@@ -29,9 +29,9 @@ extern "C"
 }
 
 std::string locateFile(std::string filename);
-long loadFile(lua_State* state, std::string input);
+long loadFile(lua_State* state, std::string filename, std::string function);
 int parseParams(lua_State* state, std::string params);
-
+std::pair<std::string, std::string> parseCode(std::string input);
 
 typedef struct ScriptDSET {
     long       number;
@@ -48,23 +48,79 @@ static char NUM_NAMES[NUM_ARGS][2] = {"A","B","C","D","E","F","G","H","I","J"};
 static char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","HH","II","JJ"};
 static char OUT_NAMES[NUM_OUT][5]  = {"OUT0","OUT1","OUT2","OUT3","OUT4","OUT5","OUT6","OUT7","OUT8","OUT9"};
 
-long initState(scriptRecord* record)
+std::pair<std::string, std::string> parseCode(std::string input)
 {
+	/* A space separates the name of the file and the function call */
+	size_t split_pos = input.find(" ");
+	
+	/* Function name goes to either the beginning of parameters, or end of string */
+	size_t end_of_func = input.find("(");
+	
+	/* Error if no functon */
+	if (split_pos == std::string::npos)      { return std::make_pair("", ""); }
+	
+	std::string filename = input.substr(1, split_pos - 1);	
+	std::string function;
+	
+	if (end_of_func == std::string::npos)
+	{
+		function = input.substr(split_pos + 1, end_of_func);
+	}
+	else
+	{
+		function = input.substr(split_pos + 1, end_of_func - split_pos - 1);
+	}
+	
+	return std::make_pair(filename, function);
+}
+
+long initState(scriptRecord* record)
+{		
 	long status = 0;
+	
 	lua_State* state = luaL_newstate();
 	luaL_openlibs(state);
 	
-	/* Cleanup any memory from previous state */
-	if (record->state != NULL)    { lua_close((lua_State*) record->state); }
-	
 	std::string code(record->code);
+	std::string pcode(record->pcode);
 	
-	/* @ signifies a call to a function in a file, otherwise treat it as code */
 	if (! code.empty())
 	{
-		if (code[0] == '@')    { status = loadFile(state, code); }
-		else                   { status = luaL_loadstring(state, record->code); }
+		/* @ signifies a call to a function in a file, otherwise treat it as code */
+		if (code[0] != '@')
+		{
+			if (code != pcode)    { status = luaL_loadstring(state, record->code); }
+		}
+		else
+		{
+			std::pair<std::string, std::string> curr = parseCode(std::string(code));
+			std::pair<std::string, std::string> prev = parseCode(std::string(pcode));
+			
+			bool reload = (record->relo == scriptRELO_Always);
+			
+			if (! reload)
+			{
+				if (curr == prev)    { return 0; }
+				
+				if      (curr.first != prev.first)                  { reload = true; }
+				else if (record->relo == scriptRELO_NewFunction)    { reload = true; }
+			}			
+			
+			if (reload)
+			{ 
+				status = loadFile(state, curr.first, curr.second);
+			}
+			else if (record->relo == scriptRELO_NewFile)
+			{
+				lua_getglobal((lua_State*) record->state, curr.second.c_str());
+				strcpy(record->pcode, record->code);
+				return 0;
+			}
+		}
 	}
+	
+	/* Cleanup any memory from previous state */
+	if (record->state != NULL)    { lua_close((lua_State*) record->state); }
 	
 	record->state = (void*) state;
 	strcpy(record->pcode, record->code);
@@ -119,30 +175,9 @@ std::string locateFile(std::string filename)
 	return filename;
 }
 
-long loadFile(lua_State* state, std::string input)
+long loadFile(lua_State* state, std::string filename, std::string function)
 {
-	int status;
-	
-	/* A space separates the name of the file and the function call */
-	size_t split_pos = input.find(" ");
-	
-	/* Function name goes to either the beginning of parameters, or end of string */
-	size_t end_of_func = input.find("(");
-	
-	/* Error if no functon */
-	if (split_pos == std::string::npos)      { return 0; }
-	
-	std::string filename = input.substr(1, split_pos - 1);
-	std::string function;
-	
-	if (end_of_func == std::string::npos)
-	{
-		function = input.substr(split_pos + 1, end_of_func);
-	}
-	else
-	{
-		function = input.substr(split_pos + 1, end_of_func - split_pos - 1);
-	}
+	int status = 0;
 	
 	status = luaL_loadfile(state, locateFile(filename).c_str()); 
 	if (status)    { return status; }
@@ -153,7 +188,6 @@ long loadFile(lua_State* state, std::string input)
 	
 	/* Get the named function */
 	lua_getglobal(state, function.c_str());
-
 	return 0;
 }
 
@@ -292,6 +326,8 @@ long runCode(scriptRecord* record)
 	if (std::string(record->code).empty())    { return 0; }
 
 	long status;
+
+	if (record->relo == scriptRELO_Always)    { initState(record); }
 	
 	lua_State* state = (lua_State*) record->state;
 	
@@ -429,11 +465,7 @@ long speci(dbAddr *paddr, int after)
 	switch (field_index)
 	{	
 		case(scriptRecordCODE):
-			if (std::string(record->code) != std::string(record->pcode))
-			{
-				if (initState(record))    { logError(record); }
-			}
-			
+			if (initState(record))    { logError(record); }
 			break;
 	
 		case(scriptRecordINPA):

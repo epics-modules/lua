@@ -23,6 +23,13 @@ menu(scriptWAIT)
 	choice(scriptWAIT_Wait,"Wait")
 }
 
+menu(scriptRELO)
+{
+	choice(scriptRELO_NewFile, "On New File")
+	choice(scriptRELO_NewFunction, "On New Function")
+	choice(scriptRELO_Always, "On Process")
+}
+
 recordtype(script)
 {
 	include "dbCommon.dbd"
@@ -33,6 +40,13 @@ recordtype(script)
 		interest(4)
 		size(4)
 		extra("void* state")
+	}
+	
+	field(RELO, DBF_MENU)
+	{
+		prompt("When to reload state?")
+		interest(1)
+		menu(scriptRELO)
 	}
 	
 	field(ERR, DBF_STRING)

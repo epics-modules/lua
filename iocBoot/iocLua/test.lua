@@ -83,3 +83,27 @@ function test()
 	OUT5 = tonumber(tempb)
 	OUT6 = tonumber(tempc)
 end
+
+function clear_val()
+	OUT0 = 0
+	OUT1 = 0
+	OUT2 = 0
+	OUT3 = 0
+	OUT4 = 0
+	OUT5 = 0
+	OUT6 = 0
+	OUT7 = 0
+	OUT8 = 0
+end
+
+function clear_sval()
+	OUT0 = ""
+	OUT1 = ""
+	OUT2 = ""
+	OUT3 = ""
+	OUT4 = ""
+	OUT5 = ""
+	OUT6 = ""
+	OUT7 = ""
+	OUT8 = ""
+end
