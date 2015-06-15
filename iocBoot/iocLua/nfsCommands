@@ -1,0 +1,21 @@
+# Set the default gateway (the address to which IP datagrams will be sent
+# when there is no specific specific routing table entry available for the
+# actual destination address.)
+routeAdd "0","164.54.52.1"
+
+# Something like this is needed for proc 0 if "inet on backplane" is defined
+# Here, 164.54.53.226 is the backplane address, and it's actually not the
+# gateway for everything in the world.
+routeDelete "164.54.0.0", "164.54.53.226"
+
+routeShow
+
+# The following lines are examples of what might be required to use NFS,
+# rather than FTP, for booting the VME crate, and generally for reading
+# and writing files on the server.
+#
+nfsMount("s100dserv","/xorApps","/net/s100dserv/xorApps")
+nfsMount("s100dserv","/APSshare","/APSshare")
+
+# The following line eliminates "cksum: out of data" messages due to DHCP
+#proxyPortFwdOff(67)

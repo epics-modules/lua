@@ -1,0 +1,3 @@
+include "scriptRecord.dbd"
+
+device(script, CONSTANT, devScriptSoft, "Soft Channel")

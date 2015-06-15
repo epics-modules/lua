@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/bcdaioc/!svn/ver/5759/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure
+END
+RELEASE
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/bcdaioc/!svn/ver/5754/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure/RELEASE
+END
+RULES.ioc
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/bcdaioc/!svn/ver/5754/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure/RULES.ioc
+END
+CONFIG
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/bcdaioc/!svn/ver/5754/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure/CONFIG
+END
+CONFIG_APP
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/bcdaioc/!svn/ver/5754/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure/CONFIG_APP
+END
+RULES
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/bcdaioc/!svn/ver/5754/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure/RULES
+END
+RULES_DIRS
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/bcdaioc/!svn/ver/5754/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure/RULES_DIRS
+END
+RULES_TOP
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/bcdaioc/!svn/ver/5754/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure/RULES_TOP
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/bcdaioc/!svn/ver/5754/EPICSsupport/working/synApps_5_7/support/calc-3-2/configure/Makefile
+END

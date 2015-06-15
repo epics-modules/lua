@@ -1,0 +1,21 @@
+#RELEASE Location of external products
+# Run "gnumake clean uninstall install" in the application
+# top directory each time this file is changed.
+
+TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
+
+SUPPORT=/APSshare/epics/synApps_5_7/support
+-include $(TOP)/../configure/SUPPORT.$(EPICS_HOST_ARCH)
+
+# Need SSCAN module only to build the swait record (recDynLink library)
+# If you comment this definition out, the module will just decline to
+# build the swait record.
+SSCAN=$(SUPPORT)/sscan-2-9
+
+# EPICS_BASE usually appears last so other apps can override stuff:
+EPICS_BASE=/APSshare/epics/base-3.14.12.3
+-include $(TOP)/../configure/EPICS_BASE.$(EPICS_HOST_ARCH)
+
+#Capfast users may need the following definitions
+#CAPFAST_TEMPLATES=
+#SCH2EDIF_PATH=
