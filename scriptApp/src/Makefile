@@ -17,53 +17,47 @@ INC += lualib.h
 INC += lauxlib.h
 INC += luaconf.h
 
-LIBRARY_IOC += interp
-interp_SRCS += lapi.c
-interp_SRCS += lauxlib.c
-interp_SRCS += lbaselib.c
-interp_SRCS += lbitlib.c
-interp_SRCS += lcode.c
-interp_SRCS += lcorolib.c
-interp_SRCS += lctype.c
-interp_SRCS += ldblib.c
-interp_SRCS += ldebug.c
-interp_SRCS += ldo.c
-interp_SRCS += ldump.c
-interp_SRCS += lfunc.c
-interp_SRCS += lgc.c
-interp_SRCS += linit.c
-interp_SRCS += liolib.c
-interp_SRCS += llex.c
-interp_SRCS += lmathlib.c
-interp_SRCS += lmem.c
-interp_SRCS += loadlib.c
-interp_SRCS += lobject.c
-interp_SRCS += lopcodes.c
-interp_SRCS += loslib.c
-interp_SRCS += lparser.c
-interp_SRCS += lstate.c
-interp_SRCS += lstring.c
-interp_SRCS += lstrlib.c
-interp_SRCS += ltable.c
-interp_SRCS += ltablib.c
-interp_SRCS += ltm.c
-interp_SRCS += lua.c
-interp_SRCS += luac.c
-interp_SRCS += lundump.c
-interp_SRCS += lutf8lib.c
-interp_SRCS += lvm.c
-interp_SRCS += lzio.c
-
-
 LIBRARY_IOC += script
+script_SRCS += lapi.c
+script_SRCS += lauxlib.c
+script_SRCS += lbaselib.c
+script_SRCS += lbitlib.c
+script_SRCS += lcode.c
+script_SRCS += lcorolib.c
+script_SRCS += lctype.c
+script_SRCS += ldblib.c
+script_SRCS += ldebug.c
+script_SRCS += ldo.c
+script_SRCS += ldump.c
+script_SRCS += lfunc.c
+script_SRCS += lgc.c
+script_SRCS += linit.c
+script_SRCS += liolib.c
+script_SRCS += llex.c
+script_SRCS += lmathlib.c
+script_SRCS += lmem.c
+script_SRCS += loadlib.c
+script_SRCS += lobject.c
+script_SRCS += lopcodes.c
+script_SRCS += loslib.c
+script_SRCS += lparser.c
+script_SRCS += lstate.c
+script_SRCS += lstring.c
+script_SRCS += lstrlib.c
+script_SRCS += ltable.c
+script_SRCS += ltablib.c
+script_SRCS += ltm.c
+script_SRCS += lua.c
+script_SRCS += luac.c
+script_SRCS += lundump.c
+script_SRCS += lutf8lib.c
+script_SRCS += lvm.c
+script_SRCS += lzio.c
 
 script_SRCS += scriptRecord.c
 script_SRCS += devScriptSoft.c
 script_SRCS += scriptUtil.cpp
 
-#LIB_INSTALLS_Linux += ../os/Linux/liblua.a
-
-script_LIBS += interp
 script_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
@@ -74,7 +68,6 @@ scriptioc_DBD += base.dbd
 scriptioc_DBD += scriptSupport.dbd
 
 scriptioc_LIBS += script
-scriptioc_LIBS += interp
 scriptioc_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
