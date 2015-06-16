@@ -25,9 +25,9 @@ menu(scriptWAIT)
 
 menu(scriptRELO)
 {
-	choice(scriptRELO_NewFile, "On New File")
-	choice(scriptRELO_NewFunction, "On New Function")
-	choice(scriptRELO_Always, "On Process")
+	choice(scriptRELO_NewFile, "Every New File")
+	choice(scriptRELO_NewFunction, "Every New Change")
+	choice(scriptRELO_Always, "Every Processing")
 }
 
 recordtype(script)
