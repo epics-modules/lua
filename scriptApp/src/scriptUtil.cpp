@@ -28,10 +28,11 @@ extern "C"
 	#include "lauxlib.h"
 }
 
-std::string locateFile(std::string filename);
-long loadFile(lua_State* state, std::string filename, std::string function);
+std::string locateFile(std::string& filename);
+long loadFile(lua_State* state, std::string& filename, std::string& function);
 int parseParams(lua_State* state, std::string params);
-std::pair<std::string, std::string> parseCode(std::string input);
+
+std::pair<std::string, std::string> parseCode(std::string& input);
 
 typedef struct ScriptDSET {
     long       number;
@@ -44,36 +45,39 @@ typedef struct ScriptDSET {
 
 
 /* Lua variable names for numeric and string fields */
-static char NUM_NAMES[NUM_ARGS][2] = {"A","B","C","D","E","F","G","H","I","J"};
-static char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","HH","II","JJ"};
-static char OUT_NAMES[NUM_OUT][5]  = {"OUT0","OUT1","OUT2","OUT3","OUT4","OUT5","OUT6","OUT7","OUT8","OUT9"};
+static const char NUM_NAMES[NUM_ARGS][2] = {"A","B","C","D","E","F","G","H","I","J"};
+static const char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","HH","II","JJ"};
+static const char OUT_NAMES[NUM_OUT][5]  = {"OUT0","OUT1","OUT2","OUT3","OUT4","OUT5","OUT6","OUT7","OUT8","OUT9"};
 
-std::pair<std::string, std::string> parseCode(std::string input)
+
+/*
+ * Parses the CODE field for a file name and given function
+ * assuming a style of "@filename function()"
+ */
+std::pair<std::string, std::string> parseCode(std::string& input)
 {
 	/* A space separates the name of the file and the function call */
-	size_t split_pos = input.find(" ");
+	size_t split = input.find(" ");
 	
 	/* Function name goes to either the beginning of parameters, or end of string */
-	size_t end_of_func = input.find("(");
+	size_t end = input.find("(");
 	
-	/* Error if no functon */
-	if (split_pos == std::string::npos)      { return std::make_pair("", ""); }
+	/* No function found */
+	if (split == std::string::npos)      { return std::make_pair("", ""); }
 	
-	std::string filename = input.substr(1, split_pos - 1);	
+	std::string filename = input.substr(1, split - 1);	
 	std::string function;
 	
-	if (end_of_func == std::string::npos)
-	{
-		function = input.substr(split_pos + 1, end_of_func);
-	}
-	else
-	{
-		function = input.substr(split_pos + 1, end_of_func - split_pos - 1);
-	}
+	if   (end == std::string::npos)    { function = input.substr(split + 1, end); }
+	else                               { function = input.substr(split + 1, end - split - 1); }
 	
 	return std::make_pair(filename, function);
 }
 
+
+/*
+ * Initializes/Reinitializes Lua state according to the CODE field
+ */
 long initState(scriptRecord* record)
 {		
 	long status = 0;
@@ -91,31 +95,31 @@ long initState(scriptRecord* record)
 		{
 			if (code != pcode)    { status = luaL_loadstring(state, record->code); }
 		}
-		else
+		else 
 		{
-			std::pair<std::string, std::string> curr = parseCode(std::string(code));
-			std::pair<std::string, std::string> prev = parseCode(std::string(pcode));
+			/* Parse for filenames and functions */
+			std::pair<std::string, std::string> curr = parseCode(code);
+			std::pair<std::string, std::string> prev = parseCode(pcode);
 			
-			bool reload = (record->relo == scriptRELO_Always);
-			
-			if (! reload)
+			/* We'll always need to reload going from code to referencing a file */
+			if (pcode[0] == '@')
 			{
-				if (curr == prev)    { return 0; }
+				if (curr == prev && record->relo != scriptRELO_Always)    { return 0; }
 				
-				if      (curr.first != prev.first)                  { reload = true; }
-				else if (record->relo == scriptRELO_NewFunction)    { reload = true; }
-			}			
+				/* 
+				 * If only the functon name changes and the record is set to only
+				 * reload on file changes, all we have to do is pull the function
+				 * and put it at the top of the stack.
+				 */
+				if ((record->relo == scriptRELO_NewFile) && (curr.first == prev.first))
+				{
+					lua_getglobal((lua_State*) record->state, curr.second.c_str());
+					strcpy(record->pcode, record->code);
+					return 0;
+				}
+			}
 			
-			if (reload)
-			{ 
-				status = loadFile(state, curr.first, curr.second);
-			}
-			else if (record->relo == scriptRELO_NewFile)
-			{
-				lua_getglobal((lua_State*) record->state, curr.second.c_str());
-				strcpy(record->pcode, record->code);
-				return 0;
-			}
+			status = loadFile(state, curr.first, curr.second);
 		}
 	}
 	
@@ -129,13 +133,12 @@ long initState(scriptRecord* record)
 }
 
 
-std::string locateFile(std::string filename)
+std::string locateFile(std::string& filename)
 {
 	char* env_path = std::getenv("LUA_SCRIPT_PATH");
-	std::string path;
 	
 	#if defined(__vxworks) || defined(vxWorks)
-    // for compatibility reasons look for global symbols
+    /* For compatibility reasons look for global symbols */
     if (!env_path)
     {
         char* symbol;
@@ -148,8 +151,11 @@ std::string locateFile(std::string filename)
     }
 	#endif
 	
-	if (env_path)    { path = std::string(env_path); }
-	else             { path = "."; }
+	std::string path;
+	
+	/* If no environment variable found, default to the current directory. */
+	if   (env_path)    { path = std::string(env_path); }
+	else               { path = "."; }
 	
 	size_t start = 0;
 	size_t next;
@@ -158,16 +164,13 @@ std::string locateFile(std::string filename)
 	{
 		next = path.find(":", start);
 		
-		std::string dir;
+		std::string test = "/" + filename;
 		
-		if (next == std::string::npos)    { dir = path.substr(start); }
-		else                              { dir = path.substr(start, next - start); }
+		if   (next == std::string::npos)    { test = path.substr(start) + test; }
+		else                                { test = path.substr(start, next - start) + test; }
 		
-		std::string test_path = dir + "/" + filename;
-		
-		std::ifstream file(test_path.c_str());
-		
-		if (file.good())    { return test_path;	}
+		/* Check if file exists. If so, return the full filepath */
+		if (std::ifstream(test.c_str()).good())    { return test; }
 		
 		start = next + 1;
 	} while (start);
@@ -175,7 +178,7 @@ std::string locateFile(std::string filename)
 	return filename;
 }
 
-long loadFile(lua_State* state, std::string filename, std::string function)
+long loadFile(lua_State* state, std::string& filename, std::string& function)
 {
 	int status = 0;
 	
@@ -228,6 +231,11 @@ long setLinks(scriptRecord* record)
 	return 0;
 }
 
+
+/*
+ * Grabs the new values of every numerical input link and
+ * pushes the result to the lua stack.
+ */
 void loadNumbers(scriptRecord* record)
 {
 	lua_State* state = (lua_State*) record->state;
@@ -251,6 +259,7 @@ void loadNumbers(scriptRecord* record)
 	}
 }
 
+
 void loadStrings(scriptRecord* record)
 {
 	lua_State* state = (lua_State*) record->state;
@@ -270,36 +279,28 @@ void loadStrings(scriptRecord* record)
 		
 		short field_type = 0;
 		long elements = 1;
-		
-		switch (field->type)
+
+		if (field->type == CA_LINK)
 		{
-			case CA_LINK:
-				field_type = dbCaGetLinkDBFtype(field);
-				dbCaGetNelements(field, &elements);
-				break;
-				
-			case DB_LINK:
-				if (! dbNameToAddr(field->value.pv_link.pvname, pAddr))
-				{
-					field_type = pAddr->field_type;
-					elements   = pAddr->no_elements;
-				}
-				else
-				{
-					field_type = DBR_STRING;
-				}
-				
-				break;
-				
-			default:
-				break;
+			field_type = dbCaGetLinkDBFtype(field);
+			dbCaGetNelements(field, &elements);
+		}
+		else if (field->type == DB_LINK)
+		{
+			field_type = DBR_STRING;
+		
+			if (! dbNameToAddr(field->value.pv_link.pvname, pAddr))
+			{
+				field_type = pAddr->field_type;
+				elements   = pAddr->no_elements;
+			}
 		}
 		
+		elements = std::min(elements, (long) STRING_SIZE - 1);
+		std::fill(tempstr, tempstr + elements, '\0');
+		
 		if ((field->type == CA_LINK) || (field->type == DB_LINK))
-		{
-			elements = std::min(elements, (long) STRING_SIZE - 1);
-			std::fill(tempstr, tempstr + elements, '\0');
-			
+		{			
 			if (((field_type == DBR_CHAR) || (field_type == DBR_UCHAR)) && elements > 1)
 			{			
 				dbGetLink(field, field_type, tempstr, 0, &elements);
@@ -321,25 +322,13 @@ void loadStrings(scriptRecord* record)
 	}
 }
 
-long runCode(scriptRecord* record)
-{	
-	if (std::string(record->code).empty())    { return 0; }
-
-	long status;
-
-	if (record->relo == scriptRELO_Always)    { initState(record); }
-	
+/*
+ * Pulls the output variables from the lua state and
+ * puts their values to the correct val/sval field.
+ */
+void postOutput(scriptRecord* record)
+{
 	lua_State* state = (lua_State*) record->state;
-	
-	/* Make a copy of the current code chunk */
-	lua_pushvalue(state, -1);
-	
-	/* Load Params */
-	int params = parseParams(state, std::string(record->code));
-	
-	/* Call the chunk */
-	status = lua_pcall(state, params, 0, 0);
-	if (status)    { return status; }
 	
 	double* val  = &record->val0;
 	double* pval = &record->pvl0;
@@ -378,8 +367,36 @@ long runCode(scriptRecord* record)
 		update++;
 		sval += STRING_SIZE;
 	}
+}
+
+long runCode(scriptRecord* record)
+{	
+	if (std::string(record->code).empty())    { return 0; }
+
+	long status;
 	
-	return status;
+	/* scriptRELO_Always indicates a state reload on every process */
+	if (record->relo == scriptRELO_Always)
+	{ 
+		status = initState(record);
+		if (status)    { return status; }
+	}
+	
+	lua_State* state = (lua_State*) record->state;
+	
+	/* Make a copy of the current code chunk */
+	lua_pushvalue(state, -1);
+	
+	/* Load Params */
+	int params = parseParams(state, std::string(record->code));
+	
+	/* Call the chunk */
+	status = lua_pcall(state, params, 0, 0);
+	if (status)    { return status; }
+	
+	postOutput(record);
+	
+	return 0;
 }
 
 void checkValUpdate(scriptRecord* record, double* val, double* pval, unsigned char* update)
@@ -530,40 +547,45 @@ long speci(dbAddr *paddr, int after)
 }
 
 
+/*
+ * Parses the comma separated values in between the parentheses
+ * in the CODE field.
+ */
 int parseParams(lua_State* state, std::string params)
 {
-	size_t start_params = params.find("(");
-	size_t end_params = params.find(")");
+	size_t start = params.find_first_of("(");
+	size_t end   = params.find_last_of(")");
+	size_t oob   = std::string::npos;
+	
 	
 	/* Syntax error */
-	if (end_params == std::string::npos) { return 0; }
+	if (end == oob || start == oob || start == end - 1) { return 0; }
 	
-	if (start_params == std::string::npos || 
-	    start_params == end_params - 1)
-	{
-		return 0;
-	}
-	
-	std::string parse = params.substr(start_params + 1, end_params - start_params - 1);
+	std::string parse = params.substr(start + 1, end - start - 1);
 
 	int num_params = 0;
 
-	size_t start = 0;
+	size_t curr = 0;
 	size_t next;
 	
 	do
 	{
 		/* Get the next parameter */
-		next = parse.find(",", start);
+		next = parse.find(",", curr);
 		
 		std::string param;
 		
 		/* If we find the end of the string, just take everything */
-		if (next == std::string::npos)    { param = parse.substr(start); }
-		else                              { param = parse.substr(start, next - start); }
+		if   (next == oob)    { param = parse.substr(curr); }
+		else                  { param = parse.substr(curr, next - curr); }
+		
+		int trim_front = param.find_first_not_of(" ");
+		int trim_back  = param.find_last_not_of(" ");
+		
+		param = param.substr(trim_front, trim_back - trim_front);
 		
 		/* Treat anything with quotes as a string, anything else as a number */
-		if (param.at(0) == '"')
+		if (param.at(0) == '"' || param.at(0) == '\'')
 		{
 			lua_pushstring(state, param.substr(1, param.length() - 2).c_str());
 		}
@@ -573,8 +595,8 @@ int parseParams(lua_State* state, std::string params)
 		}
 		
 		num_params += 1;
-		start = next + 1;
-	} while (start);
+		curr = next + 1;
+	} while (curr);
 	
 	return num_params;
 }
@@ -594,7 +616,7 @@ void writeValue(scriptRecord* record)
 	ScriptDSET* pscriptDSET = (ScriptDSET*) record->dset;
 
     if (!pscriptDSET || !pscriptDSET->write) {
-        errlogPrintf("%s DSET write does not exist\n",record->name);
+        errlogPrintf("%s DSET write does not exist\n", record->name);
         recGblSetSevr(record,SOFT_ALARM,INVALID_ALARM);
         record->pact = TRUE;
         return;
@@ -610,10 +632,7 @@ void monitor(scriptRecord* record)
 	
 	for (int index = 0; index < NUM_ARGS; index += 1)
 	{
-		if (*new_val != *old_val)
-		{
-			db_post_events(record, new_val, DBE_VALUE);
-		}
+		if (*new_val != *old_val)    { db_post_events(record, new_val, DBE_VALUE); }
 		
 		new_val++;
 		old_val++;
@@ -624,10 +643,7 @@ void monitor(scriptRecord* record)
 	
 	for (int index = 0; index < STR_ARGS; index += 1)
 	{
-		if (strcmp(new_str, *old_str))
-		{
-			db_post_events(record, new_str, DBE_VALUE);
-		}
+		if (strcmp(new_str, *old_str))    { db_post_events(record, new_str, DBE_VALUE); }
 		
 		old_str++;
 		new_str += STRING_SIZE;
