@@ -4,8 +4,10 @@
 
 TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
-SUPPORT=/home/oxygen/KLANG/Epics/synApps_5_7/support
+SUPPORT=/home/oxygen/KLANG/Epics/synApps_5_8/support
 -include $(TOP)/../configure/SUPPORT.$(EPICS_HOST_ARCH)
+
+ASYN=$(SUPPORT)/asyn-4-26
 
 # EPICS_BASE usually appears last so other apps can override stuff:
 EPICS_BASE=/home/oxygen/KLANG/Epics/base-3.14.12.4

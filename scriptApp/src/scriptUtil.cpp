@@ -553,23 +553,24 @@ long speci(dbAddr *paddr, int after)
  */
 int parseParams(lua_State* state, std::string params)
 {
+	if (params.at(0) != '@')    { return 0; }
+	
 	size_t start = params.find_first_of("(");
 	size_t end   = params.find_last_of(")");
-	size_t oob   = std::string::npos;
-	
+	size_t oob   = std::string::npos;	
 	
 	/* Syntax error */
 	if (end == oob || start == oob || start == end - 1) { return 0; }
 	
 	std::string parse = params.substr(start + 1, end - start - 1);
-
+	
 	int num_params = 0;
 
 	size_t curr = 0;
 	size_t next;
 	
 	do
-	{
+	{		
 		/* Get the next parameter */
 		next = parse.find(",", curr);
 		
@@ -582,7 +583,7 @@ int parseParams(lua_State* state, std::string params)
 		int trim_front = param.find_first_not_of(" ");
 		int trim_back  = param.find_last_not_of(" ");
 		
-		param = param.substr(trim_front, trim_back - trim_front);
+		param = param.substr(trim_front, trim_back - trim_front + 1);
 		
 		/* Treat anything with quotes as a string, anything else as a number */
 		if (param.at(0) == '"' || param.at(0) == '\'')
@@ -625,6 +626,10 @@ void writeValue(scriptRecord* record)
 	pscriptDSET->write(record);
 }
 
+
+/*
+ * Update numeric and string inputs.
+ */
 void monitor(scriptRecord* record)
 {
 	double* new_val = &record->a;

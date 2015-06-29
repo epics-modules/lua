@@ -53,25 +53,27 @@ script_SRCS += lundump.c
 script_SRCS += lutf8lib.c
 script_SRCS += lvm.c
 script_SRCS += lzio.c
+script_SRCS += lasynlib.cpp
 
 script_SRCS += scriptRecord.c
 script_SRCS += devScriptSoft.c
 script_SRCS += scriptUtil.cpp
 
+script_LIBS += asyn
 script_LIBS += $(EPICS_BASE_IOC_LIBS)
-
 
 PROD_IOC = scriptioc
 
 DBD += scriptioc.dbd
 scriptioc_DBD += base.dbd
+scriptioc_DBD += drvAsynIPPort.dbd
 scriptioc_DBD += scriptSupport.dbd
 
 scriptioc_LIBS += script
+scriptioc_LIBS += asyn
 scriptioc_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-
-scriptioc_SRCS         += scriptioc_registerRecordDeviceDriver.cpp
+scriptioc_SRCS += scriptioc_registerRecordDeviceDriver.cpp
 
 scriptioc_SRCS_DEFAULT += scriptMain.cpp
 scriptioc_SRCS_vxWorks += -nil-
