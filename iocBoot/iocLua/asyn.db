@@ -1,0 +1,118 @@
+record(script, "klang:test:script1")
+{
+	field(INPA, "klang:test:aval.VAL")
+	field(INPB, "klang:test:bval.VAL")
+	field(INPC, "klang:test:cval.VAL")
+	field(INPD, "klang:test:dval.VAL")
+	field(INPE, "klang:test:eval.VAL")
+	field(INPF, "klang:test:fval.VAL")
+	field(INPG, "klang:test:gval.VAL")
+	field(INPH, "klang:test:hval.VAL")
+	field(INPI, "klang:test:ival.VAL")
+	field(INPJ, "klang:test:jval.VAL")
+	
+	field(INAA, "klang:test:aaval.VAL")
+	field(INBB, "klang:test:bbval.VAL")
+	field(INCC, "klang:test:ccval.VAL")
+	field(INDD, "klang:test:ddval.VAL")
+	field(INEE, "klang:test:eeval.VAL")
+	field(INFF, "klang:test:ffval.VAL")
+	field(INGG, "klang:test:ggval.VAL")
+	field(INHH, "klang:test:hhval.VAL")
+	field(INII, "klang:test:iival.VAL")
+	field(INJJ, "klang:test:jjval.VAL")
+	
+	field(OOPT, "Every Time")
+	field(OUT0, "klang:test:jval")
+	field(OUT1, "klang:test:jjval")
+	
+	field(PREC, 1)
+	
+	field(PINI, 1)
+	
+	field(RELO, "Every New File")
+	
+	field(CODE, "@asyn.lua get_html('$(PORT)')")
+}
+
+record(ai, "klang:test:aval")
+{
+	field(VAL, 1)
+}
+record(ai, "klang:test:bval")
+{
+	field(VAL, 2)
+}
+record(ai, "klang:test:cval")
+{
+	field(VAL, 3)
+}
+record(ai, "klang:test:dval")
+{
+	field(VAL, 4)
+}
+record(ai, "klang:test:eval")
+{
+	field(VAL, 5)
+}
+record(ai, "klang:test:fval")
+{
+	field(VAL, 6)
+}
+record(ai, "klang:test:gval")
+{
+	field(VAL, 7)
+}
+record(ai, "klang:test:hval")
+{
+	field(VAL, 8)
+}
+record(ai, "klang:test:ival")
+{
+	field(VAL, 42)
+}
+record(ai, "klang:test:jval")
+{
+	field(VAL, 0)
+}
+
+record(stringout, "klang:test:aaval")
+{
+	field(VAL, "Hello")
+}
+record(stringout, "klang:test:bbval")
+{
+	field(VAL, "World")
+}
+record(stringout, "klang:test:ccval")
+{
+	field(VAL, "123ABC")
+}
+record(stringout, "klang:test:ddval")
+{
+	field(VAL, "A = ")
+}
+record(stringout, "klang:test:eeval")
+{
+	field(VAL, "return DD .. A")
+}
+record(stringout, "klang:test:ffval")
+{
+	field(VAL, "VOLTS?4.5,2.7,3.0")
+}
+record(stringout, "klang:test:ggval")
+{
+	field(VAL, "")
+}
+record(stringout, "klang:test:hhval")
+{
+	field(VAL, "")
+}
+record(stringout, "klang:test:iival")
+{
+	field(VAL, "")
+}
+record(stringout, "klang:test:jjval")
+{
+	field(VAL, "")
+}
