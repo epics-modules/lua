@@ -77,7 +77,7 @@ static int l_read(lua_State* state)
 		if (isnum)    { input.setTimeout(timeout); }
 		if (in_term)  { input.setInputEos(in_term, strlen(in_term)); }
 		
-		char buffer[1000];
+		char buffer[128];
 				
 		size_t numread;
 		int eomReason;
@@ -86,7 +86,7 @@ static int l_read(lua_State* state)
 		{
 			input.read(buffer, sizeof(buffer), &numread, &eomReason);
 			output += std::string(buffer, numread);
-		} while (eomReason == ASYN_EOM_CNT);
+		} while (eomReason & ASYN_EOM_CNT);
 		
 		if (output.empty())    { return 0; }
 		
