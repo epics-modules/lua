@@ -1,114 +1,114 @@
-record(script, "klang:test:script1")
+record(script, "$(P)$(Q)script1")
 {
-	field(INPA, "klang:test:aval.VAL")
-	field(INPB, "klang:test:bval.VAL")
-	field(INPC, "klang:test:cval.VAL")
-	field(INPD, "klang:test:dval.VAL")
-	field(INPE, "klang:test:eval.VAL")
-	field(INPF, "klang:test:fval.VAL")
-	field(INPG, "klang:test:gval.VAL")
-	field(INPH, "klang:test:hval.VAL")
-	field(INPI, "klang:test:ival.VAL")
-	field(INPJ, "klang:test:jval.VAL")
+	field(INPA, "$(P)$(Q)aval.VAL")
+	field(INPB, "$(P)$(Q)bval.VAL")
+	field(INPC, "$(P)$(Q)cval.VAL")
+	field(INPD, "$(P)$(Q)dval.VAL")
+	field(INPE, "$(P)$(Q)eval.VAL")
+	field(INPF, "$(P)$(Q)fval.VAL")
+	field(INPG, "$(P)$(Q)gval.VAL")
+	field(INPH, "$(P)$(Q)hval.VAL")
+	field(INPI, "$(P)$(Q)ival.VAL")
+	field(INPJ, "$(P)$(Q)jval.VAL")
 	
-	field(INAA, "klang:test:aaval.VAL")
-	field(INBB, "klang:test:bbval.VAL")
-	field(INCC, "klang:test:ccval.VAL")
-	field(INDD, "klang:test:ddval.VAL")
-	field(INEE, "klang:test:eeval.VAL")
-	field(INFF, "klang:test:ffval.VAL")
-	field(INGG, "klang:test:ggval.VAL")
-	field(INHH, "klang:test:hhval.VAL")
-	field(INII, "klang:test:iival.VAL")
-	field(INJJ, "klang:test:jjval.VAL")
+	field(INAA, "$(P)$(Q)aaval.VAL")
+	field(INBB, "$(P)$(Q)bbval.VAL")
+	field(INCC, "$(P)$(Q)ccval.VAL")
+	field(INDD, "$(P)$(Q)ddval.VAL")
+	field(INEE, "$(P)$(Q)eeval.VAL")
+	field(INFF, "$(P)$(Q)ffval.VAL")
+	field(INGG, "$(P)$(Q)ggval.VAL")
+	field(INHH, "$(P)$(Q)hhval.VAL")
+	field(INII, "$(P)$(Q)iival.VAL")
+	field(INJJ, "$(P)$(Q)jjval.VAL")
 	
 	field(OOPT, "Every Time")
-	field(OUT0, "klang:test:jval")
-	field(OUT1, "klang:test:jjval")
+	field(OUT0, "$(P)$(Q)jval")
+	field(OUT1, "$(P)$(Q)jjval")
 	
 	field(PREC, 1)
 	
 	field(PINI, 1)
 }
 
-record(ai, "klang:test:aval")
+record(ai, "$(P)$(Q)aval")
 {
 	field(VAL, 1)
 }
-record(ai, "klang:test:bval")
+record(ai, "$(P)$(Q)bval")
 {
 	field(VAL, 2)
 }
-record(ai, "klang:test:cval")
+record(ai, "$(P)$(Q)cval")
 {
 	field(VAL, 3)
 }
-record(ai, "klang:test:dval")
+record(ai, "$(P)$(Q)dval")
 {
 	field(VAL, 4)
 }
-record(ai, "klang:test:eval")
+record(ai, "$(P)$(Q)eval")
 {
 	field(VAL, 5)
 }
-record(ai, "klang:test:fval")
+record(ai, "$(P)$(Q)fval")
 {
 	field(VAL, 6)
 }
-record(ai, "klang:test:gval")
+record(ai, "$(P)$(Q)gval")
 {
 	field(VAL, 7)
 }
-record(ai, "klang:test:hval")
+record(ai, "$(P)$(Q)hval")
 {
 	field(VAL, 8)
 }
-record(ai, "klang:test:ival")
+record(ai, "$(P)$(Q)ival")
 {
 	field(VAL, 42)
 }
-record(ai, "klang:test:jval")
+record(ai, "$(P)$(Q)jval")
 {
 	field(VAL, 0)
 }
 
-record(stringout, "klang:test:aaval")
+record(stringout, "$(P)$(Q)aaval")
 {
 	field(VAL, "Hello")
 }
-record(stringout, "klang:test:bbval")
+record(stringout, "$(P)$(Q)bbval")
 {
 	field(VAL, "World")
 }
-record(stringout, "klang:test:ccval")
+record(stringout, "$(P)$(Q)ccval")
 {
 	field(VAL, "123ABC")
 }
-record(stringout, "klang:test:ddval")
+record(stringout, "$(P)$(Q)ddval")
 {
 	field(VAL, "A = ")
 }
-record(stringout, "klang:test:eeval")
+record(stringout, "$(P)$(Q)eeval")
 {
 	field(VAL, "return DD .. A")
 }
-record(stringout, "klang:test:ffval")
+record(stringout, "$(P)$(Q)ffval")
 {
 	field(VAL, "VOLTS?4.5,2.7,3.0")
 }
-record(stringout, "klang:test:ggval")
+record(stringout, "$(P)$(Q)ggval")
 {
 	field(VAL, "")
 }
-record(stringout, "klang:test:hhval")
+record(stringout, "$(P)$(Q)hhval")
 {
 	field(VAL, "")
 }
-record(stringout, "klang:test:iival")
+record(stringout, "$(P)$(Q)iival")
 {
 	field(VAL, "")
 }
-record(stringout, "klang:test:jjval")
+record(stringout, "$(P)$(Q)jjval")
 {
 	field(VAL, "")
 }

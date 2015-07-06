@@ -10,7 +10,7 @@ load("../../bin/vxWorks-ppc32/scriptioc.munch")
 dbLoadDatabase("../../dbd/scriptioc.dbd")
 scriptioc_registerRecordDeviceDriver(pdbbase)
 
-dbLoadRecords("./test.db")
+dbLoadRecords("./test.db", "P=klang:,Q=test:")
 
 epicsEnvSet("LUA_SCRIPT_PATH",".")
 
