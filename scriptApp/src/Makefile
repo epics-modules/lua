@@ -8,6 +8,7 @@ include $(TOP)/configure/CONFIG
 #=============================
 # xxxRecord.h will be created from xxxRecord.dbd
 
+DBD += scriptSupport.dbd
 DBDINC += scriptRecord.dbd
 
 SRC_DIRS += ../lua

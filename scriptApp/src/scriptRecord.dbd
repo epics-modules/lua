@@ -33,7 +33,12 @@ menu(scriptRELO)
 recordtype(script)
 {
 	include "dbCommon.dbd"
-
+	
+	field(VAL,DBF_DOUBLE)
+	{
+		prompt("Result")
+	}
+	
 	field(STATE, DBF_NOACCESS)
 	{
 		prompt("Lua State")
