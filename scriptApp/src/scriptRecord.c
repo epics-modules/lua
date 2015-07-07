@@ -78,19 +78,7 @@ static long process(void* data)
 {
 	scriptRecord* record = (scriptRecord*) data;
 
-	loadNumbers(record);
-	loadStrings(record);
-
-	if (runCode(record))
-	{
-		logError(record);
-		return -1;
-	}
-
-	writeValue(record);
-	monitor(record);
-
-	return 0;
+	return startProc(record);
 }
 
 static long special(dbAddr *paddr, int after)

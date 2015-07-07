@@ -1,4 +1,5 @@
 #include <string>
+#include <sstream>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -13,6 +14,7 @@
 
 #include <recGbl.h>
 #include <epicsExport.h>
+#include <epicsThread.h>
 #include <devSup.h>
 #include <recSup.h>
 #include <errlog.h>
@@ -343,7 +345,7 @@ void postOutput(scriptRecord* record)
 		int type = lua_getglobal(state, OUT_NAMES[index]);
 		
 		*pval = *val;
-		strncpy(sval, (char*) psvl, STRING_SIZE);
+		strncpy((char*) psvl, sval, STRING_SIZE);
 		
 		if ((type == LUA_TNUMBER) || (type == LUA_TBOOLEAN))
 		{
@@ -371,31 +373,19 @@ void postOutput(scriptRecord* record)
 
 long runCode(scriptRecord* record)
 {	
-	if (std::string(record->code).empty())    { return 0; }
+	if (std::string(record->code).empty())    { record->pact = FALSE; return 0; }
 
-	long status;
+	std::stringstream temp_stream;
+	std::string threadname;
 	
-	/* scriptRELO_Always indicates a state reload on every process */
-	if (record->relo == scriptRELO_Always)
-	{ 
-		status = initState(record);
-		if (status)    { return status; }
-	}
+	temp_stream << "Script Record Process (" << record->name << ")";
+	temp_stream >> threadname;
 	
-	lua_State* state = (lua_State*) record->state;
-	
-	/* Make a copy of the current code chunk */
-	lua_pushvalue(state, -1);
-	
-	/* Load Params */
-	int params = parseParams(state, std::string(record->code));
-	
-	/* Call the chunk */
-	status = lua_pcall(state, params, 0, 0);
-	if (status)    { return status; }
-	
-	postOutput(record);
-	
+	epicsThreadCreate(threadname.c_str(),
+	                  epicsThreadPriorityLow,
+	                  epicsThreadGetStackSize(epicsThreadStackMedium),
+	                  (EPICSTHREADFUNC)::processCallback, record);
+					
 	return 0;
 }
 
@@ -434,9 +424,13 @@ void checkValUpdate(scriptRecord* record, double* val, double* pval, unsigned ch
 
 
 void checkSvalUpdate(scriptRecord* record, char* sval, char** psvl, unsigned char* update)
-{
-	std::string prev(*psvl);
+{	
 	std::string curr(sval);
+	
+	std::string prev;
+	
+	if (*psvl)    { prev = std::string(*psvl); }
+	else          { prev = std::string(""); }
 	
 	switch (record->oopt)
 	{
@@ -636,7 +630,7 @@ void monitor(scriptRecord* record)
 	double* old_val = &record->pa;
 	
 	for (int index = 0; index < NUM_ARGS; index += 1)
-	{
+	{		
 		if (*new_val != *old_val)    { db_post_events(record, new_val, DBE_VALUE); }
 		
 		new_val++;
@@ -653,4 +647,61 @@ void monitor(scriptRecord* record)
 		old_str++;
 		new_str += STRING_SIZE;
 	}
+}
+
+
+long startProc(scriptRecord* record)
+{
+	record->pact = TRUE;
+	
+	loadNumbers(record);
+	loadStrings(record);
+
+	return runCode(record);
+}
+
+long cleanProc(scriptRecord* record)
+{	
+	postOutput(record);
+	
+	record->pact = FALSE;
+	
+	writeValue(record);
+	monitor(record);
+	
+	return 0;
+}
+
+void processCallback(void* data)
+{
+	scriptRecord* record = (scriptRecord*) data;
+	
+	/* scriptRELO_Always indicates a state reload on every process */
+	if (record->relo == scriptRELO_Always)
+	{ 
+		if (initState(record))
+		{ 
+			logError(record); 
+			record->pact = FALSE;
+			return;
+		}
+	}
+	
+	lua_State* state = (lua_State*) record->state;
+	
+	/* Make a copy of the current code chunk */
+	lua_pushvalue(state, -1);
+	
+	/* Load Params */
+	int params = parseParams(state, std::string(record->code));
+	
+	/* Call the chunk */
+	if (lua_pcall(state, params, 0, 0))
+	{ 
+		logError(record); 
+		record->pact = FALSE;
+		return;
+	}
+	
+	cleanProc(record);
 }

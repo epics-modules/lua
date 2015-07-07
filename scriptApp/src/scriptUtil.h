@@ -21,6 +21,10 @@ extern "C"
 	void logError(scriptRecord* record);
 	long initState(scriptRecord* record);
 	long setLinks(scriptRecord* record);
+
+	long startProc(scriptRecord* record);
+	long cleanProc(scriptRecord* record);
+	void processCallback(void* data);
 	
 	void loadNumbers(scriptRecord* record);
 	void loadStrings(scriptRecord* record);
