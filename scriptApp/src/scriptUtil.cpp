@@ -49,7 +49,6 @@ typedef struct ScriptDSET {
 /* Lua variable names for numeric and string fields */
 static const char NUM_NAMES[NUM_ARGS][2] = {"A","B","C","D","E","F","G","H","I","J"};
 static const char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","HH","II","JJ"};
-static const char OUT_NAMES[NUM_OUT][5]  = {"OUT0","OUT1","OUT2","OUT3","OUT4","OUT5","OUT6","OUT7","OUT8","OUT9"};
 
 
 /*
@@ -324,53 +323,6 @@ void loadStrings(scriptRecord* record)
 	}
 }
 
-/*
- * Pulls the output variables from the lua state and
- * puts their values to the correct val/sval field.
- */
-void postOutput(scriptRecord* record)
-{
-	lua_State* state = (lua_State*) record->state;
-	
-	double* val  = &record->val0;
-	double* pval = &record->pvl0;
-	
-	char*   sval = (char*)  &record->svl0;
-	char**  psvl = (char**) &record->psvl0;
-	
-	unsigned char*  update = (unsigned char*) &record->wrt0;
-	
-	for (int index = 0; index < NUM_OUT; index += 1)
-	{
-		int type = lua_getglobal(state, OUT_NAMES[index]);
-		
-		*pval = *val;
-		strncpy((char*) psvl, sval, STRING_SIZE);
-		
-		if ((type == LUA_TNUMBER) || (type == LUA_TBOOLEAN))
-		{
-			*val = lua_tonumber(state, -1);
-			
-			checkValUpdate(record, val, pval, update);
-		}
-		else if (type == LUA_TSTRING)
-		{
-			char* tempstr = (char*) lua_tostring(state, -1);
-			strncpy(sval, tempstr, STRING_SIZE);
-			
-			checkSvalUpdate(record, sval, psvl, update);
-		}
-		
-		lua_pop(state, 1);
-		
-		val++;
-		pval++;
-		psvl++;
-		update++;
-		sval += STRING_SIZE;
-	}
-}
-
 long runCode(scriptRecord* record)
 {	
 	if (std::string(record->code).empty())    { record->pact = FALSE; return 0; }
@@ -389,78 +341,84 @@ long runCode(scriptRecord* record)
 	return 0;
 }
 
-void checkValUpdate(scriptRecord* record, double* val, double* pval, unsigned char* update)
+bool checkValUpdate(scriptRecord* record)
 {
+	double val = record->val;
+	double pval = record->pval;
+	
 	switch (record->oopt)
 	{
 		case scriptOOPT_Every_Time:
-			*update = VAL_CHANGE;
+			return true;
 			break;
 		
 		case scriptOOPT_On_Change:
-			if (abs(*pval - *val) > record->mdel)    { *update = VAL_CHANGE; }
+			if (abs(pval - val) > record->mdel)    { return true; }
 			break;
 			
 		case scriptOOPT_When_Zero:
-			if (!*val)    { *update = VAL_CHANGE; }
+			if (!val)    { return true; }
 			break;
 			
 		case scriptOOPT_When_Non_zero:
-			if (*val)     { *update = VAL_CHANGE; }
+			if (val)     { return true; }
 			break;
 			
 		case scriptOOPT_Transition_To_Zero:
-			if (*val == 0 && *pval != 0)    { *update = VAL_CHANGE; }
+			if (val == 0 && pval != 0)    { return true; }
 			break;
 			
 		case scriptOOPT_Transition_To_Non_zero:
-			if (*val != 0 && *pval == 0)    { *update = VAL_CHANGE; }
+			if (val != 0 && pval == 0)    { return true; }
 			break;
 			
 		case scriptOOPT_Never:
 			break;
 	}
+	
+	return false;
 }
 
 
-void checkSvalUpdate(scriptRecord* record, char* sval, char** psvl, unsigned char* update)
+bool checkSvalUpdate(scriptRecord* record)
 {	
-	std::string curr(sval);
+	std::string curr(record->sval);
 	
 	std::string prev;
 	
-	if (*psvl)    { prev = std::string(*psvl); }
-	else          { prev = std::string(""); }
+	if (record->psvl)    { prev = std::string(record->psvl); }
+	else                 { prev = std::string(""); }
 	
 	switch (record->oopt)
 	{
 		case scriptOOPT_Every_Time:
-			*update = SVAL_CHANGE;
-			break;
+			return true;
 		
 		case scriptOOPT_On_Change:
-			if (prev != curr)    { *update = SVAL_CHANGE; }
+			if (prev != curr)    { return true; }
 			break;
 			
 		case scriptOOPT_When_Zero:
-			if (curr.empty())    { *update = SVAL_CHANGE; }
+			if (curr.empty())    { return true; }
 			break;
 			
 		case scriptOOPT_When_Non_zero:
-			if (!curr.empty())   { *update = SVAL_CHANGE; }
+			if (!curr.empty())   { return true; }
 			break;
 			
 		case scriptOOPT_Transition_To_Zero:
-			if (!prev.empty() && curr.empty())    { *update = SVAL_CHANGE; }
+			if (!prev.empty() && curr.empty())    { return true; }
 			break;
 			
 		case scriptOOPT_Transition_To_Non_zero:
-			if (!prev.empty() && !curr.empty())    { *update = SVAL_CHANGE; }
+			if (!prev.empty() && !curr.empty())    { return true; }
 			break;
 			
 		case scriptOOPT_Never:
 			break;
 	}
+	
+	return false;
 }
 
 long speci(dbAddr *paddr, int after)
@@ -499,16 +457,7 @@ long speci(dbAddr *paddr, int after)
 		case(scriptRecordINHH):
 		case(scriptRecordINII):
 		case(scriptRecordINJJ):
-		case(scriptRecordOUT0):
-		case(scriptRecordOUT1):
-		case(scriptRecordOUT2):
-		case(scriptRecordOUT3):
-		case(scriptRecordOUT4):
-		case(scriptRecordOUT5):
-		case(scriptRecordOUT6):
-		case(scriptRecordOUT7):
-		case(scriptRecordOUT8):
-		case(scriptRecordOUT9):
+		case(scriptRecordOUT):
 		{
 			int offset = field_index - scriptRecordINPA;
 			
@@ -660,18 +609,6 @@ long startProc(scriptRecord* record)
 	return runCode(record);
 }
 
-long cleanProc(scriptRecord* record)
-{	
-	postOutput(record);
-	
-	record->pact = FALSE;
-	
-	writeValue(record);
-	monitor(record);
-	
-	return 0;
-}
-
 void processCallback(void* data)
 {
 	scriptRecord* record = (scriptRecord*) data;
@@ -696,12 +633,39 @@ void processCallback(void* data)
 	int params = parseParams(state, std::string(record->code));
 	
 	/* Call the chunk */
-	if (lua_pcall(state, params, 0, 0))
+	if (lua_pcall(state, params, 1, 0))
 	{ 
 		logError(record); 
 		record->pact = FALSE;
 		return;
 	}
+
+	record->pact = FALSE;
 	
-	cleanProc(record);
+	int rettype = lua_type(state, -1);
+	
+	if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
+	{
+		record->pval = record->val;
+		record->val = lua_tonumber(state, -1);
+		
+		if (checkValUpdate(record))
+		{ 
+			writeValue(record);
+			db_post_events(record, &record->val, DBE_VALUE);
+		}
+	}
+	else if (rettype == LUA_TSTRING)
+	{
+		strncpy(record->psvl, record->sval, STRING_SIZE);
+		strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
+		
+		if (checkSvalUpdate(record))
+		{ 
+			writeValue(record);
+			db_post_events(record, &record->sval, DBE_VALUE);
+		}
+	}
+	
+	monitor(record);
 }

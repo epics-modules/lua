@@ -163,39 +163,20 @@ static long write_Script(scriptRecord* record)
 
 	long status = 0;
 	
-	double* val  = &record->val0;
-	char*   sval = (char*) &record->svl0;
+	double* val  = &record->val;
+	char*   sval = (char*) &record->sval;
 	
-	unsigned char* update = &record->wrt0;
-	struct link* out = &record->out0;
+	struct link* out = &record->out;
 	
-	int index;
-	
-	for (index = 0; index < NUM_OUT; index += 1)
+	if ((out->type == CA_LINK) && (record->wait))
 	{
-		if (*update)
-		{
-			if ((out->type == CA_LINK) && (record->wait))
-			{
-				status = asyncWrite(record, val, sval, out);
-				if (status)    { return status; }
-			}
-			else
-			{
-				status = syncWrite(record, val, sval, out);
-				if (status)    { return status; }
-			}
-			
-			if      (*update == VAL_CHANGE)     { db_post_events(record, val, DBE_VALUE); }
-			else if (*update == SVAL_CHANGE)    { db_post_events(record, sval, DBE_VALUE); }
-			
-			*update = 0;
-		}
-		
-		val++;
-		out++;
-		update++;
-		sval += STRING_SIZE;
+		status = asyncWrite(record, val, sval, out);
+		if (status)    { return status; }
+	}
+	else
+	{
+		status = syncWrite(record, val, sval, out);
+		if (status)    { return status; }
 	}
 	
 	return 0;

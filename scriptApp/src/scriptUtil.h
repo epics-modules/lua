@@ -30,8 +30,6 @@ extern "C"
 	void loadStrings(scriptRecord* record);
 	
 	long runCode(scriptRecord* record);
-	void checkValUpdate(scriptRecord* record, double* val, double* pval, unsigned char* update);
-	void checkSvalUpdate(scriptRecord* record, char* sval, char** psvl, unsigned char* update);
 	long speci(dbAddr	*paddr, int after);
 	void monitor(scriptRecord* record);
 	

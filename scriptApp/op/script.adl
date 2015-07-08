@@ -92,7 +92,7 @@ rectangle {
 		x=335
 		y=50
 		width=465
-		height=250
+		height=55
 	}
 	"basic attribute" {
 		clr=11
@@ -144,7 +144,7 @@ rectangle {
 		height=20
 	}
 	monitor {
-		chan="klang:test:script1.SVL0"
+		chan="klang:test:script1.SVAL"
 		clr=16
 		bclr=14
 	}
@@ -161,26 +161,13 @@ rectangle {
 		height=20
 	}
 	monitor {
-		chan="klang:test:script1.VAL0"
+		chan="klang:test:script1.VAL"
 		clr=16
 		bclr=14
 	}
 	align="horiz. right"
 	limits {
 	}
-}
-text {
-	object {
-		x=350
-		y=97
-		width=20
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="1:"
-	align="horiz. right"
 }
 rectangle {
 	object {
@@ -923,403 +910,6 @@ text {
 	textix="Outputs"
 	align="horiz. centered"
 }
-"message button" {
-	object {
-		x=725
-		y=310
-		width=70
-		height=20
-	}
-	control {
-		chan="klang:test:script1.PROC"
-		clr=14
-		bclr=51
-	}
-	label="Process"
-	press_msg="1"
-}
-"text entry" {
-	object {
-		x=385
-		y=310
-		width=325
-		height=20
-	}
-	control {
-		chan="klang:test:script1.CODE"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-text {
-	object {
-		x=340
-		y=312
-		width=45
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Code:"
-}
-"text update" {
-	object {
-		x=585
-		y=95
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.SVL1"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=375
-		y=95
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.VAL1"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-text {
-	object {
-		x=350
-		y=122
-		width=20
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="2:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=585
-		y=120
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.SVL2"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=375
-		y=120
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.VAL2"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-text {
-	object {
-		x=350
-		y=147
-		width=20
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="3:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=585
-		y=145
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.SVL3"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=375
-		y=145
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.VAL3"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-text {
-	object {
-		x=350
-		y=172
-		width=20
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="4:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=585
-		y=170
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.SVL4"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=375
-		y=170
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.VAL4"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-text {
-	object {
-		x=350
-		y=197
-		width=20
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="5:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=585
-		y=195
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.SVL5"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=375
-		y=195
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.VAL5"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-text {
-	object {
-		x=350
-		y=222
-		width=20
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="6:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=585
-		y=220
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.SVL6"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=375
-		y=220
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.VAL6"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-text {
-	object {
-		x=350
-		y=247
-		width=20
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="7:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=585
-		y=245
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.SVL7"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=375
-		y=245
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.VAL7"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-text {
-	object {
-		x=350
-		y=272
-		width=20
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="8:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=585
-		y=270
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.SVL8"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=375
-		y=270
-		width=200
-		height=20
-	}
-	monitor {
-		chan="klang:test:script1.VAL8"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
 text {
 	object {
 		x=350
@@ -1332,4 +922,57 @@ text {
 	}
 	textix="0:"
 	align="horiz. right"
+}
+composite {
+	object {
+		x=340
+		y=115
+		width=455
+		height=20
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=725
+				y=115
+				width=70
+				height=20
+			}
+			control {
+				chan="klang:test:script1.PROC"
+				clr=14
+				bclr=51
+			}
+			label="Process"
+			press_msg="1"
+		}
+		"text entry" {
+			object {
+				x=385
+				y=115
+				width=325
+				height=20
+			}
+			control {
+				chan="klang:test:script1.CODE"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
+		text {
+			object {
+				x=340
+				y=117
+				width=45
+				height=16
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Code:"
+		}
+	}
 }
