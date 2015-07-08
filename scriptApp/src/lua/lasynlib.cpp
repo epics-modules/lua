@@ -10,38 +10,6 @@ extern "C"
 #include <cstring>
 #include <string>
 
-static const char* try_get_string(lua_State* state, char* name)
-{
-	lua_getfield(state, -1, name);
-	const char* output = lua_tostring(state, -1);
-	lua_remove(state, -1);
-	
-	if (! output)
-	{
-		lua_getglobal(state, name);
-		output = lua_tostring(state, -1);
-		lua_remove(state, -1);
-	}
-
-	return output;
-}
-
-static double try_get_num(lua_State* state, char* name, int* success)
-{
-	lua_getfield(state, -1, name);
-	double output = lua_tonumberx(state, -1, success);
-	lua_remove(state, -1);
-	
-	if (! success)
-	{
-		lua_getglobal(state, name);
-		output = lua_tonumberx(state, -1, success);
-		lua_remove(state, -1);
-	}
-	
-	return output;
-}
-
 static int l_read(lua_State* state)
 {
 	int num_ops = lua_gettop(state);

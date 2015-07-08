@@ -54,6 +54,7 @@ static const luaL_Reg loadedlibs[] = {
   {LUA_BITLIBNAME, luaopen_bit32},
 #endif
   {LUA_ASYNLIBNAME, luaopen_asyn},
+  {LUA_EPICSLIBNAME, luaopen_epics},
   {NULL, NULL}
 };
 

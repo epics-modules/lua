@@ -55,6 +55,7 @@ script_SRCS += lutf8lib.c
 script_SRCS += lvm.c
 script_SRCS += lzio.c
 script_SRCS += lasynlib.cpp
+script_SRCS += lepicslib.cpp
 
 script_SRCS += scriptRecord.c
 script_SRCS += devScriptSoft.c
