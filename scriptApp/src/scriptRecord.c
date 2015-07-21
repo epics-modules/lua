@@ -94,7 +94,7 @@ static long get_precision(dbAddr *paddr, long *precision)
 
 	*precision = record->prec;
 	
-	if (index >= scriptRecordVAL0 && index <= scriptRecordVAL9) return 0;
+	if (index == scriptRecordVAL) return 0;
 		
 	recGblGetPrec(paddr, precision);
 	return 0;

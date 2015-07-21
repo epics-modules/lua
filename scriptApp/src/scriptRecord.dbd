@@ -34,11 +34,6 @@ recordtype(script)
 {
 	include "dbCommon.dbd"
 	
-	field(VAL,DBF_DOUBLE)
-	{
-		prompt("Result")
-	}
-	
 	field(STATE, DBF_NOACCESS)
 	{
 		prompt("Lua State")
@@ -596,434 +591,40 @@ recordtype(script)
 		extra("char *pjj")
 	}
 	
-	field(OUT0, DBF_OUTLINK) 
+	field(OUT, DBF_OUTLINK) 
 	{
-		prompt("Output Link 1")
+		prompt("Output Link")
 		special(SPC_MOD)
 		promptgroup(GUI_OUTPUT)
 		interest(1)
 	}
 	
-	field(OUT1, DBF_OUTLINK) 
+	field(VAL,DBF_DOUBLE) 
 	{
-		prompt("Output Link 2")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(OUT2, DBF_OUTLINK) 
-	{
-		prompt("Output Link 3")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(OUT3, DBF_OUTLINK) 
-	{
-		prompt("Output Link 4")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(OUT4, DBF_OUTLINK) 
-	{
-		prompt("Output Link 5")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(OUT5, DBF_OUTLINK) 
-	{
-		prompt("Output Link 6")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(OUT6, DBF_OUTLINK) 
-	{
-		prompt("Output Link 7")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(OUT7, DBF_OUTLINK) 
-	{
-		prompt("Output Link 8")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(OUT8, DBF_OUTLINK) 
-	{
-		prompt("Output Link 9")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(OUT9, DBF_OUTLINK) 
-	{
-		prompt("Output Link 10")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-	
-	field(VAL0,DBF_DOUBLE) 
-	{
-		prompt("Result 1")
+		prompt("Result")
 		asl(ASL0)
 	}
 	
-	field(VAL1,DBF_DOUBLE) 
-	{
-		prompt("Result 2")
-		asl(ASL0)
-	}
-	
-	field(VAL2,DBF_DOUBLE) 
-	{
-		prompt("Result 3")
-		asl(ASL0)
-	}
-	
-	field(VAL3,DBF_DOUBLE) 
-	{
-		prompt("Result 4")
-		asl(ASL0)
-	}
-	
-	field(VAL4,DBF_DOUBLE) 
-	{
-		prompt("Result 5")
-		asl(ASL0)
-	}
-	
-	field(VAL5,DBF_DOUBLE) 
-	{
-		prompt("Result 6")
-		asl(ASL0)
-	}
-	
-	field(VAL6,DBF_DOUBLE) 
-	{
-		prompt("Result 7")
-		asl(ASL0)
-	}
-	
-	field(VAL7,DBF_DOUBLE) 
-	{
-		prompt("Result 8")
-		asl(ASL0)
-	}
-	
-	field(VAL8,DBF_DOUBLE) 
-	{
-		prompt("Result 9")
-		asl(ASL0)
-	}
-	
-	field(VAL9,DBF_DOUBLE) 
-	{
-		prompt("Result 10")
-		asl(ASL0)
-	}
-	
-	field(SVL0,DBF_STRING) 
+	field(SVAL,DBF_STRING) 
 	{
 		prompt("String result 1")
 		asl(ASL0)
 		size(40)
 	}
 	
-	field(SVL1,DBF_STRING) 
+	field(PVAL,DBF_DOUBLE)
 	{
-		prompt("String result 2")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(SVL2,DBF_STRING) 
-	{
-		prompt("String result 3")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(SVL3,DBF_STRING) 
-	{
-		prompt("String result 4")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(SVL4,DBF_STRING) 
-	{
-		prompt("String result 5")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(SVL5,DBF_STRING) 
-	{
-		prompt("String result 6")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(SVL6,DBF_STRING) 
-	{
-		prompt("String result 7")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(SVL7,DBF_STRING) 
-	{
-		prompt("String result 8")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(SVL8,DBF_STRING) 
-	{
-		prompt("String result 9")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(SVL9,DBF_STRING) 
-	{
-		prompt("String result 10")
-		asl(ASL0)
-		size(40)
-	}
-	
-	field(PVL0,DBF_DOUBLE)
-	{
-		prompt("Previous Value 1")
+		prompt("Previous Value")
 		special(SPC_NOMOD)
 		interest(4)
 	}
 	
-	field(PVL1,DBF_DOUBLE)
+	field(PSVL,DBF_STRING) 
 	{
-		prompt("Previous Value 2")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PVL2,DBF_DOUBLE)
-	{
-		prompt("Previous Value 3")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PVL3,DBF_DOUBLE)
-	{
-		prompt("Previous Value 4")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PVL4,DBF_DOUBLE)
-	{
-		prompt("Previous Value 5")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PVL5,DBF_DOUBLE)
-	{
-		prompt("Previous Value 6")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PVL6,DBF_DOUBLE)
-	{
-		prompt("Previous Value 7")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PVL7,DBF_DOUBLE)
-	{
-		prompt("Previous Value 8")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PVL8,DBF_DOUBLE)
-	{
-		prompt("Previous Value 9")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PVL9,DBF_DOUBLE)
-	{
-		prompt("Previous Value 10")
-		special(SPC_NOMOD)
-		interest(4)
-	}
-	
-	field(PSVL0,DBF_STRING) 
-	{
-		prompt("Previous string result 1")
+		prompt("Previous string result")
 		special(SPC_NOMOD)
 		size(40)
 		interest(4)
-	}
-	
-	field(PSVL1,DBF_STRING) 
-	{
-		prompt("Previous string result 2")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(PSVL2,DBF_STRING) 
-	{
-		prompt("Previous string result 3")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(PSVL3,DBF_STRING) 
-	{
-		prompt("Previous string result 4")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(PSVL4,DBF_STRING) 
-	{
-		prompt("Previous string result 5")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(PSVL5,DBF_STRING) 
-	{
-		prompt("Previous string result 6")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(PSVL6,DBF_STRING) 
-	{
-		prompt("Previous string result 7")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(PSVL7,DBF_STRING) 
-	{
-		prompt("Previous string result 8")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(PSVL8,DBF_STRING) 
-	{
-		prompt("Previous string result 9")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(PSVL9,DBF_STRING) 
-	{
-		prompt("Previous string result 10")
-		special(SPC_NOMOD)
-		size(40)
-		interest(4)
-	}
-	
-	field(WRT0, DBF_NOACCESS)
-	{
-		prompt("Write output link 1")
-		extra("unsigned char wrt0")
-		size(4)
-	}
-	
-	field(WRT1, DBF_NOACCESS)
-	{
-		prompt("Write output link 2")
-		extra("unsigned char wrt1")
-		size(4)
-	}
-	
-	field(WRT2, DBF_NOACCESS)
-	{
-		prompt("Write output link 3")
-		extra("unsigned char wrt2")
-		size(4)
-	}
-	
-	field(WRT3, DBF_NOACCESS)
-	{
-		prompt("Write output link 4")
-		extra("unsigned char wrt3")
-		size(4)
-	}
-	
-	field(WRT4, DBF_NOACCESS)
-	{
-		prompt("Write output link 5")
-		extra("unsigned char wrt4")
-		size(4)
-	}
-	
-	field(WRT5, DBF_NOACCESS)
-	{
-		prompt("Write output link 6")
-		extra("unsigned char wrt5")
-		size(4)
-	}
-	
-	field(WRT6, DBF_NOACCESS)
-	{
-		prompt("Write output link 7")
-		extra("unsigned char wrt6")
-		size(4)
-	}
-	
-	field(WRT7, DBF_NOACCESS)
-	{
-		prompt("Write output link 8")
-		extra("unsigned char wrt7")
-		size(4)
-	}
-	
-	field(WRT8, DBF_NOACCESS)
-	{
-		prompt("Write output link 9")
-		extra("unsigned char wrt8")
-		size(4)
-	}
-	
-	field(WRT9, DBF_NOACCESS)
-	{
-		prompt("Write output link 10")
-		extra("unsigned char wrt9")
-		size(4)
 	}
 	
 	field(MDEL,DBF_DOUBLE) 
