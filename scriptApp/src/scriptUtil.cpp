@@ -59,19 +59,19 @@ std::pair<std::string, std::string> parseCode(std::string& input)
 {
 	/* A space separates the name of the file and the function call */
 	size_t split = input.find(" ");
-	
+
 	/* Function name goes to either the beginning of parameters, or end of string */
 	size_t end = input.find("(");
-	
+
 	/* No function found */
 	if (split == std::string::npos)      { return std::make_pair("", ""); }
-	
-	std::string filename = input.substr(1, split - 1);	
+
+	std::string filename = input.substr(1, split - 1);
 	std::string function;
-	
+
 	if   (end == std::string::npos)    { function = input.substr(split + 1, end); }
 	else                               { function = input.substr(split + 1, end - split - 1); }
-	
+
 	return std::make_pair(filename, function);
 }
 
@@ -80,15 +80,15 @@ std::pair<std::string, std::string> parseCode(std::string& input)
  * Initializes/Reinitializes Lua state according to the CODE field
  */
 long initState(scriptRecord* record)
-{		
+{
 	long status = 0;
-	
+
 	lua_State* state = luaL_newstate();
 	luaL_openlibs(state);
-	
+
 	std::string code(record->code);
 	std::string pcode(record->pcode);
-	
+
 	if (! code.empty())
 	{
 		/* @ signifies a call to a function in a file, otherwise treat it as code */
@@ -96,18 +96,18 @@ long initState(scriptRecord* record)
 		{
 			if (code != pcode)    { status = luaL_loadstring(state, record->code); }
 		}
-		else 
+		else
 		{
 			/* Parse for filenames and functions */
 			std::pair<std::string, std::string> curr = parseCode(code);
 			std::pair<std::string, std::string> prev = parseCode(pcode);
-			
+
 			/* We'll always need to reload going from code to referencing a file */
 			if (pcode[0] == '@')
 			{
 				if (curr == prev && record->relo != scriptRELO_Always)    { return 0; }
-				
-				/* 
+
+				/*
 				 * If only the functon name changes and the record is set to only
 				 * reload on file changes, all we have to do is pull the function
 				 * and put it at the top of the stack.
@@ -119,17 +119,17 @@ long initState(scriptRecord* record)
 					return 0;
 				}
 			}
-			
+
 			status = loadFile(state, curr.first, curr.second);
 		}
 	}
-	
+
 	/* Cleanup any memory from previous state */
 	if (record->state != NULL)    { lua_close((lua_State*) record->state); }
-	
+
 	record->state = (void*) state;
 	strcpy(record->pcode, record->code);
-	
+
 	return status;
 }
 
@@ -137,59 +137,59 @@ long initState(scriptRecord* record)
 std::string locateFile(std::string& filename)
 {
 	char* env_path = std::getenv("LUA_SCRIPT_PATH");
-	
+
 	#if defined(__vxworks) || defined(vxWorks)
-    /* For compatibility reasons look for global symbols */
-    if (!env_path)
-    {
-        char* symbol;
-        SYM_TYPE type;
-		
-        if (symFindByName(sysSymTbl, "LUA_SCRIPT_PATH", &symbol, &type) == OK)
-        {
-            env_path = *(char**) symbol;
-        }
-    }
+	/* For compatibility reasons look for global symbols */
+	if (!env_path)
+	{
+		char* symbol;
+		SYM_TYPE type;
+
+		if (symFindByName(sysSymTbl, "LUA_SCRIPT_PATH", &symbol, &type) == OK)
+		{
+			env_path = *(char**) symbol;
+		}
+	}
 	#endif
-	
+
 	std::string path;
-	
+
 	/* If no environment variable found, default to the current directory. */
 	if   (env_path)    { path = std::string(env_path); }
 	else               { path = "."; }
-	
+
 	size_t start = 0;
 	size_t next;
-	
+
 	do
 	{
 		next = path.find(":", start);
-		
+
 		std::string test = "/" + filename;
-		
+
 		if   (next == std::string::npos)    { test = path.substr(start) + test; }
 		else                                { test = path.substr(start, next - start) + test; }
-		
+
 		/* Check if file exists. If so, return the full filepath */
 		if (std::ifstream(test.c_str()).good())    { return test; }
-		
+
 		start = next + 1;
 	} while (start);
-	
+
 	return filename;
 }
 
 long loadFile(lua_State* state, std::string& filename, std::string& function)
 {
 	int status = 0;
-	
-	status = luaL_loadfile(state, locateFile(filename).c_str()); 
+
+	status = luaL_loadfile(state, locateFile(filename).c_str());
 	if (status)    { return status; }
-	
+
 	/* Run the script so functions are in the global state */
 	status = lua_pcall(state, 0, 0, 0);
 	if (status)    { return status; }
-	
+
 	/* Get the named function */
 	lua_getglobal(state, function.c_str());
 	return 0;
@@ -200,11 +200,11 @@ long setLinks(scriptRecord* record)
 {
 	dbAddr address;
 	dbAddr* paddress = &address;
-	
+
 	DBLINK* field = &record->inpa;
-	unsigned short* valid = &record->inav; 
+	unsigned short* valid = &record->inav;
 	double* value = &record->a;
-	
+
 	for (int index = 0; index < NUM_ARGS + STR_ARGS; index += 1)
 	{
 		if (field->type == CONSTANT)
@@ -214,21 +214,21 @@ long setLinks(scriptRecord* record)
 				recGblInitConstantLink(field, DBF_DOUBLE, value);
 				db_post_events(record, value, DBE_VALUE);
 			}
-			
+
 			*valid = scriptINAV_CON;
 		}
 		else if (! dbNameToAddr(field->value.pv_link.pvname, paddress))
 		{
 			*valid = scriptINAV_LOC;
-			
+
 			db_post_events(record, valid, DBE_VALUE);
 		}
-		
+
 		field++;
 		valid++;
 		value++;
 	}
-	
+
 	return 0;
 }
 
@@ -237,47 +237,53 @@ long setLinks(scriptRecord* record)
  * Grabs the new values of every numerical input link and
  * pushes the result to the lua stack.
  */
-void loadNumbers(scriptRecord* record)
+long loadNumbers(scriptRecord* record)
 {
 	lua_State* state = (lua_State*) record->state;
-	
+
 	DBLINK* field = &record->inpa;
 	double* value = &record->a;
 	double* prev  = &record->pa;
-	
+
+	long status = 0;
+
 	for (int index = 0; index < NUM_ARGS; index += 1)
 	{
 		*prev = *value;
-		
-		dbGetLink(field, DBR_DOUBLE, value, 0, 0);
-		
+
+		long newStatus = dbGetLink(field, DBR_DOUBLE, value, 0, 0);
+
+		if (! status)    { status = newStatus; }
+
 		lua_pushnumber(state, *value);
 		lua_setglobal(state, NUM_NAMES[index]);
-		
+
 		field++;
 		prev++;
 		value++;
 	}
+
+	return status;
 }
 
 
 void loadStrings(scriptRecord* record)
 {
 	lua_State* state = (lua_State*) record->state;
-	
+
 	DBLINK* field = &record->inaa;
 	char*   strvalue = (char*) record->aa;
 	char**  prev_str = (char**) &record->paa;
-	
+
 	dbAddr  Addr;
 	dbAddr* pAddr = &Addr;
-	
+
 	char tempstr[STRING_SIZE];
-	
+
 	for (int index = 0; index < STR_ARGS; index += 1)
-	{		
+	{
 		strncpy(*prev_str, strvalue, STRING_SIZE);
-		
+
 		short field_type = 0;
 		long elements = 1;
 
@@ -289,34 +295,38 @@ void loadStrings(scriptRecord* record)
 		else if (field->type == DB_LINK)
 		{
 			field_type = DBR_STRING;
-		
+
 			if (! dbNameToAddr(field->value.pv_link.pvname, pAddr))
 			{
 				field_type = pAddr->field_type;
 				elements   = pAddr->no_elements;
 			}
 		}
-		
+
 		elements = std::min(elements, (long) STRING_SIZE - 1);
 		std::fill(tempstr, tempstr + elements, '\0');
-		
+
 		if ((field->type == CA_LINK) || (field->type == DB_LINK))
-		{			
+		{
 			if (((field_type == DBR_CHAR) || (field_type == DBR_UCHAR)) && elements > 1)
-			{			
+			{
 				dbGetLink(field, field_type, tempstr, 0, &elements);
 			}
 			else
 			{
-				dbGetLink(field, DBR_STRING, tempstr, 0, 0);
+				dbGetLink(field, field_type, tempstr, 0, 0);
 			}
-			
+
 			strncpy(strvalue, tempstr, STRING_SIZE);
-				
+
 			lua_pushstring(state, tempstr);
 			lua_setglobal(state, STR_NAMES[index]);
 		}
-		
+		else
+		{
+			/* Check if the field has a value from an outside record */
+		}
+
 		field++;
 		prev_str++;
 		strvalue += STRING_SIZE;
@@ -324,20 +334,20 @@ void loadStrings(scriptRecord* record)
 }
 
 long runCode(scriptRecord* record)
-{	
+{
 	if (std::string(record->code).empty())    { record->pact = FALSE; return 0; }
 
 	std::stringstream temp_stream;
 	std::string threadname;
-	
+
 	temp_stream << "Script Record Process (" << record->name << ")";
 	temp_stream >> threadname;
-	
+
 	epicsThreadCreate(threadname.c_str(),
 	                  epicsThreadPriorityLow,
 	                  epicsThreadGetStackSize(epicsThreadStackMedium),
 	                  (EPICSTHREADFUNC)::processCallback, record);
-					
+
 	return 0;
 }
 
@@ -345,98 +355,98 @@ bool checkValUpdate(scriptRecord* record)
 {
 	double val = record->val;
 	double pval = record->pval;
-	
+
 	switch (record->oopt)
 	{
 		case scriptOOPT_Every_Time:
 			return true;
 			break;
-		
+
 		case scriptOOPT_On_Change:
 			if (abs(pval - val) > record->mdel)    { return true; }
 			break;
-			
+
 		case scriptOOPT_When_Zero:
 			if (!val)    { return true; }
 			break;
-			
+
 		case scriptOOPT_When_Non_zero:
 			if (val)     { return true; }
 			break;
-			
+
 		case scriptOOPT_Transition_To_Zero:
 			if (val == 0 && pval != 0)    { return true; }
 			break;
-			
+
 		case scriptOOPT_Transition_To_Non_zero:
 			if (val != 0 && pval == 0)    { return true; }
 			break;
-			
+
 		case scriptOOPT_Never:
 			break;
 	}
-	
+
 	return false;
 }
 
 
 bool checkSvalUpdate(scriptRecord* record)
-{	
+{
 	std::string curr(record->sval);
-	
+
 	std::string prev;
-	
+
 	if (record->psvl)    { prev = std::string(record->psvl); }
 	else                 { prev = std::string(""); }
-	
+
 	switch (record->oopt)
 	{
 		case scriptOOPT_Every_Time:
 			return true;
-		
+
 		case scriptOOPT_On_Change:
 			if (prev != curr)    { return true; }
 			break;
-			
+
 		case scriptOOPT_When_Zero:
 			if (curr.empty())    { return true; }
 			break;
-			
+
 		case scriptOOPT_When_Non_zero:
 			if (!curr.empty())   { return true; }
 			break;
-			
+
 		case scriptOOPT_Transition_To_Zero:
 			if (!prev.empty() && curr.empty())    { return true; }
 			break;
-			
+
 		case scriptOOPT_Transition_To_Non_zero:
 			if (!prev.empty() && !curr.empty())    { return true; }
 			break;
-			
+
 		case scriptOOPT_Never:
 			break;
 	}
-	
+
 	return false;
 }
 
 long speci(dbAddr *paddr, int after)
 {
 	if (!after)    { return 0; }
-	
+
 	scriptRecord* record = (scriptRecord*) paddr->precord;
-	
+
 	dbAddr address;
 	dbAddr* paddress = &address;
 	int field_index = dbGetFieldIndex(paddr);
-	
+
 	switch (field_index)
-	{	
+	{
 		case(scriptRecordCODE):
 			if (initState(record))    { logError(record); }
 			break;
-	
+
 		case(scriptRecordINPA):
 		case(scriptRecordINPB):
 		case(scriptRecordINPC):
@@ -460,10 +470,10 @@ long speci(dbAddr *paddr, int after)
 		case(scriptRecordOUT):
 		{
 			int offset = field_index - scriptRecordINPA;
-			
+
 			DBLINK* field = &record->inpa + offset;
 			double* value = &record->a + offset;
-			
+
 			if (field->type == CONSTANT)
 			{
 				if (field_index <= scriptRecordINPJ)
@@ -478,14 +488,14 @@ long speci(dbAddr *paddr, int after)
 			else
 			{
 			}
-			
+
 			break;
 		}
-		
+
 		default:
 			break;
 	}
-	
+
 	return 0;
 }
 
@@ -497,37 +507,37 @@ long speci(dbAddr *paddr, int after)
 int parseParams(lua_State* state, std::string params)
 {
 	if (params.at(0) != '@')    { return 0; }
-	
+
 	size_t start = params.find_first_of("(");
 	size_t end   = params.find_last_of(")");
-	size_t oob   = std::string::npos;	
-	
+	size_t oob   = std::string::npos;
+
 	/* Syntax error */
 	if (end == oob || start == oob || start == end - 1) { return 0; }
-	
+
 	std::string parse = params.substr(start + 1, end - start - 1);
-	
+
 	int num_params = 0;
 
 	size_t curr = 0;
 	size_t next;
-	
+
 	do
-	{		
+	{
 		/* Get the next parameter */
 		next = parse.find(",", curr);
-		
+
 		std::string param;
-		
+
 		/* If we find the end of the string, just take everything */
 		if   (next == oob)    { param = parse.substr(curr); }
 		else                  { param = parse.substr(curr, next - curr); }
-		
+
 		int trim_front = param.find_first_not_of(" ");
 		int trim_back  = param.find_last_not_of(" ");
-		
+
 		param = param.substr(trim_front, trim_back - trim_front + 1);
-		
+
 		/* Treat anything with quotes as a string, anything else as a number */
 		if (param.at(0) == '"' || param.at(0) == '\'')
 		{
@@ -537,11 +547,11 @@ int parseParams(lua_State* state, std::string params)
 		{
 			lua_pushnumber(state, strtod(param.c_str(), NULL));
 		}
-		
+
 		num_params += 1;
 		curr = next + 1;
 	} while (curr);
-	
+
 	return num_params;
 }
 
@@ -549,7 +559,7 @@ void logError(scriptRecord* record)
 {
 	std::string err(lua_tostring((lua_State*) record->state, -1));
 	lua_pop((lua_State*) record->state, 1);
-	
+
 	printf("%s\n", err.c_str());
 	strcpy(record->err, err.c_str());
 	db_post_events(record, &record->err, DBE_VALUE);
@@ -565,7 +575,7 @@ void writeValue(scriptRecord* record)
         record->pact = TRUE;
         return;
     }
-	
+
 	pscriptDSET->write(record);
 }
 
@@ -577,22 +587,22 @@ void monitor(scriptRecord* record)
 {
 	double* new_val = &record->a;
 	double* old_val = &record->pa;
-	
+
 	for (int index = 0; index < NUM_ARGS; index += 1)
-	{		
+	{
 		if (*new_val != *old_val)    { db_post_events(record, new_val, DBE_VALUE); }
-		
+
 		new_val++;
 		old_val++;
 	}
-	
+
 	char*  new_str = (char*)  &record->aa;
 	char** old_str = (char**) &record->paa;
-	
+
 	for (int index = 0; index < STR_ARGS; index += 1)
 	{
 		if (strcmp(new_str, *old_str))    { db_post_events(record, new_str, DBE_VALUE); }
-		
+
 		old_str++;
 		new_str += STRING_SIZE;
 	}
@@ -602,8 +612,21 @@ void monitor(scriptRecord* record)
 long startProc(scriptRecord* record)
 {
 	record->pact = TRUE;
-	
-	loadNumbers(record);
+
+	/* scriptRELO_Always indicates a state reload on every process */
+	if (record->relo == scriptRELO_Always)
+	{
+		if (initState(record))
+		{
+			record->pact = FALSE;
+			return -1;
+		}
+	}
+
+	long status = loadNumbers(record);
+
+	if (status) { printf("%d\n", status); }
+
 	loadStrings(record);
 
 	return runCode(record);
@@ -612,45 +635,34 @@ long startProc(scriptRecord* record)
 void processCallback(void* data)
 {
 	scriptRecord* record = (scriptRecord*) data;
-	
-	/* scriptRELO_Always indicates a state reload on every process */
-	if (record->relo == scriptRELO_Always)
-	{ 
-		if (initState(record))
-		{ 
-			logError(record); 
-			record->pact = FALSE;
-			return;
-		}
-	}
-	
+
 	lua_State* state = (lua_State*) record->state;
-	
+
 	/* Make a copy of the current code chunk */
 	lua_pushvalue(state, -1);
-	
+
 	/* Load Params */
 	int params = parseParams(state, std::string(record->code));
-	
+
 	/* Call the chunk */
 	if (lua_pcall(state, params, 1, 0))
-	{ 
-		logError(record); 
+	{
+		logError(record);
 		record->pact = FALSE;
 		return;
 	}
 
 	record->pact = FALSE;
-	
+
 	int rettype = lua_type(state, -1);
-	
+
 	if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
 	{
 		record->pval = record->val;
 		record->val = lua_tonumber(state, -1);
-		
+
 		if (checkValUpdate(record))
-		{ 
+		{
 			writeValue(record);
 			db_post_events(record, &record->val, DBE_VALUE);
 		}
@@ -659,13 +671,15 @@ void processCallback(void* data)
 	{
 		strncpy(record->psvl, record->sval, STRING_SIZE);
 		strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
-		
+
 		if (checkSvalUpdate(record))
-		{ 
+		{
 			writeValue(record);
 			db_post_events(record, &record->sval, DBE_VALUE);
 		}
 	}
-	
+
+	lua_pop(state, 1);
+
 	monitor(record);
 }

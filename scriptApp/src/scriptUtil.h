@@ -26,7 +26,7 @@ extern "C"
 	long cleanProc(scriptRecord* record);
 	void processCallback(void* data);
 	
-	void loadNumbers(scriptRecord* record);
+	long loadNumbers(scriptRecord* record);
 	void loadStrings(scriptRecord* record);
 	
 	long runCode(scriptRecord* record);
