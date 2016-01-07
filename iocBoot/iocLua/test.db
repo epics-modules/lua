@@ -23,8 +23,7 @@ record(script, "$(P)$(Q)script1")
 	field(INJJ, "$(P)$(Q)jjval.VAL")
 	
 	field(OOPT, "Every Time")
-	field(OUT0, "$(P)$(Q)jval")
-	field(OUT1, "$(P)$(Q)jjval")
+	field(OUT, "$(P)$(Q)jjval")
 	
 	field(PREC, 1)
 	

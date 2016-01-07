@@ -10,6 +10,5 @@ function get_html(port)
 		print(input)
 	
 		input = asyn.read(port)
-	end
-	
+	end	
 end
