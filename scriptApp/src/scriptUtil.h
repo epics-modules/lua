@@ -27,7 +27,7 @@ extern "C"
 	void processCallback(void* data);
 	
 	long loadNumbers(scriptRecord* record);
-	void loadStrings(scriptRecord* record);
+	long loadStrings(scriptRecord* record);
 	
 	long runCode(scriptRecord* record);
 	long speci(dbAddr	*paddr, int after);

@@ -78,7 +78,11 @@ static long process(void* data)
 {
 	scriptRecord* record = (scriptRecord*) data;
 
-	return startProc(record);
+	long status = startProc(record);
+	
+	if (status)    { record->pact = FALSE; }
+	
+	return status;
 }
 
 static long special(dbAddr *paddr, int after)

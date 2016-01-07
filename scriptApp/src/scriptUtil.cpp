@@ -267,7 +267,7 @@ long loadNumbers(scriptRecord* record)
 }
 
 
-void loadStrings(scriptRecord* record)
+long loadStrings(scriptRecord* record)
 {
 	lua_State* state = (lua_State*) record->state;
 
@@ -280,6 +280,9 @@ void loadStrings(scriptRecord* record)
 
 	char tempstr[STRING_SIZE];
 
+	long status = 0;
+	long newStatus;
+	
 	for (int index = 0; index < STR_ARGS; index += 1)
 	{
 		strncpy(*prev_str, strvalue, STRING_SIZE);
@@ -296,10 +299,17 @@ void loadStrings(scriptRecord* record)
 		{
 			field_type = DBR_STRING;
 
-			if (! dbNameToAddr(field->value.pv_link.pvname, pAddr))
+			newStatus = dbNameToAddr(field->value.pv_link.pvname, pAddr);
+			
+			if (! newStatus)
 			{
 				field_type = pAddr->field_type;
 				elements   = pAddr->no_elements;
+			}
+			else
+			{
+				status = newStatus;
+				continue;
 			}
 		}
 
@@ -310,13 +320,19 @@ void loadStrings(scriptRecord* record)
 		{
 			if (((field_type == DBR_CHAR) || (field_type == DBR_UCHAR)) && elements > 1)
 			{
-				dbGetLink(field, field_type, tempstr, 0, &elements);
+				newStatus = dbGetLink(field, field_type, tempstr, 0, &elements);
 			}
 			else
 			{
-				dbGetLink(field, field_type, tempstr, 0, 0);
+				newStatus = dbGetLink(field, field_type, tempstr, 0, 0);
 			}
 
+			if (! newStatus)
+			{ 
+				status = newStatus;
+				continue;
+			}
+			
 			strncpy(strvalue, tempstr, STRING_SIZE);
 
 			lua_pushstring(state, tempstr);
@@ -331,6 +347,8 @@ void loadStrings(scriptRecord* record)
 		prev_str++;
 		strvalue += STRING_SIZE;
 	}
+	
+	return status;
 }
 
 long runCode(scriptRecord* record)
@@ -616,18 +634,16 @@ long startProc(scriptRecord* record)
 	/* scriptRELO_Always indicates a state reload on every process */
 	if (record->relo == scriptRELO_Always)
 	{
-		if (initState(record))
-		{
-			record->pact = FALSE;
-			return -1;
-		}
+		if (initState(record))    { return -1; }
 	}
 
 	long status = loadNumbers(record);
 
-	if (status) { printf("%d\n", status); }
+	if (status)    { return status; }
 
-	loadStrings(record);
+	status = loadStrings(record);
+	
+	if (status)    { return status; }
 
 	return runCode(record);
 }
