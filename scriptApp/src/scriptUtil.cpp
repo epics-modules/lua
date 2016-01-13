@@ -36,7 +36,8 @@ int parseParams(lua_State* state, std::string params);
 
 std::pair<std::string, std::string> parseCode(std::string& input);
 
-typedef struct ScriptDSET {
+typedef struct ScriptDSET 
+{
     long       number;
     DEVSUPFUN  dev_report;
     DEVSUPFUN  init;
@@ -281,7 +282,6 @@ long loadStrings(scriptRecord* record)
 	char tempstr[STRING_SIZE];
 
 	long status = 0;
-	long newStatus;
 	
 	for (int index = 0; index < STR_ARGS; index += 1)
 	{
@@ -290,58 +290,39 @@ long loadStrings(scriptRecord* record)
 		short field_type = 0;
 		long elements = 1;
 
-		if (field->type == CA_LINK)
+		switch(field->type)
 		{
-			field_type = dbCaGetLinkDBFtype(field);
-			dbCaGetNelements(field, &elements);
-		}
-		else if (field->type == DB_LINK)
-		{
-			field_type = DBR_STRING;
-
-			newStatus = dbNameToAddr(field->value.pv_link.pvname, pAddr);
+			case CA_LINK:
+				field_type = dbCaGetLinkDBFtype(field);
+				dbCaGetNelements(field, &elements);
+				break;
 			
-			if (! newStatus)
-			{
+			case DB_LINK:
+				field_type = DBR_STRING;
+
+				status = dbNameToAddr(field->value.pv_link.pvname, pAddr);
+				
+				if (status)    { return status; }
+				
 				field_type = pAddr->field_type;
 				elements   = pAddr->no_elements;
-			}
-			else
-			{
-				status = newStatus;
+				break;
+				
+			default:
 				continue;
-			}
 		}
 
 		elements = std::min(elements, (long) STRING_SIZE - 1);
 		std::fill(tempstr, tempstr + elements, '\0');
+		
+		status = dbGetLink(field, field_type, tempstr, 0, &elements);
 
-		if ((field->type == CA_LINK) || (field->type == DB_LINK))
-		{
-			if (((field_type == DBR_CHAR) || (field_type == DBR_UCHAR)) && elements > 1)
-			{
-				newStatus = dbGetLink(field, field_type, tempstr, 0, &elements);
-			}
-			else
-			{
-				newStatus = dbGetLink(field, field_type, tempstr, 0, 0);
-			}
+		if (status)    { return status; }
+		
+		strncpy(strvalue, tempstr, STRING_SIZE);
 
-			if (! newStatus)
-			{ 
-				status = newStatus;
-				continue;
-			}
-			
-			strncpy(strvalue, tempstr, STRING_SIZE);
-
-			lua_pushstring(state, tempstr);
-			lua_setglobal(state, STR_NAMES[index]);
-		}
-		else
-		{
-			/* Check if the field has a value from an outside record */
-		}
+		lua_pushstring(state, tempstr);
+		lua_setglobal(state, STR_NAMES[index]);
 
 		field++;
 		prev_str++;
@@ -378,32 +359,26 @@ bool checkValUpdate(scriptRecord* record)
 	{
 		case scriptOOPT_Every_Time:
 			return true;
-			break;
 
 		case scriptOOPT_On_Change:
-			if (abs(pval - val) > record->mdel)    { return true; }
-			break;
+			return (abs(pval - val) > record->mdel);
 
 		case scriptOOPT_When_Zero:
-			if (!val)    { return true; }
-			break;
+			return !val;
 
 		case scriptOOPT_When_Non_zero:
-			if (val)     { return true; }
-			break;
+			return (bool) val;
 
 		case scriptOOPT_Transition_To_Zero:
-			if (val == 0 && pval != 0)    { return true; }
-			break;
+			return (val == 0 && pval != 0);
 
 		case scriptOOPT_Transition_To_Non_zero:
-			if (val != 0 && pval == 0)    { return true; }
-			break;
+			return (val != 0 && pval == 0);
 
 		case scriptOOPT_Never:
-			break;
+			return false;
 	}
-
+	
 	return false;
 }
 
@@ -423,29 +398,24 @@ bool checkSvalUpdate(scriptRecord* record)
 			return true;
 
 		case scriptOOPT_On_Change:
-			if (prev != curr)    { return true; }
-			break;
+			return (prev != curr);
 
 		case scriptOOPT_When_Zero:
-			if (curr.empty())    { return true; }
-			break;
+			return curr.empty();
 
 		case scriptOOPT_When_Non_zero:
-			if (!curr.empty())   { return true; }
-			break;
+			return ! curr.empty();
 
 		case scriptOOPT_Transition_To_Zero:
-			if (!prev.empty() && curr.empty())    { return true; }
-			break;
+			return (!prev.empty() && curr.empty());
 
 		case scriptOOPT_Transition_To_Non_zero:
-			if (!prev.empty() && !curr.empty())    { return true; }
-			break;
+			return (!prev.empty() && !curr.empty());
 
 		case scriptOOPT_Never:
-			break;
+			return false;
 	}
-
+	
 	return false;
 }
 
@@ -587,7 +557,8 @@ void writeValue(scriptRecord* record)
 {
 	ScriptDSET* pscriptDSET = (ScriptDSET*) record->dset;
 
-    if (!pscriptDSET || !pscriptDSET->write) {
+    if (!pscriptDSET || !pscriptDSET->write) 
+	{
         errlogPrintf("%s DSET write does not exist\n", record->name);
         recGblSetSevr(record,SOFT_ALARM,INVALID_ALARM);
         record->pact = TRUE;
@@ -629,15 +600,19 @@ void monitor(scriptRecord* record)
 
 long startProc(scriptRecord* record)
 {
+	long status;
+	
 	record->pact = TRUE;
-
+	
 	/* scriptRELO_Always indicates a state reload on every process */
 	if (record->relo == scriptRELO_Always)
 	{
-		if (initState(record))    { return -1; }
+		status = initState(record);
+	
+		if (status) { return status; }
 	}
 
-	long status = loadNumbers(record);
+	status = loadNumbers(record);
 
 	if (status)    { return status; }
 
