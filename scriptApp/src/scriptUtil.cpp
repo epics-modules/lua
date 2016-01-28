@@ -80,7 +80,7 @@ std::pair<std::string, std::string> parseCode(std::string& input)
 /*
  * Initializes/Reinitializes Lua state according to the CODE field
  */
-long initState(scriptRecord* record)
+long initState(scriptRecord* record, int force_reload)
 {
 	long status = 0;
 
@@ -95,16 +95,16 @@ long initState(scriptRecord* record)
 		/* @ signifies a call to a function in a file, otherwise treat it as code */
 		if (code[0] != '@')
 		{
-			if (code != pcode)    { status = luaL_loadstring(state, record->code); }
+			if (code != pcode || force_reload)    { status = luaL_loadstring(state, record->code); }
 		}
 		else
 		{
 			/* Parse for filenames and functions */
 			std::pair<std::string, std::string> curr = parseCode(code);
 			std::pair<std::string, std::string> prev = parseCode(pcode);
-
+			
 			/* We'll always need to reload going from code to referencing a file */
-			if (pcode[0] == '@')
+			if (pcode[0] == '@' && !force_reload)
 			{
 				if (curr == prev && record->relo != scriptRELO_Always)    { return 0; }
 
@@ -432,9 +432,14 @@ long speci(dbAddr *paddr, int after)
 	switch (field_index)
 	{
 		case(scriptRecordCODE):
-			if (initState(record))    { logError(record); }
+			if (initState(record, 0))    { logError(record); }
 			break;
 
+		case(scriptRecordFRLD):
+			if (record->frld)    { initState(record, 1); }
+			record->frld = 0;
+			break;
+			
 		case(scriptRecordINPA):
 		case(scriptRecordINPB):
 		case(scriptRecordINPC):
@@ -607,7 +612,7 @@ long startProc(scriptRecord* record)
 	/* scriptRELO_Always indicates a state reload on every process */
 	if (record->relo == scriptRELO_Always)
 	{
-		status = initState(record);
+		status = initState(record, 1);
 	
 		if (status) { return status; }
 	}

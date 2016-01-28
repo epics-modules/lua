@@ -60,7 +60,7 @@ static long init_record(void* data, int pass)
 			init_str++;
 		}
 	
-		if (initState(record))
+		if (initState(record, 0))
 		{
 			logError(record);
 			return -1;

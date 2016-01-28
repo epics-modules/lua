@@ -19,7 +19,7 @@ extern "C"
 {
 #endif
 	void logError(scriptRecord* record);
-	long initState(scriptRecord* record);
+	long initState(scriptRecord* record, int force_reload);
 	long setLinks(scriptRecord* record);
 
 	long startProc(scriptRecord* record);
