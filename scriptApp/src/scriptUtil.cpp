@@ -329,6 +329,9 @@ long loadStrings(scriptRecord* record)
 		strvalue += STRING_SIZE;
 	}
 	
+	lua_pushstring(state, record->name);
+	lua_setglobal(state, "self");
+	
 	return status;
 }
 
@@ -624,7 +627,7 @@ long startProc(scriptRecord* record)
 	status = loadStrings(record);
 	
 	if (status)    { return status; }
-
+	
 	return runCode(record);
 }
 
