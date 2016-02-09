@@ -1,0 +1,104 @@
+record(bo, "$(P)$(R)userScriptEnable")
+{
+	field(DESC, "userScript enable")
+	field(ZNAM, "Disable")
+	field(ONAM, "Enable")
+	field(UDF, "0")
+	field(STAT, "NO_ALARM")
+	field(SEVR, "NO_ALARM")
+}
+
+record(bo, "$(P)$(R)EnableUserScripts")
+{
+	field(OMSL, "closed_loop")
+	field(DOL, "1")
+	field(OUT, "$(P)$(R)userScriptEnable")
+}
+
+record(bo, "$(P)$(R)DisableUserScripts")
+{
+	field(OMSL, "closed_loop")
+	field(DOL, "0")
+	field(OUT, "$(P)$(R)userScriptEnable")
+}
+
+record(script, "$(P)$(R)userScript0")
+{
+	field(DESC, "userScript0")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript1")
+{
+	field(DESC, "userScript1")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript2")
+{
+	field(DESC, "userScript2")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript3")
+{
+	field(DESC, "userScript3")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript4")
+{
+	field(DESC, "userScript4")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript5")
+{
+	field(DESC, "userScript5")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript6")
+{
+	field(DESC, "userScript6")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript7")
+{
+	field(DESC, "userScript7")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript8")
+{
+	field(DESC, "userScript8")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+
+record(script, "$(P)$(R)userScript9")
+{
+	field(DESC, "userScript9")
+	field(DISV, "0")
+	field(SDIS, "$(P)$(R)userScriptEnable")
+	field(PREC, "5")
+}
+

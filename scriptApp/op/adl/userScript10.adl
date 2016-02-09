@@ -1,0 +1,413 @@
+
+file {
+	name="/home/oxygen/KLANG/Documents/Projects/Repository/git/ScriptRecord/scriptApp/op/userScript10.adl"
+	version=030107
+}
+display {
+	object {
+		x=466
+		y=87
+		width=140
+		height=220
+	}
+	clr=64
+	bclr=3
+	cmap=""
+	gridSpacing=5
+	gridOn=0
+	snapToGrid=0
+}
+"color map" {
+	ncolors=65
+	colors {
+		ffffff,
+		ececec,
+		dadada,
+		c8c8c8,
+		bbbbbb,
+		aeaeae,
+		9e9e9e,
+		919191,
+		858585,
+		787878,
+		696969,
+		5a5a5a,
+		464646,
+		2d2d2d,
+		000000,
+		00d800,
+		1ebb00,
+		339900,
+		2d7f00,
+		216c00,
+		fd0000,
+		de1309,
+		be190b,
+		a01207,
+		820400,
+		5893ff,
+		597ee1,
+		4b6ec7,
+		3a5eab,
+		27548d,
+		fbf34a,
+		f9da3c,
+		eeb62b,
+		e19015,
+		cd6100,
+		ffb0ff,
+		d67fe2,
+		ae4ebc,
+		8b1a96,
+		610a75,
+		a4aaff,
+		8793e2,
+		6a73c1,
+		4d52a4,
+		343386,
+		c7bb6d,
+		b79d5c,
+		a47e3c,
+		7d5627,
+		58340f,
+		99ffff,
+		73dfff,
+		4ea5f9,
+		2a63e4,
+		0a00b8,
+		ebf1b5,
+		d4db9d,
+		bbc187,
+		a6a462,
+		8b8239,
+		73ff6b,
+		52da3b,
+		3cb420,
+		289315,
+		1a7309,
+	}
+}
+"choice button" {
+	object {
+		x=0
+		y=0
+		width=140
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScriptEnable.VAL"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"text entry" {
+	object {
+		x=25
+		y=20
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript1.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=40
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript2.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=60
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript3.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=80
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript4.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=100
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript5.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=120
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript6.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=140
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript7.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=160
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript8.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=180
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript9.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=25
+		y=200
+		width=115
+		height=20
+	}
+	control {
+		chan="$(P)$(R)userScript0.DESC"
+		clr=54
+		bclr=3
+	}
+	limits {
+	}
+}
+"related display" {
+	object {
+		x=0
+		y=20
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 1"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript1"
+	}
+	clr=0
+	bclr=63
+	label="-1"
+}
+"related display" {
+	object {
+		x=0
+		y=40
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 2"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript2"
+	}
+	clr=0
+	bclr=63
+	label="-2"
+}
+"related display" {
+	object {
+		x=0
+		y=60
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 3"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript3"
+	}
+	clr=0
+	bclr=63
+	label="-3"
+}
+"related display" {
+	object {
+		x=0
+		y=80
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 4"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript4"
+	}
+	clr=0
+	bclr=63
+	label="-4"
+}
+"related display" {
+	object {
+		x=0
+		y=100
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 5"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript5"
+	}
+	clr=0
+	bclr=63
+	label="-5"
+}
+"related display" {
+	object {
+		x=0
+		y=120
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 6"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript6"
+	}
+	clr=0
+	bclr=63
+	label="-6"
+}
+"related display" {
+	object {
+		x=0
+		y=140
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 7"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript7"
+	}
+	clr=0
+	bclr=63
+	label="-7"
+}
+"related display" {
+	object {
+		x=0
+		y=160
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 8"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript8"
+	}
+	clr=0
+	bclr=63
+	label="-8"
+}
+"related display" {
+	object {
+		x=0
+		y=180
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 9"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript9"
+	}
+	clr=0
+	bclr=63
+	label="-9"
+}
+"related display" {
+	object {
+		x=0
+		y=200
+		width=25
+		height=20
+	}
+	display[0] {
+		label="user script 10"
+		name="script.adl"
+		args="P=$(P),R=$(R),S=userScript0"
+	}
+	clr=0
+	bclr=63
+	label="-10"
+}
