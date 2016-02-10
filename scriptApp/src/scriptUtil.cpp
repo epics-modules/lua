@@ -267,6 +267,31 @@ long loadNumbers(scriptRecord* record)
 	return status;
 }
 
+long getFieldInfo(DBLINK* field, short* field_type, long* elements)
+{
+	dbAddr  Addr;
+	dbAddr* pAddr = &Addr;
+	
+	if (field->type == CA_LINK)
+	{
+		*field_type = dbCaGetLinkDBFtype(field);
+		dbCaGetNelements(field, elements);
+	}
+	else if (field->type ==  DB_LINK)
+	{
+		*field_type = DBR_STRING;
+
+		long status = dbNameToAddr(field->value.pv_link.pvname, pAddr);
+		
+		if (status)    { return status; }
+		
+		*field_type = pAddr->field_type;
+		*elements   = pAddr->no_elements;
+	}
+	
+	return 0;
+}
+
 
 long loadStrings(scriptRecord* record)
 {
@@ -275,10 +300,6 @@ long loadStrings(scriptRecord* record)
 	DBLINK* field = &record->inaa;
 	char*   strvalue = (char*) record->aa;
 	char**  prev_str = (char**) &record->paa;
-
-	dbAddr  Addr;
-	dbAddr* pAddr = &Addr;
-
 	char tempstr[STRING_SIZE];
 
 	long status = 0;
@@ -290,27 +311,9 @@ long loadStrings(scriptRecord* record)
 		short field_type = 0;
 		long elements = 1;
 
-		switch(field->type)
-		{
-			case CA_LINK:
-				field_type = dbCaGetLinkDBFtype(field);
-				dbCaGetNelements(field, &elements);
-				break;
-			
-			case DB_LINK:
-				field_type = DBR_STRING;
-
-				status = dbNameToAddr(field->value.pv_link.pvname, pAddr);
-				
-				if (status)    { return status; }
-				
-				field_type = pAddr->field_type;
-				elements   = pAddr->no_elements;
-				break;
-				
-			default:
-				continue;
-		}
+		status = getFieldInfo(field, &field_type, &elements);
+		
+		if (status)    { return status; }
 
 		elements = std::min(elements, (long) STRING_SIZE - 1);
 		std::fill(tempstr, tempstr + elements, '\0');
@@ -422,116 +425,103 @@ bool checkSvalUpdate(scriptRecord* record)
 	return false;
 }
 
+bool isLink(int index)
+{
+	return (index == scriptRecordOUT || (index >= scriptRecordINPA && index <= scriptRecordINJJ));
+}
+
 long speci(dbAddr *paddr, int after)
 {
 	if (!after)    { return 0; }
 
 	scriptRecord* record = (scriptRecord*) paddr->precord;
-
-	dbAddr address;
-	dbAddr* paddress = &address;
+	
 	int field_index = dbGetFieldIndex(paddr);
 
-	switch (field_index)
+	if (field_index == scriptRecordCODE)
+	{ 
+		if (initState(record, 0))    { logError(record); }
+	}
+	else if (field_index == scriptRecordFRLD && record->frld)
 	{
-		case(scriptRecordCODE):
-			if (initState(record, 0))    { logError(record); }
-			break;
+		initState(record, 1);
+		record->frld = 0;
+	}
+	else if (isLink(field_index))
+	{
+		int offset = field_index - scriptRecordINPA;
 
-		case(scriptRecordFRLD):
-			if (record->frld)    { initState(record, 1); }
-			record->frld = 0;
-			break;
-			
-		case(scriptRecordINPA):
-		case(scriptRecordINPB):
-		case(scriptRecordINPC):
-		case(scriptRecordINPD):
-		case(scriptRecordINPE):
-		case(scriptRecordINPF):
-		case(scriptRecordINPG):
-		case(scriptRecordINPH):
-		case(scriptRecordINPI):
-		case(scriptRecordINPJ):
-		case(scriptRecordINAA):
-		case(scriptRecordINBB):
-		case(scriptRecordINCC):
-		case(scriptRecordINDD):
-		case(scriptRecordINEE):
-		case(scriptRecordINFF):
-		case(scriptRecordINGG):
-		case(scriptRecordINHH):
-		case(scriptRecordINII):
-		case(scriptRecordINJJ):
-		case(scriptRecordOUT):
+		DBLINK* field = &record->inpa + offset;
+		double* value = &record->a + offset;
+		unsigned short* valid = &record->inav + offset;
+	
+		dbAddr address;
+		dbAddr* paddress = &address;
+		
+		rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+		
+		if (field_index == scriptRecordOUT)    { pvt->outlink_field_type = DBF_NOACCESS; }
+		
+		if (field->type == CONSTANT)
 		{
-			int offset = field_index - scriptRecordINPA;
-
-			DBLINK* field = &record->inpa + offset;
-			double* value = &record->a + offset;
-			unsigned short* valid = &record->inav + offset;
-			
-			rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
-			
-			if (field->type == CONSTANT)
+			if (field_index <= scriptRecordINPJ)
 			{
-				if (field_index <= scriptRecordINPJ)
-				{
-					recGblInitConstantLink(field, DBF_DOUBLE, value);
-					db_post_events(record, value, DBE_VALUE);
-				}
-				
-				*valid = scriptINAV_CON;
-				
-				if (field_index == scriptRecordOUT)
-				{
-					pvt->outlink_field_type = DBF_NOACCESS;
-				}
+				recGblInitConstantLink(field, DBF_DOUBLE, value);
+				db_post_events(record, value, DBE_VALUE);
 			}
-			else if (!dbNameToAddr(field->value.pv_link.pvname, paddress))
+			
+			*valid = scriptINAV_CON;
+		}
+		else if (!dbNameToAddr(field->value.pv_link.pvname, paddress))
+		{
+			short pvlMask = field->value.pv_link.pvlMask;
+			short isCA = pvlMask & (pvlOptCA|pvlOptCP|pvlOptCPP);
+		
+			if (field_index <= scriptRecordINPJ || field_index > scriptRecordINJJ || !isCA)
 			{
-				if ((field_index <= scriptRecordINPJ) || (field_index > scriptRecordINJJ))
-				{
-					*valid = scriptINAV_LOC;
-				}
-				else
-				{
-					*valid = scriptINAV_EXT_NC;
-						
-					if (! pvt->wd_id_1_LOCK)
-					{
-						callbackRequestDelayed(&pvt->checkLinkCb, .5);
-						pvt->wd_id_1_LOCK = 1;
-						pvt->caLinkStat = CA_LINKS_NOT_OK;
-					}
-				}
-				
-				if (field_index == scriptRecordOUT)
-				{
-					pvt->outlink_field_type = paddress->field_type;
-				}
+				*valid = scriptINAV_LOC;
 			}
 			else
 			{
 				*valid = scriptINAV_EXT_NC;
-				
+					
 				if (! pvt->wd_id_1_LOCK)
 				{
-					callbackRequestDelayed(&pvt->checkLinkCb,.5);
+					callbackRequestDelayed(&pvt->checkLinkCb, .5);
 					pvt->wd_id_1_LOCK = 1;
 					pvt->caLinkStat = CA_LINKS_NOT_OK;
 				}
-				if (field_index == scriptRecordOUT)
-				{
-					pvt->outlink_field_type = DBF_NOACCESS; /* don't know */
-				}
 			}
 			
-			break;
+			if (field_index == scriptRecordOUT)
+			{ 
+				pvt->outlink_field_type = paddress->field_type;
+				
+				if (paddress->field_type >= DBF_INLINK && paddress->field_type <= DBF_FWDLINK)
+				{
+					if (! (pvlMask & pvlOptCA))
+					{
+						printf("scriptRecord(%s):non-CA link to link field\n", field->value.pv_link.pvname);
+					}
+				}
+				
+				if (record->wait && !(pvlMask & pvlOptCA))
+				{
+					printf("scriptRecord(%s):Can't wait with non-CA link attribute\n", field->value.pv_link.pvname);
+				}
+			}
 		}
-
-		default:
-			break;
+		else
+		{
+			*valid = scriptINAV_EXT_NC;
+			
+			if (! pvt->wd_id_1_LOCK)
+			{
+				callbackRequestDelayed(&pvt->checkLinkCb,.5);
+				pvt->wd_id_1_LOCK = 1;
+				pvt->caLinkStat = CA_LINKS_NOT_OK;
+			}
+		}
 	}
 
 	return 0;
