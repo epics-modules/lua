@@ -3,6 +3,7 @@
 
 #include "scriptRecord.h"
 #include <dbAccess.h>
+#include <callback.h>
 
 #define NUM_ARGS 10
 #define STR_ARGS 10
@@ -12,6 +13,18 @@
 
 #define VAL_CHANGE  1
 #define SVAL_CHANGE 2
+
+#define NO_CA_LINKS     0
+#define CA_LINKS_ALL_OK 1
+#define CA_LINKS_NOT_OK 2
+
+typedef struct rpvtStruct {
+	CALLBACK	doOutCb;
+	CALLBACK	checkLinkCb;
+	short		wd_id_1_LOCK;
+	short		caLinkStat; /* NO_CA_LINKS,CA_LINKS_ALL_OK,CA_LINKS_NOT_OK */
+	short		outlink_field_type;
+} rpvtStruct;
 
 
 #ifdef __cplusplus

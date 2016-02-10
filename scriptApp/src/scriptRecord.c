@@ -50,6 +50,7 @@ static long init_record(void* data, int pass)
 	if (pass == 0)
 	{
 		record->pcode = (char *) calloc(121, sizeof(char));
+		record->rpvt = (void *) calloc(1, sizeof(struct rpvtStruct));
 		
 		int index;
 		char** init_str = (char**) &record->paa;

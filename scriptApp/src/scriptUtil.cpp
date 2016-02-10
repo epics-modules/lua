@@ -469,7 +469,10 @@ long speci(dbAddr *paddr, int after)
 
 			DBLINK* field = &record->inpa + offset;
 			double* value = &record->a + offset;
-
+			unsigned short* valid = &record->inav + offset;
+			
+			rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+			
 			if (field->type == CONSTANT)
 			{
 				if (field_index <= scriptRecordINPJ)
@@ -477,14 +480,53 @@ long speci(dbAddr *paddr, int after)
 					recGblInitConstantLink(field, DBF_DOUBLE, value);
 					db_post_events(record, value, DBE_VALUE);
 				}
+				
+				*valid = scriptINAV_CON;
+				
+				if (field_index == scriptRecordOUT)
+				{
+					pvt->outlink_field_type = DBF_NOACCESS;
+				}
 			}
-			else if (! dbNameToAddr(field->value.pv_link.pvname, paddress))
+			else if (!dbNameToAddr(field->value.pv_link.pvname, paddress))
 			{
+				if ((field_index <= scriptRecordINPJ) || (field_index > scriptRecordINJJ))
+				{
+					*valid = scriptINAV_LOC;
+				}
+				else
+				{
+					*valid = scriptINAV_EXT_NC;
+						
+					if (! pvt->wd_id_1_LOCK)
+					{
+						callbackRequestDelayed(&pvt->checkLinkCb, .5);
+						pvt->wd_id_1_LOCK = 1;
+						pvt->caLinkStat = CA_LINKS_NOT_OK;
+					}
+				}
+				
+				if (field_index == scriptRecordOUT)
+				{
+					pvt->outlink_field_type = paddress->field_type;
+				}
 			}
 			else
 			{
+				*valid = scriptINAV_EXT_NC;
+				
+				if (! pvt->wd_id_1_LOCK)
+				{
+					callbackRequestDelayed(&pvt->checkLinkCb,.5);
+					pvt->wd_id_1_LOCK = 1;
+					pvt->caLinkStat = CA_LINKS_NOT_OK;
+				}
+				if (field_index == scriptRecordOUT)
+				{
+					pvt->outlink_field_type = DBF_NOACCESS; /* don't know */
+				}
 			}
-
+			
 			break;
 		}
 
