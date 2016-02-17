@@ -33,6 +33,8 @@ extern "C"
 #endif
 	void logError(scriptRecord* record);
 	long initState(scriptRecord* record, int force_reload);
+
+	void checkLinks(scriptRecord* record);
 	long setLinks(scriptRecord* record);
 
 	long startProc(scriptRecord* record);
