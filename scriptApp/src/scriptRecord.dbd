@@ -367,6 +367,13 @@ recordtype(script)
 		menu(scriptINAV)
 		initial("1")
 	}
+	field(OUTV,DBF_MENU) 
+	{
+		prompt("OUT PV Status")
+		special(SPC_NOMOD)
+		interest(1)
+		menu(scriptINAV)
+	}
 	field(A,DBF_DOUBLE) {
 		prompt("Value of Input A")
 		promptgroup(GUI_COMMON)
