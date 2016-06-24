@@ -76,12 +76,11 @@ recordtype(script)
 		
 	field(CODE, DBF_STRING)
 	{
-		prompt("")
+		prompt("LUA Code")
 		promptgroup(GUI_OUTPUT)
 		special(SPC_MOD)
 		interest(1)
 		size(121)
-		pp(TRUE)
 	}
 	
 	field(PCODE, DBF_NOACCESS)
