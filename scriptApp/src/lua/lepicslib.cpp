@@ -19,7 +19,9 @@ static int l_caget(lua_State* state)
 
 	chid id;
 
-	ca_create_channel(pv_name, NULL, NULL, 0, &id);
+	int status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
+    
+    if (status != ECA_NORMAL) { return 0; }
 	ca_pend_io(0.001);
 
 	switch (ca_field_type(id))
@@ -29,7 +31,7 @@ static int l_caget(lua_State* state)
 			struct dbr_time_string val;
 
 			ca_get(DBR_TIME_STRING, id, &val);
-
+            
 			lua_pushstring(state, val.value);
 			break;
 		}
