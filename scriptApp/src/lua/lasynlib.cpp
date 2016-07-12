@@ -129,7 +129,6 @@ static int l_writeread(lua_State* state)
 	if (num_ops >= 3 && ! lua_isnumber(state, 3))    { return 0; }
 	if (num_ops == 4 && ! lua_isstring(state, 4))    { return 0; }
 	
-	
 	const char* data = lua_tostring(state, 1);
 	const char* port = lua_tostring(state, 2);
 	int addr = (int) lua_tonumber(state, 3);
@@ -137,50 +136,35 @@ static int l_writeread(lua_State* state)
 	
 	if (port == NULL)    { return 0; }
 	
-	int isnum;	
-    std::string output;
+	int isnum;
     
 	try
 	{
 		asynOctetClient client(port, addr, param);
-
-        double timeout;
         
-        lua_getglobal(state, "WriteTimeout");
-        timeout = lua_tonumberx(state, -1, &isnum);
+        lua_getglobal(state, "WriteReadTimeout");
+        double timeout = lua_tonumberx(state, -1, &isnum);
         lua_remove(state, -1);
         
         lua_getglobal(state, "OutTerminator");
         const char* out_term = lua_tostring(state, -1);
         lua_remove(state, -1);
         
-		if (isnum)       { client.setTimeout(timeout); }
-		if (out_term)    { client.setOutputEos(out_term, strlen(out_term)); }
-			
-		size_t numwrite;       
-		client.write(data, strlen(data), &numwrite);
-        
-        lua_getglobal(state, "ReadTimeout");
-        timeout = lua_tonumberx(state, -1, &isnum);
-        lua_remove(state, -1);
-        
         lua_getglobal(state, "InTerminator");
         const char* in_term = lua_tostring(state, -1);
         lua_remove(state, -1);
         
-        if (isnum)    { client.setTimeout(timeout); }
+		if (isnum)       { client.setTimeout(timeout); }
+		if (out_term)    { client.setOutputEos(out_term, strlen(out_term)); }
 		if (in_term)  { client.setInputEos(in_term, strlen(in_term)); }
-		
-		char buffer[128];
-				
-		size_t numread;
+        
+		size_t numwrite, numread;
+		char buffer[256];
 		int eomReason;
 		
-		do
-		{
-			client.read(buffer, sizeof(buffer), &numread, &eomReason);
-			output += std::string(buffer, numread);
-		} while (eomReason & ASYN_EOM_CNT);
+        client.writeRead(data, strlen(data), buffer, sizeof(buffer), &numwrite, &numread, &eomReason);
+        
+        std::string output(buffer, numread);
 		
 		if (output.empty())    { return 0; }
         
