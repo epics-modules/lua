@@ -339,8 +339,77 @@ static int l_getDoubleParam(lua_State* state)
 	
 	driver->findParam(addr, param, &index);
 	driver->getDoubleParam(addr, index, &value);
-	
+    
     lua_pushnumber(state, value);
+	return 1;
+}
+
+static int l_setStringParam(lua_State* state)
+{
+	int num_ops = lua_gettop(state);
+	
+	if (num_ops < 3 || num_ops > 4)    { return 0; }
+	
+	if (! lua_isstring(state, 1))      { return 0; }
+	
+	if (num_ops == 3 && ! lua_isstring(state, 2))    { return 0; }
+	if (num_ops == 4 && ! lua_isnumber(state, 2))    { return 0; }
+	
+	if (! lua_isstring(state, 3))      { return 0; }
+	
+	if (num_ops == 4 && ! lua_isstring(state, 4))    { return 0; }
+	
+	const char* port = lua_tostring(state, 1);
+	const char* param = lua_tostring(state, num_ops - 1);
+	
+	int addr = 0;
+	
+	if (num_ops == 4)    { addr = (int) lua_tonumber(state, 2); }
+	
+	const char* value = lua_tostring(state, num_ops);
+	
+	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
+	
+	int index;
+	
+	driver->findParam(addr, param, &index);
+	driver->setStringParam(addr, index, value);
+	
+	return 0;
+}
+
+static int l_getStringParam(lua_State* state)
+{
+	int num_ops = lua_gettop(state);
+	
+	if (num_ops < 2 || num_ops > 3)    { return 0; }
+	
+	if (! lua_isstring(state, 1))      { return 0; }
+	
+	if (num_ops == 2 && ! lua_isstring(state, 2))    { return 0; }
+	if (num_ops == 3 && ! lua_isnumber(state, 2))    { return 0; }
+	
+	if (num_ops == 3 && ! lua_isstring(state, 3))    { return 0; }
+	
+	const char* port = lua_tostring(state, 1);
+	const char* param = lua_tostring(state, num_ops);
+	
+	int addr = 0;
+	
+	if (num_ops == 3)    { addr = (int) lua_tonumber(state, 2); }
+	
+	char value[255];
+	
+	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
+	
+	int index;
+	
+	driver->findParam(addr, param, &index);
+	driver->getStringParam(addr, index, 255, value);
+    
+	std::string temp(value);
+	
+    lua_pushstring(state, temp.c_str());
 	return 1;
 }
 
@@ -377,8 +446,10 @@ static const luaL_Reg mylib[] = {
 	{"setReadTimeout", l_setReadTimeout},
 	{"setIntegerParam", l_setIntegerParam},
 	{"setDoubleParam", l_setDoubleParam},
+	{"setStringParam", l_setStringParam},
 	{"getIntegerParam", l_getIntegerParam},
 	{"getDoubleParam", l_getDoubleParam},
+	{"getStringParam", l_getStringParam},
     {"callParamCallbacks", l_callParamCallbacks},
 	{NULL, NULL}  /* sentinel */
 };
