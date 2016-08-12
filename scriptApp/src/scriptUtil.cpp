@@ -6,12 +6,6 @@
 #include <cmath>
 #include <fstream>
 #include <algorithm>
-
-#if defined(__vxworks) || defined(vxWorks)
-	#include <symLib.h>
-	#include <sysSymTbl.h>
-#endif
-
 #include <recGbl.h>
 #include <epicsExport.h>
 #include <epicsThread.h>
@@ -22,16 +16,9 @@
 #include <dbEvent.h>
 
 #include "scriptUtil.h"
+#include "epicsScript.h"
 
-extern "C"
-{
-	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
-}
 
-std::string locateFile(std::string& filename);
-long loadFile(lua_State* state, std::string& filename, std::string& function);
 int parseParams(lua_State* state, std::string params);
 
 std::pair<std::string, std::string> parseCode(std::string& input);
@@ -84,8 +71,7 @@ long initState(scriptRecord* record, int force_reload)
 	long status = 0;
 
 	lua_State* state = luaL_newstate();
-	luaL_openlibs(state);
-
+	
 	std::string code(record->code);
 	std::string pcode(record->pcode);
 
@@ -94,7 +80,7 @@ long initState(scriptRecord* record, int force_reload)
 		/* @ signifies a call to a function in a file, otherwise treat it as code */
 		if (code[0] != '@')
 		{
-			if (code != pcode or force_reload)    { status = luaL_loadstring(state, record->code); }
+			if (code != pcode or force_reload)    { status = luaLoadString(state, code.c_str()); }
 		}
 		else
 		{
@@ -120,9 +106,13 @@ long initState(scriptRecord* record, int force_reload)
 				}
 			}
 
-			status = loadFile(state, curr.first, curr.second);
+			status = luaLoadScript(state, curr.first.c_str());
+			
+			if (! status)    { lua_getglobal(state, curr.second.c_str()); }
 		}
 	}
+	
+	if (status == -1)    { printf("Invalid input or could not locate file\n"); status = 0;}
 
 	/* Cleanup any memory from previous state */
 	if (record->state != NULL)    { lua_close((lua_State*) record->state); }
@@ -131,68 +121,6 @@ long initState(scriptRecord* record, int force_reload)
 	strcpy(record->pcode, record->code);
 
 	return status;
-}
-
-
-std::string locateFile(std::string& filename)
-{
-	char* env_path = std::getenv("LUA_SCRIPT_PATH");
-
-	#if defined(__vxworks) || defined(vxWorks)
-	/* For compatibility reasons look for global symbols */
-	if (!env_path)
-	{
-		char* symbol;
-		SYM_TYPE type;
-
-		if (symFindByName(sysSymTbl, "LUA_SCRIPT_PATH", &symbol, &type) == OK)
-		{
-			env_path = *(char**) symbol;
-		}
-	}
-	#endif
-
-	std::string path;
-
-	/* If no environment variable found, default to the current directory. */
-	if   (env_path)    { path = std::string(env_path); }
-	else               { path = "."; }
-
-	size_t start = 0;
-	size_t next;
-
-	do
-	{
-		next = path.find(":", start);
-
-		std::string test = "/" + filename;
-
-		if   (next == std::string::npos)    { test = path.substr(start) + test; }
-		else                                { test = path.substr(start, next - start) + test; }
-
-		/* Check if file exists. If so, return the full filepath */
-		if (std::ifstream(test.c_str()).good())    { return test; }
-
-		start = next + 1;
-	} while (start);
-
-	return filename;
-}
-
-long loadFile(lua_State* state, std::string& filename, std::string& function)
-{
-	int status = 0;
-
-	status = luaL_loadfile(state, locateFile(filename).c_str());
-	if (status)    { return status; }
-
-	/* Run the script so functions are in the global state */
-	status = lua_pcall(state, 0, 0, 0);
-	if (status)    { return status; }
-
-	/* Get the named function */
-	lua_getglobal(state, function.c_str());
-	return 0;
 }
 
 static void checkLinksCallback(CALLBACK* callback)
@@ -587,7 +515,7 @@ long speci(dbAddr *paddr, int after)
 	}
 	else if (field_index == scriptRecordFRLD and record->frld)
 	{
-		initState(record, 1);
+		if (initState(record, 1))    { logError(record); }
 		record->frld = 0;
 	}
 	else if (isLink(field_index))
@@ -679,7 +607,7 @@ long speci(dbAddr *paddr, int after)
  * in the CODE field.
  */
 int parseParams(lua_State* state, std::string params)
-{
+{	
 	if (params.at(0) != '@')    { return 0; }
 
 	size_t start = params.find_first_of("(");
@@ -711,7 +639,7 @@ int parseParams(lua_State* state, std::string params)
 		int trim_back  = param.find_last_not_of(" ");
 
 		param = param.substr(trim_front, trim_back - trim_front + 1);
-
+		
 		/* Treat anything with quotes as a string, anything else as a number */
 		if (param.at(0) == '"' or param.at(0) == '\'')
 		{
@@ -733,8 +661,7 @@ void logError(scriptRecord* record)
 {
 	std::string err(lua_tostring((lua_State*) record->state, -1));
 	lua_pop((lua_State*) record->state, 1);
-
-	printf("%s\n", err.c_str());
+	
 	strcpy(record->err, err.c_str());
 	db_post_events(record, &record->err, DBE_VALUE);
 }
@@ -817,7 +744,7 @@ void processCallback(void* data)
 
 	/* Make a copy of the current code chunk */
 	lua_pushvalue(state, -1);
-
+	
 	/* Load Params */
 	int params = parseParams(state, std::string(record->code));
 
