@@ -25,12 +25,12 @@ std::pair<std::string, std::string> parseCode(std::string& input);
 
 typedef struct ScriptDSET 
 {
-    long       number;
-    DEVSUPFUN  dev_report;
-    DEVSUPFUN  init;
-    DEVSUPFUN  init_record;
-    DEVSUPFUN  get_ioint_info;
-    DEVSUPFUN  write;
+	long       number;
+	DEVSUPFUN  dev_report;
+	DEVSUPFUN  init;
+	DEVSUPFUN  init_record;
+	DEVSUPFUN  get_ioint_info;
+	DEVSUPFUN  write;
 } ScriptDSET;
 
 
@@ -413,16 +413,23 @@ long runCode(scriptRecord* record)
 {
 	if (std::string(record->code).empty())    { record->pact = FALSE; return 0; }
 
-	std::stringstream temp_stream;
-	std::string threadname;
-
-	temp_stream << "Script Record Process (" << record->name << ")";
-	temp_stream >> threadname;
-
-	epicsThreadCreate(threadname.c_str(),
-	                  epicsThreadPriorityLow,
-	                  epicsThreadGetStackSize(epicsThreadStackMedium),
-	                  (EPICSTHREADFUNC)::processCallback, record);
+	if (record->sync == scriptSYNC_Synchronous)
+	{
+		processCallback(record);
+	}
+	else
+	{
+		std::stringstream temp_stream;
+		std::string threadname;
+		
+		temp_stream << "Script Record Process (" << record->name << ")";
+		temp_stream >> threadname;
+		
+		epicsThreadCreate(threadname.c_str(),
+		                  epicsThreadPriorityLow,
+		                  epicsThreadGetStackSize(epicsThreadStackMedium),
+		                  (EPICSTHREADFUNC)::processCallback, record);
+	}
 
 	return 0;
 }
@@ -670,13 +677,13 @@ void writeValue(scriptRecord* record)
 {
 	ScriptDSET* pscriptDSET = (ScriptDSET*) record->dset;
 
-    if (not pscriptDSET or not pscriptDSET->write) 
+if (not pscriptDSET or not pscriptDSET->write) 
 	{
-        errlogPrintf("%s DSET write does not exist\n", record->name);
-        recGblSetSevr(record, SOFT_ALARM, INVALID_ALARM);
-        record->pact = TRUE;
-        return;
-    }
+    errlogPrintf("%s DSET write does not exist\n", record->name);
+    recGblSetSevr(record, SOFT_ALARM, INVALID_ALARM);
+    record->pact = TRUE;
+    return;
+}
 
 	pscriptDSET->write(record);
 }
@@ -732,7 +739,7 @@ long startProc(scriptRecord* record)
 	status = loadStrings(record);
 	
 	if (status)    { return status; }
-	
+
 	return runCode(record);
 }
 
@@ -784,6 +791,6 @@ void processCallback(void* data)
 	lua_pop(state, 1);
 
 	monitor(record);
-    
-    record->pact = FALSE;
+
+	record->pact = FALSE;
 }

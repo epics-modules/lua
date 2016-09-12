@@ -30,6 +30,12 @@ menu(scriptRELO)
 	choice(scriptRELO_Always, "Every Processing")
 }
 
+menu(scriptSYNC)
+{
+	choice(scriptSYNC_Synchronous, "Sync")
+	choice(scriptSYNC_Asynchronous, "Async")
+}
+
 recordtype(script)
 {
 	include "dbCommon.dbd"
@@ -49,6 +55,13 @@ recordtype(script)
 		interest(4)
 		size(4)
 		extra("void *rpvt")
+	}
+	
+	field(SYNC, DBF_MENU)
+	{
+		prompt("Sync/Async processing")
+		interest(1)
+		menu(scriptSYNC)
 	}
 	
 	field(RELO, DBF_MENU)
