@@ -756,8 +756,6 @@ void processCallback(void* data)
 		return;
 	}
 
-	record->pact = FALSE;
-
 	int rettype = lua_type(state, -1);
 
 	if (rettype == LUA_TBOOLEAN or rettype == LUA_TNUMBER)
@@ -786,4 +784,6 @@ void processCallback(void* data)
 	lua_pop(state, 1);
 
 	monitor(record);
+    
+    record->pact = FALSE;
 }
