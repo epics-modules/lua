@@ -18,17 +18,19 @@ script - Lua Script Processing Record</H1>
 
 <DT><A HREF="#HEADING14-13"><B>3. </B>- Read Parameters</A></DT>
 
-<DT><A HREF="#HEADING14-98"><B>4. </B>- Output Parameters</A></DT>
+<DT><A HREF="#HEADING14-16"><B>4. </B>- Expressions</A></DT>
 
-<DT><A HREF="#HEADING14-109"><B>5. </B>- Operator Display Parameters</A></DT>
+<DT><A HREF="#HEADING14-98"><B>5. </B>- Output Parameters</A></DT>
 
-<DT><A HREF="#HEADING14-122"><B>6. </B>- Alarm Parameters</A></DT>
+<DT><A HREF="#HEADING14-109"><B>6. </B>- Operator Display Parameters</A></DT>
 
-<DT><A HREF="#HEADING14-126"><B>7. </B>- Monitor Parameters</A></DT>
+<DT><A HREF="#HEADING14-122"><B>7. </B>- Alarm Parameters</A></DT>
 
-<DT><A HREF="#HEADING14-128"><B>8. </B>- Run-time Parameters</A></DT>
+<DT><A HREF="#HEADING14-126"><B>8. </B>- Monitor Parameters</A></DT>
 
-<DT><A HREF="#HEADING14-132"><B>9. </B>- Record Support Routines</A></DT>
+<DT><A HREF="#HEADING14-128"><B>9. </B>- Run-time Parameters</A></DT>
+
+<DT><A HREF="#HEADING14-132"><B>10. </B>- Record Support Routines</A></DT>
 
 <DT><A HREF="#HEADING14-133">init_record</A></DT>
 
@@ -36,25 +38,11 @@ script - Lua Script Processing Record</H1>
 
 <DT><A HREF="#HEADING14-138">special</A></DT>
 
-<DT><A HREF="#HEADING14-140">get_value</A></DT>
-
-<DT><A HREF="#HEADING14-142">get_units</A></DT>
-
 <DT><A HREF="#HEADING14-144">get_precision</A></DT>
-
-<DT><A HREF="#HEADING14-146">get_graphic_double</A></DT>
-
-<DT><A HREF="#HEADING14-148">get_control_double</A></DT>
-
-<DT><A HREF="#HEADING14-150">get_alarm_double</A></DT>
 
 <DT><A HREF="#HEADING14-156"><B>11. </B>- Record Processing</A></DT>
 
 <DT><A HREF="#HEADING14-157"><B>11.1. </B>- process()</A></DT>
-
-<DT><A HREF="#HEADING14-169"><B>11.2. </B>- execOutput()</A></DT>
-
-<DT><A HREF="#HEADING14-170"><B>12. </B>- Sample Database</A></DT>
 
 </DL>
 
@@ -76,8 +64,8 @@ output.
 
 <P>When writing to a string PV (any of DBF_STRING, DBF_ENUM, DBF_MENU,
 DBF_DEVICE, DBF_INLINK, DBF_OUTLINK, DBF_FWDLINK) the record (actually, device
-support) writes its string value (SVAL or OSV).  When writing to any other kind
-of PV, the record writes its numeric value (VAL or OVAL).
+support) writes its string value (SVAL).  When writing to any other kind
+of PV, the record writes its numeric value (VAL).
 
 <P>To write successfully to a DBF_MENU or DBF_ENUM (for example, the VAL field
 of a <code>bo</code> or <code>mbbo</code> record) the record's string value must
@@ -93,8 +81,12 @@ converted to integers, set the precision (the PREC field) to zero.
 2. Scan Parameters</H1>
 
 The script record has the standard fields for specifying under what
-circumstances the record will be processed.  See the EPICS Record Reference
-Manual for these fields and their use.
+circumstances the record will be processed. These fields are listed in 
+<a href="http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html#MARKER-9-2"><em>Scan Fields, Chapter 2, 2</em></a>. 
+In addition, <a href="http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-2"><em>Scanning Specification, 
+Chapter 1, 1</em></a>, explains how these fields are used. Since the script record 
+supports no direct interfaces to hardware, it cannot be scanned on I/O interrupt, 
+so its SCAN field cannot be <code>I/O Intr</code>.<p>
 
 <P>&nbsp;
 <HR><A NAME="HEADING14-13"></A>
@@ -171,7 +163,7 @@ truncates the result to fit into a 40-character string.
 
 <TR>
 <TD>INPL</TD>
-<TD>Input Link L</TD>
+<TD>Input Link J</TD>
 <TD>INLINK</TD>
 <TD>Yes</TD>
 <TD>0</TD>
@@ -249,6 +241,23 @@ when the record processes. Optionally, a set of parameters can be provided that 
 function will be called with each processing by including a comma separated list 
 enclosed by parentheses.
 
+<P>When changing the CODE field, the script record's RELO field controls whether or not
+the record will recompile the string into a new lua state, resetting any variables in the
+global scope. The field is a menu with three choices:
+
+<ul>
+<p><li><code>Every New File</code> -- Recompile only if the file referenced is changed, the
+record can be changed to point to a new function within that file without losing any prior
+state. </li>
+<p><li><code>Every New Change</code> -- Recompile on any change to the CODE field. </li>
+<p><li><code>Every Processing</code> -- Recompile before each time the record is processed. </li>
+</ul>
+<p>There is also the FRLD field which forces the record to recompile a new lua state when a non-zero
+value is written to it.
+
+<P>Finally, the ERR field contains a string representation of the last error encountered during
+processing.
+
 <P>
 <BR>The record also has a second set of calculation-related fields described  in <A HREF="#MARKER-9-1">Section 4, <I>Output Parameters.</I></A>
 
@@ -301,6 +310,42 @@ enclosed by parentheses.
 <TD>Yes</TD>
 <TD>No</TD>
 </TR>
+
+<TR>
+<TD>RELO</TD>
+<TD>When to reload state?</TD>
+<TD>Menu</TD>
+<TD>Yes</TD>
+<TD>0</TD>
+<TD>Yes</TD>
+<TD>Yes</TD>
+<TD>No</TD>
+<TD>No</TD>
+</TR>
+
+<TR>
+<TD>FRLD</TD>
+<TD>Force Reload</TD>
+<TD>Short</TD>
+<TD>Yes</TD>
+<TD>0</TD>
+<TD>Yes</TD>
+<TD>Yes</TD>
+<TD>No</TD>
+<TD>No</TD>
+</TR>
+
+<TR>
+<TD>ERR</TD>
+<TD>Last Error</TD>
+<TD>String (200)</TD>
+<TD>No</TD>
+<TD>0</TD>
+<TD>Yes</TD>
+<TD>Yes</TD>
+<TD>No</TD>
+<TD>No</TD>
+</TR>
 </TABLE>
 
 <P>
@@ -313,6 +358,10 @@ enclosed by parentheses.
 <P>field(CODE, "return AA .. BB")
 <ul><li>Sets SVAL to the concatenation of AA and BB</li></ul>
 
+<P>field(CODE, "@test.lua example")
+<ul><li>Runs the function 'example' from the file test.lua with zero
+parameters.</li></ul>
+
 <P>field(CODE, "@test.lua example(1, 'foo')")
 <ul><li>Runs the function 'example' from the file test.lua with two 
 parameters, one a number, the other a string.</li></ul>
@@ -320,7 +369,7 @@ parameters, one a number, the other a string.</li></ul>
 <P>&nbsp;
 <HR><A NAME="HEADING14-98"></A>
 <H1>
-4.&nbsp;<A NAME="MARKER-9-1"></A>Output Parameters</H1>
+5.&nbsp;<A NAME="MARKER-9-1"></A>Output Parameters</H1>
 
 These parameters specify and control the output capabilities of the
 script record. They determine when to write the output, where to write
@@ -329,42 +378,30 @@ to which the result will be written. The OOPT field determines the condition
 that causes the output link to be written to. It's a menu field that has
 six choices:
 
-<P><table border>
-<tr><td valign=top>
-<TT>Every Time</TT><td valign=top>write output every time record is processed.
-
-
-<tr><td valign=top>
-<TT>On Change</TT><td valign=top>write output every time VAL/SVAL changes, i.e., every
-time the result of the expression changes.
-
-
-<tr><td valign=top>
-<TT>When Zero</TT><td valign=top>when record is processed, write output if VAL is
-zero or if SVAL is an empty string.
-
-
-<tr><td valign=top>
-<TT>When Non-zero</TT><td valign=top>when record is processed, write output if VAL
-is non-zero or SVAL is a non-empty string.
-
-
-<tr><td valign=top>
-<TT>Transition to Zero</TT><td valign=top>when record is processed, write output only
+<P><ul>
+<P><li><code>Every Time</code> -- write output every time record is processed. </li>
+<P><li><code>On Change</code> -- write output every time VAL/SVAL changes, i.e., every
+time the result of the expression changes. </li>
+<P><li><code>When Zero</code> -- when record is processed, write output if VAL is
+zero or if SVAL is an empty string. </li>
+<P><li><code>When Non-zero</code> -- when record is processed, write output if VAL
+is non-zero or SVAL is a non-empty string. </li>
+<P><li><code>Transition to Zero</code> -- when record is processed, write output only
 if VAL is zero and last value was non-zero. If SVAL was changed, write output only if
-SVAL is an empty string and the last value was a non-empty string.
-
-
-<tr><td valign=top>
-<TT>Transition to Non-zero</TT><td valign=top>when record is processed, write output
+SVAL is an empty string and the last value was a non-empty string. </li>
+<P><li><code>Transition to Non-zero</code> -- when record is processed, write output
 only if VAL is non-zero and last value was zero. If SVAL was changed, write output only 
-if SVAL is a non-empty string and the last value was a empty string.
+if SVAL is a non-empty string and the last value was a empty string. </li>
+<P><li><code>Never</code> -- Don't write output ever.
+</ul>
 
-<tr><td valign=top>
-<TT>Never</TT><td valign=top>Don't write output ever.
+<P>The SYNC field controls whether the record processes in a synchronous or asynchronous
+manner. It is a menu field with two choices:
 
-</table>
-
+<ul>
+<P><li><code>Synchronous</code> -- process the record's lua code synchronously. </li>
+<P><li><code>Asynchronous</code> -- process the record's lua code in a separate thread. </li>
+</ul>
 
 <P>
 <TABLE BORDER>
@@ -404,6 +441,18 @@ if SVAL is a non-empty string and the last value was a empty string.
 <TD>No</TD>
 </TR>
 
+<TR>
+<TD>SYNC</TD>
+<TD>Synchronicity</TD>
+<TD>Menu</TD>
+<TD>Yes</TD>
+<TD>0</TD>
+<TD>Yes</TD>
+<TD>Yes</TD>
+<TD>No</TD>
+<TD>No</TD>
+</TR>
+
 </TABLE>
 
 <P> The script record uses device support to write to the <code>OUT</code> link. 
@@ -414,7 +463,7 @@ Soft device supplied with the record is selected with the .dbd specification
 <HR>
 <P><A NAME="HEADING14-109"></A>
 <H1>
-5.&nbsp;<A NAME="MARKER-9-2"></A>Operator Display Parameters</H1>
+6.&nbsp;<A NAME="MARKER-9-2"></A>Operator Display Parameters</H1>
 
 These parameters are used to present meaningful data to the operator.
 Some are also meant to represent the status of the record at run-time.
@@ -650,7 +699,7 @@ description (DESC) fields.
 <HR>
 <P><A NAME="HEADING14-122"></A>
 <H1>
-6. Alarm Parameters</H1>
+7. Alarm Parameters</H1>
 
 The possible alarm conditions for the script record are the SCAN,
 READ, Calculation, and limit alarms. The SCAN and READ alarms are called
@@ -794,7 +843,7 @@ and these fields.
 <HR>
 <P><A NAME="HEADING14-126"></A>
 <H1>
-7. Monitor Parameters</H1>
+8. Monitor Parameters</H1>
 
 These parameters are used to determine when to send monitors for the
 value fields. The monitors are sent when the value field exceeds the last
