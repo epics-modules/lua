@@ -1,6 +1,6 @@
 # Linux startup script
 
-< ./nfsCommands
+< ../nfsCommands
 
 #load("../../bin/vxWorks-ppc32/scriptioc.munch")
 
@@ -13,7 +13,7 @@ scriptioc_registerRecordDeviceDriver(pdbbase)
 dbLoadRecords("../../scriptApp/Db/userScripts10.db", "P=lua:,R=test:")
 
 
-epicsEnvSet("LUA_SCRIPT_PATH",".")
+epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 
 #######
 iocInit
