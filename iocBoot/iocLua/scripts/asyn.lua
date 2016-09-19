@@ -1,3 +1,7 @@
+-- Lua script to demonstrate reading from an asyn port
+-- function writes an HTTP request to a given ip port
+-- and then prints the result to the console.
+
 WriteTimeout = 4.0
 OutTerminator = "\n\n"
 InTerminator = "\n"

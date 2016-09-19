@@ -1,6 +1,6 @@
 # Linux startup script
 
-< ./nfsCommands
+< ../nfsCommands
 
 #load("../../bin/vxWorks-ppc32/scriptioc.munch")
 
@@ -10,7 +10,7 @@
 dbLoadDatabase("../../dbd/scriptioc.dbd")
 scriptioc_registerRecordDeviceDriver(pdbbase)
 
-epicsEnvSet("LUA_SCRIPT_PATH",".")
+epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 
 drvAsynIPPortConfigure("IP", "cars.uchicago.edu:80", 0,0,0)
 
@@ -19,3 +19,5 @@ dbLoadRecords("./asyn.db", "P=lua:,Q=test:,PORT=IP")
 #######
 iocInit
 #######
+
+dbpf("lua:test:script.PROC", 1)
