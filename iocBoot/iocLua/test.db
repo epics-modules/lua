@@ -1,16 +1,5 @@
-record(script, "$(P)$(Q)script1")
-{
-	field(INPA, "$(P)$(Q)aval.VAL")
-	field(INPB, "$(P)$(Q)bval.VAL")
-	field(INPC, "$(P)$(Q)cval.VAL")
-	field(INPD, "$(P)$(Q)dval.VAL")
-	field(INPE, "$(P)$(Q)eval.VAL")
-	field(INPF, "$(P)$(Q)fval.VAL")
-	field(INPG, "$(P)$(Q)gval.VAL")
-	field(INPH, "$(P)$(Q)hval.VAL")
-	field(INPI, "$(P)$(Q)ival.VAL")
-	field(INPJ, "$(P)$(Q)jval.VAL")
-	
+record(script, "$(P)$(Q)state_machine")
+{	
 	field(INAA, "$(P)$(Q)aaval.VAL")
 	field(INBB, "$(P)$(Q)bbval.VAL")
 	field(INCC, "$(P)$(Q)ccval.VAL")
@@ -22,12 +11,31 @@ record(script, "$(P)$(Q)script1")
 	field(INII, "$(P)$(Q)iival.VAL")
 	field(INJJ, "$(P)$(Q)jjval.VAL")
 	
-	field(OOPT, "Every Time")
-	field(OUT, "$(P)$(Q)jjval")
+	field(PREC, 1)
+	
+	field(PINI, 1)
+	
+	field(CODE, "@test.lua state_demo()")
+}
+
+record(script, "$(P)$(Q)pattern_match")
+{	
+	field(INAA, "$(P)$(Q)aaval.VAL")
+	field(INBB, "$(P)$(Q)bbval.VAL")
+	field(INCC, "$(P)$(Q)ccval.VAL")
+	field(INDD, "$(P)$(Q)ddval.VAL")
+	field(INEE, "$(P)$(Q)eeval.VAL")
+	field(INFF, "$(P)$(Q)ffval.VAL")
+	field(INGG, "$(P)$(Q)ggval.VAL")
+	field(INHH, "$(P)$(Q)hhval.VAL")
+	field(INII, "$(P)$(Q)iival.VAL")
+	field(INJJ, "$(P)$(Q)jjval.VAL")
 	
 	field(PREC, 1)
 	
 	field(PINI, 1)
+	
+	field(CODE, "@test.lua pattern_demo('%d+')")
 }
 
 record(ai, "$(P)$(Q)aval")

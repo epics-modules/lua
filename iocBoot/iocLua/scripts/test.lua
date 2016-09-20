@@ -30,11 +30,11 @@ function state_demo()
 	end
 end
 
-function regex_demo(num_or_let)
+function pattern_demo(pattern)
 	-- Demonstrates the regex processing 
 	-- capabilities. Can replace scalc
 	
-	return string.match(CC, "%d+")
+	return string.match(CC, pattern)
 end
 
 
