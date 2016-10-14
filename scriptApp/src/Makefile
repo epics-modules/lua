@@ -17,7 +17,7 @@ INC += lua.h
 INC += lualib.h
 INC += lauxlib.h
 INC += luaconf.h
-INC += epicsScript.h
+INC += luaEpics.h
 
 LIBRARY_IOC += script
 script_SRCS += lapi.c
@@ -60,8 +60,8 @@ script_SRCS += lepicslib.cpp
 
 script_SRCS += scriptRecord.c
 script_SRCS += devScriptSoft.c
-script_SRCS += scriptUtil.cpp
-script_SRCS += epicsScript.cpp
+script_SRCS += luascriptUtil.cpp
+script_SRCS += luaEpics.cpp
 
 script_LIBS += asyn
 script_LIBS += $(EPICS_BASE_IOC_LIBS)

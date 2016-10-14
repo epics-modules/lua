@@ -16,7 +16,7 @@
 #include <dbEvent.h>
 
 #include "luascriptUtil.h"
-#include "epicsScript.h"
+#include "luaEpics.h"
 
 
 int parseParams(lua_State* state, std::string params);

@@ -1,5 +1,5 @@
-#ifndef INCEPICSSCRIPT_H
-#define INCEPICSSCRIPT_H
+#ifndef INC_LUAEPICS_H
+#define INC_LUAEPICS_H
 
 extern "C"
 {

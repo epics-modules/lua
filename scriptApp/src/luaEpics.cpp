@@ -12,7 +12,7 @@
 
 #include <macLib.h>
 
-#include "epicsScript.h"
+#include "luaEpics.h"
 
 static std::string locateFile(std::string filename)
 {
