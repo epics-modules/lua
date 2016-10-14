@@ -12,7 +12,7 @@ epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 dbLoadDatabase("../../dbd/scriptioc.dbd")
 scriptioc_registerRecordDeviceDriver(pdbbase)
 
-dbLoadRecords("../../scriptApp/Db/userScripts10.db", "P=lua:,Q=test:")
+dbLoadRecords("../../scriptApp/Db/userScripts10.db", "P=lua:,R=test:")
 
 #######
 iocInit
