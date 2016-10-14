@@ -22,7 +22,7 @@ record(bo, "$(P)$(R)DisableUserScripts")
 	field(OUT, "$(P)$(R)userScriptEnable")
 }
 
-record(script, "$(P)$(R)userScript0")
+record(luascript, "$(P)$(R)userScript0")
 {
 	field(DESC, "userScript0")
 	field(DISV, "0")
@@ -30,7 +30,7 @@ record(script, "$(P)$(R)userScript0")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript1")
+record(luascript, "$(P)$(R)userScript1")
 {
 	field(DESC, "userScript1")
 	field(DISV, "0")
@@ -38,7 +38,7 @@ record(script, "$(P)$(R)userScript1")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript2")
+record(luascript, "$(P)$(R)userScript2")
 {
 	field(DESC, "userScript2")
 	field(DISV, "0")
@@ -46,7 +46,7 @@ record(script, "$(P)$(R)userScript2")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript3")
+record(luascript, "$(P)$(R)userScript3")
 {
 	field(DESC, "userScript3")
 	field(DISV, "0")
@@ -54,7 +54,7 @@ record(script, "$(P)$(R)userScript3")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript4")
+record(luascript, "$(P)$(R)userScript4")
 {
 	field(DESC, "userScript4")
 	field(DISV, "0")
@@ -62,7 +62,7 @@ record(script, "$(P)$(R)userScript4")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript5")
+record(luascript, "$(P)$(R)userScript5")
 {
 	field(DESC, "userScript5")
 	field(DISV, "0")
@@ -70,7 +70,7 @@ record(script, "$(P)$(R)userScript5")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript6")
+record(luascript, "$(P)$(R)userScript6")
 {
 	field(DESC, "userScript6")
 	field(DISV, "0")
@@ -78,7 +78,7 @@ record(script, "$(P)$(R)userScript6")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript7")
+record(luascript, "$(P)$(R)userScript7")
 {
 	field(DESC, "userScript7")
 	field(DISV, "0")
@@ -86,7 +86,7 @@ record(script, "$(P)$(R)userScript7")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript8")
+record(luascript, "$(P)$(R)userScript8")
 {
 	field(DESC, "userScript8")
 	field(DISV, "0")
@@ -94,7 +94,7 @@ record(script, "$(P)$(R)userScript8")
 	field(PREC, "5")
 }
 
-record(script, "$(P)$(R)userScript9")
+record(luascript, "$(P)$(R)userScript9")
 {
 	field(DESC, "userScript9")
 	field(DISV, "0")

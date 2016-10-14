@@ -1,7 +1,7 @@
 #ifndef INC_LUASCRIPTUTIL_H
 #define INC_LUASCRIPTUTIL_H
 
-#include "scriptRecord.h"
+#include "luascriptRecord.h"
 #include <dbAccess.h>
 #include <callback.h>
 
@@ -31,24 +31,24 @@ typedef struct rpvtStruct {
 extern "C"
 {
 #endif
-	void logError(scriptRecord* record);
-	long initState(scriptRecord* record, int force_reload);
+	void logError(luascriptRecord* record);
+	long initState(luascriptRecord* record, int force_reload);
 
-	void checkLinks(scriptRecord* record);
-	long setLinks(scriptRecord* record);
+	void checkLinks(luascriptRecord* record);
+	long setLinks(luascriptRecord* record);
 
-	long startProc(scriptRecord* record);
-	long cleanProc(scriptRecord* record);
+	long startProc(luascriptRecord* record);
+	long cleanProc(luascriptRecord* record);
 	void processCallback(void* data);
 	
-	long loadNumbers(scriptRecord* record);
-	long loadStrings(scriptRecord* record);
+	long loadNumbers(luascriptRecord* record);
+	long loadStrings(luascriptRecord* record);
 	
-	long runCode(scriptRecord* record);
+	long runCode(luascriptRecord* record);
 	long speci(dbAddr	*paddr, int after);
-	void monitor(scriptRecord* record);
+	void monitor(luascriptRecord* record);
 	
-	void writeValue(scriptRecord* record);
+	void writeValue(luascriptRecord* record);
 #ifdef __cplusplus
 }
 #endif

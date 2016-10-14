@@ -5,7 +5,7 @@
 #include <epicsExport.h>
 
 #define GEN_SIZE_OFFSET
-#include "scriptRecord.h"
+#include "luascriptRecord.h"
 #undef  GEN_SIZE_OFFSET
 
 #include "luascriptUtil.h"
@@ -19,7 +19,7 @@ static long process();
 static long special();
 static long get_precision();
 
-rset scriptRSET =
+rset luascriptRSET =
 {
 	RSETNUMBER,
 	NULL,
@@ -41,11 +41,11 @@ rset scriptRSET =
 	NULL,
 };
 
-epicsExportAddress(rset, scriptRSET);
+epicsExportAddress(rset, luascriptRSET);
 
 static long init_record(void* data, int pass)
 {	
-	scriptRecord* record = (scriptRecord*) data;
+	luascriptRecord* record = (luascriptRecord*) data;
 	
 	if (pass == 0)
 	{
@@ -77,7 +77,7 @@ static long init_record(void* data, int pass)
 
 static long process(void* data)
 {
-	scriptRecord* record = (scriptRecord*) data;
+	luascriptRecord* record = (luascriptRecord*) data;
 
 	long status = startProc(record);
 	
@@ -94,12 +94,12 @@ static long special(dbAddr *paddr, int after)
 
 static long get_precision(dbAddr *paddr, long *precision)
 {
-	scriptRecord *record = (scriptRecord *) paddr->precord;
+	luascriptRecord *record = (luascriptRecord *) paddr->precord;
 	int index = dbGetFieldIndex(paddr);
 
 	*precision = record->prec;
 	
-	if (index == scriptRecordVAL) return 0;
+	if (index == luascriptRecordVAL) return 0;
 		
 	recGblGetPrec(paddr, precision);
 	return 0;

@@ -1,42 +1,42 @@
-menu(scriptOOPT) 
+menu(luascriptOOPT) 
 {
-	choice(scriptOOPT_Every_Time,"Every Time")
-	choice(scriptOOPT_On_Change,"On Change")
-	choice(scriptOOPT_When_Zero,"When Zero")
-	choice(scriptOOPT_When_Non_zero,"When Non-zero")
-	choice(scriptOOPT_Transition_To_Zero,"Transition To Zero")
-	choice(scriptOOPT_Transition_To_Non_zero,"Transition To Non-zero")
-	choice(scriptOOPT_Never,"Never")
+	choice(luascriptOOPT_Every_Time,"Every Time")
+	choice(luascriptOOPT_On_Change,"On Change")
+	choice(luascriptOOPT_When_Zero,"When Zero")
+	choice(luascriptOOPT_When_Non_zero,"When Non-zero")
+	choice(luascriptOOPT_Transition_To_Zero,"Transition To Zero")
+	choice(luascriptOOPT_Transition_To_Non_zero,"Transition To Non-zero")
+	choice(luascriptOOPT_Never,"Never")
 }
 
-menu(scriptINAV) 
+menu(luascriptINAV) 
 {
-	choice(scriptINAV_EXT_NC,"Ext PV NC")
-	choice(scriptINAV_EXT,"Ext PV OK")
-	choice(scriptINAV_LOC,"Local PV")
-	choice(scriptINAV_CON,"Constant")
+	choice(luascriptINAV_EXT_NC,"Ext PV NC")
+	choice(luascriptINAV_EXT,"Ext PV OK")
+	choice(luascriptINAV_LOC,"Local PV")
+	choice(luascriptINAV_CON,"Constant")
 }
 
-menu(scriptWAIT) 
+menu(luascriptWAIT) 
 {
-	choice(scriptWAIT_NoWait,"NoWait")
-	choice(scriptWAIT_Wait,"Wait")
+	choice(luascriptWAIT_NoWait,"NoWait")
+	choice(luascriptWAIT_Wait,"Wait")
 }
 
-menu(scriptRELO)
+menu(luascriptRELO)
 {
-	choice(scriptRELO_NewFile, "Every New File")
-	choice(scriptRELO_NewFunction, "Every New Change")
-	choice(scriptRELO_Always, "Every Processing")
+	choice(luascriptRELO_NewFile, "Every New File")
+	choice(luascriptRELO_NewFunction, "Every New Change")
+	choice(luascriptRELO_Always, "Every Processing")
 }
 
-menu(scriptSYNC)
+menu(luascriptSYNC)
 {
-	choice(scriptSYNC_Synchronous, "Sync")
-	choice(scriptSYNC_Asynchronous, "Async")
+	choice(luascriptSYNC_Synchronous, "Sync")
+	choice(luascriptSYNC_Asynchronous, "Async")
 }
 
-recordtype(script)
+recordtype(luascript)
 {
 	include "dbCommon.dbd"
 	
@@ -61,14 +61,14 @@ recordtype(script)
 	{
 		prompt("Sync/Async processing")
 		interest(1)
-		menu(scriptSYNC)
+		menu(luascriptSYNC)
 	}
 	
 	field(RELO, DBF_MENU)
 	{
 		prompt("When to reload state?")
 		interest(1)
-		menu(scriptRELO)
+		menu(luascriptRELO)
 	}
 	
 	field(FRLD, DBF_SHORT)
@@ -109,14 +109,14 @@ recordtype(script)
 		prompt("Output Execute Opt")
 		promptgroup(GUI_CALC)
 		interest(1)
-		menu(scriptOOPT)
+		menu(luascriptOOPT)
 	}
 	
 	field(WAIT,DBF_MENU) 
 	{
 		prompt("Wait for completion?")
 		interest(1)
-		menu(scriptWAIT)
+		menu(luascriptWAIT)
 	}
 	
 	field(INPA,DBF_INLINK) {
@@ -243,140 +243,140 @@ recordtype(script)
 		prompt("INPA PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INBV,DBF_MENU) {
 		prompt("INPB PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INCV,DBF_MENU) {
 		prompt("INPC PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INDV,DBF_MENU) {
 		prompt("INPD PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INEV,DBF_MENU) {
 		prompt("INPE PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INFV,DBF_MENU) {
 		prompt("INPF PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INGV,DBF_MENU) {
 		prompt("INPG PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INHV,DBF_MENU) {
 		prompt("INPH PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INIV,DBF_MENU) {
 		prompt("INPI PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(INJV,DBF_MENU) {
 		prompt("INPJ PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IAAV,DBF_MENU) {
 		prompt("INAA PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IBBV,DBF_MENU) {
 		prompt("INBB PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(ICCV,DBF_MENU) {
 		prompt("INCC PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IDDV,DBF_MENU) {
 		prompt("INDD PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IEEV,DBF_MENU) {
 		prompt("INEE PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IFFV,DBF_MENU) {
 		prompt("INFF PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IGGV,DBF_MENU) {
 		prompt("INGG PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IHHV,DBF_MENU) {
 		prompt("INHH PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IIIV,DBF_MENU) {
 		prompt("INII PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(IJJV,DBF_MENU) {
 		prompt("INJJ PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 		initial("1")
 	}
 	field(OUTV,DBF_MENU) 
@@ -384,7 +384,7 @@ recordtype(script)
 		prompt("OUT PV Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(scriptINAV)
+		menu(luascriptINAV)
 	}
 	field(A,DBF_DOUBLE) {
 		prompt("Value of Input A")

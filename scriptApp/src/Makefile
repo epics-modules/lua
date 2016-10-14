@@ -9,7 +9,7 @@ include $(TOP)/configure/CONFIG
 # xxxRecord.h will be created from xxxRecord.dbd
 
 DBD += scriptSupport.dbd
-DBDINC += scriptRecord.dbd
+DBDINC += luascriptRecord.dbd
 
 SRC_DIRS += ../lua
 
@@ -58,7 +58,7 @@ script_SRCS += lzio.c
 script_SRCS += lasynlib.cpp
 script_SRCS += lepicslib.cpp
 
-script_SRCS += scriptRecord.c
+script_SRCS += luascriptRecord.c
 script_SRCS += devScriptSoft.c
 script_SRCS += luascriptUtil.cpp
 script_SRCS += luaEpics.cpp
