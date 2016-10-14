@@ -17,7 +17,7 @@
 #include "epicsExport.h"
 #include <dbEvent.h>
 
-#include "scriptUtil.h"
+#include "luascriptUtil.h"
 
 static long write_Script(scriptRecord *record);
 
