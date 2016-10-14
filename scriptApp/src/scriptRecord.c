@@ -8,7 +8,7 @@
 #include "scriptRecord.h"
 #undef  GEN_SIZE_OFFSET
 
-#include "scriptUtil.h"
+#include "luascriptUtil.h"
 
 #include <stdlib.h>
 

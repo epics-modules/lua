@@ -15,7 +15,7 @@
 #include <alarm.h>
 #include <dbEvent.h>
 
-#include "scriptUtil.h"
+#include "luascriptUtil.h"
 #include "epicsScript.h"
 
 

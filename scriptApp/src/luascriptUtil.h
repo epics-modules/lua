@@ -1,5 +1,5 @@
-#ifndef INC_SCRIPTUTIL_H
-#define INC_SCRIPTUTIL_H
+#ifndef INC_LUASCRIPTUTIL_H
+#define INC_LUASCRIPTUTIL_H
 
 #include "scriptRecord.h"
 #include <dbAccess.h>
