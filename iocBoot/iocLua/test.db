@@ -1,4 +1,4 @@
-record(script, "$(P)$(Q)state_machine")
+record(luascript, "$(P)$(Q)state_machine")
 {	
 	field(INAA, "$(P)$(Q)aaval.VAL")
 	field(INBB, "$(P)$(Q)bbval.VAL")
@@ -18,7 +18,7 @@ record(script, "$(P)$(Q)state_machine")
 	field(CODE, "@test.lua state_demo()")
 }
 
-record(script, "$(P)$(Q)pattern_match")
+record(luascript, "$(P)$(Q)pattern_match")
 {	
 	field(INAA, "$(P)$(Q)aaval.VAL")
 	field(INBB, "$(P)$(Q)bbval.VAL")

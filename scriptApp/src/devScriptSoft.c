@@ -13,13 +13,13 @@
 #include "devSup.h"
 #include "link.h"
 #include "special.h"
-#include "scriptRecord.h"
+#include "luascriptRecord.h"
 #include "epicsExport.h"
 #include <dbEvent.h>
 
 #include "luascriptUtil.h"
 
-static long write_Script(scriptRecord *record);
+static long write_Script(luascriptRecord *record);
 
 struct {
 	long		number;
@@ -42,7 +42,7 @@ epicsExportAddress(dset,devScriptSoft);
 volatile int devScriptSoftDebug = 0;
 epicsExportAddress(int, devScriptSoftDebug);
 
-static long asyncWrite(scriptRecord* record, double* val, char* sval, struct link* out)
+static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct link* out)
 {	
 	long    status;
 	long    n_elements = 1;
@@ -106,7 +106,7 @@ static long asyncWrite(scriptRecord* record, double* val, char* sval, struct lin
 	return status;
 }
 
-static long syncWrite(scriptRecord* record, double* val, char* sval, struct link* out)
+static long syncWrite(luascriptRecord* record, double* val, char* sval, struct link* out)
 {
 	long    n_elements = 1;
 	short   field_type = 0;
@@ -155,7 +155,7 @@ static long syncWrite(scriptRecord* record, double* val, char* sval, struct link
 	}
 }
 
-static long write_Script(scriptRecord* record)
+static long write_Script(luascriptRecord* record)
 {	
 	if (devScriptSoftDebug)    { printf("write_Script: pact=%d\n", record->pact); }
 		
