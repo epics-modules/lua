@@ -11,7 +11,7 @@ include $(TOP)/configure/CONFIG
 DBD += scriptSupport.dbd
 DBDINC += luascriptRecord.dbd
 
-SRC_DIRS += ../lua
+SRC_DIRS += ../lua/core
 
 INC += lua.h
 INC += lualib.h
@@ -59,7 +59,7 @@ script_SRCS += lasynlib.cpp
 script_SRCS += lepicslib.cpp
 
 script_SRCS += luascriptRecord.c
-script_SRCS += devScriptSoft.c
+script_SRCS += luaSoft.c
 script_SRCS += luascriptUtil.cpp
 script_SRCS += luaEpics.cpp
 
