@@ -728,6 +728,10 @@ long startProc(luascriptRecord* record)
 {
 	long status;
 	
+	/* Clear any existing error message */
+	memset(record->err, 0, 200);
+	db_post_events(record, &record->err, DBE_VALUE);
+	
 	record->pact = TRUE;
 	
 	/* luascriptRELO_Always indicates a state reload on every process */
