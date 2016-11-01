@@ -669,6 +669,12 @@ void logError(luascriptRecord* record)
 	std::string err(lua_tostring((lua_State*) record->state, -1));
 	lua_pop((lua_State*) record->state, 1);
 	
+	
+	/* Get rid of everything up until the line number */
+	size_t split = err.find_first_of(':');
+	
+	if (split != std::string::npos)    { err.erase(0, split + 1); }
+	
 	strcpy(record->err, err.c_str());
 	db_post_events(record, &record->err, DBE_VALUE);
 }
@@ -677,13 +683,13 @@ void writeValue(luascriptRecord* record)
 {
 	ScriptDSET* pluascriptDSET = (ScriptDSET*) record->dset;
 
-if (not pluascriptDSET or not pluascriptDSET->write) 
-	{
-    errlogPrintf("%s DSET write does not exist\n", record->name);
-    recGblSetSevr(record, SOFT_ALARM, INVALID_ALARM);
-    record->pact = TRUE;
-    return;
-}
+	if (not pluascriptDSET or not pluascriptDSET->write) 
+		{
+		errlogPrintf("%s DSET write does not exist\n", record->name);
+		recGblSetSevr(record, SOFT_ALARM, INVALID_ALARM);
+		record->pact = TRUE;
+		return;
+	}
 
 	pluascriptDSET->write(record);
 }
