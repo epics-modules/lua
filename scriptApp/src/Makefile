@@ -8,10 +8,12 @@ include $(TOP)/configure/CONFIG
 #=============================
 # xxxRecord.h will be created from xxxRecord.dbd
 
-DBD += scriptSupport.dbd
-DBDINC += luascriptRecord.dbd
-
+SRC_DIRS += ../lua
 SRC_DIRS += ../lua/core
+
+DBD += luaSupport.dbd
+
+DBDINC += luascriptRecord.dbd
 
 INC += lua.h
 INC += lualib.h
@@ -19,61 +21,61 @@ INC += lauxlib.h
 INC += luaconf.h
 INC += luaEpics.h
 
-LIBRARY_IOC += script
-script_SRCS += lapi.c
-script_SRCS += lauxlib.c
-script_SRCS += lbaselib.c
-script_SRCS += lbitlib.c
-script_SRCS += lcode.c
-script_SRCS += lcorolib.c
-script_SRCS += lctype.c
-script_SRCS += ldblib.c
-script_SRCS += ldebug.c
-script_SRCS += ldo.c
-script_SRCS += ldump.c
-script_SRCS += lfunc.c
-script_SRCS += lgc.c
-script_SRCS += linit.c
-script_SRCS += liolib.c
-script_SRCS += llex.c
-script_SRCS += lmathlib.c
-script_SRCS += lmem.c
-script_SRCS += loadlib.c
-script_SRCS += lobject.c
-script_SRCS += lopcodes.c
-script_SRCS += loslib.c
-script_SRCS += lparser.c
-script_SRCS += lstate.c
-script_SRCS += lstring.c
-script_SRCS += lstrlib.c
-script_SRCS += ltable.c
-script_SRCS += ltablib.c
-script_SRCS += ltm.c
-script_SRCS += lua.c
-script_SRCS += luac.c
-script_SRCS += lundump.c
-script_SRCS += lutf8lib.c
-script_SRCS += lvm.c
-script_SRCS += lzio.c
-script_SRCS += lasynlib.cpp
-script_SRCS += lepicslib.cpp
+LIBRARY_IOC += lua
+lua_SRCS += lapi.c
+lua_SRCS += lauxlib.c
+lua_SRCS += lbaselib.c
+lua_SRCS += lbitlib.c
+lua_SRCS += lcode.c
+lua_SRCS += lcorolib.c
+lua_SRCS += lctype.c
+lua_SRCS += ldblib.c
+lua_SRCS += ldebug.c
+lua_SRCS += ldo.c
+lua_SRCS += ldump.c
+lua_SRCS += lfunc.c
+lua_SRCS += lgc.c
+lua_SRCS += linit.c
+lua_SRCS += liolib.c
+lua_SRCS += llex.c
+lua_SRCS += lmathlib.c
+lua_SRCS += lmem.c
+lua_SRCS += loadlib.c
+lua_SRCS += lobject.c
+lua_SRCS += lopcodes.c
+lua_SRCS += loslib.c
+lua_SRCS += lparser.c
+lua_SRCS += lstate.c
+lua_SRCS += lstring.c
+lua_SRCS += lstrlib.c
+lua_SRCS += ltable.c
+lua_SRCS += ltablib.c
+lua_SRCS += ltm.c
+lua_SRCS += lua.c
+lua_SRCS += luac.c
+lua_SRCS += lundump.c
+lua_SRCS += lutf8lib.c
+lua_SRCS += lvm.c
+lua_SRCS += lzio.c
+lua_SRCS += lasynlib.cpp
+lua_SRCS += lepicslib.cpp
 
-script_SRCS += luascriptRecord.c
-script_SRCS += luaSoft.c
-script_SRCS += luascriptUtil.cpp
-script_SRCS += luaEpics.cpp
+lua_SRCS += luascriptRecord.c
+lua_SRCS += luaSoft.c
+lua_SRCS += luascriptUtil.cpp
+lua_SRCS += luaEpics.cpp
 
-script_LIBS += asyn
-script_LIBS += $(EPICS_BASE_IOC_LIBS)
+lua_LIBS += asyn
+lua_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 PROD_IOC = scriptioc
 
 DBD += scriptioc.dbd
 scriptioc_DBD += base.dbd
 scriptioc_DBD += drvAsynIPPort.dbd
-scriptioc_DBD += scriptSupport.dbd
+scriptioc_DBD += luaSupport.dbd
 
-scriptioc_LIBS += script
+scriptioc_LIBS += lua
 scriptioc_LIBS += asyn
 scriptioc_LIBS += $(EPICS_BASE_IOC_LIBS)
 
