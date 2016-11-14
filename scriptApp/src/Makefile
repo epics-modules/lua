@@ -8,8 +8,7 @@ include $(TOP)/configure/CONFIG
 #=============================
 # xxxRecord.h will be created from xxxRecord.dbd
 
-SRC_DIRS += ../lua
-SRC_DIRS += ../lua/core
+SRC_DIRS += ../core
 
 DBD += luaSupport.dbd
 
@@ -75,13 +74,14 @@ scriptioc_DBD += base.dbd
 scriptioc_DBD += drvAsynIPPort.dbd
 scriptioc_DBD += luaSupport.dbd
 
+
 scriptioc_LIBS += lua
 scriptioc_LIBS += asyn
 scriptioc_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 scriptioc_SRCS += scriptioc_registerRecordDeviceDriver.cpp
 
-scriptioc_SRCS_DEFAULT += scriptMain.cpp
+scriptioc_SRCS_DEFAULT += luaMain.cpp
 scriptioc_SRCS_vxWorks += -nil-
 
 

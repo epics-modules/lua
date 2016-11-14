@@ -14,7 +14,7 @@
 
 #include "luaEpics.h"
 
-static std::string locateFile(std::string filename)
+std::string luaLocateFile(std::string filename)
 {
 	char* env_path = std::getenv("LUA_SCRIPT_PATH");
 	
@@ -58,7 +58,7 @@ static std::string locateFile(std::string filename)
 
 int luaLoadScript(lua_State* state, const char* script_file)
 {	
-	std::string found = locateFile(std::string(script_file));
+	std::string found = luaLocateFile(std::string(script_file));
 	
 	if (! found.empty())
 	{
@@ -129,5 +129,25 @@ void luaLoadParams(lua_State* state, const char* param_list)
 			
 			lua_setglobal(state, pairs[0]);
 		}
+	}
+}
+
+
+void luaLoadEnviron(lua_State* state)
+{
+	extern char** environ;
+	char** sp;
+	
+	for (sp = environ; (sp != NULL) && (*sp != NULL); sp++)
+	{
+		std::string line(*sp);
+		
+		size_t split_loc = line.find_first_of("=");
+		
+		std::string var_name = line.substr(0, split_loc);
+		std::string var_val  = line.substr(split_loc + 1);
+		
+		lua_pushstring(state, var_val.c_str());
+		lua_setglobal(state, var_name.c_str());
 	}
 }
