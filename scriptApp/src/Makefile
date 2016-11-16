@@ -67,6 +67,8 @@ lua_SRCS += luaEpics.cpp
 
 lua_SRCS += devLuaAi.c
 lua_SRCS += devLuaAo.c
+lua_SRCS += devLuaBi.c
+lua_SRCS += devLuaBo.c
 lua_SRCS += devUtil.cpp
 
 lua_LIBS += asyn
