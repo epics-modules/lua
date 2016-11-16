@@ -69,8 +69,12 @@ lua_SRCS += devLuaAi.c
 lua_SRCS += devLuaAo.c
 lua_SRCS += devLuaBi.c
 lua_SRCS += devLuaBo.c
+lua_SRCS += devLuaMbbi.c
+lua_SRCS += devLuaMbbo.c
 lua_SRCS += devLuaLongin.c
 lua_SRCS += devLuaLongout.c
+lua_SRCS += devLuaStringin.c
+lua_SRCS += devLuaStringout.c
 lua_SRCS += devUtil.cpp
 
 lua_LIBS += asyn
