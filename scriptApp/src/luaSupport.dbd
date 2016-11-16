@@ -1,3 +1,5 @@
 include "luascriptRecord.dbd"
 
 device(luascript, CONSTANT, devLuaSoft, "Soft Channel")
+device(ai, CONSTANT, devLuaAi, "lua")
+device(ao, CONSTANT, devLuaAo, "lua")

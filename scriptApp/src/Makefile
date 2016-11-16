@@ -19,6 +19,7 @@ INC += lualib.h
 INC += lauxlib.h
 INC += luaconf.h
 INC += luaEpics.h
+INC += devUtil.h
 
 LIBRARY_IOC += lua
 lua_SRCS += lapi.c
@@ -63,6 +64,10 @@ lua_SRCS += luascriptRecord.c
 lua_SRCS += luaSoft.c
 lua_SRCS += luascriptUtil.cpp
 lua_SRCS += luaEpics.cpp
+
+lua_SRCS += devLuaAi.c
+lua_SRCS += devLuaAo.c
+lua_SRCS += devUtil.cpp
 
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
