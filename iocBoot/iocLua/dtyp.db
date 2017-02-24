@@ -1,0 +1,14 @@
+record(ai, "$(P)$(Q)ai")
+{
+	field(DTYP, "lua")
+	field(INP, "@dtyp.lua next_int")
+}
+
+record(bi, "$(P)$(Q)bi")
+{
+	field(DTYP, "lua")
+	field(INP, "@dtyp.lua next_bool")
+	
+	field(ONAM, "True")
+	field(ZNAM, "False")
+}
