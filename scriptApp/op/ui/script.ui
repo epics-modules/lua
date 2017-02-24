@@ -1252,7 +1252,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
      <enum>caLineEdit::WidthAndHeight</enum>
     </property>
     <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
+     <enum>caLineEdit::string</enum>
     </property>
    </widget>
    <widget class="caLabel" name="caLabel_12">
@@ -2782,7 +2782,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
      <enum>caLineEdit::Static</enum>
     </property>
     <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
+     <enum>caLineEdit::User</enum>
     </property>
     <property name="limitsMode">
      <enum>caLineEdit::Channel</enum>
@@ -2797,7 +2797,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
      <enum>caLineEdit::WidthAndHeight</enum>
     </property>
     <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
+     <enum>caLineEdit::string</enum>
     </property>
    </widget>
    <widget class="caLineEdit" name="caLineEdit_21">
@@ -3405,6 +3405,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
       <green>0</green>
       <blue>0</blue>
      </color>
+    </property>
+    <property name="framePresent" stdset="0">
+     <bool>false</bool>
     </property>
     <property name="formatType">
      <enum>caLineEdit::string</enum>
