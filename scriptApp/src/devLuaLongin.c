@@ -1,13 +1,69 @@
 #include "devUtil.h"
 
+#include "lua.h"
+
 #include <longinRecord.h>
 #include <epicsExport.h>
 #include <dbCommon.h>
 #include <devSup.h>
 
+static void pushRecord(struct longinRecord* record)
+{
+	Protocol* proto = (Protocol*) record->dpvt;
+	lua_State* state = proto->state;
+	
+	lua_createtable(state, 0, 3);
+	
+	lua_pushstring(state, "name");
+	lua_pushstring(state, record->name);
+	lua_settable(state, -3);
+	
+	lua_pushstring(state, "desc");
+	lua_pushstring(state, record->desc);
+	lua_settable(state, -3);
+	
+	lua_pushstring(state, "val");
+	lua_pushnumber(state, record->val);
+	lua_settable(state, -3);
+}
+
 static long readData(struct longinRecord* record)
 {
-	return runScript(record->dpvt);
+	Protocol* proto = (Protocol*) record->dpvt;
+	
+	lua_getglobal(proto->state, proto->function_name);
+	pushRecord(record);
+	runFunction(proto);
+	
+	int type = lua_type(proto->state, -1);
+	
+	switch (type)
+	{		
+		case LUA_TNUMBER:
+		{
+			if (! lua_isinteger(proto->state, -1))
+			{ 
+				lua_pop(proto->state, 1);
+				return -1;
+			}
+			
+			long val = lua_tointeger(proto->state, -1);
+			record->val = val;
+			
+			lua_pop(proto->state, 1);
+			return 2;
+		}
+		
+		case LUA_TNIL:
+			lua_pop(proto->state, 1);
+			return 0;
+		
+		default:
+			lua_pop(proto->state, 1);
+			return -1;
+	}
+	
+	return 0;
 }
 
 
