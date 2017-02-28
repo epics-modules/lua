@@ -60,9 +60,8 @@ lua_SRCS += lzio.c
 lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
 
-lua_SRCS += luascriptRecord.c
+lua_SRCS += luascriptRecord.cpp
 lua_SRCS += luaSoft.c
-lua_SRCS += luascriptUtil.cpp
 lua_SRCS += luaEpics.cpp
 
 lua_SRCS += devLuaAi.c

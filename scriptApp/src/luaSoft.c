@@ -17,8 +17,6 @@
 #include "epicsExport.h"
 #include <dbEvent.h>
 
-#include "luascriptUtil.h"
-
 static long write_Script(luascriptRecord *record);
 
 struct {
