@@ -97,13 +97,55 @@ int luaLoadString(lua_State* state, const char* lua_code)
 	return -1;
 }
 
-void luaLoadParams(lua_State* state, const char* param_list)
+int luaLoadParams(lua_State* state, const char* param_list)
+{
+	std::string parse(param_list);
+	
+	int num_params = 0;
+
+	size_t curr = 0;
+	size_t next;
+
+	do
+	{
+		/* Get the next parameter */
+		next = parse.find(",", curr);
+
+		std::string param;
+
+		/* If we find the end of the string, just take everything */
+		if   (next == oob)    { param = parse.substr(curr); }
+		else                  { param = parse.substr(curr, next - curr); }
+
+		int trim_front = param.find_first_not_of(" ");
+		int trim_back  = param.find_last_not_of(" ");
+
+		param = param.substr(trim_front, trim_back - trim_front + 1);
+		
+		/* Treat anything with quotes as a string, anything else as a number */
+		if (param.at(0) == '"' or param.at(0) == '\'')
+		{
+			lua_pushstring(state, param.substr(1, param.length() - 2).c_str());
+		}
+		else
+		{
+			lua_pushnumber(state, strtod(param.c_str(), NULL));
+		}
+
+		num_params += 1;
+		curr = next + 1;
+	} while (curr);
+	
+	return num_params;
+}
+
+void luaLoadMacros(lua_State* state, const char* macro_list)
 {
 	char** pairs;
 	
-	if (param_list)
+	if (macro_list)
 	{
-		macParseDefns(NULL, param_list, &pairs);
+		macParseDefns(NULL, macro_list, &pairs);
 		
 		for ( ; pairs && pairs[0]; pairs += 2)
 		{

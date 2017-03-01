@@ -13,6 +13,7 @@ extern "C"
 std::string luaLocateFile(std::string filename);
 int luaLoadScript(lua_State* state, const char* script_file);
 int luaLoadString(lua_State* state, const char* lua_code);
-void luaLoadParams(lua_State* state, const char* param_list);
+int  luaLoadParams(lua_State* state, const char* param_list);
+void luaLoadMacros(lua_State* state, const char* macro_list);
 void luaLoadEnviron(lua_State* state);
 #endif
