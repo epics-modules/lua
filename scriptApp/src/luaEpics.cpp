@@ -114,8 +114,8 @@ int luaLoadParams(lua_State* state, const char* param_list)
 		std::string param;
 
 		/* If we find the end of the string, just take everything */
-		if   (next == oob)    { param = parse.substr(curr); }
-		else                  { param = parse.substr(curr, next - curr); }
+		if   (next == std::string::npos)    { param = parse.substr(curr); }
+		else                                { param = parse.substr(curr, next - curr); }
 
 		int trim_front = param.find_first_not_of(" ");
 		int trim_back  = param.find_last_not_of(" ");
