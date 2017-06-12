@@ -1,13 +1,13 @@
 <HTML>
 <HEAD>
    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-		 <TITLE>script - Lua Script Processing Record</TITLE>
+		 <TITLE>luascript - Lua Script Processing Record</TITLE>
 
 </HEAD>
 <BODY>
 
 <H1>
-script - Lua Script Processing Record</H1>
+lusscript - Lua Script Processing Record</H1>
 
 <!-- TOC -->
 <H2>Contents</H2>
@@ -51,15 +51,15 @@ script - Lua Script Processing Record</H1>
 <H1>
 1. Introduction</H1>
 
-The lua script processing record or "script" record is derived from the Calcout
+The lua script processing record or "luascript" record is derived from the Calcout
 record in EPICS base, but replaces the calc operation engine with the lua
 scripting language.&nbsp; The record has 10 string fields (AA...JJ)
 and 10 double fields (A...J) which are turned into global variables for the
 expression.  
 
 <P>If the lua expression uses the return operator to return a string variable, the
-script record will produce a string output. If the lua expression uses the return
-operator to return a numerical variable, the script record will produce a double
+luascript record will produce a string output. If the lua expression uses the return
+operator to return a numerical variable, the luascript record will produce a double
 output.
 
 <P>When writing to a string PV (any of DBF_STRING, DBF_ENUM, DBF_MENU,
@@ -80,11 +80,11 @@ converted to integers, set the precision (the PREC field) to zero.
 <H1>
 2. Scan Parameters</H1>
 
-The script record has the standard fields for specifying under what
+The luascript record has the standard fields for specifying under what
 circumstances the record will be processed. These fields are listed in 
 <a href="http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html#MARKER-9-2"><em>Scan Fields, Chapter 2, 2</em></a>. 
 In addition, <a href="http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-2"><em>Scanning Specification, 
-Chapter 1, 1</em></a>, explains how these fields are used. Since the script record 
+Chapter 1, 1</em></a>, explains how these fields are used. Since the luascript record 
 supports no direct interfaces to hardware, it cannot be scanned on I/O interrupt, 
 so its SCAN field cannot be <code>I/O Intr</code>.<p>
 
@@ -94,23 +94,23 @@ so its SCAN field cannot be <code>I/O Intr</code>.<p>
 <H1>
 3. Read Parameters</H1>
 
-The read parameters for the script record consist of 20 input links:
+The read parameters for the luascript record consist of 20 input links:
 10 to numeric fields (INPA -> A, INPB -> B, . . . INPJ -> J); and 10 to
 string fields (INAA -> AA, INBB -> BB, ...INJJ -> JJ). The fields can be
 database links, channel access links, or constants. If they are links,
 they must specify another record's field. If they are constants, they will
 be initialized with the value they are configured with and can be changed
 via <TT>dbPuts</TT>. These fields cannot be hardware addresses. In addition,
-the script record contains the fields INAV, INBV, . . . INJV, which indicate
+the luascript record contains the fields INAV, INBV, . . . INJV, which indicate
 the status of the links to numeric fields, and the fields IAAV, IBBV, .
 . . IJJV, which indicate the status of the links to string fields.&nbsp;
 These fields indicate whether or not the specified PV was found and a link
 to it established. See <A HREF="#MARKER-9-2">Section 5, <I>Operator Display
 Parameters</I></A> for an explanation of these fields.
 
-<P>From most types of PV's, the script record's string input links fetch data as
+<P>From most types of PV's, the luascript record's string input links fetch data as
 strings, and depend on EPICS to convert a PV's native value to string.  But when a
-script record's string input link names a PV whose data type is an array of
+luascript record's string input link names a PV whose data type is an array of
 DBF_CHAR or DBF_UCHAR, the record fetches up to 39 array elements from the array in
 their native form, translates the result using epicsStrSnPrintEscaped(), and
 truncates the result to fit into a 40-character string.
@@ -224,7 +224,7 @@ truncates the result to fit into a 40-character string.
 <H1>
 4. Expressions</H1>
 
-The script record has a CODE field into which you can enter an expression for 
+The luascript record has a CODE field into which you can enter an expression for 
 the record to evaluate when it processes.  The return operator can be used to
 return either a numeric or string variable for writing to the VAL or SVAL field
 respectively. Either VAL and SVAL can also be written to the output link.  
@@ -233,15 +233,15 @@ depending on the data type of the field at the other end of the output link.)
 
 <P>The CODE expression can also be used to reference a file containing the
 description of at least a single lua function. If the CODE field starts with the
-symbol '@' followed by the name of said file, the script record will search through
+symbol '@' followed by the name of said file, the luascript record will search through
 a list of directories given by the environment variable 'LUA_SCRIPT_PATH'
 (default: current directory) for the given file. A space character and then the name
-of a function defined in the file lets the script record know what function to call
+of a function defined in the file lets the luascript record know what function to call
 when the record processes. Optionally, a set of parameters can be provided that the
 function will be called with each processing by including a comma separated list 
 enclosed by parentheses.
 
-<P>When changing the CODE field, the script record's RELO field controls whether or not
+<P>When changing the CODE field, the luascript record's RELO field controls whether or not
 the record will recompile the string into a new lua state, resetting any variables in the
 global scope. The field is a menu with three choices:
 
@@ -372,7 +372,7 @@ parameters, one a number, the other a string.</li></ul>
 5.&nbsp;<A NAME="MARKER-9-1"></A>Output Parameters</H1>
 
 These parameters specify and control the output capabilities of the
-script record. They determine when to write the output, where to write
+luascript record. They determine when to write the output, where to write
 it, and what the output will be. The OUT link specifies the Process Variable
 to which the result will be written. The OOPT field determines the condition
 that causes the output link to be written to. It's a menu field that has
@@ -455,7 +455,7 @@ manner. It is a menu field with two choices:
 
 </TABLE>
 
-<P> The script record uses device support to write to the <code>OUT</code> link. 
+<P> The luascript record uses device support to write to the <code>OUT</code> link. 
 Soft device supplied with the record is selected with the .dbd specification 
 <PRE> field(DTYP,"Soft Channel") </PRE>
 
@@ -468,7 +468,7 @@ Soft device supplied with the record is selected with the .dbd specification
 These parameters are used to present meaningful data to the operator.
 Some are also meant to represent the status of the record at run-time.
 An example of an interactive MEDM display screen that displays the status
-of the script record is located here.
+of the luascript record is located here.
 
 <P>The HOPR and LOPR fields only refer to the limits of the VAL,
 HIHI, HIGH, LOW, and LOLO fields. PREC controls the precision of the VAL
@@ -701,7 +701,7 @@ description (DESC) fields.
 <H1>
 7. Alarm Parameters</H1>
 
-The possible alarm conditions for the script record are the SCAN,
+The possible alarm conditions for the luascript record are the SCAN,
 READ, Calculation, and limit alarms. The SCAN and READ alarms are called
 by the record support routines. The Calculation alarm is called by the
 record processing routine when the CALC expression is an invalid one, upon
