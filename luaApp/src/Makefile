@@ -60,6 +60,14 @@ lua_SRCS += lzio.c
 lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
 
+ifeq ($(BASE_3_15),YES)
+    if [ ${EPICS_REVISION} -gt 4 ] ; then lua_SRCS += liocshlib.cpp fi
+endif
+
+ifdef BASE_3_16
+  lua_SRCS += liocshlib.cpp
+endif
+
 lua_SRCS += luascriptRecord.cpp
 lua_SRCS += luaSoft.c
 lua_SRCS += luaEpics.cpp

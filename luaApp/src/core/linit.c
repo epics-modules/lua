@@ -55,6 +55,9 @@ static const luaL_Reg loadedlibs[] = {
 #endif
   {LUA_ASYNLIBNAME, luaopen_asyn},
   {LUA_EPICSLIBNAME, luaopen_epics},
+#if defined(LUA_COMPAT_IOCSH)
+  {LUA_IOCSHLIBNAME, luaopen_iocsh},
+#endif
   {NULL, NULL}
 };
 

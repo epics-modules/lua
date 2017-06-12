@@ -50,6 +50,9 @@ LUAMOD_API int (luaopen_asyn) (lua_State *L);
 #define LUA_EPICSLIBNAME "epics"
 LUAMOD_API int (luaopen_epics) (lua_State *L);
 
+#define LUA_IOCSHLIBNAME "iocsh"
+LUAMOD_API int (luaopen_iocsh) (lua_State *L);
+
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
 

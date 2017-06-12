@@ -18,6 +18,28 @@
 ** ===================================================================
 */
 
+/*
+** EPICS CONFIGURATION
+ */
+
+#if EPICS_VERSION == 3
+#if EPICS_REVISION == 15
+
+  #if EPICS_MODIFICATION >= 5
+    #define EPICS_COMPAT_IOCSH
+  #endif
+
+#elif EPICS_REVISION > 15
+  #define EPICS_COMPAT_IOCSH
+#endif
+
+#elif EPICS_VERSION > 3
+  #define EPICS_COMPAT_IOCSH
+#endif
+
+
+
+
 
 /*
 ** {====================================================================
