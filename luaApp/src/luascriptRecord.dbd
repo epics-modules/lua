@@ -76,7 +76,6 @@ recordtype(luascript)
 		prompt("Force Reload")
 		special(SPC_MOD)
 		interest(4)
-		pp(TRUE)
 	}
 	
 	field(ERR, DBF_STRING)
