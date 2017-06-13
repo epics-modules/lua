@@ -14,6 +14,14 @@ DBD += luaSupport.dbd
 
 DBDINC += luascriptRecord.dbd
 
+ifeq ($(BASE_3_15),YES)
+    if [ ${EPICS_REVISION} -gt 4 ] ; then DBD += luaShell.dbd fi
+endif
+
+ifdef BASE_3_16
+    DBD += luaShell.dbd
+endif
+
 INC += lua.h
 INC += lualib.h
 INC += lauxlib.h
@@ -62,10 +70,12 @@ lua_SRCS += lepicslib.cpp
 
 ifeq ($(BASE_3_15),YES)
     if [ ${EPICS_REVISION} -gt 4 ] ; then lua_SRCS += liocshlib.cpp fi
+    if [ ${EPICS_REVISION} -gt 4 ] ; then lua_SRCS += luaShell.cpp fi
 endif
 
 ifdef BASE_3_16
-  lua_SRCS += liocshlib.cpp
+    lua_SRCS += liocshlib.cpp
+    lua_SRCS += luaShell.cpp
 endif
 
 lua_SRCS += luascriptRecord.cpp
@@ -94,6 +104,13 @@ scriptioc_DBD += base.dbd
 scriptioc_DBD += drvAsynIPPort.dbd
 scriptioc_DBD += luaSupport.dbd
 
+ifeq ($(BASE_3_15),YES)
+    if [ ${EPICS_REVISION} -gt 4 ] ; then scriptioc_DBD += luaShell.dbd fi
+endif
+
+ifdef BASE_3_16
+    scriptioc_DBD += luaShell.dbd
+endif
 
 scriptioc_LIBS += lua
 scriptioc_LIBS += asyn
