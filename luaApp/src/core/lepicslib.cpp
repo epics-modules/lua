@@ -6,26 +6,26 @@ extern "C"
 }
 
 #include <cadef.h>
+#include <string>
 #include <stdio.h>
 #include <epicsThread.h>
 
-static int l_caget(lua_State* state)
+static int epics_get(lua_State* state, const char* pv_name)
 {
-	if (! lua_isstring(state, 1))    { return 0; }
-
 	ca_context_create(ca_enable_preemptive_callback);
-
-	const char* pv_name = lua_tostring(state, 1);
-
+	
 	chid id;
 
 	int status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
 
 	if (status != ECA_NORMAL) { return 0; }
 	ca_pend_io(0.001);
-
+	
 	switch (ca_field_type(id))
 	{
+		case -1:
+			return 0;
+		
 		case DBF_STRING:
 		{
 			struct dbr_time_string val;
@@ -95,6 +95,9 @@ static int l_caget(lua_State* state)
 			lua_pushnumber(state, val.value);
 			break;
 		}
+		
+		case DBF_NO_ACCESS:
+			return 0;
 	}
 
 	ca_clear_channel(id);
@@ -104,38 +107,38 @@ static int l_caget(lua_State* state)
 	return 1;
 }
 
-static int l_caput(lua_State* state)
+static int epics_put(lua_State* state, const char* pv_name, int offset)
 {
-	if (! lua_isstring(state, 1))    { return 0; }
-
+	int status;
+	
 	ca_context_create(ca_enable_preemptive_callback);
-
-	const char* pv_name = lua_tostring(state, 1);
-
+	
 	chid id;
 
-	ca_create_channel(pv_name, NULL, NULL, 0, &id);
-	ca_pend_io(0.001);
+	ca_create_channel(pv_name, NULL, NULL, 0, &id);	
+	status = ca_pend_io(0.001);
+	SEVCHK (status, NULL);
 
-	switch (lua_type(state, 2))
+	switch (lua_type(state, offset))
 	{
 		case LUA_TNUMBER:
 		{
-			double data = lua_tonumber(state, 2);
+			double data = lua_tonumber(state, offset);
 			ca_put(DBR_DOUBLE, id, &data);
 			break;
 		}
 
 		case LUA_TBOOLEAN:
 		{
-			short data = lua_toboolean(state, 2);
+			short data = lua_toboolean(state, offset);
 			ca_put(DBR_INT, id, &data);
 			break;
 		}
 
 		case LUA_TSTRING:
-		{
-			ca_put(DBR_STRING, id, lua_tostring(state, 2));
+		{			
+			const char* data = lua_tostring(state, offset);
+			ca_put(DBR_STRING, id, data);
 			break;
 		}
 
@@ -150,12 +153,31 @@ static int l_caput(lua_State* state)
 			/* Unsupported types */
 			break;
 	}
-
+	
 	ca_clear_channel(id);
-
+	
 	ca_context_destroy();
 
 	return 0;
+}
+
+
+static int l_caget(lua_State* state)
+{
+	if (! lua_isstring(state, 1))    { return 0; }
+
+	const char* pv_name = lua_tostring(state, 1);
+
+	return epics_get(state, pv_name);
+}
+
+static int l_caput(lua_State* state)
+{
+	if (! lua_isstring(state, 1))    { return 0; }
+
+	const char* pv_name = lua_tostring(state, 1);
+
+	return epics_put(state, pv_name, 2);
 }
 
 static int l_epicssleep(lua_State* state)
@@ -169,11 +191,66 @@ static int l_epicssleep(lua_State* state)
 	return 0;
 }
 
+static int l_pvgetval(lua_State* state)
+{
+	luaL_getmetafield(state, 1, "pv_name");
+	const char* pv_name = lua_tostring(state, lua_gettop(state));	
+	lua_pop(state, 1);
+	
+	const char* field_name = lua_tostring(state, 2);
+	
+	std::string full_name(pv_name);
+	full_name.append(".");
+	full_name.append(field_name);
+	
+	return epics_get(state, full_name.c_str());
+}
+
+static int l_pvsetval(lua_State* state)
+{
+	luaL_getmetafield(state, 1, "pv_name");
+	const char* pv_name = lua_tostring(state, lua_gettop(state));	
+	lua_pop(state, 1);
+	
+	const char* field_name = lua_tostring(state, 2);
+	
+	std::string full_name(pv_name);
+	full_name.append(".");
+	full_name.append(field_name);
+	
+	return epics_put(state, full_name.c_str(), 3);
+}
+
+static const luaL_Reg pv_meta[] = {
+	{"__index", l_pvgetval},
+	{"__newindex", l_pvsetval},
+	{NULL, NULL}
+};
+
+static int l_createpv(lua_State* state)
+{
+	if (! lua_isstring(state, 1))    { return 0; }
+	
+	const char* pv_name = lua_tostring(state, 1);
+	
+	luaL_newmetatable(state, "pv_meta");
+	luaL_setfuncs(state, pv_meta, 0);	
+	lua_pushstring(state, pv_name);
+	lua_setfield(state, -2, "pv_name");
+	lua_pop(state, 1);
+	
+	lua_newtable(state);
+	luaL_setmetatable(state, "pv_meta");
+	
+	return 1;
+}
+
 
 static const luaL_Reg mylib[] = {
 	{"get", l_caget},
 	{"put", l_caput},
 	{"sleep", l_epicssleep},
+	{"pv", l_createpv},
 	{NULL, NULL}  /* sentinel */
 };
 
