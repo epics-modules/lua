@@ -1,19 +1,18 @@
-int_state = 0
-bool_state = 0
-
 function next_int(record)
-	print(record["name"])
+	local curr_val = record["VAL"]
 
-	int_state = int_state + 1
-	return int_state
+	print("Previous Value: " .. curr_val)
+	print("Changing to: " .. (curr_val + 1))
+
+	return curr_val + 1
 end
 
-function next_bool()
-	if bool_state == 0 then
-		bool_state = 1
+function next_bool(record)
+	local curr_val = record["VAL"]
+
+	if curr_val == 0 then
 		return "True"
 	else
-		bool_state = 0
 		return "False"
 	end
 end

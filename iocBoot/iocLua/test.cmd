@@ -1,9 +1,4 @@
 # Linux startup script
-
-< ../nfsCommands
-
-#load("../../bin/vxWorks-ppc32/scriptioc.munch")
-
 epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 
 ################################################################################
