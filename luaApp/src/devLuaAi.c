@@ -14,35 +14,7 @@ static void pushRecord(struct aiRecord* record)
 	Protocol* proto = (Protocol*) record->dpvt;
 	lua_State* state = proto->state;
 	
-	lua_createtable(state, 0, 7);
-	
-	lua_pushstring(state, "name");
-	lua_pushstring(state, record->name);
-	lua_settable(state, -3);
-	
-	lua_pushstring(state, "desc");
-	lua_pushstring(state, record->desc);
-	lua_settable(state, -3);
-	
-	lua_pushstring(state, "scan");
-	lua_pushnumber(state, record->scan);
-	lua_settable(state, -3);
-	
-	lua_pushstring(state, "val");
-	lua_pushnumber(state, record->val);
-	lua_settable(state, -3);
-	
-	lua_pushstring(state, "egu");
-	lua_pushstring(state, record->egu);
-	lua_settable(state, -3);
-	
-	lua_pushstring(state, "aoff");
-	lua_pushnumber(state, record->aoff);
-	lua_settable(state, -3);
-	
-	lua_pushstring(state, "aslo");
-	lua_pushnumber(state, record->aslo);
-	lua_settable(state, -3);
+	luaGeneratePV(state, record->name);
 }
 
 static long readData(struct aiRecord* record)

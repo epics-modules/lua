@@ -227,12 +227,10 @@ static const luaL_Reg pv_meta[] = {
 	{NULL, NULL}
 };
 
-static int l_createpv(lua_State* state)
+extern "C"
 {
-	if (! lua_isstring(state, 1))    { return 0; }
-	
-	const char* pv_name = lua_tostring(state, 1);
-	
+void luaGeneratePV(lua_State* state, const char* pv_name)
+{
 	luaL_newmetatable(state, "pv_meta");
 	luaL_setfuncs(state, pv_meta, 0);	
 	lua_pushstring(state, pv_name);
@@ -241,6 +239,16 @@ static int l_createpv(lua_State* state)
 	
 	lua_newtable(state);
 	luaL_setmetatable(state, "pv_meta");
+}
+}
+
+static int l_createpv(lua_State* state)
+{
+	if (! lua_isstring(state, 1))    { return 0; }
+	
+	const char* pv_name = lua_tostring(state, 1);
+	
+	luaGeneratePV(state, pv_name);
 	
 	return 1;
 }

@@ -20,6 +20,7 @@ typedef struct Protocol
 Protocol* parseINPOUT(const struct link* inpout);
 
 void runFunction(Protocol* proto);
+void luaGeneratePV(lua_State* state, const char* pv_name);
 
 #ifdef __cplusplus
 }

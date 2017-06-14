@@ -13,19 +13,7 @@ static void pushRecord(struct biRecord* record)
 	Protocol* proto = (Protocol*) record->dpvt;
 	lua_State* state = proto->state;
 	
-	lua_createtable(state, 0, 3);
-	
-	lua_pushstring(state, "name");
-	lua_pushstring(state, record->name);
-	lua_settable(state, -3);
-	
-	lua_pushstring(state, "desc");
-	lua_pushstring(state, record->desc);
-	lua_settable(state, -3);
-	
-	lua_pushstring(state, "val");
-	lua_pushnumber(state, record->val);
-	lua_settable(state, -3);
+	luaGeneratePV(state, record->name);
 }
 
 static long readData(struct biRecord* record)
