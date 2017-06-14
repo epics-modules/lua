@@ -170,3 +170,11 @@ epics.sleep(seconds)
 	
 	
 	seconds  [number]     - Amount of seconds to sleep for (can be fractional).
+
+	
+epics.pv(PV)
+
+	Returns a table representing a PV object. Index accesses can be used to retrive or 
+	change record fields. These changes are completed through ca_get or ca_put.
+	
+	PV       [string]    - The name of the PV to request.
