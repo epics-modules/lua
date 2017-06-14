@@ -62,18 +62,18 @@ extern "C"
 		
 		output->state = luaL_newstate();
 		
-		std::string code(inpout->text);
+		std::string code(inpout->value.instio.string);
 		
 		size_t first_split = code.find_first_of(" ");
 		size_t last_split  = code.find_last_of(" ");
 		
-		if (code.empty() or (code[0] != '@'))
+		if (code.empty())
 		{
 			printf("Error parsing INP string, format is '@filename function [portname]'\n");
 			return NULL;
 		}
 		
-		strcpy(output->filename, code.substr(1, first_split - 1).c_str());
+		strcpy(output->filename, code.substr(0, first_split).c_str());
 		
 		if (last_split != first_split)
 		{
