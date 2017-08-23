@@ -15,7 +15,9 @@ DBD += luaSupport.dbd
 DBDINC += luascriptRecord.dbd
 
 ifeq ($(BASE_3_15),YES)
-    if [ ${EPICS_REVISION} -gt 4 ] ; then DBD += luaShell.dbd fi
+ifeq ($(EPICS_REVISION),5)
+    DBD += luaShell.dbd
+endif
 endif
 
 ifdef BASE_3_16
