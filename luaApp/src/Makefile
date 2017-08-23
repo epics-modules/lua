@@ -5,9 +5,6 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-#=============================
-# xxxRecord.h will be created from xxxRecord.dbd
-
 SRC_DIRS += ../core
 
 DBD += luaSupport.dbd
@@ -122,10 +119,6 @@ scriptioc_SRCS += scriptioc_registerRecordDeviceDriver.cpp
 
 scriptioc_SRCS_DEFAULT += luaMain.cpp
 scriptioc_SRCS_vxWorks += -nil-
-
-
-#=============================
-# build an ioc application for testing
 
 #===========================
 
