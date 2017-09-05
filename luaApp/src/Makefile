@@ -5,9 +5,6 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-#=============================
-# xxxRecord.h will be created from xxxRecord.dbd
-
 SRC_DIRS += ../core
 
 DBD += luaSupport.dbd
@@ -15,7 +12,9 @@ DBD += luaSupport.dbd
 DBDINC += luascriptRecord.dbd
 
 ifeq ($(BASE_3_15),YES)
-    if [ ${EPICS_REVISION} -gt 4 ] ; then DBD += luaShell.dbd fi
+ifeq ($(EPICS_REVISION),5)
+    DBD += luaShell.dbd
+endif
 endif
 
 ifdef BASE_3_16
@@ -69,8 +68,10 @@ lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
 
 ifeq ($(BASE_3_15),YES)
-    if [ ${EPICS_REVISION} -gt 4 ] ; then lua_SRCS += liocshlib.cpp fi
-    if [ ${EPICS_REVISION} -gt 4 ] ; then lua_SRCS += luaShell.cpp fi
+ifeq ($(EPICS_REVISION),5)
+    lua_SRCS += liocshlib.cpp
+    lua_SRCS += luaShell.cpp
+endif
 endif
 
 ifdef BASE_3_16
@@ -105,7 +106,9 @@ scriptioc_DBD += drvAsynIPPort.dbd
 scriptioc_DBD += luaSupport.dbd
 
 ifeq ($(BASE_3_15),YES)
-    if [ ${EPICS_REVISION} -gt 4 ] ; then scriptioc_DBD += luaShell.dbd fi
+ifeq ($(EPICS_REVISION),5)
+    scriptioc_DBD += luaShell.dbd
+endif
 endif
 
 ifdef BASE_3_16
@@ -120,10 +123,6 @@ scriptioc_SRCS += scriptioc_registerRecordDeviceDriver.cpp
 
 scriptioc_SRCS_DEFAULT += luaMain.cpp
 scriptioc_SRCS_vxWorks += -nil-
-
-
-#=============================
-# build an ioc application for testing
 
 #===========================
 
