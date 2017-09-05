@@ -385,6 +385,150 @@ recordtype(luascript)
 		interest(1)
 		menu(luascriptINAV)
 	}
+	
+	field(ADSC,DBF_STRING) 
+	{
+		prompt("Input A Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input A")
+	}
+	field(BDSC,DBF_STRING) 
+	{
+		prompt("Input B Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input B")
+	}
+	field(CDSC,DBF_STRING) 
+	{
+		prompt("Input C Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input C")
+	}
+	field(DDSC,DBF_STRING) 
+	{
+		prompt("Input D Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input D")
+	}
+	field(EDSC,DBF_STRING) 
+	{
+		prompt("Input E Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input E")
+	}
+	field(FDSC,DBF_STRING) 
+	{
+		prompt("Input F Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input F")
+	}
+	field(GDSC,DBF_STRING) 
+	{
+		prompt("Input G Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input G")
+	}
+	field(HDSC,DBF_STRING) 
+	{
+		prompt("Input H Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input H")
+	}
+	field(IDSC,DBF_STRING) 
+	{
+		prompt("Input I Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input I")
+	}
+	field(JDSC,DBF_STRING) 
+	{
+		prompt("Input J Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input J")
+	}
+	
+	field(AADN,DBF_STRING) 
+	{
+		prompt("Input AA Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input AA")
+	}
+	field(BBDN,DBF_STRING) 
+	{
+		prompt("Input BB Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input BB")
+	}
+	field(CCDN,DBF_STRING) 
+	{
+		prompt("Input CC Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input CC")
+	}
+	field(DDDN,DBF_STRING) 
+	{
+		prompt("Input DD Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input DD")
+	}
+	field(EEDN,DBF_STRING) 
+	{
+		prompt("Input EE Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input EE")
+	}
+	field(FFDN,DBF_STRING) 
+	{
+		prompt("Input FF Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input FF")
+	}
+	field(GGDN,DBF_STRING) 
+	{
+		prompt("Input GG Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input GG")
+	}
+	field(HHDN,DBF_STRING) 
+	{
+		prompt("Input HH Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input HH")
+	}
+	field(IIDN,DBF_STRING) 
+	{
+		prompt("Input II Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input II")
+	}
+	field(JJDN,DBF_STRING) 
+	{
+		prompt("Input JJ Description")
+		asl(ASL0)
+		size(20)
+		#initial("Input JJ")
+	}
+	
+	
 	field(A,DBF_DOUBLE) {
 		prompt("Value of Input A")
 		promptgroup(GUI_COMMON)
