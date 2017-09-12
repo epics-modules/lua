@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/epics-modules/lua.svg?branch=master)](https://travis-ci.org/epics-modules/lua)
+
 # luascriptRecord
 Lua Scripting Record for EPICS
 
