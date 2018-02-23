@@ -65,7 +65,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
          <property name="font">
           <font>
            <family>DejaVu Sans Mono</family>
-           <pointsize>16</pointsize>
+           <pointsize>17</pointsize>
           </font>
          </property>
          <property name="text">
@@ -216,9 +216,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -409,9 +409,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -467,9 +467,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -606,9 +606,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -652,7 +652,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="font">
              <font>
               <family>DejaVu Sans Mono</family>
-              <pointsize>11</pointsize>
+              <pointsize>10</pointsize>
               <stylestrategy>PreferDefault</stylestrategy>
              </font>
             </property>
@@ -723,9 +723,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -959,9 +959,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1017,9 +1017,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1063,7 +1063,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="font">
              <font>
               <family>DejaVu Sans Mono</family>
-              <pointsize>10</pointsize>
+              <pointsize>9</pointsize>
               <stylestrategy>PreferDefault</stylestrategy>
              </font>
             </property>
@@ -1167,9 +1167,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1213,7 +1213,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="font">
              <font>
               <family>DejaVu Sans Mono</family>
-              <pointsize>10</pointsize>
+              <pointsize>9</pointsize>
               <stylestrategy>PreferDefault</stylestrategy>
              </font>
             </property>
@@ -1284,9 +1284,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1385,7 +1385,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="font">
              <font>
               <family>DejaVu Sans Mono</family>
-              <pointsize>11</pointsize>
+              <pointsize>10</pointsize>
               <stylestrategy>PreferDefault</stylestrategy>
              </font>
             </property>
@@ -1485,9 +1485,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1568,9 +1568,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1626,9 +1626,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1765,9 +1765,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1823,9 +1823,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -1983,7 +1983,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="font">
              <font>
               <family>DejaVu Sans Mono</family>
-              <pointsize>11</pointsize>
+              <pointsize>10</pointsize>
               <stylestrategy>PreferDefault</stylestrategy>
              </font>
             </property>
@@ -2028,9 +2028,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -2167,9 +2167,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -2225,9 +2225,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -2338,9 +2338,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -2491,7 +2491,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="font">
              <font>
               <family>DejaVu Sans Mono</family>
-              <pointsize>11</pointsize>
+              <pointsize>10</pointsize>
               <stylestrategy>PreferDefault</stylestrategy>
              </font>
             </property>
@@ -2715,7 +2715,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="font">
              <font>
               <family>DejaVu Sans Mono</family>
-              <pointsize>11</pointsize>
+              <pointsize>10</pointsize>
               <stylestrategy>PreferDefault</stylestrategy>
              </font>
             </property>
@@ -2958,9 +2958,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
@@ -3016,9 +3016,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="foreground">
              <color>
-              <red>30</red>
-              <green>187</green>
-              <blue>0</blue>
+              <red>57</red>
+              <green>196</green>
+              <blue>57</blue>
              </color>
             </property>
             <property name="background">
