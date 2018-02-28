@@ -11,16 +11,6 @@ DBD += luaSupport.dbd
 
 DBDINC += luascriptRecord.dbd
 
-ifeq ($(BASE_3_15),YES)
-ifeq ($(EPICS_REVISION),5)
-    DBD += luaShell.dbd
-endif
-endif
-
-ifdef BASE_3_16
-    DBD += luaShell.dbd
-endif
-
 INC += lua.h
 INC += lualib.h
 INC += lauxlib.h
@@ -66,17 +56,16 @@ lua_SRCS += lvm.c
 lua_SRCS += lzio.c
 lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
+lua_SRCS += luaShell.cpp
 
 ifeq ($(BASE_3_15),YES)
 ifeq ($(EPICS_REVISION),5)
     lua_SRCS += liocshlib.cpp
-    lua_SRCS += luaShell.cpp
 endif
 endif
 
 ifdef BASE_3_16
     lua_SRCS += liocshlib.cpp
-    lua_SRCS += luaShell.cpp
 endif
 
 lua_SRCS += luascriptRecord.cpp

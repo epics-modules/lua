@@ -11,3 +11,5 @@ device(longin,  INST_IO, devLuaLongin,  "lua")
 device(longout, INST_IO, devLuaLongout, "lua")
 device(stringin,  INST_IO, devLuaStringin,  "lua")
 device(stringout, INST_IO, devLuaStringout, "lua")
+
+registrar(luashRegister)
