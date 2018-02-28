@@ -9,10 +9,9 @@
 
 #include <iocsh.h>
 #include <epicsExport.h>
+#include <epicsReadline.h>
 
 #include "luaEpics.h"
-
-#include <readline/history.h>
 
 /* mark in error messages for incomplete statements */
 #define EOFMARK		"<eof>"
@@ -22,9 +21,6 @@
 #define LUA_PROGNAME		"lua"
 #endif
 
-#define lua_saveline(L,idx) \
-        if (lua_rawlen(L,idx) > 0)  /* non-empty line? */ \
-          add_history(lua_tostring(L, idx));  /* add it to history */
 
 static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
@@ -150,21 +146,6 @@ static int incomplete (lua_State *L, int status)
 	return 0;  /* else... */
 }
 
-static int pushline(lua_State* state, std::ifstream* script)
-{
-	if (! script->good()) { return 0; }
-	
-	std::string a_line;
-	
-	std::getline(*script, a_line);
-	lua_pushstring(state, a_line.c_str());
-	
-	if (! a_line.empty())    { printf("%s\n", a_line.c_str()); }
-	
-	return 1;
-}
-
-
 /*
 ** Try to compile line on the stack as 'return <line>'; on return, stack
 ** has either compiled chunk or original line (if compilation failed).
@@ -191,10 +172,24 @@ static int addreturn (lua_State *L)
 }
 
 
+static int pushline (lua_State* state, const char* prompt, void* readlineContext)
+{
+	const char* raw = epicsReadline(prompt, readlineContext);
+	
+	if (raw == NULL)                 { return 0; }
+	if (strcmp(raw, "exit") == 0)    { return 0; }
+	
+	lua_pushstring(state, raw);
+	
+	if (prompt == NULL)    { printf("%s\n", raw); }
+	
+	return 1;
+}
+
 /*
 ** Read multiple lines until a complete Lua statement
 */
-static int multiline (lua_State *L, std::ifstream* script)
+static int multiline (lua_State *L, const char* prompt, void* readlineContext)
 {
 	for (;;)  /* repeat until gets a complete statement */
 	{
@@ -203,7 +198,7 @@ static int multiline (lua_State *L, std::ifstream* script)
 		int status = luaL_loadbuffer(L, line, len, "=stdin");  /* try it */
 		
 		/* cannot or should not try to add continuation line */
-		if (!incomplete(L, status) || !pushline(L, script))    { return status; }
+		if (!incomplete(L, status) || !pushline(L, "  ", readlineContext))    { return status; }
 		
 		lua_pushliteral(L, "\n");  /* add newline... */
 		lua_insert(L, -2);  /* ...between the two lines */
@@ -217,14 +212,15 @@ static int multiline (lua_State *L, std::ifstream* script)
 ** the final status of load/call with the resulting function (if any)
 ** in the top of the stack.
 */
-static int loadline (lua_State *L, std::ifstream* script) 
+static int loadline (lua_State *L, const char* prompt, void* readlineContext) 
 {
 	int status;
 	lua_settop(L, 0);
-	if (!pushline(L, script))    { return -1;  /* no input */ }
-	if ((status = addreturn(L)) != LUA_OK) { status = multiline(L, script);  /* try as command, maybe with continuation lines */ }
 	
-	lua_saveline(L, 1);  /* keep history */
+	if (!pushline(L, prompt, readlineContext)) { return -1; /* no input */ }	
+	if ((status = addreturn(L)) != LUA_OK) { status = multiline(L, prompt, readlineContext);  /* try as command, maybe with continuation lines */ }
+	
+	//lua_saveline(L, 1);  /* keep history */
 	lua_remove(L, 1);  /* remove line from the stack */
 	lua_assert(lua_gettop(L) == 1);
 	return status;
@@ -250,27 +246,11 @@ static int docall (lua_State *L, int narg, int nres)
 }
 
 
-static const iocshArg luashCmdArg0 = { "lua shell script", iocshArgString};
-static const iocshArg luashCmdArg1 = { "macros", iocshArgString};
-static const iocshArg *luashCmdArgs[2] = {&luashCmdArg0, &luashCmdArg1};
-static const iocshFuncDef luashFuncDef = {"luash", 2, luashCmdArgs};
-
-static void luashCallFunc(const iocshArgBuf* args)
-{	
-	lua_State* state = luaL_newstate();
-	luaL_openlibs(state);
-	luaLoadEnviron(state);
-	luaLoadParams(state, args[1].sval);
-	
-	std::string filename(args[0].sval);
-	std::string path = luaLocateFile(filename);
-	
-	std::ifstream script;
-	script.open(path.c_str());
-
+static void luashBody(lua_State* state, const char* prompt, void* readlineContext)
+{
 	int status;
 	
-	while ((status = loadline(state, &script)) != -1) 
+	while ((status = loadline(state, prompt, readlineContext)) != -1) 
 	{
 		if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
 		
@@ -279,8 +259,40 @@ static void luashCallFunc(const iocshArgBuf* args)
 	}
 	
 	lua_settop(state, 0);  /* clear stack */
+}
+
+
+static const iocshArg luashCmdArg0 = { "lua shell script", iocshArgString};
+static const iocshArg luashCmdArg1 = { "macros", iocshArgString};
+static const iocshArg *luashCmdArgs[2] = {&luashCmdArg0, &luashCmdArg1};
+static const iocshFuncDef luashFuncDef = {"luash", 2, luashCmdArgs};
+
+static void luashCallFunc(const iocshArgBuf* args)
+{	
+	const char* prompt = NULL;
+
+	lua_State* state = luaL_newstate();
+	luaL_openlibs(state);
+	luaLoadEnviron(state);
 	
-	script.close();
+	void* readlineContext = NULL;
+	
+	if (args[0].sval)
+	{
+		luaLoadMacros(state, args[1].sval);
+		
+		std::string filename(args[0].sval);
+		std::string path = luaLocateFile(filename);
+		
+		readlineContext = epicsReadlineBegin(fopen(path.c_str(), "r"));
+	}
+	else
+	{
+		readlineContext = epicsReadlineBegin(NULL);
+		prompt = "luash>";
+	}
+	
+	luashBody(state, prompt, readlineContext);
 }
 
 static void luashRegister(void)
