@@ -198,7 +198,7 @@ static int multiline (lua_State *L, const char* prompt, void* readlineContext)
 		int status = luaL_loadbuffer(L, line, len, "=stdin");  /* try it */
 		
 		/* cannot or should not try to add continuation line */
-		if (!incomplete(L, status) || !pushline(L, ">", readlineContext))    { return status; }
+		if (!incomplete(L, status) || !pushline(L, "> ", readlineContext))    { return status; }
 		
 		lua_pushliteral(L, "\n");  /* add newline... */
 		lua_insert(L, -2);  /* ...between the two lines */
@@ -289,7 +289,7 @@ static void luashCallFunc(const iocshArgBuf* args)
 	else
 	{
 		readlineContext = epicsReadlineBegin(NULL);
-		prompt = "luash>";
+		prompt = "luash> ";
 	}
 	
 	luashBody(state, prompt, readlineContext);
