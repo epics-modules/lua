@@ -44,9 +44,7 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 		return 1;
 	}
 	catch (...)
-	{
-		printf("error\n");
-		
+	{		
 		return 0;
 	}
 	
@@ -457,19 +455,19 @@ static int l_callParamCallbacks(lua_State* state)
 
 static int l_portread(lua_State* state)
 {
-	luaL_getmetafield(state, 1, "port_name");
+	lua_getfield(state, 1, "port_name");
 	const char* port = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "param_name");
+	lua_getfield(state, 1, "param_name");
 	const char* param = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "addr");
+	lua_getfield(state, 1, "addr");
 	int addr = lua_tonumber(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "in_term");
+	lua_getfield(state, 1, "in_term");
 	const char* in_term = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
@@ -482,19 +480,19 @@ static int l_portwrite(lua_State* state)
 	
 	const char* output = lua_tostring(state, 2);
 	
-	luaL_getmetafield(state, 1, "port_name");
+	lua_getfield(state, 1, "port_name");
 	const char* port = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "param_name");
+	lua_getfield(state, 1, "param_name");
 	const char* param = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "addr");
+	lua_getfield(state, 1, "addr");
 	int addr = lua_tonumber(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "out_term");
+	lua_getfield(state, 1, "out_term");
 	const char* out_term = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
@@ -507,27 +505,47 @@ static int l_portwriteread(lua_State* state)
 	
 	const char* output = lua_tostring(state, 2);
 	
-	luaL_getmetafield(state, 1, "port_name");
+	lua_getfield(state, 1, "port_name");
 	const char* port = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "param_name");
+	lua_getfield(state, 1, "param_name");
 	const char* param = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "addr");
+	lua_getfield(state, 1, "addr");
 	int addr = lua_tonumber(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "in_term");
+	lua_getfield(state, 1, "in_term");
 	const char* in_term = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	luaL_getmetafield(state, 1, "out_term");
+	lua_getfield(state, 1, "out_term");
 	const char* out_term = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
 
 	return asyn_writeread(state, output, port, addr, param, in_term, out_term);
+}
+
+static int l_porteosout(lua_State* state)
+{
+	if (! lua_isstring(state, 2))    { return 0; }
+	
+	lua_pushvalue(state, 2);
+	lua_setfield(state, 1, "out_term");
+	
+	return 0;
+}
+
+static int l_porteosin(lua_State* state)
+{
+	if (! lua_isstring(state, 2))    { return 0; }
+	
+	lua_pushvalue(state, 2);
+	lua_setfield(state, 1, "in_term");
+	
+	return 0;
 }
 
 
@@ -535,6 +553,8 @@ static const luaL_Reg port_funcs[] = {
 	{"read", l_portread},
 	{"write", l_portwrite},
 	{"writeread", l_portwriteread},
+	{"setOutputTerminator", l_porteosout},
+	{"setInputTerminator", l_porteosin},
 	{NULL, NULL}
 };
 
@@ -545,6 +565,10 @@ extern "C"
 void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param)
 {
 	luaL_newmetatable(state, "port_meta");
+	lua_pop(state, 1);
+	
+	lua_newtable(state);
+	luaL_setfuncs(state, port_funcs, 0);
 	
 	lua_pushstring(state, port_name);
 	lua_setfield(state, -2, "port_name");
@@ -560,11 +584,6 @@ void luaGeneratePort(lua_State* state, const char* port_name, int addr, const ch
 	
 	lua_getglobal(state, "InTerminator");
 	lua_setfield(state, -2, "in_term");
-	
-	lua_pop(state, 1);
-	
-	lua_newtable(state);
-	luaL_setfuncs(state, port_funcs, 0);
 
 	luaL_setmetatable(state, "port_meta");
 }
