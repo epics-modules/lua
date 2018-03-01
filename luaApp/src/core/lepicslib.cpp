@@ -193,7 +193,7 @@ static int l_epicssleep(lua_State* state)
 
 static int l_pvgetval(lua_State* state)
 {
-	luaL_getmetafield(state, 1, "pv_name");
+	lua_getfield(state, 1, "pv_name");
 	const char* pv_name = lua_tostring(state, lua_gettop(state));	
 	lua_pop(state, 1);
 	
@@ -208,7 +208,7 @@ static int l_pvgetval(lua_State* state)
 
 static int l_pvsetval(lua_State* state)
 {
-	luaL_getmetafield(state, 1, "pv_name");
+	lua_getfield(state, 1, "pv_name");
 	const char* pv_name = lua_tostring(state, lua_gettop(state));	
 	lua_pop(state, 1);
 	
@@ -233,11 +233,13 @@ void luaGeneratePV(lua_State* state, const char* pv_name)
 {
 	luaL_newmetatable(state, "pv_meta");
 	luaL_setfuncs(state, pv_meta, 0);	
-	lua_pushstring(state, pv_name);
-	lua_setfield(state, -2, "pv_name");
 	lua_pop(state, 1);
 	
 	lua_newtable(state);
+	
+	lua_pushstring(state, pv_name);
+	lua_setfield(state, -2, "pv_name");
+	
 	luaL_setmetatable(state, "pv_meta");
 }
 }
