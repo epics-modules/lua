@@ -21,6 +21,7 @@ Protocol* parseINPOUT(const struct link* inpout);
 
 void runFunction(Protocol* proto);
 void luaGeneratePV(lua_State* state, const char* pv_name);
+void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param);
 
 #ifdef __cplusplus
 }
