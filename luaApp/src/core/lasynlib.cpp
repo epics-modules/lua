@@ -11,10 +11,10 @@ extern "C"
 #include <cstring>
 #include <string>
 
-static int asyn_read(lua_State* state, const char* port, int addr, const char* param)
+static int asyn_read(lua_State* state, const char* port, int addr, const char* param, const char* in_term)
 {
-	int isnum;
 	std::string output;
+	int isnum;
 	
 	try
 	{
@@ -22,10 +22,6 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 		
 		lua_getglobal(state, "ReadTimeout");
 		double timeout = lua_tonumberx(state, -1, &isnum);
-		lua_remove(state, -1);
-		
-		lua_getglobal(state, "InTerminator");
-		const char* in_term = lua_tostring(state, -1);
 		lua_remove(state, -1);
 
 		if (isnum)    { input.setTimeout(timeout); }
@@ -57,7 +53,7 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 	return 0;
 }
 
-static int asyn_write(lua_State* state, const char* data, const char* port, int addr, const char* param)
+static int asyn_write(lua_State* state, const char* data, const char* port, int addr, const char* param, const char* out_term)
 {
 	int isnum;
 	
@@ -67,10 +63,6 @@ static int asyn_write(lua_State* state, const char* data, const char* port, int 
 			
 		lua_getglobal(state, "WriteTimeout");
 		double timeout = lua_tonumberx(state, -1, &isnum);
-		lua_remove(state, -1);
-		
-		lua_getglobal(state, "OutTerminator");
-		const char* out_term = lua_tostring(state, -1);
 		lua_remove(state, -1);
 
 		if (isnum)       { output.setTimeout(timeout); }
@@ -105,7 +97,11 @@ static int l_read(lua_State* state)
 	
 	if (port == NULL) { return 0; }
 	
-	return asyn_read(state, port, addr, param);
+	lua_getglobal(state, "InTerminator");
+	const char* in_term = lua_tostring(state, -1);
+	lua_remove(state, -1);
+	
+	return asyn_read(state, port, addr, param, in_term);
 }
 
 
@@ -128,10 +124,14 @@ static int l_write(lua_State* state)
 	
 	if (port == NULL)    { return 0; }
 	
-	return asyn_write(state, data, port, addr, param);
+	lua_getglobal(state, "OutTerminator");
+	const char* out_term = lua_tostring(state, -1);
+	lua_remove(state, -1);
+	
+	return asyn_write(state, data, port, addr, param, out_term);
 }
 
-static int asyn_writeread(lua_State* state, const char* data, const char* port, int addr, const char* param)
+static int asyn_writeread(lua_State* state, const char* data, const char* port, int addr, const char* param, const char* in_term, const char* out_term)
 {
 	int isnum;
 
@@ -142,18 +142,10 @@ static int asyn_writeread(lua_State* state, const char* data, const char* port, 
 		lua_getglobal(state, "WriteReadTimeout");
 		double timeout = lua_tonumberx(state, -1, &isnum);
 		lua_remove(state, -1);
-		
-		lua_getglobal(state, "OutTerminator");
-		const char* out_term = lua_tostring(state, -1);
-		lua_remove(state, -1);
-		
-		lua_getglobal(state, "InTerminator");
-		const char* in_term = lua_tostring(state, -1);
-		lua_remove(state, -1);
 
 		if (isnum)       { client.setTimeout(timeout); }
 		if (out_term)    { client.setOutputEos(out_term, strlen(out_term)); }
-		if (in_term)  { client.setInputEos(in_term, strlen(in_term)); }
+		if (in_term)     { client.setInputEos(in_term, strlen(in_term)); }
 
 		size_t numwrite, numread;
 		char buffer[256];
@@ -194,7 +186,15 @@ static int l_writeread(lua_State* state)
 	
 	if (port == NULL)    { return 0; }
 	
-	return asyn_writeread(state, data, port, addr, param);
+	lua_getglobal(state, "OutTerminator");
+	const char* out_term = lua_tostring(state, -1);
+	lua_remove(state, -1);
+	
+	lua_getglobal(state, "InTerminator");
+	const char* in_term = lua_tostring(state, -1);
+	lua_remove(state, -1);
+	
+	return asyn_writeread(state, data, port, addr, param, in_term, out_term);
 }
 
 static int l_setOutTerminator(lua_State* state)
@@ -469,7 +469,11 @@ static int l_portread(lua_State* state)
 	int addr = lua_tonumber(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	return asyn_read(state, port, addr, param);
+	luaL_getmetafield(state, 1, "in_term");
+	const char* in_term = lua_tostring(state, lua_gettop(state));
+	lua_pop(state, 1);
+	
+	return asyn_read(state, port, addr, param, in_term);
 }
 
 static int l_portwrite(lua_State* state)
@@ -490,7 +494,11 @@ static int l_portwrite(lua_State* state)
 	int addr = lua_tonumber(state, lua_gettop(state));
 	lua_pop(state, 1);
 	
-	return asyn_write(state, output, port, addr, param);
+	luaL_getmetafield(state, 1, "out_term");
+	const char* out_term = lua_tostring(state, lua_gettop(state));
+	lua_pop(state, 1);
+	
+	return asyn_write(state, output, port, addr, param, out_term);
 }
 
 static int l_portwriteread(lua_State* state)
@@ -510,8 +518,16 @@ static int l_portwriteread(lua_State* state)
 	luaL_getmetafield(state, 1, "addr");
 	int addr = lua_tonumber(state, lua_gettop(state));
 	lua_pop(state, 1);
+	
+	luaL_getmetafield(state, 1, "in_term");
+	const char* in_term = lua_tostring(state, lua_gettop(state));
+	lua_pop(state, 1);
+	
+	luaL_getmetafield(state, 1, "out_term");
+	const char* out_term = lua_tostring(state, lua_gettop(state));
+	lua_pop(state, 1);
 
-	return asyn_writeread(state, output, port, addr, param);
+	return asyn_writeread(state, output, port, addr, param, in_term, out_term);
 }
 
 
@@ -538,6 +554,12 @@ void luaGeneratePort(lua_State* state, const char* port_name, int addr, const ch
 	
 	lua_pushnumber(state, addr);
 	lua_setfield(state, -2, "addr");
+
+	lua_getglobal(state, "OutTerminator");
+	lua_setfield(state, -2, "out_term");
+	
+	lua_getglobal(state, "InTerminator");
+	lua_setfield(state, -2, "in_term");
 	
 	lua_pop(state, 1);
 	
