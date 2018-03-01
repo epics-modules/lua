@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include <cstring>
+#include <cmath>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -542,7 +543,7 @@ static bool checkValUpdate(luascriptRecord* record)
 			return true;
 
 		case luascriptOOPT_On_Change:
-			return (abs(pval - val) > record->mdel);
+			return (fabs(pval - val) > record->mdel);
 
 		case luascriptOOPT_When_Zero:
 			return !val;
