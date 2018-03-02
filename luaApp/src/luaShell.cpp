@@ -22,6 +22,11 @@
 #endif
 
 
+#if defined(__vxworks) || defined(vxWorks)
+	#include <symLib.h>
+	#include <sysSymTbl.h>
+#endif
+
 static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
@@ -289,7 +294,24 @@ static void luashCallFunc(const iocshArgBuf* args)
 	else
 	{
 		readlineContext = epicsReadlineBegin(NULL);
-		prompt = "luash> ";
+		
+		char* prompt = std::getenv("LUASH_PS1");
+	
+		#if defined(__vxworks) || defined(vxWorks)
+		/* For compatibility reasons look for global symbols */
+		if (!prompt)
+		{
+			char* symbol;
+			SYM_TYPE type;
+	
+			if (symFindByName(sysSymTbl, "LUASH_PS1", &symbol, &type) == OK)
+			{
+				prompt = *(char**) symbol;
+			}
+		}
+		#endif
+		
+		if (!prompt)    { prompt = "luash> "; }
 	}
 	
 	luashBody(state, prompt, readlineContext);

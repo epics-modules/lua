@@ -139,6 +139,18 @@ asyn.writeread(data, portName, addr)
 	by the global variable ReadTimeout is reached.
 	
 
+asyn.port(portName, addr)
+
+	Returns a table representing a port object. This object has the functions read
+	write, and readwrite, which work the same as the functions above, but the port
+	and address need not be specified. The port uses the global in and out terminators
+	by default, but has the functions setInputTerminator and setOutputTerminator to
+	change that functionality.
+	
+	portName   [string]   - A registered asyn port name.
+
+	addr       [number]   - The asyn address of the parameter.
+	
 
 epics.get(PV)
 	
