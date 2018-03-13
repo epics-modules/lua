@@ -94,16 +94,6 @@ scriptioc_DBD += base.dbd
 scriptioc_DBD += drvAsynIPPort.dbd
 scriptioc_DBD += luaSupport.dbd
 
-ifeq ($(BASE_3_15),YES)
-ifeq ($(EPICS_REVISION),5)
-    scriptioc_DBD += luaShell.dbd
-endif
-endif
-
-ifdef BASE_3_16
-    scriptioc_DBD += luaShell.dbd
-endif
-
 scriptioc_LIBS += lua
 scriptioc_LIBS += asyn
 scriptioc_LIBS += $(EPICS_BASE_IOC_LIBS)
