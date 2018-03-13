@@ -111,7 +111,7 @@ static void logError(luascriptRecord* record)
 
 static bool isLink(int index)
 {
-	return (index == luascriptRecordOUT or (index >= luascriptRecordINPA and index <= luascriptRecordINJJ));
+	return (index == luascriptRecordOUT || (index >= luascriptRecordINPA && index <= luascriptRecordINJJ));
 }
 
 /*
@@ -151,7 +151,7 @@ static int parseParams(lua_State* state, std::string params)
 	size_t oob   = std::string::npos;
 
 	/* Syntax error */
-	if (end == oob or start == oob or start == end - 1) { return 0; }
+	if (end == oob || start == oob || start == end - 1) { return 0; }
 
 	return luaLoadParams(state, params.substr(start + 1, end - start - 1).c_str());
 }
@@ -168,12 +168,12 @@ static long initState(luascriptRecord* record, int force_reload)
 	std::string code(record->code);
 	std::string pcode(record->pcode);
 
-	if (not code.empty())
+	if (!code.empty())
 	{
 		/* @ signifies a call to a function in a file, otherwise treat it as code */
 		if (code[0] != '@')
 		{
-			if (code != pcode or force_reload)    { status = luaLoadString(state, code.c_str()); }
+			if (code != pcode || force_reload)    { status = luaLoadString(state, code.c_str()); }
 		}
 		else
 		{
@@ -182,16 +182,16 @@ static long initState(luascriptRecord* record, int force_reload)
 			std::pair<std::string, std::string> prev = parseCode(pcode);
 			
 			/* We'll always need to reload going from code to referencing a file */
-			if (pcode[0] == '@' and not force_reload)
+			if (pcode[0] == '@' && !force_reload)
 			{
-				if (curr == prev and record->relo != luascriptRELO_Always)    { return 0; }
+				if (curr == prev && record->relo != luascriptRELO_Always)    { return 0; }
 
 				/*
 				 * If only the functon name changes and the record is set to only
 				 * reload on file changes, all we have to do is pull the function
 				 * and put it at the top of the stack.
 				 */
-				if ((record->relo == luascriptRELO_NewFile) and (curr.first == prev.first))
+				if ((record->relo == luascriptRELO_NewFile) && (curr.first == prev.first))
 				{
 					lua_getglobal((lua_State*) record->state, curr.second.c_str());
 					strcpy(record->pcode, record->code);
@@ -262,7 +262,7 @@ static long loadNumbers(luascriptRecord* record)
 
 		long newStatus = dbGetLink(field, DBR_DOUBLE, value, 0, 0);
 
-		if (not status)    { status = newStatus; }
+		if (!status)    { status = newStatus; }
 
 		lua_pushnumber(state, *value);
 		lua_setglobal(state, NUM_NAMES[index]);
@@ -364,7 +364,7 @@ void checkLinks(luascriptRecord* record)
 			{
 				if (*valid == luascriptINAV_EXT_NC)
 				{
-					if (not dbNameToAddr(field->value.pv_link.pvname, paddress))
+					if (!dbNameToAddr(field->value.pv_link.pvname, paddress))
 					{
 						*valid = luascriptINAV_LOC;
 					}
@@ -407,7 +407,7 @@ void checkLinks(luascriptRecord* record)
 	else if (isCaLink)      { pvt->caLinkStat = CA_LINKS_ALL_OK; }
 	else                    { pvt->caLinkStat = NO_CA_LINKS; }
 	
-	if (not pvt->wd_id_1_LOCK and isCaLinkNc)
+	if (!pvt->wd_id_1_LOCK && isCaLinkNc)
 	{
 		pvt->wd_id_1_LOCK = 1;
 		callbackRequestDelayed(&pvt->checkLinkCb, .5);
@@ -463,7 +463,7 @@ long setLinks(luascriptRecord* record)
 
 			*valid = luascriptINAV_CON;
 		}
-		else if (not dbNameToAddr(field->value.pv_link.pvname, paddress))
+		else if (!dbNameToAddr(field->value.pv_link.pvname, paddress))
 		{
 			*valid = luascriptINAV_LOC;
 			
@@ -552,10 +552,10 @@ static bool checkValUpdate(luascriptRecord* record)
 			return (bool) val;
 
 		case luascriptOOPT_Transition_To_Zero:
-			return (val == 0 and pval != 0);
+			return (val == 0 && pval != 0);
 
 		case luascriptOOPT_Transition_To_Non_zero:
-			return (val != 0 and pval == 0);
+			return (val != 0 && pval == 0);
 
 		case luascriptOOPT_Never:
 			return false;
@@ -586,13 +586,13 @@ static bool checkSvalUpdate(luascriptRecord* record)
 			return curr.empty();
 
 		case luascriptOOPT_When_Non_zero:
-			return not curr.empty();
+			return !curr.empty();
 
 		case luascriptOOPT_Transition_To_Zero:
-			return (not prev.empty() and curr.empty());
+			return (!prev.empty() && curr.empty());
 
 		case luascriptOOPT_Transition_To_Non_zero:
-			return (not prev.empty() and not curr.empty());
+			return (!prev.empty() && !curr.empty());
 
 		case luascriptOOPT_Never:
 			return false;
@@ -605,7 +605,7 @@ static void writeValue(luascriptRecord* record)
 {
 	ScriptDSET* pluascriptDSET = (ScriptDSET*) record->dset;
 
-	if (not pluascriptDSET or not pluascriptDSET->write) 
+	if (!pluascriptDSET || !pluascriptDSET->write) 
 		{
 		errlogPrintf("%s DSET write does not exist\n", record->name);
 		recGblSetSevr(record, SOFT_ALARM, INVALID_ALARM);
@@ -639,7 +639,7 @@ static void processCallback(void* data)
 
 	int rettype = lua_type(state, -1);
 
-	if (rettype == LUA_TBOOLEAN or rettype == LUA_TNUMBER)
+	if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
 	{
 		record->pval = record->val;
 		record->val = lua_tonumber(state, -1);
@@ -749,7 +749,7 @@ static long process(luascriptRecord* record)
 
 static long special(dbAddr* paddr, int after)
 {
-	if (not after)    { return 0; }
+	if (!after)    { return 0; }
 
 	luascriptRecord* record = (luascriptRecord*) paddr->precord;
 	
@@ -759,7 +759,7 @@ static long special(dbAddr* paddr, int after)
 	{ 
 		if (initState(record, 0))    { logError(record); }
 	}
-	else if (field_index == luascriptRecordFRLD and record->frld)
+	else if (field_index == luascriptRecordFRLD && record->frld)
 	{
 		if (initState(record, 1))    { logError(record); }
 		record->frld = 0;
@@ -790,12 +790,12 @@ static long special(dbAddr* paddr, int after)
 			
 			*valid = luascriptINAV_CON;
 		}
-		else if (not dbNameToAddr(name, paddress))
+		else if (!dbNameToAddr(name, paddress))
 		{
 			short pvlMask = field->value.pv_link.pvlMask;
 			short isCA = pvlMask & (pvlOptCA | pvlOptCP | pvlOptCPP);
 		
-			if (field_index <= luascriptRecordINPJ or field_index > luascriptRecordINJJ or !isCA)
+			if (field_index <= luascriptRecordINPJ || field_index > luascriptRecordINJJ || !isCA)
 			{
 				*valid = luascriptINAV_LOC;
 			}
@@ -803,7 +803,7 @@ static long special(dbAddr* paddr, int after)
 			{
 				*valid = luascriptINAV_EXT_NC;
 					
-				if (not pvt->wd_id_1_LOCK)
+				if (!pvt->wd_id_1_LOCK)
 				{
 					callbackRequestDelayed(&pvt->checkLinkCb, .5);
 					pvt->wd_id_1_LOCK = 1;
@@ -815,7 +815,7 @@ static long special(dbAddr* paddr, int after)
 			{ 
 				pvt->outlink_field_type = paddress->field_type;
 				
-				if (paddress->field_type >= DBF_INLINK and paddress->field_type <= DBF_FWDLINK)
+				if (paddress->field_type >= DBF_INLINK && paddress->field_type <= DBF_FWDLINK)
 				{
 					if (! (pvlMask & pvlOptCA))
 					{
@@ -823,7 +823,7 @@ static long special(dbAddr* paddr, int after)
 					}
 				}
 				
-				if (record->wait and not (pvlMask & pvlOptCA))
+				if (record->wait && !(pvlMask & pvlOptCA))
 				{
 					printf("luascriptRecord(%s):Can't wait with non-CA link attribute\n", name);
 				}
@@ -833,7 +833,7 @@ static long special(dbAddr* paddr, int after)
 		{
 			*valid = luascriptINAV_EXT_NC;
 			
-			if (not pvt->wd_id_1_LOCK)
+			if (!pvt->wd_id_1_LOCK)
 			{
 				callbackRequestDelayed(&pvt->checkLinkCb,.5);
 				pvt->wd_id_1_LOCK = 1;
