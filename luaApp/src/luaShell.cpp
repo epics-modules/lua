@@ -317,9 +317,13 @@ static void luashCallFunc(const iocshArgBuf* args)
 	luashBody(state, prompt, readlineContext);
 }
 
+extern "C"
+{
+
 static void luashRegister(void)
 {
 	iocshRegister(&luashFuncDef, luashCallFunc);
 }
 
 epicsExportRegistrar(luashRegister);
+}
