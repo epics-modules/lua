@@ -123,7 +123,7 @@ int luaLoadParams(lua_State* state, const char* param_list)
 		param = param.substr(trim_front, trim_back - trim_front + 1);
 		
 		/* Treat anything with quotes as a string, anything else as a number */
-		if (param.at(0) == '"' or param.at(0) == '\'')
+		if (param.at(0) == '"' || param.at(0) == '\'')
 		{
 			lua_pushstring(state, param.substr(1, param.length() - 2).c_str());
 		}
@@ -159,7 +159,7 @@ void luaLoadMacros(lua_State* state, const char* macro_list)
 			else
 			{
 				/* Othewise it's a string, remove quotes if necessary */
-				if (param.at(0) == '"' or param.at(0) == '\'')
+				if (param.at(0) == '"' || param.at(0) == '\'')
 				{
 					lua_pushstring(state, param.substr(1, param.length() - 2).c_str());
 				}

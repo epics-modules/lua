@@ -36,7 +36,7 @@ static int parseParams(Protocol* proto)
 		a_param = a_param.substr(trim_front, trim_back - trim_front + 1);
 		
 		/* Treat anything with quotes as a string, anything else as a number */
-		if (a_param.at(0) == '"' or a_param.at(0) == '\'')
+		if (a_param.at(0) == '"' || a_param.at(0) == '\'')
 		{
 			lua_pushstring(proto->state, a_param.substr(1, a_param.length() - 2).c_str());
 		}
@@ -88,7 +88,7 @@ extern "C"
 		bool has_start = start_params != std::string::npos;
 		bool has_end   = end_params   != std::string::npos;
 		
-		if ((has_start and not has_end) or (has_end and not has_start))
+		if ((has_start && !has_end) || (has_end && !has_start))
 		{
 			printf("Error parsing function parameters, format is 'function_name(param1,param2,...)'\n");
 			return NULL;
@@ -96,7 +96,7 @@ extern "C"
 		
 		strcpy(output->function_name, function.substr(0, start_params).c_str());
 		
-		if (has_start and has_end)
+		if (has_start && has_end)
 		{
 			strcpy(output->param_list,    function.substr(start_params + 1, end_params - start_params - 1).c_str());
 		}

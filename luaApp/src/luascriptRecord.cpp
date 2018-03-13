@@ -17,6 +17,7 @@
 
 #include <sstream>
 
+#include <algorithm>
 #include <cstring>
 #include <cmath>
 #include <stdlib.h>
