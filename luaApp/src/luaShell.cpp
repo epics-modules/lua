@@ -295,11 +295,11 @@ static void luashCallFunc(const iocshArgBuf* args)
 	{
 		readlineContext = epicsReadlineBegin(NULL);
 		
-		char* prompt = std::getenv("LUASH_PS1");
-	
+		prompt = std::getenv("LUASH_PS1");
+		
 		#if defined(__vxworks) || defined(vxWorks)
 		/* For compatibility reasons look for global symbols */
-		if (!prompt)
+		if (prompt == NULL)
 		{
 			char* symbol;
 			SYM_TYPE type;
@@ -311,7 +311,7 @@ static void luashCallFunc(const iocshArgBuf* args)
 		}
 		#endif
 		
-		if (!prompt)    { prompt = "luash> "; }
+		if (prompt == NULL)    { prompt = "luash> "; }
 	}
 	
 	luashBody(state, prompt, readlineContext);
