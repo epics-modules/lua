@@ -11,9 +11,9 @@
    </rect>
   </property>
   <property name="styleSheet">
-   <string>
+   <string notr="true">
 
-QWidget#centralWidget {background: rgba(187, 187, 187, 255);}
+QWidget#centralWidget {background: rgba(196, 196, 196, 255);}
 QPushButton::menu-indicator {image: url(none.png); width: 0}
 
 </string>
@@ -49,7 +49,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
         <number>5</number>
        </property>
        <property name="rightMargin">
-        <number>0</number>
+        <number>10</number>
        </property>
        <property name="bottomMargin">
         <number>5</number>
@@ -67,6 +67,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
            <family>DejaVu Sans Mono</family>
            <pointsize>17</pointsize>
           </font>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
          </property>
          <property name="text">
           <string>User Script ($(P)$(R)$(S))</string>
@@ -91,9 +94,54 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
            <blue>255</blue>
           </color>
          </property>
-         <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
-         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="caFrame" name="caframe_9">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <item>
+           <widget class="caTextEntry" name="catextentry">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="channel" stdset="0">
+             <string notr="true">$(P)$(R)userScript$(S).DESC</string>
+            </property>
+            <property name="foreground">
+             <color>
+              <red>36</red>
+              <green>36</green>
+              <blue>36</blue>
+             </color>
+            </property>
+            <property name="background">
+             <color>
+              <red>228</red>
+              <green>228</green>
+              <blue>228</blue>
+             </color>
+            </property>
+            <property name="colorMode">
+             <enum>caLineEdit::Static</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -185,7 +233,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -243,7 +291,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -298,7 +346,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -320,6 +368,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <pointsize>18</pointsize>
              </font>
             </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(160, 160, 164, 0); color: rgb(36, 36, 36, 255);</string>
+            </property>
             <property name="text">
              <string>String Inputs</string>
             </property>
@@ -328,6 +379,20 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="fontScaleMode">
              <enum>ESimpleLabel::WidthAndHeight</enum>
+            </property>
+            <property name="foreground">
+             <color>
+              <red>36</red>
+              <green>36</green>
+              <blue>36</blue>
+             </color>
+            </property>
+            <property name="background">
+             <color alpha="0">
+              <red>160</red>
+              <green>160</green>
+              <blue>164</blue>
+             </color>
             </property>
            </widget>
           </item>
@@ -378,7 +443,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -436,7 +501,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -494,7 +559,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -549,7 +614,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -633,7 +698,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -750,7 +815,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -818,7 +883,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -873,7 +938,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -928,7 +993,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -986,7 +1051,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1044,7 +1109,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1194,7 +1259,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1311,7 +1376,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1366,7 +1431,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1454,7 +1519,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1512,7 +1577,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1534,6 +1599,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <pointsize>18</pointsize>
              </font>
             </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(160, 160, 164, 0); color: rgb(36, 36, 36, 255);</string>
+            </property>
             <property name="text">
              <string>Double Inputs</string>
             </property>
@@ -1542,6 +1610,20 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             </property>
             <property name="fontScaleMode">
              <enum>ESimpleLabel::WidthAndHeight</enum>
+            </property>
+            <property name="foreground">
+             <color>
+              <red>36</red>
+              <green>36</green>
+              <blue>36</blue>
+             </color>
+            </property>
+            <property name="background">
+             <color alpha="0">
+              <red>160</red>
+              <green>160</green>
+              <blue>164</blue>
+             </color>
             </property>
            </widget>
           </item>
@@ -1595,7 +1677,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1653,7 +1735,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1734,7 +1816,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1792,7 +1874,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1850,7 +1932,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -1905,7 +1987,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2055,7 +2137,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2136,7 +2218,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2194,7 +2276,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2252,7 +2334,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2307,7 +2389,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2365,7 +2447,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2446,7 +2528,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2560,7 +2642,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2615,7 +2697,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2670,7 +2752,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2817,7 +2899,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2872,7 +2954,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2927,7 +3009,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -2985,7 +3067,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -3043,7 +3125,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -3122,6 +3204,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <pointsize>12</pointsize>
              </font>
             </property>
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
+            </property>
             <property name="text">
              <string> Out:</string>
             </property>
@@ -3144,9 +3229,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <green>0</green>
               <blue>0</blue>
              </color>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
             </property>
            </widget>
           </item>
@@ -3229,7 +3311,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -3250,6 +3332,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <family>DejaVu Sans Mono</family>
               <pointsize>12</pointsize>
              </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="text">
              <string> VAL:</string>
@@ -3274,9 +3359,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <blue>0</blue>
              </color>
             </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
            </widget>
           </item>
           <item row="1" column="1">
@@ -3290,7 +3372,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="font">
              <font>
               <family>DejaVu Sans Mono</family>
-              <pointsize>9</pointsize>
+              <pointsize>10</pointsize>
               <stylestrategy>PreferDefault</stylestrategy>
              </font>
             </property>
@@ -3326,7 +3408,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -3347,6 +3429,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <family>DejaVu Sans Mono</family>
               <pointsize>12</pointsize>
              </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="text">
              <string>Code:</string>
@@ -3371,9 +3456,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <blue>0</blue>
              </color>
             </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
            </widget>
           </item>
           <item row="2" column="3">
@@ -3389,6 +3471,9 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <family>DejaVu Sans Mono</family>
               <pointsize>12</pointsize>
              </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="text">
              <string>SVAL:</string>
@@ -3412,9 +3497,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
               <green>0</green>
               <blue>0</blue>
              </color>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
             </property>
            </widget>
           </item>
@@ -3468,7 +3550,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
@@ -3608,7 +3690,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
             <property name="minValue">
              <double>0.000000000000000</double>
             </property>
-            <property name="fontScaleMode" stdset="0">
+            <property name="fontScaleMode">
              <enum>caLineEdit::WidthAndHeight</enum>
             </property>
             <property name="formatType">
