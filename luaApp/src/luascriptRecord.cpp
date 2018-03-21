@@ -164,6 +164,10 @@ static long initState(luascriptRecord* record, int force_reload)
 {
 	long status = 0;
 
+	/* Clear existing errors */
+	memset(record->err, 0, 200);
+	db_post_events(record, &record->err, DBE_VALUE);
+	
 	lua_State* state = luaL_newstate();
 	
 	std::string code(record->code);
