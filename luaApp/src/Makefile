@@ -16,6 +16,7 @@ INC += lualib.h
 INC += lauxlib.h
 INC += luaconf.h
 INC += luaEpics.h
+INC += luaShell.h
 INC += devUtil.h
 
 LIBRARY_IOC += lua

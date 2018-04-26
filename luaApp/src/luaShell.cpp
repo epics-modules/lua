@@ -8,10 +8,12 @@
 #include <signal.h>
 
 #include <iocsh.h>
+#include <shareLib.h>
 #include <epicsExport.h>
 #include <epicsReadline.h>
 
 #include "luaEpics.h"
+#include "luaShell.h"
 
 /* mark in error messages for incomplete statements */
 #define EOFMARK		"<eof>"
@@ -274,19 +276,30 @@ static const iocshFuncDef luashFuncDef = {"luash", 2, luashCmdArgs};
 
 static void luashCallFunc(const iocshArgBuf* args)
 {	
+	luashBegin(args[0].sval, args[1].sval);
+}
+
+extern "C"
+{
+
+epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* macros)
+{
 	const char* prompt = NULL;
 
 	lua_State* state = luaL_newstate();
 	luaL_openlibs(state);
 	luaLoadEnviron(state);
 	
+	lua_pushlightuserdata(state, *iocshPpdbbase);
+	lua_setglobal(state, "pdbbase");
+	
 	void* readlineContext = NULL;
 	
-	if (args[0].sval)
+	if (pathname)
 	{
-		luaLoadMacros(state, args[1].sval);
+		luaLoadMacros(state, macros);
 		
-		std::string filename(args[0].sval);
+		std::string filename(pathname);
 		std::string path = luaLocateFile(filename);
 		
 		readlineContext = epicsReadlineBegin(fopen(path.c_str(), "r"));
@@ -315,11 +328,17 @@ static void luashCallFunc(const iocshArgBuf* args)
 	}
 	
 	luashBody(state, prompt, readlineContext);
+	
+	return 0;
 }
 
-extern "C"
+epicsShareFunc int epicsShareAPI luash(const char* pathname)
 {
-
+	return luashBegin(pathname, NULL);
+}
+	
+	
+	
 static void luashRegister(void)
 {
 	iocshRegister(&luashFuncDef, luashCallFunc);
@@ -327,3 +346,4 @@ static void luashRegister(void)
 
 epicsExportRegistrar(luashRegister);
 }
+

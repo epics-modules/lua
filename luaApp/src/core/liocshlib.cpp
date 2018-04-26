@@ -90,6 +90,12 @@ static int l_call(lua_State* state)
 			
 				argBuf[index].sval = (char *) val;
 			}
+			else if (needed_type == iocshArgPdbbase)
+			{
+				void* val = (index < given_args) ? lua_touserdata(state, index + 2) : NULL;
+				
+				argBuf[index].vval = val;
+			}
 			
 			index += 1;
 		}
