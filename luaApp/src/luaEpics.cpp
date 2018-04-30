@@ -12,9 +12,10 @@
 
 #include <macLib.h>
 
+#define epicsExportSharedSymbols
 #include "luaEpics.h"
 
-std::string luaLocateFile(std::string filename)
+epicsShareFunc std::string luaLocateFile(std::string filename)
 {
 	char* env_path = std::getenv("LUA_SCRIPT_PATH");
 	
@@ -56,7 +57,7 @@ std::string luaLocateFile(std::string filename)
 }
 
 
-int luaLoadScript(lua_State* state, const char* script_file)
+epicsShareFunc int luaLoadScript(lua_State* state, const char* script_file)
 {	
 	std::string found = luaLocateFile(std::string(script_file));
 	
@@ -79,7 +80,7 @@ int luaLoadScript(lua_State* state, const char* script_file)
 	return -1;
 }
 
-int luaLoadString(lua_State* state, const char* lua_code)
+epicsShareFunc int luaLoadString(lua_State* state, const char* lua_code)
 {
 	std::string code(lua_code);
 	
@@ -97,7 +98,7 @@ int luaLoadString(lua_State* state, const char* lua_code)
 	return -1;
 }
 
-int luaLoadParams(lua_State* state, const char* param_list)
+epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
 {
 	std::string parse(param_list);
 	
@@ -139,7 +140,7 @@ int luaLoadParams(lua_State* state, const char* param_list)
 	return num_params;
 }
 
-void luaLoadMacros(lua_State* state, const char* macro_list)
+epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 {
 	char** pairs;
 	
@@ -175,7 +176,7 @@ void luaLoadMacros(lua_State* state, const char* macro_list)
 }
 
 
-void luaLoadEnviron(lua_State* state)
+epicsShareFunc void luaLoadEnviron(lua_State* state)
 {
 	extern char** environ;
 	char** sp;

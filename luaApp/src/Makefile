@@ -90,6 +90,11 @@ lua_SRCS += devLuaStringin.c
 lua_SRCS += devLuaStringout.c
 lua_SRCS += devUtil.cpp
 
+ifeq ($(SHARED_LIBRARIES),YES)
+    USR_CFLAGS += -DLUA_BUILD_AS_DLL
+    USR_CPPFLAGS += -DLUA_BUILD_AS_DLL
+endif
+
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
 
