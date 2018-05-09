@@ -281,6 +281,20 @@ static void luashBody(lua_State* state, const char* pathname)
 		if (raw == NULL)                 { break; }
 		if (strcmp(raw, "exit") == 0)    { break; }
 		
+		if (raw[0] == '<')
+		{
+			std::string line(raw);
+			
+			// Get rid of < character
+			line.erase(0,1);
+			
+			// Get rid of whitespace
+			line.erase(0, line.find_first_not_of(" 	"));
+			
+			luashBody(state, line.c_str());
+			continue;
+		}
+		
 		lua_pushstring(state, raw);
 		
 		if (prompt == NULL)    { printf("%s\n", raw); }
