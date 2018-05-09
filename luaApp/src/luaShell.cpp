@@ -178,26 +178,13 @@ static int addreturn (lua_State *L)
 	return status;
 }
 
-
-static int pushline (lua_State* state, const char* prompt, void* readlineContext)
-{
-	const char* raw = epicsReadline(prompt, readlineContext);
-	
-	if (raw == NULL)                 { return 0; }
-	if (strcmp(raw, "exit") == 0)    { return 0; }
-	
-	lua_pushstring(state, raw);
-	
-	if (prompt == NULL)    { printf("%s\n", raw); }
-	
-	return 1;
-}
-
 /*
 ** Read multiple lines until a complete Lua statement
 */
 static int multiline (lua_State *L, const char* prompt, void* readlineContext)
 {
+	const char* subprompt = prompt ? "> " : "";
+	
 	for (;;)  /* repeat until gets a complete statement */
 	{
 		size_t len;
@@ -205,33 +192,20 @@ static int multiline (lua_State *L, const char* prompt, void* readlineContext)
 		int status = luaL_loadbuffer(L, line, len, "=stdin");  /* try it */
 		
 		/* cannot or should not try to add continuation line */
-		if (!incomplete(L, status) || !pushline(L, "> ", readlineContext))    { return status; }
+		if (!incomplete(L, status))    { return status; }
 		
+		const char* raw = epicsReadline(subprompt, readlineContext);
+		
+		if (!raw)       { return status; }
+		if (!prompt)    { printf("%s\n", raw); }
+		
+		lua_pushstring(L, raw);
 		lua_pushliteral(L, "\n");  /* add newline... */
 		lua_insert(L, -2);  /* ...between the two lines */
 		lua_concat(L, 3);  /* join them */
 	}
 }
 
-/*
-** Read a line and try to load (compile) it first as an expression (by
-** adding "return " in front of it) and second as a statement. Return
-** the final status of load/call with the resulting function (if any)
-** in the top of the stack.
-*/
-static int loadline (lua_State *L, const char* prompt, void* readlineContext) 
-{
-	int status;
-	lua_settop(L, 0);
-	
-	if (!pushline(L, prompt, readlineContext)) { return -1; /* no input */ }	
-	if ((status = addreturn(L)) != LUA_OK) { status = multiline(L, prompt, readlineContext);  /* try as command, maybe with continuation lines */ }
-	
-	//lua_saveline(L, 1);  /* keep history */
-	lua_remove(L, 1);  /* remove line from the stack */
-	lua_assert(lua_gettop(L) == 1);
-	return status;
-}
 
 /*
 ** Interface to 'lua_pcall', which sets appropriate message function
@@ -253,54 +227,19 @@ static int docall (lua_State *L, int narg, int nres)
 }
 
 
-static void luashBody(lua_State* state, const char* prompt, void* readlineContext)
+static void luashBody(lua_State* state, const char* pathname)
 {
 	int status;
 	
-	while ((status = loadline(state, prompt, readlineContext)) != -1) 
-	{
-		if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
-		
-		if (status == LUA_OK)     { l_print(state); }
-		else                      { report(state, status); }
-	}
-	
-	lua_settop(state, 0);  /* clear stack */
-}
-
-
-static const iocshArg luashCmdArg0 = { "lua shell script", iocshArgString};
-static const iocshArg luashCmdArg1 = { "macros", iocshArgString};
-static const iocshArg *luashCmdArgs[2] = {&luashCmdArg0, &luashCmdArg1};
-static const iocshFuncDef luashFuncDef = {"luash", 2, luashCmdArgs};
-
-static void luashCallFunc(const iocshArgBuf* args)
-{	
-	luashBegin(args[0].sval, args[1].sval);
-}
-
-extern "C"
-{
-
-epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* macros)
-{
 	const char* prompt = NULL;
-
-	lua_State* state = luaL_newstate();
-	luaL_openlibs(state);
-	luaLoadEnviron(state);
-	
-	lua_pushlightuserdata(state, *iocshPpdbbase);
-	lua_setglobal(state, "pdbbase");
-	
 	void* readlineContext = NULL;
 	
 	if (pathname)
-	{
-		luaLoadMacros(state, macros);
-		
+	{		
 		std::string filename(pathname);
 		std::string path = luaLocateFile(filename);
+		
+		if (path.empty())    { printf("File %s not found\n", pathname); return; }
 		
 		readlineContext = epicsReadlineBegin(fopen(path.c_str(), "r"));
 	}
@@ -327,7 +266,70 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 		if (prompt == NULL)    { prompt = "luash> "; }
 	}
 	
-	luashBody(state, prompt, readlineContext);
+	do
+	{
+		/*
+		** Read a line and try to load (compile) it first as an expression (by
+		** adding "return " in front of it) and second as a statement. Return
+		** the final status of load/call with the resulting function (if any)
+		** in the top of the stack.
+		*/
+		lua_settop(state, 0);
+		
+		const char* raw = epicsReadline(prompt, readlineContext);
+		
+		if (raw == NULL)                 { break; }
+		if (strcmp(raw, "exit") == 0)    { break; }
+		
+		lua_pushstring(state, raw);
+		
+		if (prompt == NULL)    { printf("%s\n", raw); }
+		
+		/* try as command, maybe with continuation lines */
+		if ((status = addreturn(state)) != LUA_OK)    { status = multiline(state, prompt, readlineContext); }
+		
+		lua_remove(state, 1);  /* remove line from the stack */
+		lua_assert(lua_gettop(state) == 1);
+		
+		if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
+		
+		if (status == LUA_OK)     { l_print(state); }
+		else                      { report(state, status); }
+	}while (true);
+	
+	epicsReadlineEnd(readlineContext);
+	lua_settop(state, 0);  /* clear stack */
+}
+
+
+static const iocshArg luashCmdArg0 = { "lua shell script", iocshArgString};
+static const iocshArg luashCmdArg1 = { "macros", iocshArgString};
+static const iocshArg *luashCmdArgs[2] = {&luashCmdArg0, &luashCmdArg1};
+static const iocshFuncDef luashFuncDef = {"luash", 2, luashCmdArgs};
+
+static void luashCallFunc(const iocshArgBuf* args)
+{	
+	luashBegin(args[0].sval, args[1].sval);
+}
+
+extern "C"
+{
+
+epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* macros)
+{
+	lua_State* state = luaL_newstate();
+	luaL_openlibs(state);
+	luaLoadEnviron(state);
+	
+	lua_pushlightuserdata(state, *iocshPpdbbase);
+	lua_setglobal(state, "pdbbase");
+	
+	if (macros)
+	{
+		luaLoadMacros(state, macros);
+	}
+	
+	luashBody(state, pathname);
 	
 	return 0;
 }
