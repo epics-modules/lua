@@ -11,6 +11,7 @@
 #include <shareLib.h>
 #include <epicsExport.h>
 #include <epicsReadline.h>
+#include <epicsThread.h>
 
 #include "luaEpics.h"
 #include "luaShell.h"
@@ -230,9 +231,12 @@ static int docall (lua_State *L, int narg, int nres)
 static void luashBody(lua_State* state, const char* pathname)
 {
 	int status;
+	int wasOkToBlock;
 	
 	const char* prompt = NULL;
 	void* readlineContext = NULL;
+	
+	FILE *fp = NULL;
 	
 	if (pathname)
 	{		
@@ -241,7 +245,9 @@ static void luashBody(lua_State* state, const char* pathname)
 		
 		if (path.empty())    { printf("File %s not found\n", pathname); return; }
 		
-		readlineContext = epicsReadlineBegin(fopen(path.c_str(), "r"));
+		fp = fopen(path.c_str(), "r");
+		
+		readlineContext = epicsReadlineBegin(fp);
 	}
 	else
 	{
@@ -266,51 +272,65 @@ static void luashBody(lua_State* state, const char* pathname)
 		if (prompt == NULL)    { prompt = "luash> "; }
 	}
 	
-	do
-	{
-		/*
-		** Read a line and try to load (compile) it first as an expression (by
-		** adding "return " in front of it) and second as a statement. Return
-		** the final status of load/call with the resulting function (if any)
-		** in the top of the stack.
-		*/
-		lua_settop(state, 0);
-		
-		const char* raw = epicsReadline(prompt, readlineContext);
-		
-		if (raw == NULL)                 { break; }
-		if (strcmp(raw, "exit") == 0)    { break; }
-		
-		if (raw[0] == '<')
-		{
-			std::string line(raw);
-			
-			// Get rid of < character
-			line.erase(0,1);
-			
-			// Get rid of whitespace
-			line.erase(0, line.find_first_not_of(" 	"));
-			
-			luashBody(state, line.c_str());
-			continue;
-		}
-		
-		lua_pushstring(state, raw);
-		
-		if (prompt == NULL)    { printf("%s\n", raw); }
-		
-		/* try as command, maybe with continuation lines */
-		if ((status = addreturn(state)) != LUA_OK)    { status = multiline(state, prompt, readlineContext); }
-		
-		lua_remove(state, 1);  /* remove line from the stack */
-		lua_assert(lua_gettop(state) == 1);
-		
-		if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
-		
-		if (status == LUA_OK)     { l_print(state); }
-		else                      { report(state, status); }
-	}while (true);
 	
+	wasOkToBlock = epicsThreadIsOkToBlock();
+    epicsThreadSetOkToBlock(1);
+	
+	if (readlineContext)
+	{	
+		do
+		{
+			/*
+			** Read a line and try to load (compile) it first as an expression (by
+			** adding "return " in front of it) and second as a statement. Return
+			** the final status of load/call with the resulting function (if any)
+			** in the top of the stack.
+			*/
+			lua_settop(state, 0);
+			
+			const char* raw = epicsReadline(prompt, readlineContext);
+			
+			if (raw == NULL)                 { break; }
+			if (strcmp(raw, "exit") == 0)    { break; }
+			
+			if (raw[0] == '<')
+			{
+				std::string line(raw);
+				
+				// Get rid of < character
+				line.erase(0,1);
+				
+				// Get rid of whitespace
+				line.erase(0, line.find_first_not_of(" 	"));
+				
+				luashBody(state, line.c_str());
+				continue;
+			}
+			
+			lua_pushstring(state, raw);
+			
+			if (prompt == NULL)    { printf("%s\n", raw); }
+			
+			/* try as command, maybe with continuation lines */
+			if ((status = addreturn(state)) != LUA_OK)    { status = multiline(state, prompt, readlineContext); }
+			
+			lua_remove(state, 1);  /* remove line from the stack */
+			lua_assert(lua_gettop(state) == 1);
+			
+			if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
+			
+			if (status == LUA_OK)     { l_print(state); }
+			else                      { report(state, status); }
+		}while (true);
+	}
+	else
+	{
+		printf("Couldn't allocate command-line object.\n");
+	}
+	
+	if (fp)    { fclose(fp); }
+	
+	epicsThreadSetOkToBlock( wasOkToBlock);
 	epicsReadlineEnd(readlineContext);
 	lua_settop(state, 0);  /* clear stack */
 }
