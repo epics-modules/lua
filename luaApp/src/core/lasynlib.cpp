@@ -34,7 +34,9 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 		
 		do
 		{
-			input.read(buffer, sizeof(buffer), &numread, &eomReason);
+			asynStatus status = input.read(buffer, sizeof(buffer), &numread, &eomReason);
+			
+			printf("%d\n", status);
 			output += std::string(buffer, numread);
 		} while (eomReason & ASYN_EOM_CNT);
 		
@@ -49,7 +51,7 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 		return 0;
 	}
 	catch (...)
-	{		
+	{
 		return 0;
 	}
 	
@@ -57,7 +59,7 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 }
 
 static int asyn_write(lua_State* state, const char* data, const char* port, int addr, const char* param, const char* out_term)
-{
+{	
 	int isnum;
 	
 	try
@@ -470,6 +472,12 @@ static int l_callParamCallbacks(lua_State* state)
 
 static int l_portread(lua_State* state)
 {
+	if (! lua_istable(state, 1))
+	{
+		printf("Port reference not given. (Did you use '.read' instead of ':read'?)\n");
+		return 0;
+	}
+	
 	lua_getfield(state, 1, "port_name");
 	const char* port = lua_tostring(state, lua_gettop(state));
 	lua_pop(state, 1);
@@ -491,6 +499,12 @@ static int l_portread(lua_State* state)
 
 static int l_portwrite(lua_State* state)
 {
+	if (! lua_istable(state, 1))
+	{
+		printf("Port reference not given. (Did you use '.write' instead of ':write'?)\n");
+		return 0;
+	}
+	
 	if (! lua_isstring(state, 2))    { return 0; }
 	
 	const char* output = lua_tostring(state, 2);
@@ -516,6 +530,12 @@ static int l_portwrite(lua_State* state)
 
 static int l_portwriteread(lua_State* state)
 {
+	if (! lua_istable(state, 1))
+	{
+		printf("Port reference not given. (Did you use '.writeread' instead of ':writeread'?)\n");
+		return 0;
+	}
+	
 	if (! lua_isstring(state, 2))    { return 0; }
 	
 	const char* output = lua_tostring(state, 2);
@@ -545,6 +565,12 @@ static int l_portwriteread(lua_State* state)
 
 static int l_porteosout(lua_State* state)
 {
+	if (! lua_istable(state, 1))
+	{
+		printf("Port reference not given. (Did you use '.setOutputTerminator' instead of ':setOutputTerminator'?)\n");
+		return 0;
+	}
+	
 	if (! lua_isstring(state, 2))    { return 0; }
 	
 	lua_pushvalue(state, 2);
@@ -555,6 +581,12 @@ static int l_porteosout(lua_State* state)
 
 static int l_porteosin(lua_State* state)
 {
+	if (! lua_istable(state, 1))
+	{
+		printf("Port reference not given. (Did you use '.setInputTerminator' instead of ':setInputTerminator'?)\n");
+		return 0;
+	}
+	
 	if (! lua_isstring(state, 2))    { return 0; }
 	
 	lua_pushvalue(state, 2);
@@ -578,7 +610,7 @@ static const luaL_Reg port_funcs[] = {
 extern "C"
 {
 void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param)
-{
+{	
 	luaL_newmetatable(state, "port_meta");
 	lua_pop(state, 1);
 	
