@@ -53,7 +53,7 @@ asyn.callParamCallbacks(portName, addr)
 
 
 
-asyn.SetOutTerminator(terminator)
+asyn.setOutTerminator(terminator)
 
 	Sets the global variable OutTerminator, which controls asyn write commands
 	
@@ -63,7 +63,7 @@ asyn.SetOutTerminator(terminator)
 
 
 
-asyn.SetInTerminator(terminator)
+asyn.setInTerminator(terminator)
 
 	Sets the global variable InTerminator, which controls asyn read commands
 	
@@ -73,7 +73,7 @@ asyn.SetInTerminator(terminator)
 
 
 
-asyn.SetWriteTimeout(timeout)
+asyn.setWriteTimeout(timeout)
 
 	Sets the global variable WriteTimeout, which controls asyn write commands
 	
@@ -83,7 +83,7 @@ asyn.SetWriteTimeout(timeout)
 
 
 
-asyn.SetReadTimeout(timeout)
+asyn.setReadTimeout(timeout)
 
 	Sets the global variable ReadTimeout, which controls asyn read commands
 	
