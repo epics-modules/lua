@@ -17,9 +17,27 @@ static int epics_get(lua_State* state, const char* pv_name)
 	chid id;
 
 	int status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
-
-	if (status != ECA_NORMAL) { return 0; }
-	ca_pend_io(0.001);
+	
+	switch (status)
+	{
+		case ECA_STRTOBIG:
+			printf("PV name too long\n");
+			return 0;
+			
+		case ECA_ALLOCMEM:
+			printf("Cannot allocate memory\n");
+			return 0;
+			
+		case ECA_BADTYPE:
+			printf("Invalid DBR_XXXX type\n");
+			return 0;
+			
+		default:
+			break;
+	}
+	
+	ca_pend_io(0.1);
+	SEVCHK (status, NULL);
 	
 	switch (ca_field_type(id))
 	{
@@ -99,6 +117,8 @@ static int epics_get(lua_State* state, const char* pv_name)
 		case DBF_NO_ACCESS:
 			return 0;
 	}
+	
+	ca_pend_io(0.1);
 
 	ca_clear_channel(id);
 
@@ -115,8 +135,27 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 	
 	chid id;
 
-	ca_create_channel(pv_name, NULL, NULL, 0, &id);	
-	status = ca_pend_io(0.001);
+	status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
+	
+	switch (status)
+	{
+		case ECA_STRTOBIG:
+			printf("PV name too long\n");
+			return 0;
+			
+		case ECA_ALLOCMEM:
+			printf("Cannot allocate memory\n");
+			return 0;
+			
+		case ECA_BADTYPE:
+			printf("Invalid DBR_XXXX type\n");
+			return 0;
+			
+		default:
+			break;
+	}
+	
+	status = ca_pend_io(0.1);
 	SEVCHK (status, NULL);
 
 	switch (lua_type(state, offset))
@@ -153,6 +192,8 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 			/* Unsupported types */
 			break;
 	}
+	
+	ca_pend_io(0.1);
 	
 	ca_clear_channel(id);
 	
@@ -221,9 +262,27 @@ static int l_pvsetval(lua_State* state)
 	return epics_put(state, full_name.c_str(), 3);
 }
 
+static int l_pvgetname(lua_State* state)
+{	
+	if (! lua_istable(state, 1))
+	{
+		printf("PV reference not given. (Did you use '.getName' instead of ':getName'?)\n");
+		return 0;
+	}
+	
+	lua_getfield(state, -1, "pv_name");
+	
+	return 1;
+}
+
 static const luaL_Reg pv_meta[] = {
 	{"__index", l_pvgetval},
 	{"__newindex", l_pvsetval},
+	{NULL, NULL}
+};
+
+static const luaL_Reg pv_funcs[] = {
+	{"getName", l_pvgetname},
 	{NULL, NULL}
 };
 
@@ -236,8 +295,9 @@ void luaGeneratePV(lua_State* state, const char* pv_name)
 	lua_pop(state, 1);
 	
 	lua_newtable(state);
+	luaL_setfuncs(state, pv_funcs, 0);
 	
-	lua_pushstring(state, pv_name);
+	lua_pushstring(state, pv_name);	
 	lua_setfield(state, -2, "pv_name");
 	
 	luaL_setmetatable(state, "pv_meta");
