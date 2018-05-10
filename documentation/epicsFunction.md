@@ -3,9 +3,9 @@ enable access to the epics runtime environment.
 
 
 
-asyn.getStringParam (portName, addr, paramName)
-asyn.getDoubleParam (portName, addr, paramName)
-asyn.getIntegerParam(portName, addr, paramName)
+**asyn.getStringParam** (*portName, addr, paramName*)  
+**asyn.getDoubleParam** (*portName, addr, paramName*)  
+**asyn.getIntegerParam** (*portName, addr, paramName*)  
 
 	Fetches the value of an asyn parameter.
 
@@ -22,9 +22,9 @@ asyn.getIntegerParam(portName, addr, paramName)
 	
 
 
-asyn.setStringParam (portName, addr, paramName, value)
-asyn.setDoubleParam (portName, addr, paramName, value)
-asyn.setIntegerParam(portName, addr, paramName, value)
+**asyn.setStringParam** (*portName, addr, paramName, value*)  
+**asyn.setDoubleParam** (*portName, addr, paramName, value*)  
+**asyn.setIntegerParam** (*portName, addr, paramName, value*)  
 
 	Sets the value of an asyn parameter.
 
@@ -41,7 +41,7 @@ asyn.setIntegerParam(portName, addr, paramName, value)
 
 
 
-asyn.callParamCallbacks(portName, addr)
+**asyn.callParamCallbacks** (*portName, addr*)
 
 	Tells an asyn port to call parameter callbacks on changed values.
 	
@@ -53,7 +53,7 @@ asyn.callParamCallbacks(portName, addr)
 
 
 
-asyn.setOutTerminator(terminator)
+**asyn.setOutTerminator** (*terminator*)
 
 	Sets the global variable OutTerminator, which controls asyn write commands
 	
@@ -61,12 +61,12 @@ asyn.setOutTerminator(terminator)
 	terminator [string]   - The string value to append to the end of all asyn
 	                        write calls.
 
-asyn.getOutTerminator()
+**asyn.getOutTerminator** ()
 	
 	Returns the value of the global variable OutTerminator
 
 
-asyn.setInTerminator(terminator)
+**asyn.setInTerminator** (*terminator*)
 
 	Sets the global variable InTerminator, which controls asyn read commands
 	
@@ -75,12 +75,12 @@ asyn.setInTerminator(terminator)
 	                        asyn port.
 
 
-asyn.getInTerminator()
+**asyn.getInTerminator** ()
 	
 	Returns the value of the global variable InTerminator
 
 
-asyn.setWriteTimeout(timeout)
+**asyn.setWriteTimeout** (*timeout*)
 
 	Sets the global variable WriteTimeout, which controls asyn write commands
 	
@@ -89,13 +89,13 @@ asyn.setWriteTimeout(timeout)
 	                        to wait before failure.
 
 
-asyn.getWriteTimeout()
+**asyn.getWriteTimeout** ()
 	
 	Returns the value of the global variable WriteTimeout
 							
 	
 
-asyn.setReadTimeout(timeout)
+**asyn.setReadTimeout** (*timeout*)
 
 	Sets the global variable ReadTimeout, which controls asyn read commands
 	
@@ -104,13 +104,13 @@ asyn.setReadTimeout(timeout)
 	                        to wait before failure.
 
 
-asyn.getReadTimeout()
+**asyn.getReadTimeout** ()
 	
 	Returns the value of the global variable ReadTimeout
 							
 	
 
-asyn.write(data, portName, addr)
+**asyn.write** (*data, portName, addr*)
 
 	Write a string to a given asynOctet port
 	
@@ -125,7 +125,7 @@ asyn.write(data, portName, addr)
 	
 	
 
-asyn.read(portName, addr)
+**asyn.read** (*portName, addr*)
 
 	Read a string from a given asynOctet port
 
@@ -141,7 +141,7 @@ asyn.read(portName, addr)
 
 
 
-asyn.writeread(data, portName, addr)
+**asyn.writeread** (*data, portName, addr*)
 
 	Writes data to a port and then reads data from that same port.
 
@@ -156,7 +156,7 @@ asyn.writeread(data, portName, addr)
 	by the global variable ReadTimeout is reached.
 	
 
-asyn.port(portName, addr)
+**asyn.port** (*portName, addr*)
 
 	Returns a table representing a port object. This object has the functions read
 	write, and readwrite, which work the same as the functions above, but the port
@@ -171,7 +171,7 @@ asyn.port(portName, addr)
 	addr       [number]   - The asyn address of the parameter.
 	
 
-epics.get(PV)
+**epics.get** (*PV*)
 	
 	Calls ca_get to retrieve the value of a PV accessible by the host.
 	
@@ -183,7 +183,7 @@ epics.get(PV)
 	
 	
 
-epics.put(PV, value)
+**epics.put** (*PV, value*)
 
 	Calls ca_put to set the value of a PV accessible by the host.
 	
@@ -195,7 +195,7 @@ epics.put(PV, value)
 	
 	
 	
-epics.sleep(seconds)
+**epics.sleep** (*seconds*)
 
 	Tells the epics thread running the lua script to sleep for a given time.
 	
@@ -203,7 +203,7 @@ epics.sleep(seconds)
 	seconds  [number]     - Amount of seconds to sleep for (can be fractional).
 
 	
-epics.pv(PV)
+**epics.pv** (*PV*)
 
 	Returns a table representing a PV object. Index accesses can be used to retrive or 
 	change record fields. These changes are completed through ca_get or ca_put.
