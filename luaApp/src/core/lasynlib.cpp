@@ -34,7 +34,7 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 		
 		do
 		{
-			asynStatus status = input.read(buffer, sizeof(buffer), &numread, &eomReason);
+			input.read(buffer, sizeof(buffer), &numread, &eomReason);
 			output += std::string(buffer, numread);
 		} while (eomReason & ASYN_EOM_CNT);
 		
