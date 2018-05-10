@@ -621,7 +621,9 @@ static int l_portoutget(lua_State* state)
 		return 0;
 	}
 	
-	return lua_getfield(state, 1, "out_term");
+	lua_getfield(state, 1, "out_term");
+	
+	return 1;
 }
 
 static int l_portinget(lua_State* state)
@@ -632,7 +634,9 @@ static int l_portinget(lua_State* state)
 		return 0;
 	}
 	
-	return lua_getfield(state, 1, "in_term");
+	lua_getfield(state, 1, "in_term");
+	
+	return 1;
 }
 
 static int l_portnameget(lua_State* state)
@@ -643,7 +647,9 @@ static int l_portnameget(lua_State* state)
 		return 0;
 	}
 	
-	return lua_getfield(state, 1, "port_name");
+	lua_getfield(state, 1, "port_name");
+	
+	return 1;
 }
 
 
