@@ -43,6 +43,11 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 		lua_pushstring(state, output.c_str());
 		return 1;
 	}
+	catch (std::runtime_error& e)
+	{
+		printf("asyn.read: %s\n", e.what());
+		return 0;
+	}
 	catch (...)
 	{		
 		return 0;
@@ -71,6 +76,11 @@ static int asyn_write(lua_State* state, const char* data, const char* port, int 
 
 		return 0;
 	}
+	catch (std::runtime_error& e)
+	{
+		printf("asyn.write: %s\n", e.what());
+		return 0;
+	}
 	catch (...)
 	{
 		return 0;
@@ -93,7 +103,7 @@ static int l_read(lua_State* state)
 	int addr = (int) lua_tonumber(state, 2);
 	const char* param = lua_tostring(state, 3);
 	
-	if (port == NULL) { return 0; }
+	if (port == NULL)    { return 0; }
 	
 	lua_getglobal(state, "InTerminator");
 	const char* in_term = lua_tostring(state, -1);
@@ -157,6 +167,11 @@ static int asyn_writeread(lua_State* state, const char* data, const char* port, 
 
 		lua_pushstring(state, output.c_str());
 		return 1;      
+	}
+	catch (std::runtime_error& e)
+	{
+		printf("asyn.writeread: %s\n", e.what());
+		return 0;
 	}
 	catch (...)
 	{
