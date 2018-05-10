@@ -219,11 +219,21 @@ static int l_setOutTerminator(lua_State* state)
 	return 0;
 }
 
+static int l_getOutTerminator(lua_State* state)
+{
+	return lua_getglobal(state, "OutTerminator");
+}
+
 static int l_setInTerminator(lua_State* state)
 {
 	if (lua_isstring(state, -1))    { lua_setglobal(state, "InTerminator"); }
 	
 	return 0;
+}
+
+static int l_getInTerminator(lua_State* state)
+{
+	return lua_getglobal(state, "InTerminator");
 }
 
 static int l_setWriteTimeout(lua_State* state)
@@ -233,11 +243,21 @@ static int l_setWriteTimeout(lua_State* state)
 	return 0;
 }
 
+static int l_getWriteTimeout(lua_State* state)
+{
+	return lua_getglobal(state, "WriteTimeout");
+}
+
 static int l_setReadTimeout(lua_State* state)
 {
 	if (lua_isnumber(state, -1))    { lua_setglobal(state, "ReadTimeout"); }
 	
 	return 0;
+}
+
+static int l_getReadTimeout(lua_State* state)
+{
+	return lua_getglobal(state, "ReadTimeout");
 }
 
 static int l_setIntegerParam(lua_State* state)
@@ -567,7 +587,7 @@ static int l_porteosout(lua_State* state)
 {
 	if (! lua_istable(state, 1))
 	{
-		printf("Port reference not given. (Did you use '.setOutputTerminator' instead of ':setOutputTerminator'?)\n");
+		printf("Port reference not given. (Did you use '.setOutTerminator' instead of ':setOutTerminator'?)\n");
 		return 0;
 	}
 	
@@ -583,7 +603,7 @@ static int l_porteosin(lua_State* state)
 {
 	if (! lua_istable(state, 1))
 	{
-		printf("Port reference not given. (Did you use '.setInputTerminator' instead of ':setInputTerminator'?)\n");
+		printf("Port reference not given. (Did you use '.setInTerminator' instead of ':setInTerminator'?)\n");
 		return 0;
 	}
 	
@@ -595,13 +615,49 @@ static int l_porteosin(lua_State* state)
 	return 0;
 }
 
+static int l_portoutget(lua_State* state)
+{
+	if (! lua_istable(state, 1))
+	{
+		printf("Port reference not given. (Did you use '.getOutTerminator' instead of ':getOutTerminator'?)\n");
+		return 0;
+	}
+	
+	return lua_getfield(state, 1, "out_term");
+}
+
+static int l_portinget(lua_State* state)
+{
+	if (! lua_istable(state, 1))
+	{
+		printf("Port reference not given. (Did you use '.getInTerminator' instead of ':getInTerminator'?)\n");
+		return 0;
+	}
+	
+	return lua_getfield(state, 1, "in_term");
+}
+
+static int l_portnameget(lua_State* state)
+{
+	if (! lua_istable(state, 1))
+	{
+		printf("Port reference not given. (Did you use '.getPortName' instead of ':getPortName'?)\n");
+		return 0;
+	}
+	
+	return lua_getfield(state, 1, "port_name");
+}
+
 
 static const luaL_Reg port_funcs[] = {
 	{"read", l_portread},
 	{"write", l_portwrite},
 	{"writeread", l_portwriteread},
-	{"setOutputTerminator", l_porteosout},
-	{"setInputTerminator", l_porteosin},
+	{"getPortName", l_portnameget},
+	{"setOutTerminator", l_porteosout},
+	{"getOutTerminator", l_portoutget},
+	{"setInTerminator", l_porteosin},
+	{"getInTerminator", l_portinget},
 	{NULL, NULL}
 };
 
@@ -663,9 +719,13 @@ static const luaL_Reg mylib[] = {
 	{"write", l_write},
 	{"writeread", l_writeread},
 	{"setOutTerminator", l_setOutTerminator},
+	{"getOutTerminator", l_getOutTerminator},
 	{"setInTerminator", l_setInTerminator},
+	{"getInTerminator", l_getInTerminator},
 	{"setWriteTimeout", l_setWriteTimeout},
+	{"getWriteTimeout", l_getWriteTimeout},
 	{"setReadTimeout", l_setReadTimeout},
+	{"getReadTimeout", l_getReadTimeout},
 	{"setIntegerParam", l_setIntegerParam},
 	{"setDoubleParam", l_setDoubleParam},
 	{"setStringParam", l_setStringParam},
