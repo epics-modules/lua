@@ -31,8 +31,10 @@ function state_demo()
 end
 
 function pattern_demo(pattern)
-	-- Demonstrates the regex processing 
+	-- Demonstrates the pattern processing 
 	-- capabilities. Can replace scalc
+	
+	-- Lua PCRE regex libraries are also available
 	
 	return string.match(CC, pattern)
 end
@@ -41,6 +43,7 @@ end
 function arg_demo(arg1)
 	-- Demonstrates that you can pass
 	-- arguments to the function.
+	
 	print(arg1)
 end
 
@@ -54,11 +57,15 @@ function log_demo()
 end
 
 function string_demo()
+	-- Runs the String EE as if it were code
+
 	f = load(EE)
 	return f()
 end
 
 function test()
+	-- Pulls three values out of FF as if it were processing a stream response
+	
 	local tempa, tempb, tempc = string.match(FF, "VOLTS%?(.*),(.*),(.*)")
 	
 	return tempa

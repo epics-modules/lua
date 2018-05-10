@@ -1,7 +1,7 @@
 record(ai, "$(P)$(Q)ai")
 {
 	field(DTYP, "lua")
-	field(INP, "@dtyp.lua next_int")
+	field(INP, "@dtyp.lua next_int(10)")
 }
 
 record(bi, "$(P)$(Q)bi")

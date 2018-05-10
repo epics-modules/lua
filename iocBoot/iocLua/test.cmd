@@ -1,11 +1,9 @@
-# Linux startup script
-epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
+# Script record example script
 
-################################################################################
-# Tell EPICS all about the record types, device-support modules, drivers,
-# etc. in the software we just loaded (xxx.munch)
 dbLoadDatabase("../../dbd/scriptioc.dbd")
 scriptioc_registerRecordDeviceDriver(pdbbase)
+
+epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 
 dbLoadRecords("./test.db", "P=lua:,Q=test:")
 

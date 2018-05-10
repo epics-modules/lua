@@ -1,15 +1,11 @@
-# Linux startup script
-epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
+# Asyn writing and reading example script
 
-################################################################################
-# Tell EPICS all about the record types, device-support modules, drivers,
-# etc. in the software we just loaded (xxx.munch)
 dbLoadDatabase("../../dbd/scriptioc.dbd")
 scriptioc_registerRecordDeviceDriver(pdbbase)
 
 epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 
-drvAsynIPPortConfigure("IP", "cars.uchicago.edu:80", 0,0,0)
+drvAsynIPPortConfigure("IP", "www.google.com:80", 0,0,0)
 
 dbLoadRecords("./asyn.db", "P=lua:,Q=test:,PORT=IP")
 
