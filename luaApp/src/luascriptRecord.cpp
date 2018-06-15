@@ -691,6 +691,7 @@ static void processCallback(void* data)
 		new_str += STRING_SIZE;
 	}
 	
+	recGblFwdLink(record);
 	record->pact = FALSE;
 }
 
@@ -747,7 +748,11 @@ static long process(luascriptRecord* record)
 
 	status = runCode(record);
 	
-	if (status)    { record->pact = FALSE; }
+	if (status)
+	{
+		recGblFwdLink(record);
+		record->pact = FALSE;
+	}
 	
 	return status;
 }
