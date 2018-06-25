@@ -651,7 +651,9 @@ static void processCallback(void* data)
 
 		if (checkValUpdate(record))
 		{
+			record->pact = FALSE;
 			writeValue(record);
+			record->pact = TRUE;
 			db_post_events(record, &record->val, DBE_VALUE);
 		}
 	}
@@ -662,7 +664,9 @@ static void processCallback(void* data)
 
 		if (checkSvalUpdate(record))
 		{
+			record->pact = FALSE;
 			writeValue(record);
+			record->pact = TRUE;
 			db_post_events(record, &record->sval, DBE_VALUE);
 		}
 	}
