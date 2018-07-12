@@ -62,7 +62,6 @@ $(P).SCAN
 $(P).PREC
 $(P).OUT
 $(P).WAIT
-$(P).CODE
 $(P).OOPT
 $(P).RELO
 $(P).DESC
