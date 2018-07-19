@@ -20,27 +20,6 @@
 
 
 /*
-** EPICS CONFIGURATION
- */
-
-#if EPICS_VERSION == 3
-#if EPICS_REVISION == 15
-
-  #if EPICS_MODIFICATION >= 5
-    #define EPICS_COMPAT_IOCSH
-  #endif
-
-#elif EPICS_REVISION > 15
-  #define EPICS_COMPAT_IOCSH
-#endif
-
-#elif EPICS_VERSION > 3
-  #define EPICS_COMPAT_IOCSH
-#endif
-
-
-
-/*
 ** {====================================================================
 ** System Configuration: macros to adapt (if needed) Lua to some
 ** particular platform, for instance compiling it with 32-bit numbers or
@@ -72,6 +51,10 @@
 #define LUA_USE_WINDOWS  /* enable goodies for regular Windows */
 #endif
 
+#if defined(__vxworks) || defined(vxWorks)
+#define LUA_USE_VXWORKS
+#endif
+
 
 #if defined(LUA_USE_WINDOWS)
 #define LUA_DL_DLL	/* enable support for DLL */
@@ -92,6 +75,9 @@
 #define LUA_USE_READLINE	/* needs an extra library: -lreadline */
 #endif
 
+#if defined(LUA_USE_VXWORKS)
+#define LUA_USE_C89
+#endif
 
 /*
 @@ LUA_C89_NUMBERS ensures that Lua uses the largest types available for
