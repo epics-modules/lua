@@ -178,6 +178,7 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 
 epicsShareFunc void luaLoadEnviron(lua_State* state)
 {
+	#if defined(__unix__)
 	extern char** environ;
 	char** sp;
 	
@@ -193,4 +194,5 @@ epicsShareFunc void luaLoadEnviron(lua_State* state)
 		lua_pushstring(state, var_val.c_str());
 		lua_setglobal(state, var_name.c_str());
 	}
+	#endif
 }
