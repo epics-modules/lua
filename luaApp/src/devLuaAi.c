@@ -19,13 +19,14 @@ static void pushRecord(struct aiRecord* record)
 
 static long readData(struct aiRecord* record)
 {
+	int type;
 	Protocol* proto = (Protocol*) record->dpvt;
 	
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	runFunction(proto);
 	
-	int type = lua_type(proto->state, -1);
+	type = lua_type(proto->state, -1);
 	
 	switch (type)
 	{		

@@ -18,13 +18,14 @@ static void pushRecord(struct biRecord* record)
 
 static long readData(struct biRecord* record)
 {
+	int type;
 	Protocol* proto = (Protocol*) record->dpvt;
 	
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	runFunction(proto);
 	
-	int type = lua_type(proto->state, -1);
+	type = lua_type(proto->state, -1);
 	
 	switch (type)
 	{		
@@ -35,15 +36,17 @@ static long readData(struct biRecord* record)
 				lua_pop(proto->state, 1);
 				return -1;
 			}
+			else
+			{
+			    int val = lua_tointeger(proto->state, -1);
 			
-			int val = lua_tointeger(proto->state, -1);
+			    if (record->mask) val &= record->mask;
 			
-			if (record->mask) val &= record->mask;
+			    record->rval = val;
 			
-			record->rval = val;
-			
-			lua_pop(proto->state, 1);
-			return 2;
+			    lua_pop(proto->state, 1);
+			    return 2;
+			}
 		}
 		
 		case LUA_TSTRING:
