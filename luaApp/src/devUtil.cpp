@@ -6,6 +6,8 @@
 
 #include "link.h"
 
+#include <epicsExport.h>
+
 #include "luaEpics.h"
 
 static int parseParams(Protocol* proto)
@@ -30,8 +32,8 @@ static int parseParams(Protocol* proto)
 		if   (next == std::string::npos)    { a_param = params.substr(curr); }
 		else                                { a_param = params.substr(curr, next - curr); }
 
-		int trim_front = a_param.find_first_not_of(" ");
-		int trim_back  = a_param.find_last_not_of(" ");
+		size_t trim_front = a_param.find_first_not_of(" ");
+		size_t trim_back  = a_param.find_last_not_of(" ");
 
 		a_param = a_param.substr(trim_front, trim_back - trim_front + 1);
 		

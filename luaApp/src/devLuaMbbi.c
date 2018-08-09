@@ -18,27 +18,28 @@ static void pushRecord(struct mbbiRecord* record)
 
 static long readData(struct mbbiRecord* record)
 {
+	int type, index;
 	Protocol* proto = (Protocol*) record->dpvt;
 	
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	runFunction(proto);
 
-	int index;
-	
-	int type = lua_type(proto->state, -1);
+	type = lua_type(proto->state, -1);
 	
 	switch (type)
 	{		
 		case LUA_TNUMBER:
 		{
+			int val;
+			
 			if (! lua_isinteger(proto->state, -1))
 			{ 
 				lua_pop(proto->state, 1);
 				return -1;
 			}
 			
-			int val = lua_tointeger(proto->state, -1);
+			val = lua_tointeger(proto->state, -1);
 			
 			if (record->sdef)
 			{

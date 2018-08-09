@@ -118,8 +118,8 @@ epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
 		if   (next == std::string::npos)    { param = parse.substr(curr); }
 		else                                { param = parse.substr(curr, next - curr); }
 
-		int trim_front = param.find_first_not_of(" ");
-		int trim_back  = param.find_last_not_of(" ");
+		size_t trim_front = param.find_first_not_of(" ");
+		size_t trim_back  = param.find_last_not_of(" ");
 
 		param = param.substr(trim_front, trim_back - trim_front + 1);
 		

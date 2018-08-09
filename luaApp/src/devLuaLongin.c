@@ -17,13 +17,14 @@ static void pushRecord(struct longinRecord* record)
 
 static long readData(struct longinRecord* record)
 {
+	int type;
 	Protocol* proto = (Protocol*) record->dpvt;
 	
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	runFunction(proto);
 	
-	int type = lua_type(proto->state, -1);
+	type = lua_type(proto->state, -1);
 	
 	switch (type)
 	{		
@@ -34,12 +35,14 @@ static long readData(struct longinRecord* record)
 				lua_pop(proto->state, 1);
 				return -1;
 			}
+			else
+			{
+				long val = lua_tointeger(proto->state, -1);
+				record->val = val;
 			
-			long val = lua_tointeger(proto->state, -1);
-			record->val = val;
-			
-			lua_pop(proto->state, 1);
-			return 2;
+				lua_pop(proto->state, 1);
+				return 2;
+			}
 		}
 		
 		case LUA_TNIL:
