@@ -9,7 +9,6 @@
 	#include <sysSymTbl.h>
 #endif
 
-
 #include <macLib.h>
 
 #define epicsExportSharedSymbols
@@ -173,26 +172,4 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 			lua_setglobal(state, pairs[0]);
 		}
 	}
-}
-
-
-epicsShareFunc void luaLoadEnviron(lua_State* state)
-{
-	#if defined(__unix__)
-	extern char** environ;
-	char** sp;
-	
-	for (sp = environ; (sp != NULL) && (*sp != NULL); sp++)
-	{
-		std::string line(*sp);
-		
-		size_t split_loc = line.find_first_of("=");
-		
-		std::string var_name = line.substr(0, split_loc);
-		std::string var_val  = line.substr(split_loc + 1);
-		
-		lua_pushstring(state, var_val.c_str());
-		lua_setglobal(state, var_name.c_str());
-	}
-	#endif
 }
