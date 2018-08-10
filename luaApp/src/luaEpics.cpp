@@ -9,9 +9,6 @@
 	#include <sysSymTbl.h>
 #endif
 
-
-#include "osiEnviron.h"
-
 #include <macLib.h>
 
 #define epicsExportSharedSymbols
