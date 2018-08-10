@@ -2,6 +2,8 @@ The following are additional functions added to the lua runtime interpreter to
 enable access to the epics runtime environment.
 
 
+## Asyn Functions
+
 
 **asyn.getStringParam** (*portName, addr, paramName*)  
 **asyn.getDoubleParam** (*portName, addr, paramName*)  
@@ -170,6 +172,8 @@ enable access to the epics runtime environment.
 
 	addr       [number]   - The asyn address of the parameter.
 	
+	
+## Epics Functions
 
 **epics.get** (*PV*)
 	
@@ -209,3 +213,15 @@ enable access to the epics runtime environment.
 	change record fields. These changes are completed through ca_get or ca_put.
 	
 	PV       [string]    - The name of the PV to request.
+	
+	
+
+## IOC Shell Functions (Epics base 3.15.6 or higher only)
+
+**iocsh.<function_name>** (*arguments...*)
+
+	Searches the list of registered IOC shell functions to find a function with the given
+	name. If found, the arguments given are converted to the types that the function expects
+	and the function is called.
+	
+	arguments...   [varies]    - A list of the arguments you would normally use in the IOC shell.
