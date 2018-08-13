@@ -1,4 +1,4 @@
-= Dynamic Libraries
+# Dynamic Libraries
 
 If you are on a system that supports dynamic libraries, you can add new 
 functions into lua using the *require* function. Compile a dynamic library 
@@ -54,7 +54,7 @@ Note that luaopen_foo just returns a table with all the functions indexed to the
 correct names, which is why the return value of the require function then needs to
 be assigned to a variable name. 
 
-= Static Libraries
+# Static Libraries
 
 Using static libraries is very similar to using dynamic ones. The major difference
 is that you will have to tell lua what the name of the function that opens your
