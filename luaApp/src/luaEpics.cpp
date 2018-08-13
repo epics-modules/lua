@@ -3,6 +3,7 @@
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
 
 #if defined(__vxworks) || defined(vxWorks)
 	#include <symLib.h>
@@ -13,6 +14,8 @@
 
 #define epicsExportSharedSymbols
 #include "luaEpics.h"
+
+static std::vector<std::pair<const char*, lua_CFunction> > registered;
 
 epicsShareFunc std::string luaLocateFile(std::string filename)
 {
@@ -171,5 +174,22 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 			
 			lua_setglobal(state, pairs[0]);
 		}
+	}
+}
+
+epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction library_func)
+{
+	std::pair<const char*, lua_CFunction> temp(library_name, library_func);
+	
+	registered.push_back(temp);
+}
+
+epicsShareFunc void luaLoadRegisteredLibraries(lua_State* state)
+{
+	for (std::size_t index = 0; index < registered.size(); index += 1)
+	{
+		std::pair<const char* , lua_CFunction> temp = registered[index];
+		
+		luaL_requiref( state, temp.first, temp.second, 1 );
 	}
 }

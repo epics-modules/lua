@@ -353,6 +353,7 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 {
 	lua_State* state = luaL_newstate();
 	luaL_openlibs(state);
+	luaLoadRegisteredLibraries(state);
 	
 	lua_pushlightuserdata(state, *iocshPpdbbase);
 	lua_setglobal(state, "pdbbase");
