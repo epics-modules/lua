@@ -1,0 +1,67 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<title>luaReleaseNotes</title>
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<h1 align="center">lua Release Notes</h1>
+
+<h2 align="center">Release master</h2>
+<ul>
+<li><p>Fixes compilation issues for Visual Studio 2010
+<li><p>Dynamic library loading enabled for Linux architectures
+<li><p>C functions can now be registered into lua libraries that
+will automatically load on lua shell startup.
+<li><p>Also set up a quick way to bind functions already loaded
+into the IOC shell
+<li><p>luaEpics functions are now able to be used in C files
+<li><p>Full Documentation
+</ul>
+
+<h2 align="center">Release 1-2-2</h2>
+<ul>
+<li><p>Fixed a compilation bug on vxWorks
+<li><p>First official synApps release
+</ul>
+
+<h2 align="center">Release 1-2-1</h2>
+<ul>
+<li><p>Fixed a bug where softChannel support wasn't working
+<li><p>luascript's CODE field is no longer saved by autosave on every luascript
+record, just for the user luascripts.
+</ul>
+
+<h2 align="center">Release 1-2</h2>
+<ul>
+<li><p>Fixed building for Windows
+<li><p>Added global reference to the pdbbase variable, allows lua shell
+to be used as a full replacement for iocsh
+<li><p>Added '<' command to luash to include the contents of other scripts
+<li><p>luaScript input fields now can have descriptions of their contents
+<li><p>Fixed a bug where forward link processing wasn't happening
+<li><p>
+</ul>
+
+<h2 align="center">Release 1-1</h2>
+<ul>
+<li><p>luash function now runs as a command shell or an interpreter
+<li><p>Lua asyn library function to access ports as lua objects
+<li><p>LUASH_PS1 variable for lua shell prompt
+</ul>
+
+<h2 align="center">Release 1-0</h2>
+<ul>
+<li><p>First public release on github
+</ul>
+
+<address>
+    Suggestions and Comments to: <br>
+    <a href="mailto:klang@aps.anl.gov">Keenan Lang</a>:
+    (klang@aps.anl.gov) <br>
+</address>
+</body>
+</html>
