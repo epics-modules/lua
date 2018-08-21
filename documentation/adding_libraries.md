@@ -87,3 +87,69 @@ then opened when you start an instance of the lua shell. If, however, you are al
 the lua shell when the database is loaded, there is a lua function *shell.loadRegistered()*
 that will go through and open the libraries so you don't need to open another instance of the
 lua shell.
+
+## Quick Static Libraries From Epics
+
+If you already have gone through the trouble of registering functions into the IOC shell, you
+can quickly bind all of those functions into a lua library by using *luaEpicsLibrary*. This works
+similarly to *luaL_newlib* as seen above, but it takes in iocshCmdDef's instead of luaL_Reg's.
+So, if you already have this in your code:
+
+    static void foo(int input)
+    {
+        printf("%d", input);
+    }
+    
+    static void callFoo(const iocshArgBuf* buf)
+    {
+        foo(buf[0].ival);
+    }
+
+    static void bar(const char* text)
+    {
+        printf("%s\n", text);
+    }
+    
+    static void callBar(const iocshArgBuf* buf)
+    {
+        bar(buf[0].sval);
+    }
+
+    static const iocshArg fooCmdArg0 = { "number", iocshArgInt};
+    static const iocshArg* fooCmdArgs[1] = {&fooCmdArg0};
+    static const iocshFuncDef fooFuncDef = {"foo", 1, fooCmdArgs};
+ 
+    static const iocshArg barCmdArg0 = { "text", iocshArgString};
+    static const iocshArg* barCmdArgs[1] = {&barCmdArg0};
+    static const iocshFuncDef barFuncDef = {"bar", 1, barCmdArgs};
+ 
+    static void testRegister(void)
+    {
+        iocshRegister(&fooFuncDef, callFoo);
+        iocshRegister(&barFuncDef, callFoo);
+    }
+
+    epicsExportRegistrar(testRegister);
+    
+
+You can add both foo and bar into a lua library with just a few extra lines:
+
+    int luaopen_test(lua_State* state)
+    {
+        static const iocshCmdDef lib[] = {
+            {&fooFuncDef, callFoo},
+            {&barFuncDef, callBar},
+            {NULL, NULL}
+        };
+        
+        luaEpicsLibrary(state, lib);
+        return 1;
+    }
+    
+    static void testRegister(void)
+    {
+        iocshRegister(&fooFuncDef, callFoo);
+        iocshRegister(&barFuncDef, callFoo);
+        
+        luaRegisterLibrary("test", luaopen_test);
+    }
