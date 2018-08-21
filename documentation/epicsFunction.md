@@ -229,7 +229,7 @@ enable access to the epics runtime environment.
         
 ## Lua Shell Functions
 
-**shell.loadLibraries** ()
+**shell.loadRegistered** ()
 
         Loads all registered libraries into the global scope. This is only needed if new libraries 
         have been loaded since the shell has started. Where this happens most frequently would be

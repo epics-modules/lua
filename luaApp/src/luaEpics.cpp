@@ -184,7 +184,8 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 	registered.push_back(temp);
 }
 
-epicsShareFunc void luaLoadRegisteredLibraries(lua_State* state)
+
+epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
 	for (std::size_t index = 0; index < registered.size(); index += 1)
 	{
@@ -330,7 +331,7 @@ static int l_index(lua_State* state)
 }
 
 
-epicsShareFunc void luaBindFunctions(lua_State* state, const iocshCmdDef* cmds)
+epicsShareFunc void luaEpicsLibrary(lua_State* state, const iocshCmdDef* cmds)
 {
 	static const luaL_Reg epics_meta[] = {
 		{"__index", l_index},

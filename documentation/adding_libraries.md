@@ -84,6 +84,6 @@ use the dbd's registrar function.
 
 Then when you load the dbd file into your IOC, the library gets automatically registered and
 then opened when you start an instance of the lua shell. If, however, you are already within
-the lua shell when the database is loaded, there is a lua function *shell.loadLibraries()*
+the lua shell when the database is loaded, there is a lua function *shell.loadRegistered()*
 that will go through and open the libraries so you don't need to open another instance of the
 lua shell.

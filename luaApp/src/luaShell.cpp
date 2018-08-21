@@ -338,14 +338,14 @@ static void luashBody(lua_State* state, const char* pathname)
 
 static int l_load(lua_State* state)
 {
-    luaLoadRegisteredLibraries(state);
+    luaLoadRegistered(state);
     return 0;
 }
 
 static int luaopen_shell(lua_State* state)
 {
     static const luaL_Reg shell_lib[] = {
-        { "loadLibraries", l_load },
+        { "loadRegistered", l_load },
         { NULL, NULL }
     };
 
@@ -371,7 +371,7 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 	lua_State* state = luaL_newstate();
 	luaL_openlibs(state);
 	luaL_requiref(state, "shell", luaopen_shell, 1);
-	luaLoadRegisteredLibraries(state);
+	luaLoadRegistered(state);
 	
 	lua_pushlightuserdata(state, *iocshPpdbbase);
 	lua_setglobal(state, "pdbbase");
