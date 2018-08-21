@@ -28,7 +28,10 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list);
 
 epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction load_func);
 epicsShareFunc void luaLoadRegistered(lua_State* state);
+
+#ifdef LUA_COMPAT_IOCSH
 epicsShareFunc void luaEpicsLibrary(lua_State* state, const iocshCmdDef*);
+#endif
 
 #ifdef __cplusplus
 }

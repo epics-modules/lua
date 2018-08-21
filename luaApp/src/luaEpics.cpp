@@ -196,6 +196,7 @@ epicsShareFunc void luaLoadRegistered(lua_State* state)
 }
 
 
+#ifdef LUA_COMPAT_IOCSH
 static int l_call(lua_State* state)
 {	
 	lua_getfield(state, 1, "function_definition");
@@ -352,3 +353,4 @@ epicsShareFunc void luaEpicsLibrary(lua_State* state, const iocshCmdDef* cmds)
 	lua_pushlightuserdata(state, (void*) cmds);
 	lua_setfield(state, -2, "iocshCmdDef");
 }
+#endif
