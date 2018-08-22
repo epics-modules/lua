@@ -15,7 +15,7 @@ record(luascript, "$(P)$(Q)state_machine")
 	
 	field(PINI, 1)
 	
-	field(CODE, "@test.lua state_demo()")
+	field(CODE, "@examples.lua state_demo()")
 }
 
 record(luascript, "$(P)$(Q)pattern_match")
@@ -35,7 +35,7 @@ record(luascript, "$(P)$(Q)pattern_match")
 	
 	field(PINI, 1)
 	
-	field(CODE, "@test.lua pattern_demo('%d+')")
+	field(CODE, "@examples.lua pattern_demo('%d+')")
 }
 
 record(ai, "$(P)$(Q)aval")

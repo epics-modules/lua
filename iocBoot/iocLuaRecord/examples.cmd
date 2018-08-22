@@ -5,7 +5,7 @@ scriptioc_registerRecordDeviceDriver(pdbbase)
 
 epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 
-dbLoadRecords("./test.db", "P=lua:,Q=test:")
+dbLoadRecords("./examples.db", "P=lua:,Q=test:")
 
 #######
 iocInit
