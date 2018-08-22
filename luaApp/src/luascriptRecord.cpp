@@ -168,7 +168,7 @@ static long initState(luascriptRecord* record, int force_reload)
 	memset(record->err, 0, 200);
 	db_post_events(record, &record->err, DBE_VALUE);
 	
-	lua_State* state = luaL_newstate();
+	lua_State* state = luaCreateState();
 	
 	std::string code(record->code);
 	std::string pcode(record->pcode);

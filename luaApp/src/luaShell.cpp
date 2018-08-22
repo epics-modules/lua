@@ -368,10 +368,8 @@ extern "C"
 
 epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* macros)
 {
-	lua_State* state = luaL_newstate();
-	luaL_openlibs(state);
+	lua_State* state = luaCreateState();
 	luaL_requiref(state, "shell", luaopen_shell, 1);
-	luaLoadRegistered(state);
 	
 	lua_pushlightuserdata(state, *iocshPpdbbase);
 	lua_setglobal(state, "pdbbase");

@@ -62,7 +62,7 @@ extern "C"
 	{
 		Protocol* output = new Protocol;
 		
-		output->state = luaL_newstate();
+		output->state = luaCreateState();
 		
 		std::string code(inpout->value.instio.string);
 		
