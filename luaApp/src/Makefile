@@ -93,6 +93,9 @@ lua_SRCS += devUtil.cpp
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
 
+
+#Build an IOC with the ioc shell
+
 PROD_IOC = scriptioc
 
 DBD += scriptioc.dbd
@@ -108,6 +111,28 @@ scriptioc_SRCS += scriptioc_registerRecordDeviceDriver.cpp
 
 scriptioc_SRCS_DEFAULT += luaMain.cpp
 scriptioc_SRCS_vxWorks += -nil-
+
+
+
+#And build an IOC with the luashell
+
+PROD_IOC = luashell
+
+DBD += luashell.dbd
+luashell_DBD += base.dbd
+luashell_DBD += drvAsynIPPort.dbd
+luashell_DBD += luaSupport.dbd
+
+luashell_LIBS += lua
+luashell_LIBS += asyn
+luashell_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+luashell_SRCS += luashell_registerRecordDeviceDriver.cpp
+
+luashell_SRCS_DEFAULT += luashMain.cpp
+luashell_SRCS_vxWorks += -nil-
+
+
 
 #===========================
 
