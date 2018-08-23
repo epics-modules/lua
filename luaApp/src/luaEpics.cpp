@@ -368,6 +368,8 @@ epicsShareFunc void luaEpicsLibrary(lua_State* state, const iocshCmdDef* cmds)
 	lua_pushlightuserdata(state, (void*) cmds);
 	lua_setfield(state, -2, "iocshCmdDef");
 }
+#endif
+
 
 epicsShareFunc lua_State* luaCreateState()
 {
@@ -377,4 +379,3 @@ epicsShareFunc lua_State* luaCreateState()
 	
 	return output;
 }
-#endif
