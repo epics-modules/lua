@@ -61,7 +61,7 @@ lua_SRCS += luaShell.cpp
 ifeq ($(BASE_3_15),YES)
 ifeq ($(EPICS_MODIFICATION),6)
     lua_SRCS += liocshlib.cpp
-    
+
     USR_CFLAGS += -DLUA_COMPAT_IOCSH
     USR_CXXFLAGS += -DLUA_COMPAT_IOCSH
 endif
@@ -69,7 +69,7 @@ endif
 
 ifdef BASE_3_16
     lua_SRCS += liocshlib.cpp
-    
+
     USR_CFLAGS += -DLUA_COMPAT_IOCSH
     USR_CXXFLAGS += -DLUA_COMPAT_IOCSH
 endif
@@ -116,7 +116,7 @@ scriptioc_SRCS_vxWorks += -nil-
 
 #And build an IOC with the luashell
 
-PROD_IOC = luashell
+PROD_IOC += luashell
 
 DBD += luashell.dbd
 luashell_DBD += base.dbd
