@@ -15,7 +15,8 @@
 #define epicsExportSharedSymbols
 #include "luaEpics.h"
 
-static std::vector<std::pair<const char*, lua_CFunction> > registered;
+static std::vector<std::pair<const char*, lua_CFunction> > registered_libs;
+static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
 
 epicsShareFunc std::string luaLocateFile(std::string filename)
 {
@@ -181,15 +182,29 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 {
 	std::pair<const char*, lua_CFunction> temp(library_name, library_func);
 	
-	registered.push_back(temp);
+	registered_libs.push_back(temp);
+}
+
+epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction function)
+{
+	std::pair<const char*, lua_CFunction> temp(function_name, function);
+	
+	registered_funcs.push_back(temp);
 }
 
 
 epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
-	for (std::size_t index = 0; index < registered.size(); index += 1)
+	for (std::size_t index = 0; index < registered_funcs.size(); index += 1)
 	{
-		std::pair<const char* , lua_CFunction> temp = registered[index];
+		std::pair<const char* , lua_CFunction> temp = registered_funcs[index];
+		
+		lua_register( state, temp.first, temp.second);
+	}
+	
+	for (std::size_t index = 0; index < registered_libs.size(); index += 1)
+	{
+		std::pair<const char* , lua_CFunction> temp = registered_libs[index];
 		
 		luaL_requiref( state, temp.first, temp.second, 1 );
 	}

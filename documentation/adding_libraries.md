@@ -88,7 +88,7 @@ the lua shell when the database is loaded, there is a lua function *shell.loadRe
 that will go through and open the libraries so you don't need to open another instance of the
 lua shell.
 
-## Quick Static Libraries From Epics
+## Quick Static Libraries From Epics (EPICS base 3.15.6 or higher only)
 
 If you already have gone through the trouble of registering functions into the IOC shell, you
 can quickly bind all of those functions into a lua library by using *luaEpicsLibrary*. This works
@@ -153,3 +153,30 @@ You can add both foo and bar into a lua library with just a few extra lines:
         
         luaRegisterLibrary("test", luaopen_test);
     }
+
+    
+# Adding Individual Functions
+
+You are also able to register individual functions into the global scope, 
+though it isn't necessarily recommended due to possible collisions with
+existing functions.
+
+To do this, use the *luaRegisterFunction* command pretty much just like you
+would use the *luaRegisterLibrary* call. Instead of a library name, it takes
+the name you want the function to have. And instead of taking a function that 
+registers other functions, it just takes the functions directly.
+
+**Example:**
+
+    static int l_bar( lua_State *L )
+    {
+        lua_pushstring(L, "Hello, World");
+        return 1;
+    }
+    
+    static void testRegister(void)
+    {
+        luaRegisterFunction("bar", l_bar);
+    }
+    
+Then, you can call the function bar in the lua shell.
