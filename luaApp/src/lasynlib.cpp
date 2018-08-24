@@ -751,9 +751,9 @@ int luaopen_asyn (lua_State *L)
 }
 
 
-static void registerAsyn(void)
+static void libasynRegister(void)
 {
     luaRegisterLibrary("asyn", luaopen_asyn);
 }
 
-epicsExportRegistrar(registerAsyn);
+epicsExportRegistrar(libasynRegister);

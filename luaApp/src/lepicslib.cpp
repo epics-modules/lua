@@ -333,9 +333,9 @@ int luaopen_epics (lua_State *L)
 	return 1;
 }
 
-static void epicsRegister(void)
+static void libepicsRegister(void)
 {
     luaRegisterLibrary("epics", luaopen_epics);
 }
 
-epicsExportRegistrar(epicsRegister);
+epicsExportRegistrar(libepicsRegister);
