@@ -5,21 +5,34 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-SRC_DIRS += ../core
+ifeq ($(BASE_3_15),YES)
+ifeq ($(EPICS_MODIFICATION),6)
+    USR_CFLAGS += -DLUA_COMPAT_IOCSH
+    USR_CXXFLAGS += -DLUA_COMPAT_IOCSH
+endif
+endif
+
+ifdef BASE_3_16
+    USR_CFLAGS += -DLUA_COMPAT_IOCSH
+    USR_CXXFLAGS += -DLUA_COMPAT_IOCSH
+endif
+
+
+
+LIBRARY_IOC += lua
 
 DBD += luaSupport.dbd
 
 DBDINC += luascriptRecord.dbd
 
+
+# Build core lua language
+SRC_DIRS += $(TOP)/luaApp/src/core
 INC += lua.h
 INC += lualib.h
 INC += lauxlib.h
 INC += luaconf.h
-INC += luaEpics.h
-INC += luaShell.h
-INC += devUtil.h
 
-LIBRARY_IOC += lua
 lua_SRCS += lapi.c
 lua_SRCS += lauxlib.c
 lua_SRCS += lbaselib.c
@@ -54,25 +67,11 @@ lua_SRCS += lundump.c
 lua_SRCS += lutf8lib.c
 lua_SRCS += lvm.c
 lua_SRCS += lzio.c
-lua_SRCS += lasynlib.cpp
-lua_SRCS += lepicslib.cpp
-lua_SRCS += luaShell.cpp
 
-ifeq ($(BASE_3_15),YES)
-ifeq ($(EPICS_MODIFICATION),6)
-    USR_CFLAGS += -DLUA_COMPAT_IOCSH
-    USR_CXXFLAGS += -DLUA_COMPAT_IOCSH
-endif
-endif
 
-ifdef BASE_3_16
-    USR_CFLAGS += -DLUA_COMPAT_IOCSH
-    USR_CXXFLAGS += -DLUA_COMPAT_IOCSH
-endif
-
-lua_SRCS += luascriptRecord.cpp
-lua_SRCS += luaSoft.c
-lua_SRCS += luaEpics.cpp
+# Include device support
+SRC_DIRS += $(TOP)/luaApp/src/devSupport
+INC += devUtil.h
 
 lua_SRCS += devLuaAi.c
 lua_SRCS += devLuaAo.c
@@ -86,8 +85,27 @@ lua_SRCS += devLuaStringin.c
 lua_SRCS += devLuaStringout.c
 lua_SRCS += devUtil.cpp
 
+
+
+
+INC += luaEpics.h
+INC += luaShell.h
+
+
+lua_SRCS += lasynlib.cpp
+lua_SRCS += lepicslib.cpp
+lua_SRCS += luaShell.cpp
+
+
+lua_SRCS += luascriptRecord.cpp
+lua_SRCS += luaSoft.c
+lua_SRCS += luaEpics.cpp
+
+
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+
 
 
 #Build an IOC with the ioc shell
