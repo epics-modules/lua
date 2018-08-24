@@ -23,8 +23,6 @@ LIBRARY_IOC += lua
 
 DBD += luaSupport.dbd
 
-DBDINC += luascriptRecord.dbd
-
 
 # Build core lua language
 SRC_DIRS += $(TOP)/luaApp/src/core
@@ -86,6 +84,15 @@ lua_SRCS += devLuaStringout.c
 lua_SRCS += devUtil.cpp
 
 
+# Include luascript record
+SRC_DIRS += $(TOP)/luaApp/src/rec
+DBDINC += luascriptRecord.dbd
+
+lua_SRCS += luascriptRecord.cpp
+lua_SRCS += luaSoft.c
+
+
+
 
 
 INC += luaEpics.h
@@ -97,8 +104,7 @@ lua_SRCS += lepicslib.cpp
 lua_SRCS += luaShell.cpp
 
 
-lua_SRCS += luascriptRecord.cpp
-lua_SRCS += luaSoft.c
+
 lua_SRCS += luaEpics.cpp
 
 
