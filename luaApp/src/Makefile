@@ -24,6 +24,10 @@ LIBRARY_IOC += lua
 DBD += luaSupport.dbd
 
 
+INC += luaEpics.h
+lua_SRCS += luaEpics.cpp
+
+
 # Build core lua language
 SRC_DIRS += $(TOP)/luaApp/src/core
 INC += lua.h
@@ -92,20 +96,18 @@ lua_SRCS += luascriptRecord.cpp
 lua_SRCS += luaSoft.c
 
 
-
-
-
-INC += luaEpics.h
+# Build lua shell
+SRC_DIRS += $(TOP)/luaApp/src/shell
 INC += luaShell.h
 
-
-lua_SRCS += lasynlib.cpp
-lua_SRCS += lepicslib.cpp
 lua_SRCS += luaShell.cpp
 
 
+# Build lua libraries
+SRC_DIRS += $(TOP)/luaApp/src/libs
 
-lua_SRCS += luaEpics.cpp
+lua_SRCS += lasynlib.cpp
+lua_SRCS += lepicslib.cpp
 
 
 lua_LIBS += asyn
