@@ -13,3 +13,6 @@ device(stringin,  INST_IO, devLuaStringin,  "lua")
 device(stringout, INST_IO, devLuaStringout, "lua")
 
 registrar(luashRegister)
+registrar(asynRegister)
+registrar(epicsRegister)
+registrar(iocLibRegister)
