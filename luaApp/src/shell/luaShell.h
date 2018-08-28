@@ -11,6 +11,8 @@ extern "C" {
 epicsShareFunc int epicsShareAPI luash(const char* pathname);
 epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* macros);
 
+epicsShareFunc int epicsShareAPI luaSpawn(const char* pathname, const char* macros);
+
 #ifdef __cplusplus
 }
 #endif

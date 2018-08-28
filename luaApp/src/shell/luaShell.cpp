@@ -335,6 +335,13 @@ static void luashBody(lua_State* state, const char* pathname)
 	lua_settop(state, 0);  /* clear stack */
 }
 
+void spawn_thread_callback(void* arg)
+{
+	lua_State* state = (lua_State*) arg;
+	
+	lua_pcall(state, 0, 0, 0);
+}
+
 
 static int l_load(lua_State* state)
 {
@@ -363,6 +370,17 @@ static void luashCallFunc(const iocshArgBuf* args)
 	luashBegin(args[0].sval, args[1].sval);
 }
 
+static const iocshArg spawnCmdArg0 = { "lua script", iocshArgString};
+static const iocshArg spawnCmdArg1 = { "macros", iocshArgString};
+static const iocshArg *spawnCmdArgs[2] = {&spawnCmdArg0, &spawnCmdArg1};
+static const iocshFuncDef spawnFuncDef = {"luaSpawn", 2, spawnCmdArgs};
+
+
+static void spawnCallFunc(const iocshArgBuf* args)
+{
+	luaSpawn(args[0].sval, args[1].sval);
+}
+
 extern "C"
 {
 
@@ -389,11 +407,44 @@ epicsShareFunc int epicsShareAPI luash(const char* pathname)
 	return luashBegin(pathname, NULL);
 }
 
+epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macros)
+{
+	lua_State* state = luaCreateState();
+	
+	if (macros)
+	{
+		luaLoadMacros(state, macros);
+	}
+	
+	std::string temp(filename);
+	std::string found = luaLocateFile(temp);
+	
+	if (! found.empty())
+	{
+		int status = luaL_loadfile(state, found.c_str());
+		
+		if (status)    { return status; }
+	}
+	
+	std::stringstream temp_stream;
+	std::string threadname;
+	
+	temp_stream << "Lua Shell Thread: " << filename << "(" << macros << ")";
+	temp_stream >> threadname;
+	
+	epicsThreadCreate(threadname.c_str(), 
+	                  epicsThreadPriorityLow, 
+	                  epicsThreadGetStackSize(epicsThreadStackMedium), 
+	                  (EPICSTHREADFUNC)::spawn_thread_callback, state);
+					
+	return 0;
+}
 
 
 static void luashRegister(void)
 {
 	iocshRegister(&luashFuncDef, luashCallFunc);
+	iocshRegister(&spawnFuncDef, spawnCallFunc);
 }
 
 epicsExportRegistrar(luashRegister);
