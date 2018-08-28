@@ -67,9 +67,7 @@ epicsShareFunc int luaLoadScript(lua_State* state, const char* script_file)
 	std::string found = luaLocateFile(std::string(script_file));
 	
 	if (! found.empty())
-	{
-		luaL_openlibs(state);
-	
+	{	
 		int status = luaL_loadfile(state, found.c_str());
 		
 		if (status)    { return status; }
@@ -91,8 +89,6 @@ epicsShareFunc int luaLoadString(lua_State* state, const char* lua_code)
 	
 	if (! code.empty())
 	{
-		luaL_openlibs(state);
-	
 		int status = luaL_loadstring(state, lua_code);
 		
 		if (status)    { return status; }
