@@ -405,6 +405,8 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 	}
 
 	luashBody(state, pathname);
+	
+	lua_close(state);
 
 	return 0;
 }
