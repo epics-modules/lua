@@ -339,7 +339,14 @@ void spawn_thread_callback(void* arg)
 {
 	lua_State* state = (lua_State*) arg;
 	
-	lua_pcall(state, 0, 0, 0);
+	int status = docall(state, 0, 0);
+	
+	if (status != LUA_OK)
+	{
+		report(state, status);
+	}
+	
+	lua_close(state);
 }
 
 
@@ -423,7 +430,14 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 	{
 		int status = luaL_loadfile(state, found.c_str());
 		
-		if (status)    { return status; }
+		if (status)
+		{
+			std::string err(lua_tostring(state, -1));
+			lua_pop(state, 1);
+			
+			printf("%s\n", err.c_str());
+			return status;
+		}
 	}
 	
 	std::stringstream temp_stream;
