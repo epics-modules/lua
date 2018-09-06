@@ -1,0 +1,15 @@
+
+bin/*
+configure/O.linux-x86_64/*
+configure/O.vxWorks-ppc32/*
+configure/O.vxWorks-ppc32sf/*
+dbd/*
+include/*
+lib/*
+luaApp/Db/O.linux-x86_64/*
+luaApp/Db/O.vxWorks-ppc32/*
+luaApp/Db/O.vxWorks-ppc32sf/*
+luaApp/src/O.Common/*
+luaApp/src/O.linux-x86_64/*
+luaApp/src/O.vxWorks-ppc32/*
+luaApp/src/O.vxWorks-ppc32sf/*
