@@ -21,9 +21,7 @@ env:
     - BASE=R3.15.5    STATIC=shared ASYN=master
     - BASE=R3.15.5    STATIC=shared ASYN=R4-31
     - BASE=R3.14.12.6 STATIC=shared ASYN=R4-31
-    - BASE=R3.15.5    STATIC=shared CMPLR=clang WINE=32 ASYN=master
-    - BASE=R3.15.5    STATIC=shared CMPLR=clang WINE=32 ASYN=R4-31
-    - BASE=R3.14.12.6 STATIC=shared CMPLR=clang WINE=32 ASYN=R4-31
+    - BASE=R3.16.1    STATIC=shared CMPLR=clang WINE=32 ASYN=master
     
 before_install: chmod +x ./.ci/assemble_synApps.sh
 
