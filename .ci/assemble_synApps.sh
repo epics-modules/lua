@@ -42,15 +42,15 @@ EPICS_BASE=$HOME/.cache/base-$BASE
 
 if [ ! -d "$EPICS_BASE" ] 
 then
-git clone --branch $BASE --depth 1 git://github.com/epics-base/epics-base.git base-$BASE
+	git clone --branch $BASE --depth 1 git://github.com/epics-base/epics-base.git base-$BASE
 	
-		EPICS_HOST_ARCH=`sh $EPICS_BASE/startup/EpicsHostArch`
+	EPICS_HOST_ARCH=`sh $EPICS_BASE/startup/EpicsHostArch`
 		
-		echo EPICS_HOST_ARCH
+	echo EPICS_HOST_ARCH
 
-    case "$STATIC" in
-    static)
-        cat << EOF >> "$EPICS_BASE/configure/CONFIG_SITE"
+	case "$STATIC" in
+	static)
+		cat << EOF >> "$EPICS_BASE/configure/CONFIG_SITE"
 SHARED_LIBRARIES=NO
 STATIC_BUILD=YES
 EOF
@@ -102,36 +102,42 @@ CROSS_COMPILER_TARGET_ARCHS+=RTEMS-pc386
 EOF
 
     fi
+fi
 
-    make -C "$EPICS_BASE" -j2
+EPICS_HOST_ARCH=`sh $EPICS_BASE/startup/EpicsHostArch`
+
+make -C "$EPICS_BASE" -j2
     
 	
-	# get MSI for 3.14
-    case "$BASE" in
-    3.14*)
-        echo "Build MSI"
-        install -d "$HOME/msi/extensions/src"
-        curl https://epics.anl.gov/download/extensions/extensionsTop_20120904.tar.gz | tar -C "$HOME/msi" -xvz
-        curl https://epics.anl.gov/download/extensions/msi1-7.tar.gz | tar -C "$HOME/msi/extensions/src" -xvz
-        mv "$HOME/msi/extensions/src/msi1-7" "$HOME/msi/extensions/src/msi"
-
-        cat << EOF > "$HOME/msi/extensions/configure/RELEASE"
+# get MSI for 3.14
+case "$BASE" in
+3.14*)
+	if [ ! -d "$HOME/msi/extensions/src" ]
+	then
+		echo "Build MSI"
+		install -d "$HOME/msi/extensions/src"
+		curl https://epics.anl.gov/download/extensions/extensionsTop_20120904.tar.gz | tar -C "$HOME/msi" -xvz
+		curl https://epics.anl.gov/download/extensions/msi1-7.tar.gz | tar -C "$HOME/msi/extensions/src" -xvz
+		mv "$HOME/msi/extensions/src/msi1-7" "$HOME/msi/extensions/src/msi"
+	
+		cat << EOF > "$HOME/msi/extensions/configure/RELEASE"
 EPICS_BASE=$EPICS_BASE
 EPICS_EXTENSIONS=\$(TOP)
 EOF
-        make -C "$HOME/msi/extensions"
-        cp "$HOME/msi/extensions/bin/$EPICS_HOST_ARCH/msi" "$EPICS_BASE/bin/$EPICS_HOST_ARCH/"
-        echo 'MSI:=$(EPICS_BASE)/bin/$(EPICS_HOST_ARCH)/msi' >> "$EPICS_BASE/configure/CONFIG_SITE"
+	fi
+	
+	make -C "$HOME/msi/extensions"
+	cp "$HOME/msi/extensions/bin/$EPICS_HOST_ARCH/msi" "$EPICS_BASE/bin/$EPICS_HOST_ARCH/"
+	echo 'MSI:=$(EPICS_BASE)/bin/$(EPICS_HOST_ARCH)/msi' >> "$EPICS_BASE/configure/CONFIG_SITE"
 
-        cat <<EOF >> configure/CONFIG_SITE
+	cat <<EOF >> configure/CONFIG_SITE
 MSI = \$(EPICS_BASE)/bin/\$(EPICS_HOST_ARCH)/msi
 EOF
 
-      ;;
-    *) echo "Use MSI from Base"
-      ;;
-    esac
-fi
+	;;
+*) echo "Use MSI from Base"
+	;;
+esac
 
 alias get_support='shallow_support'
 alias get_repo='shallow_repo'
