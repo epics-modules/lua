@@ -1,5 +1,6 @@
 #!/bin/bash
 shopt -s expand_aliases
+set -x
 
 # This file is intended to gather everything in or used in synApps.
 # The version numbers in this file are not guaranteed to be up to date,
@@ -45,8 +46,6 @@ then
 	git clone --branch $BASE --depth 1 git://github.com/epics-base/epics-base.git base-$BASE
 	
 	EPICS_HOST_ARCH=`sh $EPICS_BASE/startup/EpicsHostArch`
-		
-	echo EPICS_HOST_ARCH
 
 	case "$STATIC" in
 	static)
@@ -61,7 +60,7 @@ EOF
     case "$CMPLR" in
     clang)
       echo "Host compiler is clang"
-      cat << EOF >> $EPICS_BASE/configure/os/CONFIG_SITE.Common.$EPICS_HOST_ARCH
+      cat << EOF >> "$EPICS_BASE/configure/os/CONFIG_SITE.Common.$EPICS_HOST_ARCH"
 GNU         = NO
 CMPLR_CLASS = clang
 CC          = clang
@@ -76,10 +75,10 @@ EOF
     then
       echo "Cross mingw32"
       sed -i -e '/CMPLR_PREFIX/d' $EPICS_BASE/configure/os/CONFIG_SITE.linux-x86.win32-x86-mingw
-      cat << EOF >> $EPICS_BASE/configure/os/CONFIG_SITE.linux-x86.win32-x86-mingw
+      cat << EOF >> "$EPICS_BASE/configure/os/CONFIG_SITE.linux-x86.win32-x86-mingw"
 CMPLR_PREFIX=i686-w64-mingw32-
 EOF
-      cat << EOF >> $EPICS_BASE/configure/CONFIG_SITE
+      cat << EOF >> "$EPICS_BASE/configure/CONFIG_SITE"
 CROSS_COMPILER_TARGET_ARCHS+=win32-x86-mingw
 EOF
     fi
@@ -93,7 +92,7 @@ EOF
       | tar -C /home/travis/.cache -xj
 
       sed -i -e '/^RTEMS_VERSION/d' -e '/^RTEMS_BASE/d' $EPICS_BASE/configure/os/CONFIG_SITE.Common.RTEMS
-      cat << EOF >> $EPICS_BASE/configure/os/CONFIG_SITE.Common.RTEMS
+      cat << EOF >> "$EPICS_BASE/configure/os/CONFIG_SITE.Common.RTEMS"
 RTEMS_VERSION=$RTEMS
 RTEMS_BASE=/home/travis/.cache/rtems${RTEMS}-i386
 EOF
@@ -104,10 +103,8 @@ EOF
     fi
 fi
 
-EPICS_HOST_ARCH=`sh $EPICS_BASE/startup/EpicsHostArch`
-
 make -C "$EPICS_BASE" -j2
-    
+
 	
 # get MSI for 3.14
 case "$BASE" in
