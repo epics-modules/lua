@@ -30,7 +30,10 @@ shallow_repo()
 
 shallow_support()
 {
-	git clone --branch $2 --depth 1 git://github.com/EPICS-synApps/$1.git
+	if [ ! -d "$1" ]
+	then
+		git clone --branch $2 --depth 1 git://github.com/EPICS-synApps/$1.git
+	fi
 }
 
 cd $HOME/.cache
