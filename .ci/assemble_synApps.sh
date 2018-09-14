@@ -42,6 +42,8 @@ then
 git clone --branch $BASE --depth 1 git://github.com/epics-base/epics-base.git base-$BASE
 	
 		EPICS_HOST_ARCH=`sh $EPICS_BASE/startup/EpicsHostArch`
+		
+		echo EPICS_HOST_ARCH
 
     case "$STATIC" in
     static)
