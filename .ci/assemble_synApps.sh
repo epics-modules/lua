@@ -50,9 +50,9 @@ then
 	case "$STATIC" in
 	static)
 		cat << EOF >> "$EPICS_BASE/configure/CONFIG_SITE"
-	SHARED_LIBRARIES=NO
-	STATIC_BUILD=YES
-	EOF
+SHARED_LIBRARIES=NO
+STATIC_BUILD=YES
+EOF
 		;;
 	*) ;;
 	esac
@@ -62,11 +62,11 @@ then
 		echo "Host compiler is clang"
 		
 		cat << EOF >> "$EPICS_BASE/configure/os/CONFIG_SITE.Common.$EPICS_HOST_ARCH"
-	GNU         = NO
-	CMPLR_CLASS = clang
-	CC          = clang
-	CCC         = clang++
-	EOF
+GNU         = NO
+CMPLR_CLASS = clang
+CC          = clang
+CCC         = clang++
+EOF
 		;;
 	*) echo "Host compiler is default";;
 	esac
@@ -77,11 +77,11 @@ then
 		echo "Cross mingw32"
 		sed -i -e '/CMPLR_PREFIX/d' $EPICS_BASE/configure/os/CONFIG_SITE.linux-x86.win32-x86-mingw
 		cat << EOF >> "$EPICS_BASE/configure/os/CONFIG_SITE.linux-x86.win32-x86-mingw"
-	CMPLR_PREFIX=i686-w64-mingw32-
-	EOF
+CMPLR_PREFIX=i686-w64-mingw32-
+EOF
 		cat << EOF >> "$EPICS_BASE/configure/CONFIG_SITE"
-	CROSS_COMPILER_TARGET_ARCHS+=win32-x86-mingw
-	EOF
+CROSS_COMPILER_TARGET_ARCHS+=win32-x86-mingw
+EOF
 	fi
 	
 	# set RTEMS to eg. "4.9" or "4.10"
@@ -94,12 +94,12 @@ then
 	
 		sed -i -e '/^RTEMS_VERSION/d' -e '/^RTEMS_BASE/d' $EPICS_BASE/configure/os/CONFIG_SITE.Common.RTEMS
 		cat << EOF >> "$EPICS_BASE/configure/os/CONFIG_SITE.Common.RTEMS"
-	RTEMS_VERSION=$RTEMS
-	RTEMS_BASE=/home/travis/.cache/rtems${RTEMS}-i386
-	EOF
+RTEMS_VERSION=$RTEMS
+RTEMS_BASE=/home/travis/.cache/rtems${RTEMS}-i386
+EOF
 		cat << EOF >> $EPICS_BASE/configure/CONFIG_SITE
-	CROSS_COMPILER_TARGET_ARCHS+=RTEMS-pc386
-	EOF
+CROSS_COMPILER_TARGET_ARCHS+=RTEMS-pc386
+EOF
 	
 	fi
 fi
@@ -122,6 +122,7 @@ case "$BASE" in
 EPICS_BASE=$EPICS_BASE
 EPICS_EXTENSIONS=\$(TOP)
 EOF
+
 	fi
 	
 	make -C "$HOME/msi/extensions"
