@@ -18,7 +18,7 @@ shallow_repo()
 	echo "Grabbing $MODULE_NAME at tag: $TAG"
 	echo
 	
-	if [ ! -e "$FOLDER_NAME" ] 
+	if [ ! -d "$FOLDER_NAME" ] 
 	then
 		git clone --branch $TAG --depth 1 git://github.com/$PROJECT/$MODULE_NAME.git $FOLDER_NAME
 	fi
@@ -37,7 +37,7 @@ cd $HOME/.cache
 
 EPICS_BASE=$HOME/.cache/base-$BASE
 
-if [ ! -e "$EPICS_BASE" ] 
+if [ ! -d "$EPICS_BASE" ] 
 then
 git clone --branch $BASE --depth 1 git://github.com/epics-base/epics-base.git base-$BASE
 	
