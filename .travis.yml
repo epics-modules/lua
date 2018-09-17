@@ -17,12 +17,21 @@ addons:
     - clang
     - g++-mingw-w64-i686
     - re2c
-env:
-    - BASE=R3.15.5    STATIC=shared ASYN=master
-    - BASE=R3.15.5    STATIC=shared ASYN=R4-31
-    - BASE=R3.14.12.6 STATIC=shared ASYN=R4-31
-    - BASE=3.16       STATIC=shared CMPLR=clang WINE=32 ASYN=master
-    - BASE=3.16       STATIC=static CMPLR=clang WINE=32 ASYN=master
+include:
+    - name: "3.16 master"
+      env: BASE=3.16  STATIC=shared ASYN=master
+    
+    - name: "3.15 master"
+      env: BASE=3.15  STATIC=shared ASYN=master
+        
+    - name: "3.14 master"
+      env: BASE=3.14  STATIC=shared ASYN=master
+        
+    - name: "Windows Shared"
+      env: BASE=3.16  STATIC=shared CMPLR=clang WINE=32 ASYN=master
+        
+    - name: "Windows Static"
+      env: BASE=3.16  STATIC=static CMPLR=clang WINE=32 ASYN=master
     
 before_install: chmod +x ./.ci/assemble_synApps.sh
 
