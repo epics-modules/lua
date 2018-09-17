@@ -34,12 +34,13 @@ matrix:
     - name: "Windows Static"
       env: BASE=3.16  STATIC=static CMPLR=clang WINE=32 ASYN=master
     
-    before_install: chmod +x ./.ci/assemble_synApps.sh
 
-    install: ./.ci/assemble_synApps.sh
-    
-    
-    script: 
+        
+before_install: chmod +x ./.ci/assemble_synApps.sh
+
+install: ./.ci/assemble_synApps.sh
+
+script: 
     # Build the module
     - make
  
