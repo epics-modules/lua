@@ -756,4 +756,7 @@ static void libasynRegister(void)
     luaRegisterLibrary("asyn", luaopen_asyn);
 }
 
-epicsExportRegistrar(libasynRegister);
+extern "C"
+{
+	epicsExportRegistrar(libasynRegister);
+}

@@ -338,4 +338,7 @@ static void libepicsRegister(void)
     luaRegisterLibrary("epics", luaopen_epics);
 }
 
-epicsExportRegistrar(libepicsRegister);
+extern "C"
+{
+	epicsExportRegistrar(libepicsRegister);
+}
