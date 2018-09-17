@@ -102,41 +102,41 @@ CROSS_COMPILER_TARGET_ARCHS+=RTEMS-pc386
 EOF
 	
 	fi
-fi
-
-make -C "$EPICS_BASE" -j2
+	
+	make -C "$EPICS_BASE" -j2
 
 	
-# get MSI for 3.14
-case "$BASE" in
-3.14*)
-	if [ ! -d "$HOME/msi/extensions/src" ]
-	then
-		echo "Build MSI"
-		install -d "$HOME/msi/extensions/src"
-		curl https://epics.anl.gov/download/extensions/extensionsTop_20120904.tar.gz | tar -C "$HOME/msi" -xvz
-		curl https://epics.anl.gov/download/extensions/msi1-7.tar.gz | tar -C "$HOME/msi/extensions/src" -xvz
-		mv "$HOME/msi/extensions/src/msi1-7" "$HOME/msi/extensions/src/msi"
-	
-		cat << EOF > "$HOME/msi/extensions/configure/RELEASE"
+	# get MSI for 3.14
+	case "$BASE" in
+	3.14*)
+		if [ ! -d "$HOME/msi/extensions/src" ]
+		then
+			echo "Build MSI"
+			install -d "$HOME/msi/extensions/src"
+			curl https://epics.anl.gov/download/extensions/extensionsTop_20120904.tar.gz | tar -C "$HOME/msi" -xvz
+			curl https://epics.anl.gov/download/extensions/msi1-7.tar.gz | tar -C "$HOME/msi/extensions/src" -xvz
+			mv "$HOME/msi/extensions/src/msi1-7" "$HOME/msi/extensions/src/msi"
+		
+			cat << EOF > "$HOME/msi/extensions/configure/RELEASE"
 EPICS_BASE=$EPICS_BASE
 EPICS_EXTENSIONS=\$(TOP)
 EOF
-
-	fi
 	
-	make -C "$HOME/msi/extensions"
-	cp "$HOME/msi/extensions/bin/$EPICS_HOST_ARCH/msi" "$EPICS_BASE/bin/$EPICS_HOST_ARCH/"
-	echo 'MSI:=$(EPICS_BASE)/bin/$(EPICS_HOST_ARCH)/msi' >> "$EPICS_BASE/configure/CONFIG_SITE"
-
-	cat <<EOF >> configure/CONFIG_SITE
+		fi
+		
+		make -C "$HOME/msi/extensions"
+		cp "$HOME/msi/extensions/bin/$EPICS_HOST_ARCH/msi" "$EPICS_BASE/bin/$EPICS_HOST_ARCH/"
+		echo 'MSI:=$(EPICS_BASE)/bin/$(EPICS_HOST_ARCH)/msi' >> "$EPICS_BASE/configure/CONFIG_SITE"
+	
+		cat <<EOF >> configure/CONFIG_SITE
 MSI = \$(EPICS_BASE)/bin/\$(EPICS_HOST_ARCH)/msi
 EOF
-
-	;;
-*) echo "Use MSI from Base"
-	;;
-esac
+	
+		;;
+	*) echo "Use MSI from Base"
+		;;
+	esac
+fi
 
 alias get_support='shallow_support'
 alias get_repo='shallow_repo'
