@@ -17,7 +17,8 @@ addons:
     - clang
     - g++-mingw-w64-i686
     - re2c
-include:
+matrix:
+    include:
     - name: "3.16 master"
       env: BASE=3.16  STATIC=shared ASYN=master
     
@@ -33,12 +34,12 @@ include:
     - name: "Windows Static"
       env: BASE=3.16  STATIC=static CMPLR=clang WINE=32 ASYN=master
     
-before_install: chmod +x ./.ci/assemble_synApps.sh
+    before_install: chmod +x ./.ci/assemble_synApps.sh
 
-install: ./.ci/assemble_synApps.sh
+    install: ./.ci/assemble_synApps.sh
     
     
-script: 
-  # Build the module
-  - make
+    script: 
+    # Build the module
+    - make
  
