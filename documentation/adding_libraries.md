@@ -76,7 +76,10 @@ use the dbd's registrar function.
         luaRegisterLibrary("foo", luaopen_foo);
     }
 
-    epicsExportRegistrar(fooRegister);
+    extern "C"
+    {
+        epicsExportRegistrar(fooRegister);
+    }
 
 **foo.dbd**
 
@@ -129,7 +132,10 @@ So, if you already have this in your code:
         iocshRegister(&barFuncDef, callFoo);
     }
 
-    epicsExportRegistrar(testRegister);
+    extern "C"
+    {
+        epicsExportRegistrar(testRegister);
+    }
     
 
 You can add both foo and bar into a lua library with just a few extra lines:
