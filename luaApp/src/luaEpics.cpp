@@ -17,6 +17,8 @@
 #define epicsExportSharedSymbols
 #include "luaEpics.h"
 
+typedef std::vector<std::pair<const char*, lua_CFunction> >::iterator reg_iter;
+
 static std::vector<std::pair<const char*, lua_CFunction> > registered_libs;
 static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
 
@@ -61,77 +63,63 @@ epicsShareFunc int luaLoadScript(lua_State* state, const char* script_file)
 {	
 	std::string found = luaLocateFile(std::string(script_file));
 	
-	if (! found.empty())
-	{	
-		int status = luaL_loadfile(state, found.c_str());
-		
-		if (status)    { return status; }
-		
-		/* Run the script so that functions are in the global state */
-		status = lua_pcall(state, 0, 0, 0);
-		
-		if (status)    { return status; }
-		
-		return 0;
-	}
+	if (found.empty())    { return -1; }
 	
-	return -1;
+	int status = luaL_loadfile(state, found.c_str());
+	
+	if (status)    { return status; }
+	
+	/* Run the script so that functions are in the global state */
+	return lua_pcall(state, 0, 0, 0);
+		
 }
 
 epicsShareFunc int luaLoadString(lua_State* state, const char* lua_code)
 {
-	std::string code(lua_code);
-	
-	if (! code.empty())
-	{
-		int status = luaL_loadstring(state, lua_code);
-		
-		if (status)    { return status; }
-		
-		return 0;
-	}
-	
-	return -1;
+	if (std::string(lua_code).empty())    { return -1; }
+
+	return luaL_loadstring(state, lua_code);
 }
 
-epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
+static void strtolua(lua_State* state, std::string text)
 {
-	std::string parse(param_list);
+	size_t trim_front = text.find_first_not_of(" ");
+	size_t trim_back  = text.find_last_not_of(" ");
 	
-	int num_params = 0;
-
-	size_t curr = 0;
-	size_t next;
-
-	do
+	text = text.substr(trim_front, trim_back - trim_front + 1);
+	
+	double test;
+	std::stringstream convert(text);
+	
+	/* Attempt to convert the parameter into a number */
+	if (convert >> test)    { lua_pushnumber(state, test); }
+	else
 	{
-		/* Get the next parameter */
-		next = parse.find(",", curr);
-
-		std::string param;
-
-		/* If we find the end of the string, just take everything */
-		if   (next == std::string::npos)    { param = parse.substr(curr); }
-		else                                { param = parse.substr(curr, next - curr); }
-
-		size_t trim_front = param.find_first_not_of(" ");
-		size_t trim_back  = param.find_last_not_of(" ");
-
-		param = param.substr(trim_front, trim_back - trim_front + 1);
-		
-		/* Treat anything with quotes as a string, anything else as a number */
-		if (param.at(0) == '"' || param.at(0) == '\'')
+		/* Othewise it's a string, remove quotes if necessary */
+		if (text.at(0) == '"' || text.at(0) == '\'')
 		{
-			lua_pushstring(state, param.substr(1, param.length() - 2).c_str());
+			lua_pushstring(state, text.substr(1, text.length() - 2).c_str());
 		}
 		else
 		{
-			lua_pushnumber(state, strtod(param.c_str(), NULL));
+			lua_pushstring(state, text.c_str());
 		}
+	}
+}
 
+
+epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
+{
+	std::stringstream parse(param_list);
+	std::string param;
+	
+	int num_params = 0;
+
+	while (std::getline(parse, param, ','))
+	{
+		strtolua(state, param);		
 		num_params += 1;
-		curr = next + 1;
-	} while (curr);
+	}
 	
 	return num_params;
 }
@@ -147,24 +135,8 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 		for ( ; pairs && pairs[0]; pairs += 2)
 		{
 			std::string param(pairs[1]);
-			
-			double test;
-			std::istringstream convert(param);
-			
-			/* Attempt to convert the parameter into a number */
-			if (convert >> test)    { lua_pushnumber(state, test); }
-			else
-			{
-				/* Othewise it's a string, remove quotes if necessary */
-				if (param.at(0) == '"' || param.at(0) == '\'')
-				{
-					lua_pushstring(state, param.substr(1, param.length() - 2).c_str());
-				}
-				else
-				{
-					lua_pushstring(state, param.c_str());
-				}
-			}
+
+			strtolua(state, param);
 			
 			lua_setglobal(state, pairs[0]);
 		}
@@ -188,18 +160,14 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 
 epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
-	for (std::size_t index = 0; index < registered_funcs.size(); index += 1)
-	{
-		std::pair<const char* , lua_CFunction> temp = registered_funcs[index];
-		
-		lua_register( state, temp.first, temp.second);
+	for (reg_iter index = registered_funcs.begin(); index != registered_funcs.end(); index++)
+	{		
+		lua_register( state, index->first, index->second);
 	}
 	
-	for (std::size_t index = 0; index < registered_libs.size(); index += 1)
-	{
-		std::pair<const char* , lua_CFunction> temp = registered_libs[index];
-		
-		luaL_requiref( state, temp.first, temp.second, 1 );
+	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
+	{		
+		luaL_requiref( state, index->first, index->second, 1 );
 	}
 }
 
@@ -307,7 +275,8 @@ static int l_iocindex(lua_State* state)
 	const char* func_name = lua_tostring(state, 2);
 	const iocshCmdDef* found = iocshFindCommand(func_name);
 	
-	if (found)
+	if (! found)    { lua_pushnil(state); }
+	else
 	{
 		luaL_newmetatable(state, "func_meta");
 		luaL_setfuncs(state, func_meta, 0);
@@ -321,12 +290,6 @@ static int l_iocindex(lua_State* state)
 		
 		lua_pushlightuserdata(state, (void*) found->func);
 		lua_setfield(state, -2, "function_pointer");
-		
-		return 1;
-	}
-	else
-	{
-		lua_pushnil(state);
 	}
 
 	return 1;
