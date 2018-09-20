@@ -290,20 +290,20 @@ static const luaL_Reg pv_funcs[] = {
 
 extern "C"
 {
-void luaGeneratePV(lua_State* state, const char* pv_name)
-{
-	luaL_newmetatable(state, "pv_meta");
-	luaL_setfuncs(state, pv_meta, 0);
-	lua_pop(state, 1);
-
-	lua_newtable(state);
-	luaL_setfuncs(state, pv_funcs, 0);
-
-	lua_pushstring(state, pv_name);
-	lua_setfield(state, -2, "pv_name");
-
-	luaL_setmetatable(state, "pv_meta");
-}
+	void luaGeneratePV(lua_State* state, const char* pv_name)
+	{
+		luaL_newmetatable(state, "pv_meta");
+		luaL_setfuncs(state, pv_meta, 0);
+		lua_pop(state, 1);
+	
+		lua_newtable(state);
+		luaL_setfuncs(state, pv_funcs, 0);
+	
+		lua_pushstring(state, pv_name);
+		lua_setfield(state, -2, "pv_name");
+	
+		luaL_setmetatable(state, "pv_meta");
+	}
 }
 
 static int l_createpv(lua_State* state)
@@ -318,25 +318,21 @@ static int l_createpv(lua_State* state)
 }
 
 
-static const luaL_Reg mylib[] = {
-	{"get", l_caget},
-	{"put", l_caput},
-	{"sleep", l_epicssleep},
-	{"pv", l_createpv},
-	{NULL, NULL}  /* sentinel */
-};
-
-
 int luaopen_epics (lua_State *L)
 {
+	static const luaL_Reg mylib[] = {
+		{"get", l_caget},
+		{"put", l_caput},
+		{"sleep", l_epicssleep},
+		{"pv", l_createpv},
+		{NULL, NULL}  /* sentinel */
+	};
+	
 	luaL_newlib(L, mylib);
 	return 1;
 }
 
-static void libepicsRegister(void)
-{
-    luaRegisterLibrary("epics", luaopen_epics);
-}
+static void libepicsRegister(void)    { luaRegisterLibrary("epics", luaopen_epics); }
 
 extern "C"
 {

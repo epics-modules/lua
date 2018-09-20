@@ -671,31 +671,31 @@ static const luaL_Reg port_funcs[] = {
 
 extern "C"
 {
-void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param)
-{
-	luaL_newmetatable(state, "port_meta");
-	lua_pop(state, 1);
-
-	lua_newtable(state);
-	luaL_setfuncs(state, port_funcs, 0);
-
-	lua_pushstring(state, port_name);
-	lua_setfield(state, -2, "port_name");
-
-	lua_pushstring(state, param);
-	lua_setfield(state, -2, "param_name");
-
-	lua_pushnumber(state, addr);
-	lua_setfield(state, -2, "addr");
-
-	lua_getglobal(state, "OutTerminator");
-	lua_setfield(state, -2, "out_term");
-
-	lua_getglobal(state, "InTerminator");
-	lua_setfield(state, -2, "in_term");
-
-	luaL_setmetatable(state, "port_meta");
-}
+	void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param)
+	{
+		luaL_newmetatable(state, "port_meta");
+		lua_pop(state, 1);
+	
+		lua_newtable(state);
+		luaL_setfuncs(state, port_funcs, 0);
+	
+		lua_pushstring(state, port_name);
+		lua_setfield(state, -2, "port_name");
+	
+		lua_pushstring(state, param);
+		lua_setfield(state, -2, "param_name");
+	
+		lua_pushnumber(state, addr);
+		lua_setfield(state, -2, "addr");
+	
+		lua_getglobal(state, "OutTerminator");
+		lua_setfield(state, -2, "out_term");
+	
+		lua_getglobal(state, "InTerminator");
+		lua_setfield(state, -2, "in_term");
+	
+		luaL_setmetatable(state, "port_meta");
+	}
 }
 
 
@@ -719,42 +719,37 @@ static int l_createport(lua_State* state)
 }
 
 
-
-static const luaL_Reg mylib[] = {
-	{"read", l_read},
-	{"write", l_write},
-	{"writeread", l_writeread},
-	{"setOutTerminator", l_setOutTerminator},
-	{"getOutTerminator", l_getOutTerminator},
-	{"setInTerminator", l_setInTerminator},
-	{"getInTerminator", l_getInTerminator},
-	{"setWriteTimeout", l_setWriteTimeout},
-	{"getWriteTimeout", l_getWriteTimeout},
-	{"setReadTimeout", l_setReadTimeout},
-	{"getReadTimeout", l_getReadTimeout},
-	{"setIntegerParam", l_setIntegerParam},
-	{"setDoubleParam", l_setDoubleParam},
-	{"setStringParam", l_setStringParam},
-	{"getIntegerParam", l_getIntegerParam},
-	{"getDoubleParam", l_getDoubleParam},
-	{"getStringParam", l_getStringParam},
-	{"callParamCallbacks", l_callParamCallbacks},
-	{"port", l_createport},
-	{NULL, NULL}  /* sentinel */
-};
-
-
 int luaopen_asyn (lua_State *L)
 {
+	static const luaL_Reg mylib[] = {
+		{"read", l_read},
+		{"write", l_write},
+		{"writeread", l_writeread},
+		{"setOutTerminator", l_setOutTerminator},
+		{"getOutTerminator", l_getOutTerminator},
+		{"setInTerminator", l_setInTerminator},
+		{"getInTerminator", l_getInTerminator},
+		{"setWriteTimeout", l_setWriteTimeout},
+		{"getWriteTimeout", l_getWriteTimeout},
+		{"setReadTimeout", l_setReadTimeout},
+		{"getReadTimeout", l_getReadTimeout},
+		{"setIntegerParam", l_setIntegerParam},
+		{"setDoubleParam", l_setDoubleParam},
+		{"setStringParam", l_setStringParam},
+		{"getIntegerParam", l_getIntegerParam},
+		{"getDoubleParam", l_getDoubleParam},
+		{"getStringParam", l_getStringParam},
+		{"callParamCallbacks", l_callParamCallbacks},
+		{"port", l_createport},
+		{NULL, NULL}  /* sentinel */
+	};
+	
 	luaL_newlib(L, mylib);
 	return 1;
 }
 
 
-static void libasynRegister(void)
-{
-    luaRegisterLibrary("asyn", luaopen_asyn);
-}
+static void libasynRegister(void)    { luaRegisterLibrary("asyn", luaopen_asyn); }
 
 extern "C"
 {
