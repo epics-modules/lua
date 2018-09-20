@@ -34,6 +34,9 @@ static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
 
+static void luashBody(lua_State* state, const char* pathname);
+
+
 /*
 ** Hook set by signal function to stop the interpreter.
 */
@@ -227,10 +230,60 @@ static int docall (lua_State *L, int narg, int nres)
 	return status;
 }
 
+static void repl(lua_State* state, void* readlineContext, const char* prompt)
+{
+	int status;
+	
+	while (true)
+	{
+		/*
+		** Read a line and try to load (compile) it first as an expression (by
+		** adding "return " in front of it) and second as a statement. Return
+		** the final status of load/call with the resulting function (if any)
+		** in the top of the stack.
+		*/
+		lua_settop(state, 0);
+
+		const char* raw = epicsReadline(prompt, readlineContext);
+
+		if (raw == NULL)                 { return; }
+		if (strcmp(raw, "exit") == 0)    { return; }
+
+		if (raw[0] == '<')
+		{
+			std::string line(raw);
+
+			// Get rid of < character
+			line.erase(0,1);
+
+			// Get rid of whitespace
+			line.erase(0, line.find_first_not_of(" 	"));
+
+			luashBody(state, line.c_str());
+			continue;
+		}
+
+		lua_pushstring(state, raw);
+
+		if (prompt == NULL)    { printf("%s\n", raw); }
+
+		/* try as command, maybe with continuation lines */
+		if ((status = addreturn(state)) != LUA_OK)    { status = multiline(state, prompt, readlineContext); }
+
+		lua_remove(state, 1);  /* remove line from the stack */
+		lua_assert(lua_gettop(state) == 1);
+
+		if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
+
+		if (status == LUA_OK)     { l_print(state); }
+		else                      { report(state, status); }
+	}
+}
+
+
 
 static void luashBody(lua_State* state, const char* pathname)
 {
-	int status;
 	int wasOkToBlock;
 
 	const char* prompt = NULL;
@@ -276,57 +329,8 @@ static void luashBody(lua_State* state, const char* pathname)
 	wasOkToBlock = epicsThreadIsOkToBlock();
     epicsThreadSetOkToBlock(1);
 
-	if (readlineContext)
-	{
-		do
-		{
-			/*
-			** Read a line and try to load (compile) it first as an expression (by
-			** adding "return " in front of it) and second as a statement. Return
-			** the final status of load/call with the resulting function (if any)
-			** in the top of the stack.
-			*/
-			lua_settop(state, 0);
-
-			const char* raw = epicsReadline(prompt, readlineContext);
-
-			if (raw == NULL)                 { break; }
-			if (strcmp(raw, "exit") == 0)    { break; }
-
-			if (raw[0] == '<')
-			{
-				std::string line(raw);
-
-				// Get rid of < character
-				line.erase(0,1);
-
-				// Get rid of whitespace
-				line.erase(0, line.find_first_not_of(" 	"));
-
-				luashBody(state, line.c_str());
-				continue;
-			}
-
-			lua_pushstring(state, raw);
-
-			if (prompt == NULL)    { printf("%s\n", raw); }
-
-			/* try as command, maybe with continuation lines */
-			if ((status = addreturn(state)) != LUA_OK)    { status = multiline(state, prompt, readlineContext); }
-
-			lua_remove(state, 1);  /* remove line from the stack */
-			lua_assert(lua_gettop(state) == 1);
-
-			if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
-
-			if (status == LUA_OK)     { l_print(state); }
-			else                      { report(state, status); }
-		}while (true);
-	}
-	else
-	{
-		printf("Couldn't allocate command-line object.\n");
-	}
+	if (readlineContext)    { repl(state, readlineContext, prompt);	}
+	else                    { printf("Couldn't allocate command-line object.\n"); }
 
 	if (fp)    { fclose(fp); }
 
@@ -341,10 +345,7 @@ void spawn_thread_callback(void* arg)
 	
 	int status = docall(state, 0, 0);
 	
-	if (status != LUA_OK)
-	{
-		report(state, status);
-	}
+	if (status != LUA_OK)    { report(state, status); }
 	
 	lua_close(state);
 }
@@ -399,10 +400,7 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 	lua_pushlightuserdata(state, *iocshPpdbbase);
 	lua_setglobal(state, "pdbbase");
 
-	if (macros)
-	{
-		luaLoadMacros(state, macros);
-	}
+	if (macros)    { luaLoadMacros(state, macros);	}
 
 	luashBody(state, pathname);
 	
@@ -428,18 +426,17 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 	std::string temp(filename);
 	std::string found = luaLocateFile(temp);
 	
-	if (! found.empty())
+	if (found.empty())    { return -1; }
+	
+	int status = luaL_loadfile(state, found.c_str());
+	
+	if (status)
 	{
-		int status = luaL_loadfile(state, found.c_str());
+		std::string err(lua_tostring(state, -1));
+		lua_pop(state, 1);
 		
-		if (status)
-		{
-			std::string err(lua_tostring(state, -1));
-			lua_pop(state, 1);
-			
-			printf("%s\n", err.c_str());
-			return status;
-		}
+		printf("%s\n", err.c_str());
+		return status;
 	}
 	
 	std::stringstream temp_stream;
