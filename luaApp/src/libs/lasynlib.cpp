@@ -93,14 +93,8 @@ static int asyn_write(lua_State* state, const char* data, const char* port, int 
 
 static int l_read(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-
-	if (num_ops < 1 || num_ops > 3)    { return 0; }
-
-	if (num_ops >= 1 && ! lua_isstring(state, 1))    { return 0; }
-	if (num_ops >= 2 && ! lua_isnumber(state, 2))    { return 0; }
-	if (num_ops == 3 && ! lua_isstring(state, 3))    { return 0; }
-
+	lua_settop(state, 3);
+	
 	const char* port = lua_tostring(state, 1);
 	int addr = (int) lua_tonumber(state, 2);
 	const char* param = lua_tostring(state, 3);
@@ -117,15 +111,7 @@ static int l_read(lua_State* state)
 
 static int l_write(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-
-	if (num_ops < 2 || num_ops > 4)    { return 0; }
-
-	if (num_ops >= 1 && ! lua_isstring(state, 1))    { return 0; }
-	if (num_ops >= 2 && ! lua_isstring(state, 2))    { return 0; }
-	if (num_ops >= 3 && ! lua_isnumber(state, 3))    { return 0; }
-	if (num_ops == 4 && ! lua_isstring(state, 4))    { return 0; }
-
+	lua_settop(state, 4);
 
 	const char* data = lua_tostring(state, 1);
 	const char* port = lua_tostring(state, 2);
@@ -185,14 +171,7 @@ static int asyn_writeread(lua_State* state, const char* data, const char* port, 
 
 static int l_writeread(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-
-	if (num_ops < 2 || num_ops > 4)    { return 0; }
-
-	if (num_ops >= 1 && ! lua_isstring(state, 1))    { return 0; }
-	if (num_ops >= 2 && ! lua_isstring(state, 2))    { return 0; }
-	if (num_ops >= 3 && ! lua_isnumber(state, 3))    { return 0; }
-	if (num_ops == 4 && ! lua_isstring(state, 4))    { return 0; }
+	lua_settop(state, 4);
 
 	const char* data = lua_tostring(state, 1);
 	const char* port = lua_tostring(state, 2);
@@ -214,51 +193,37 @@ static int l_writeread(lua_State* state)
 
 static int l_setOutTerminator(lua_State* state)
 {
-	if (lua_isstring(state, -1))    { lua_setglobal(state, "OutTerminator"); }
+	if (lua_isstring(state, 1))    { lua_setglobal(state, "OutTerminator"); }
 
 	return 0;
-}
-
-static int l_getOutTerminator(lua_State* state)
-{
-	return lua_getglobal(state, "OutTerminator");
 }
 
 static int l_setInTerminator(lua_State* state)
 {
-	if (lua_isstring(state, -1))    { lua_setglobal(state, "InTerminator"); }
+	if (lua_isstring(state, 1))    { lua_setglobal(state, "InTerminator"); }
 
 	return 0;
-}
-
-static int l_getInTerminator(lua_State* state)
-{
-	return lua_getglobal(state, "InTerminator");
 }
 
 static int l_setWriteTimeout(lua_State* state)
 {
-	if (lua_isnumber(state, -1))    { lua_setglobal(state, "WriteTimeout"); }
+	if (lua_isnumber(state, 1))    { lua_setglobal(state, "WriteTimeout"); }
 
 	return 0;
-}
-
-static int l_getWriteTimeout(lua_State* state)
-{
-	return lua_getglobal(state, "WriteTimeout");
 }
 
 static int l_setReadTimeout(lua_State* state)
 {
-	if (lua_isnumber(state, -1))    { lua_setglobal(state, "ReadTimeout"); }
+	if (lua_isnumber(state, 1))    { lua_setglobal(state, "ReadTimeout"); }
 
 	return 0;
 }
 
-static int l_getReadTimeout(lua_State* state)
-{
-	return lua_getglobal(state, "ReadTimeout");
-}
+static int l_getOutTerminator(lua_State* state)    { return lua_getglobal(state, "OutTerminator"); }
+static int l_getInTerminator(lua_State* state)     { return lua_getglobal(state, "InTerminator"); }
+static int l_getWriteTimeout(lua_State* state)     { return lua_getglobal(state, "WriteTimeout"); }
+static int l_getReadTimeout(lua_State* state)      { return lua_getglobal(state, "ReadTimeout"); }
+
 
 static int l_setIntegerParam(lua_State* state)
 {
@@ -468,19 +433,13 @@ static int l_getStringParam(lua_State* state)
 
 static int l_callParamCallbacks(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-
-	if (num_ops < 1 || num_ops > 2)    { return 0; }
-
-	if (! lua_isstring(state, 1))      { return 0; }
-
-	if (num_ops == 2 && ! lua_isnumber(state, 2))    { return 0; }
+	lua_settop(state, 2);
 
 	const char* port = lua_tostring(state, 1);
 
-	int addr = 0;
-
-	if (num_ops == 2)    { addr = (int) lua_tonumber(state, 2); }
+	if (port == NULL)    { return 0; }
+	
+	int addr = (int) lua_tonumber(state, 2);
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
@@ -591,10 +550,11 @@ static int l_porteosout(lua_State* state)
 		return 0;
 	}
 
-	if (! lua_isstring(state, 2))    { return 0; }
-
-	lua_pushvalue(state, 2);
-	lua_setfield(state, 1, "out_term");
+	if (lua_isstring(state, 2))
+	{
+		lua_pushvalue(state, 2);
+		lua_setfield(state, 1, "out_term");
+	}
 
 	return 0;
 }
@@ -607,10 +567,11 @@ static int l_porteosin(lua_State* state)
 		return 0;
 	}
 
-	if (! lua_isstring(state, 2))    { return 0; }
-
-	lua_pushvalue(state, 2);
-	lua_setfield(state, 1, "in_term");
+	if (lua_isstring(state, 2))
+	{
+		lua_pushvalue(state, 2);
+		lua_setfield(state, 1, "in_term");
+	}
 
 	return 0;
 }
@@ -654,25 +615,22 @@ static int l_portnameget(lua_State* state)
 	return 1;
 }
 
-
-static const luaL_Reg port_funcs[] = {
-	{"read", l_portread},
-	{"write", l_portwrite},
-	{"writeread", l_portwriteread},
-	{"getPortName", l_portnameget},
-	{"setOutTerminator", l_porteosout},
-	{"getOutTerminator", l_portoutget},
-	{"setInTerminator", l_porteosin},
-	{"getInTerminator", l_portinget},
-	{NULL, NULL}
-};
-
-
-
 extern "C"
 {
 	void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param)
 	{
+		static const luaL_Reg port_funcs[] = {
+			{"read", l_portread},
+			{"write", l_portwrite},
+			{"writeread", l_portwriteread},
+			{"getPortName", l_portnameget},
+			{"setOutTerminator", l_porteosout},
+			{"getOutTerminator", l_portoutget},
+			{"setInTerminator", l_porteosin},
+			{"getInTerminator", l_portinget},
+			{NULL, NULL}
+		};
+		
 		luaL_newmetatable(state, "port_meta");
 		lua_pop(state, 1);
 	
@@ -701,18 +659,14 @@ extern "C"
 
 static int l_createport(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-
-	if (num_ops < 1 || num_ops > 3)    { return 0; }
-
-	if (num_ops >= 1 && ! lua_isstring(state, 1))    { return 0; }
-	if (num_ops >= 2 && ! lua_isnumber(state, 2))    { return 0; }
-	if (num_ops == 3 && ! lua_isstring(state, 3))    { return 0; }
+	lua_settop(state, 3);
 
 	const char* port = lua_tostring(state, 1);
 	int addr = (int) lua_tonumber(state, 2);
 	const char* param = lua_tostring(state, 3);
 
+	if (port == NULL)    { return 0; }
+	
 	luaGeneratePort(state, port, addr, param);
 
 	return 1;
