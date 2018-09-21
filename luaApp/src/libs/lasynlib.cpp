@@ -45,15 +45,8 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 		lua_pushstring(state, output.c_str());
 		return 1;
 	}
-	catch (std::runtime_error& e)
-	{
-		printf("asyn.read: %s\n", e.what());
-		return 0;
-	}
-	catch (...)
-	{
-		return 0;
-	}
+	catch (std::runtime_error& e)    { return luaL_error(state, "%s\n", e.what()); }
+	catch (...)                      { }
 
 	return 0;
 }
@@ -75,18 +68,9 @@ static int asyn_write(lua_State* state, const char* data, const char* port, int 
 
 		size_t numwrite;
 		output.write(data, strlen(data), &numwrite);
-
-		return 0;
 	}
-	catch (std::runtime_error& e)
-	{
-		printf("asyn.write: %s\n", e.what());
-		return 0;
-	}
-	catch (...)
-	{
-		return 0;
-	}
+	catch (std::runtime_error& e)    { return luaL_error(state, "%s\n", e.what()); }
+	catch (...)                      { }
 
 	return 0;
 }
@@ -156,15 +140,8 @@ static int asyn_writeread(lua_State* state, const char* data, const char* port, 
 		lua_pushstring(state, output.c_str());
 		return 1;
 	}
-	catch (std::runtime_error& e)
-	{
-		printf("asyn.writeread: %s\n", e.what());
-		return 0;
-	}
-	catch (...)
-	{
-		return 0;
-	}
+	catch (std::runtime_error& e)    { return luaL_error(state, "%s\n", e.what()); }
+	catch (...)                      { }
 
 	return 0;
 }
