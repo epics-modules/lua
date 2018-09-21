@@ -14,6 +14,8 @@ extern "C"
 
 static int epics_get(lua_State* state, const char* pv_name)
 {
+	if (pv_name == NULL)    { return 0; }
+	
 	ca_context_create(ca_enable_preemptive_callback);
 
 	chid id;
@@ -131,6 +133,8 @@ static int epics_get(lua_State* state, const char* pv_name)
 
 static int epics_put(lua_State* state, const char* pv_name, int offset)
 {
+	if (pv_name == NULL)    { return 0; }
+	
 	int status;
 
 	ca_context_create(ca_enable_preemptive_callback);
@@ -207,8 +211,6 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 
 static int l_caget(lua_State* state)
 {
-	if (! lua_isstring(state, 1))    { return 0; }
-
 	const char* pv_name = lua_tostring(state, 1);
 
 	return epics_get(state, pv_name);
@@ -216,8 +218,6 @@ static int l_caget(lua_State* state)
 
 static int l_caput(lua_State* state)
 {
-	if (! lua_isstring(state, 1))    { return 0; }
-
 	const char* pv_name = lua_tostring(state, 1);
 
 	return epics_put(state, pv_name, 2);
@@ -225,8 +225,6 @@ static int l_caput(lua_State* state)
 
 static int l_epicssleep(lua_State* state)
 {
-	if (! lua_isnumber(state, 1))    { return 0; }
-
 	double seconds = lua_tonumber(state, 1);
 
 	epicsThreadSleep(seconds);
@@ -277,21 +275,21 @@ static int l_pvgetname(lua_State* state)
 	return 1;
 }
 
-static const luaL_Reg pv_meta[] = {
-	{"__index", l_pvgetval},
-	{"__newindex", l_pvsetval},
-	{NULL, NULL}
-};
-
-static const luaL_Reg pv_funcs[] = {
-	{"getName", l_pvgetname},
-	{NULL, NULL}
-};
-
 extern "C"
 {
 	void luaGeneratePV(lua_State* state, const char* pv_name)
 	{
+		static const luaL_Reg pv_meta[] = {
+			{"__index", l_pvgetval},
+			{"__newindex", l_pvsetval},
+			{NULL, NULL}
+		};
+		
+		static const luaL_Reg pv_funcs[] = {
+			{"getName", l_pvgetname},
+			{NULL, NULL}
+		};
+		
 		luaL_newmetatable(state, "pv_meta");
 		luaL_setfuncs(state, pv_meta, 0);
 		lua_pop(state, 1);
