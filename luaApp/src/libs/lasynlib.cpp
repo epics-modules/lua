@@ -40,13 +40,13 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 			output += std::string(buffer, numread);
 		} while (eomReason & ASYN_EOM_CNT);
 
-		if (output.empty())    { return 0; }
-
-		lua_pushstring(state, output.c_str());
+		if (output.empty())    { lua_pushnil(state); }
+		else                   { lua_pushstring(state, output.c_str()); }
+		
 		return 1;
 	}
 	catch (std::runtime_error& e)    { return luaL_error(state, "%s\n", e.what()); }
-	catch (...)                      { }
+	catch (...)                      { return luaL_error(state, "Unexpected exception while reading\n"); }
 
 	return 0;
 }
@@ -70,7 +70,7 @@ static int asyn_write(lua_State* state, const char* data, const char* port, int 
 		output.write(data, strlen(data), &numwrite);
 	}
 	catch (std::runtime_error& e)    { return luaL_error(state, "%s\n", e.what()); }
-	catch (...)                      { }
+	catch (...)                      { return luaL_error(state, "Unexpected exception while writing\n"); }
 
 	return 0;
 }
@@ -135,13 +135,12 @@ static int asyn_writeread(lua_State* state, const char* data, const char* port, 
 
 		std::string output(buffer, numread);
 
-		if (output.empty())    { return 0; }
-
-		lua_pushstring(state, output.c_str());
+		if (output.empty())    { lua_pushnil(state); }
+		else                   { lua_pushstring(state, output.c_str()); }
 		return 1;
 	}
 	catch (std::runtime_error& e)    { return luaL_error(state, "%s\n", e.what()); }
-	catch (...)                      { }
+	catch (...)                      { return luaL_error(state, "Unexpected exception during writeread\n"); }
 
 	return 0;
 }
