@@ -118,41 +118,41 @@ lua_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 #Build an IOC with the ioc shell
 
-PROD_IOC = scriptioc
+PROD_IOC = testLuaIoc
 
-DBD += scriptioc.dbd
-scriptioc_DBD += base.dbd
-scriptioc_DBD += drvAsynIPPort.dbd
-scriptioc_DBD += luaSupport.dbd
+DBD += testLuaIoc.dbd
+testLuaIoc_DBD += base.dbd
+testLuaIoc_DBD += drvAsynIPPort.dbd
+testLuaIoc_DBD += luaSupport.dbd
 
-scriptioc_LIBS += lua
-scriptioc_LIBS += asyn
-scriptioc_LIBS += $(EPICS_BASE_IOC_LIBS)
+testLuaIoc_LIBS += lua
+testLuaIoc_LIBS += asyn
+testLuaIoc_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-scriptioc_SRCS += scriptioc_registerRecordDeviceDriver.cpp
+testLuaIoc_SRCS += testLuaIoc_registerRecordDeviceDriver.cpp
 
-scriptioc_SRCS_DEFAULT += luaMain.cpp
-scriptioc_SRCS_vxWorks += -nil-
+testLuaIoc_SRCS_DEFAULT += luaMain.cpp
+testLuaIoc_SRCS_vxWorks += -nil-
 
 
 
 #And build an IOC with the luashell
 
-PROD_IOC += luashell
+PROD_IOC += testLuaShell
 
-DBD += luashell.dbd
-luashell_DBD += base.dbd
-luashell_DBD += drvAsynIPPort.dbd
-luashell_DBD += luaSupport.dbd
+DBD += testLuaShell.dbd
+testLuaShell_DBD += base.dbd
+testLuaShell_DBD += drvAsynIPPort.dbd
+testLuaShell_DBD += luaSupport.dbd
 
-luashell_LIBS += lua
-luashell_LIBS += asyn
-luashell_LIBS += $(EPICS_BASE_IOC_LIBS)
+testLuaShell_LIBS += lua
+testLuaShell_LIBS += asyn
+testLuaShell_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-luashell_SRCS += luashell_registerRecordDeviceDriver.cpp
+testLuaShell_SRCS += testLuaShell_registerRecordDeviceDriver.cpp
 
-luashell_SRCS_DEFAULT += luashMain.cpp
-luashell_SRCS_vxWorks += -nil-
+testLuaShell_SRCS_DEFAULT += luashMain.cpp
+testLuaShell_SRCS_vxWorks += -nil-
 
 
 

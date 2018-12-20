@@ -1,7 +1,7 @@
 # Loads a set of userscripts for testing purposes
 
-dbLoadDatabase("../../dbd/scriptioc.dbd")
-scriptioc_registerRecordDeviceDriver(pdbbase)
+dbLoadDatabase("../../dbd/testLuaIoc.dbd")
+testLuaIoc_registerRecordDeviceDriver(pdbbase)
 
 epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 

@@ -1,7 +1,7 @@
 # Script record example script
 
-dbLoadDatabase("../../dbd/scriptioc.dbd")
-scriptioc_registerRecordDeviceDriver(pdbbase)
+dbLoadDatabase("../../dbd/testLuaIoc.dbd")
+testLuaIoc_registerRecordDeviceDriver(pdbbase)
 
 epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 
