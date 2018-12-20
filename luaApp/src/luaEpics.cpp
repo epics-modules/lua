@@ -24,6 +24,10 @@ static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
 
 epicsShareFunc std::string luaLocateFile(std::string filename)
 {
+	/* Check if the filename is a direct path */
+	if (std::ifstream(filename.c_str()).good())    { return filename; }
+	
+	/* Otherwise, see if the file exists in the script path */
 	char* env_path = std::getenv("LUA_SCRIPT_PATH");
 	
 	#if defined(__vxworks) || defined(vxWorks)
