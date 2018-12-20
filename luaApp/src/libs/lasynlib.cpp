@@ -229,6 +229,8 @@ static int l_setIntegerParam(lua_State* state)
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
+	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
+	
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -261,6 +263,8 @@ static int l_getIntegerParam(lua_State* state)
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
+	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
+	
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -298,6 +302,8 @@ static int l_setDoubleParam(lua_State* state)
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
+	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
+	
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -330,6 +336,8 @@ static int l_getDoubleParam(lua_State* state)
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
+	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
+	
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -365,6 +373,8 @@ static int l_setStringParam(lua_State* state)
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
+	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
+	
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -397,6 +407,8 @@ static int l_getStringParam(lua_State* state)
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
+	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
+	
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -420,6 +432,8 @@ static int l_callParamCallbacks(lua_State* state)
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
+	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
+	
 	driver->callParamCallbacks(addr);
 
 	return 0;
