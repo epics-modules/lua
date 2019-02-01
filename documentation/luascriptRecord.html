@@ -54,13 +54,14 @@ lusscript - Lua Script Processing Record</H1>
 The lua script processing record or "luascript" record is derived from the Calcout
 record in EPICS base, but replaces the calc operation engine with the lua
 scripting language.&nbsp; The record has 10 string fields (AA...JJ)
-and 10 double fields (A...J) which are turned into global variables for the
-expression.  
+and 10 double fields (A...J) whose values are retrieved every time the record
+is processed and those values are pushed into lua as global variables with
+the same name as the field.
 
-<P>If the lua expression uses the return operator to return a string variable, the
-luascript record will produce a string output. If the lua expression uses the return
-operator to return a numerical variable, the luascript record will produce a double
-output.
+<P>The luascript record has both a VAL and SVAL output field. If the return operator
+is used within a lua expression, the returned value is placed into one of these fields.
+Booleans or Numbers that are returned get their value put into the VAL field, while
+Strings will be put into the SVAL field.
 
 <P>When writing to a string PV (any of DBF_STRING, DBF_ENUM, DBF_MENU,
 DBF_DEVICE, DBF_INLINK, DBF_OUTLINK, DBF_FWDLINK) the record (actually, device
@@ -72,7 +73,7 @@ of a <code>bo</code> or <code>mbbo</code> record) the record's string value must
 be one of the possible strings for the PV, or it must an integer specifying the
 string number [0..N] for the PV.  For example, when writing to a <code>bo</code>
 record whose ZNAM is "No" and whose ONAM is "Yes", the string value must be one
-of the following: "No", "Yes", "0", and "1".  To ensure that numeric values are
+of the following: "No", "Yes", "0", or "1".  To ensure that numeric values are
 converted to integers, set the precision (the PREC field) to zero.
 
 <P>&nbsp;
