@@ -238,6 +238,13 @@ recordtype(luascript)
 		promptgroup(GUI_CALC)
 		interest(1)
 	}
+	field(OUTV,DBF_MENU) 
+	{
+		prompt("OUT PV Status")
+		special(SPC_NOMOD)
+		interest(1)
+		menu(luascriptINAV)
+	}
 	field(INAV,DBF_MENU) {
 		prompt("INPA PV Status")
 		special(SPC_NOMOD)
@@ -377,13 +384,6 @@ recordtype(luascript)
 		interest(1)
 		menu(luascriptINAV)
 		initial("1")
-	}
-	field(OUTV,DBF_MENU) 
-	{
-		prompt("OUT PV Status")
-		special(SPC_NOMOD)
-		interest(1)
-		menu(luascriptINAV)
 	}
 	
 	field(ADSC,DBF_STRING) 
