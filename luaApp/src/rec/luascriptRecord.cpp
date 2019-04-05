@@ -36,16 +36,27 @@
 #define CA_LINKS_ALL_OK 1
 #define CA_LINKS_NOT_OK 2
 
+#include "epicsVersion.h"
+#ifdef VERSION_INT
+# if EPICS_VERSION_INT < VERSION_INT(3,16,0,2)
+#  define RECSUPFUN_CAST (RECSUPFUN)
+# else
+#  define RECSUPFUN_CAST
+# endif
+#else
+# define RECSUPFUN_CAST (RECSUPFUN)
+#endif
+
 
 /* Lua variable names for numeric and string fields */
 static const char NUM_NAMES[NUM_ARGS][2] = {"A","B","C","D","E","F","G","H","I","J"};
 static const char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","HH","II","JJ"};
 
 
-static long init_record(luascriptRecord* record, int pass);
-static long process(luascriptRecord* record);
+static long init_record(dbCommon* record, int pass);
+static long process(dbCommon* record);
 static long special(dbAddr *paddr, int after);
-static long get_precision(dbAddr* paddr, long* precision);
+static long get_precision(const dbAddr* paddr, long* precision);
 
 typedef struct ScriptDSET 
 {
@@ -73,15 +84,15 @@ rset luascriptRSET =
 	RSETNUMBER,
 	NULL,
 	NULL,
-	reinterpret_cast < RECSUPFUN > (init_record),
-	reinterpret_cast < RECSUPFUN > (process),
-	reinterpret_cast < RECSUPFUN > (special),
+	RECSUPFUN_CAST (init_record),
+	RECSUPFUN_CAST (process),
+	RECSUPFUN_CAST (special),
 	NULL,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	reinterpret_cast < RECSUPFUN > (get_precision),
+	RECSUPFUN_CAST (get_precision),
 	NULL,
 	NULL,
 	NULL,
@@ -507,8 +518,10 @@ long setLinks(luascriptRecord* record)
 
 
 
-static long init_record(luascriptRecord* record, int pass)
+static long init_record(dbCommon* common, int pass)
 {	
+	luascriptRecord* record = (luascriptRecord*) common;
+
 	if (pass == 0)
 	{
 		record->pcode = (char *) calloc(121, sizeof(char));
@@ -724,8 +737,10 @@ static long runCode(luascriptRecord* record)
 	return 0;
 }
 
-static long process(luascriptRecord* record)
+static long process(dbCommon* common)
 {
+	luascriptRecord* record = (luascriptRecord*) common;
+	
 	long status;
 	
 	/* Clear any existing error message */
@@ -861,7 +876,7 @@ static long special(dbAddr* paddr, int after)
 	return 0;
 }
 
-static long get_precision(dbAddr* paddr, long* precision)
+static long get_precision(const dbAddr* paddr, long* precision)
 {
 	luascriptRecord *record = (luascriptRecord *) paddr->precord;
 	int index = dbGetFieldIndex(paddr);
