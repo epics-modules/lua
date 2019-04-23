@@ -1,7 +1,7 @@
 
 file {
-	name="/home/oxygen40/KLANG/Documents/Projects/Repository/git/ScriptRecord/scriptApp/op/script.adl"
-	version=030107
+	name="/home/oxygen40/KLANG/Epics/synApps_7_0_2/support/lua/luaApp/op/adl/script.adl"
+	version=030111
 }
 display {
 	object {
@@ -200,22 +200,6 @@ text {
 	}
 	textix="B:"
 }
-"text update" {
-	object {
-		x=160
-		y=95
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).B"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
 text {
 	object {
 		x=25
@@ -227,38 +211,6 @@ text {
 		clr=14
 	}
 	textix="A:"
-}
-"text update" {
-	object {
-		x=160
-		y=70
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).A"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=160
-		y=120
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).C"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
 }
 text {
 	object {
@@ -272,22 +224,6 @@ text {
 	}
 	textix="C:"
 }
-"text update" {
-	object {
-		x=160
-		y=145
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).D"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
 text {
 	object {
 		x=25
@@ -299,22 +235,6 @@ text {
 		clr=14
 	}
 	textix="D:"
-}
-"text update" {
-	object {
-		x=160
-		y=170
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).E"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
 }
 text {
 	object {
@@ -340,22 +260,6 @@ text {
 	}
 	textix="J:"
 }
-"text update" {
-	object {
-		x=160
-		y=295
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).J"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
 text {
 	object {
 		x=25
@@ -367,22 +271,6 @@ text {
 		clr=14
 	}
 	textix="I:"
-}
-"text update" {
-	object {
-		x=160
-		y=270
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).I"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
 }
 text {
 	object {
@@ -396,22 +284,6 @@ text {
 	}
 	textix="H:"
 }
-"text update" {
-	object {
-		x=160
-		y=245
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).H"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
 text {
 	object {
 		x=25
@@ -424,22 +296,6 @@ text {
 	}
 	textix="G:"
 }
-"text update" {
-	object {
-		x=160
-		y=220
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).G"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
-}
 text {
 	object {
 		x=25
@@ -451,22 +307,6 @@ text {
 		clr=14
 	}
 	textix="F:"
-}
-"text update" {
-	object {
-		x=160
-		y=195
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).F"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	limits {
-	}
 }
 "message button" {
 	object {
@@ -539,23 +379,6 @@ text {
 	label="Reload Script"
 	press_msg="1"
 }
-"text update" {
-	object {
-		x=430
-		y=70
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).AA"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
 text {
 	object {
 		x=290
@@ -580,40 +403,6 @@ text {
 	}
 	textix="BB:"
 }
-"text update" {
-	object {
-		x=430
-		y=95
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).BB"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=430
-		y=120
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).CC"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
 text {
 	object {
 		x=290
@@ -625,23 +414,6 @@ text {
 		clr=14
 	}
 	textix="CC:"
-}
-"text update" {
-	object {
-		x=430
-		y=145
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).DD"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
 }
 text {
 	object {
@@ -655,23 +427,6 @@ text {
 	}
 	textix="DD:"
 }
-"text update" {
-	object {
-		x=430
-		y=170
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).EE"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
 text {
 	object {
 		x=290
@@ -684,23 +439,6 @@ text {
 	}
 	textix="EE:"
 }
-"text update" {
-	object {
-		x=430
-		y=195
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).FF"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
 text {
 	object {
 		x=290
@@ -712,23 +450,6 @@ text {
 		clr=14
 	}
 	textix="FF:"
-}
-"text update" {
-	object {
-		x=430
-		y=220
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).GG"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
 }
 text {
 	object {
@@ -754,40 +475,6 @@ text {
 	}
 	textix="HH:"
 }
-"text update" {
-	object {
-		x=430
-		y=245
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).HH"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=430
-		y=270
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).II"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
-}
 text {
 	object {
 		x=290
@@ -799,23 +486,6 @@ text {
 		clr=14
 	}
 	textix="II:"
-}
-"text update" {
-	object {
-		x=430
-		y=295
-		width=100
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R)$(S).JJ"
-		clr=16
-		bclr=14
-	}
-	align="horiz. right"
-	format="string"
-	limits {
-	}
 }
 text {
 	object {
@@ -1180,6 +850,306 @@ text {
 	}
 	control {
 		chan="$(P)$(R)$(S).INJJ"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=70
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).A"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=95
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).B"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=120
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).C"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=145
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).D"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=170
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).E"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=195
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).F"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=220
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).G"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=245
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).H"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=270
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).I"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=160
+		y=295
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).J"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=70
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).AA"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=95
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).BB"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=120
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).CC"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=145
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).DD"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=170
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).EE"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=195
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).FF"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=220
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).GG"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=245
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).HH"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=270
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).II"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=430
+		y=295
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)$(S).JJ"
 		clr=14
 		bclr=51
 	}

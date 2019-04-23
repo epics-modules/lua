@@ -104,7 +104,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
      <property name="font">
       <font>
        <family>DejaVu Sans Mono</family>
-       <pointsize>10</pointsize>
+       <pointsize>9</pointsize>
        <stylestrategy>PreferDefault</stylestrategy>
       </font>
      </property>
@@ -302,198 +302,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
     </property>
     <property name="formatType">
      <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_6">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>365</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).J</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_2">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>95</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).A</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_9">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>275</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).G</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
     </property>
    </widget>
    <widget class="caTextEntry" name="caTextEntry_3">
@@ -796,70 +604,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
      <enum>caLineEdit::decimal</enum>
     </property>
    </widget>
-   <widget class="caLineEdit" name="caLineEdit_7">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>335</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).I</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
-    </property>
-   </widget>
    <widget class="caTextEntry" name="catextentry_5">
     <property name="geometry">
      <rect>
@@ -1036,70 +780,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
     </property>
     <property name="formatType">
      <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_10">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>245</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).F</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
     </property>
    </widget>
    <widget class="caTextEntry" name="catextentry_8">
@@ -1363,134 +1043,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
      <enum>caLineEdit::decimal</enum>
     </property>
    </widget>
-   <widget class="caLineEdit" name="caLineEdit_1">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>125</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).B</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_4">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>185</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).D</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
-    </property>
-   </widget>
    <widget class="caTextEntry" name="caTextEntry_8">
     <property name="geometry">
      <rect>
@@ -1528,134 +1080,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
       <red>87</red>
       <green>202</green>
       <blue>228</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_3">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>155</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).C</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_5">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>215</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).E</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
      </color>
     </property>
     <property name="colorMode">
@@ -1778,70 +1202,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
       <red>87</red>
       <green>202</green>
       <blue>228</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::decimal</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_8">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>305</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).H</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
      </color>
     </property>
     <property name="colorMode">
@@ -2360,134 +1720,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
      <enum>caLineEdit::string</enum>
     </property>
    </widget>
-   <widget class="caLineEdit" name="caLineEdit_12">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>125</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).BB</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_14">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>185</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).DD</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
    <widget class="caTextEntry" name="catextentry_12">
     <property name="geometry">
      <rect>
@@ -2515,198 +1747,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
     </property>
     <property name="colorMode">
      <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_13">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>155</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).CC</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_11">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>95</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).AA</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_17">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>275</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).GG</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
     </property>
     <property name="formatType">
      <enum>caLineEdit::string</enum>
@@ -2781,70 +1821,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
       <red>87</red>
       <green>202</green>
       <blue>228</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_19">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>335</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).II</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
      </color>
     </property>
     <property name="colorMode">
@@ -2999,262 +1975,6 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
       <red>87</red>
       <green>202</green>
       <blue>228</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_18">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>305</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).HH</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_15">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>215</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).EE</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_16">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>245</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).FF</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
-     </color>
-    </property>
-    <property name="colorMode">
-     <enum>caLineEdit::Static</enum>
-    </property>
-    <property name="precisionMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="limitsMode">
-     <enum>caLineEdit::Channel</enum>
-    </property>
-    <property name="maxValue">
-     <double>1.000000000000000</double>
-    </property>
-    <property name="minValue">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="fontScaleMode" stdset="0">
-     <enum>caLineEdit::WidthAndHeight</enum>
-    </property>
-    <property name="formatType">
-     <enum>caLineEdit::string</enum>
-    </property>
-   </widget>
-   <widget class="caLineEdit" name="caLineEdit_20">
-    <property name="geometry">
-     <rect>
-      <x>675</x>
-      <y>365</y>
-      <width>110</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <family>DejaVu Sans Mono</family>
-      <pointsize>12</pointsize>
-      <stylestrategy>PreferDefault</stylestrategy>
-     </font>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignAbsolute|Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="channel" stdset="0">
-     <string>$(P)$(R)$(S).JJ</string>
-    </property>
-    <property name="foreground">
-     <color>
-      <red>57</red>
-      <green>196</green>
-      <blue>57</blue>
-     </color>
-    </property>
-    <property name="background">
-     <color>
-      <red>36</red>
-      <green>36</green>
-      <blue>36</blue>
      </color>
     </property>
     <property name="colorMode">
@@ -4044,6 +2764,1226 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
     </property>
     <property name="frameShape">
      <enum>QFrame::NoFrame</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_22">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>305</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).H</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_23">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>125</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).B</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_24">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>155</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).C</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_25">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>215</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).E</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_26">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>185</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).D</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_27">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>335</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).I</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_28">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>275</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).G</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_29">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>95</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).A</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_30">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>245</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).F</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_31">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>365</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).J</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::decimal</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_32">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>95</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).AA</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_33">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>155</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).CC</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_34">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>185</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).DD</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_35">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>335</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).II</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_36">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>275</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).GG</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_37">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>125</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).BB</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_38">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>365</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).JJ</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_39">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>245</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).FF</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_40">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>305</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).HH</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
+    </property>
+   </widget>
+   <widget class="caTextEntry" name="caTextEntry_41">
+    <property name="geometry">
+     <rect>
+      <x>675</x>
+      <y>215</y>
+      <width>110</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <family>DejaVu Sans Mono</family>
+      <pointsize>9</pointsize>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="channel" stdset="0">
+     <string notr="true">$(P)$(R)$(S).EE</string>
+    </property>
+    <property name="foreground">
+     <color>
+      <red>0</red>
+      <green>0</green>
+      <blue>0</blue>
+     </color>
+    </property>
+    <property name="background">
+     <color>
+      <red>87</red>
+      <green>202</green>
+      <blue>228</blue>
+     </color>
+    </property>
+    <property name="colorMode">
+     <enum>caLineEdit::Static</enum>
+    </property>
+    <property name="precisionMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="limitsMode">
+     <enum>caLineEdit::Channel</enum>
+    </property>
+    <property name="maxValue">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="minValue">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="fontScaleMode" stdset="0">
+     <enum>caLineEdit::WidthAndHeight</enum>
+    </property>
+    <property name="formatType">
+     <enum>caLineEdit::string</enum>
     </property>
    </widget>
   </widget>
