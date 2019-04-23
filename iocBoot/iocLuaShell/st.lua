@@ -10,7 +10,7 @@ VERSION_INT   = VERSION << 16 | REVISION << 8 | MODIFICATION;
 VERSION_CHECK = 3 << 16 | 15 << 8 | 6;
 
 -- Require 3.15.6 or higher for the iocsh library
-if (VERSION_INT <= VERSION_CHECK) then
+if (VERSION_INT < VERSION_CHECK) then
 	print("Requires Epics Base version 3.15.6 or higher")
 	os.exit()
 end
