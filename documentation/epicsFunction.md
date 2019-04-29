@@ -225,13 +225,3 @@ enable access to the epics runtime environment.
 	and the function is called.
 	
 	arguments...   [varies]    - A list of the arguments you would normally use in the IOC shell.
-
-        
-## Lua Shell Functions
-
-**shell.loadRegistered** ()
-
-        Loads all registered libraries into the global scope. This is only needed if new libraries 
-        have been loaded since the shell has started. Where this happens most frequently would be
-        if the lua shell is used as the primary shell and you have just called iocsh.dbLoadDatabase
-        to load a database file that contains lua library registrations.
