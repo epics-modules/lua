@@ -22,10 +22,15 @@ typedef std::vector<std::pair<const char*, lua_CFunction> >::iterator reg_iter;
 static std::vector<std::pair<const char*, lua_CFunction> > registered_libs;
 static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
 
+/* Hook Routines */
+
+epicsShareDef LUA_LIBRARY_LOAD_HOOK_ROUTINE luaLoadLibraryHook = NULL;
+epicsShareDef LUA_FUNCTION_LOAD_HOOK_ROUTINE luaLoadFunctionHook = NULL;
+
 epicsShareFunc std::string luaLocateFile(std::string filename)
 {
-	/* Check if the filename is a direct path */
-	if (std::ifstream(filename.c_str()).good())    { return filename; }
+	/* Check if the filename is an absolute path */
+	if (filename.at(0) == '/' && std::ifstream(filename.c_str()).good())    { return filename; }
 	
 	/* Otherwise, see if the file exists in the script path */
 	char* env_path = std::getenv("LUA_SCRIPT_PATH");
@@ -152,6 +157,8 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 	std::pair<const char*, lua_CFunction> temp(library_name, library_func);
 	
 	registered_libs.push_back(temp);
+	
+	if (luaLoadLibraryHook)    { luaLoadLibraryHook(library_name, library_func); }
 }
 
 epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction function)
@@ -159,6 +166,8 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 	std::pair<const char*, lua_CFunction> temp(function_name, function);
 	
 	registered_funcs.push_back(temp);
+	
+	if (luaLoadFunctionHook)    { luaLoadFunctionHook(function_name, function); }
 }
 
 

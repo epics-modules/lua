@@ -29,7 +29,13 @@ extern "C"
 #endif
 #define LT_EPICSBASE(V,R,M,P) (EPICS_VERSION_INT < VERSION_INT((V),(R),(M),(P)))
 #define GE_EPICSBASE(V,R,M,P) (EPICS_VERSION_INT >= VERSION_INT((V),(R),(M),(P)))
-	
+
+typedef void (*LUA_LIBRARY_LOAD_HOOK_ROUTINE)(const char* library_name, lua_CFunction library_func);
+typedef void (*LUA_FUNCTION_LOAD_HOOK_ROUTINE)(const char* function_name, lua_CFunction function);
+
+epicsShareExtern LUA_LIBRARY_LOAD_HOOK_ROUTINE luaLoadLibraryHook;
+epicsShareExtern LUA_FUNCTION_LOAD_HOOK_ROUTINE luaLoadFunctionHook;
+
 epicsShareFunc int  luaLoadScript(lua_State* state, const char* script_file);
 epicsShareFunc int  luaLoadString(lua_State* state, const char* lua_code);
 epicsShareFunc int  luaLoadParams(lua_State* state, const char* param_list);
