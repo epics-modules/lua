@@ -34,6 +34,8 @@ static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
 
+static lua_State* shell_state = NULL;
+
 static void luashBody(lua_State* state, const char* pathname);
 
 
@@ -350,23 +352,23 @@ void spawn_thread_callback(void* arg)
 	lua_close(state);
 }
 
+static LUA_LIBRARY_LOAD_HOOK_ROUTINE previousLibraryHook=NULL;
+static LUA_FUNCTION_LOAD_HOOK_ROUTINE previousFunctionHook=NULL;
 
-static int l_load(lua_State* state)
+static void newLibraryLoadedHook(const char* library_name, lua_CFunction library_func)
 {
-    luaLoadRegistered(state);
-    return 0;
+	if (previousLibraryHook)    { previousLibraryHook(library_name, library_func); }
+	
+	luaL_requiref(shell_state, library_name, library_func, 1);
 }
 
-static int luaopen_shell(lua_State* state)
+static void newFunctionLoadedHook(const char* function_name, lua_CFunction function)
 {
-    static const luaL_Reg shell_lib[] = {
-        { "loadRegistered", l_load },
-        { NULL, NULL }
-    };
-
-    luaL_newlib(state, shell_lib );
-    return 1;
+	if (previousFunctionHook)    { previousFunctionHook(function_name, function); }
+	
+	lua_register(shell_state, function_name, function);
 }
+
 
 static const iocshArg luashCmdArg0 = { "lua shell script", iocshArgString};
 static const iocshArg luashCmdArg1 = { "macros", iocshArgString};
@@ -394,17 +396,30 @@ extern "C"
 
 epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* macros)
 {
-	lua_State* state = luaCreateState();
-	luaL_requiref(state, "shell", luaopen_shell, 1);
-
-	lua_pushlightuserdata(state, *iocshPpdbbase);
-	lua_setglobal(state, "pdbbase");
-
-	if (macros)    { luaLoadMacros(state, macros);	}
-
-	luashBody(state, pathname);
+	if (shell_state != NULL)
+	{
+		luashBody(shell_state, pathname);
+		return 0;
+	}
 	
-	lua_close(state);
+	shell_state = luaCreateState();
+
+	lua_pushlightuserdata(shell_state, *iocshPpdbbase);
+	lua_setglobal(shell_state, "pdbbase");
+
+	if (macros)    { luaLoadMacros(shell_state, macros); }
+
+	previousLibraryHook = luaLoadLibraryHook;
+	previousFunctionHook = luaLoadFunctionHook;
+	
+	luaLoadLibraryHook = newLibraryLoadedHook;
+	luaLoadFunctionHook = newFunctionLoadedHook;
+	
+	luashBody(shell_state, pathname);
+	
+	lua_close(shell_state);
+	
+	shell_state = NULL;
 
 	return 0;
 }

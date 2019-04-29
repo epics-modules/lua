@@ -20,9 +20,6 @@ iocsh.epicsEnvSet("LUA_SCRIPT_PATH", "./scripts")
 iocsh.dbLoadDatabase("../../dbd/testLuaShell.dbd")
 iocsh.testLuaShell_registerRecordDeviceDriver(pdbbase)
 
--- If the database registered any new libraries, load them
-shell.loadRegistered()
-
 < load_userscripts.lua
 
 ---------------
