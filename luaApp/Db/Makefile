@@ -18,6 +18,11 @@ include $(TOP)/configure/CONFIG
 # databases, templates, substitutions like this
 #DB += softMotorexample.db
 
+DB += luascripts10.db
+
+REQ += luascripts10_settings.req
+REQ += script_settings.req
+
 #----------------------------------------------------
 # Declare template files which do not show up in DB
 #USES_TEMPLATE += dbExample2.template
