@@ -5,18 +5,6 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-ifeq ($(BASE_3_15),YES)
-ifeq ($(EPICS_MODIFICATION),6)
-    USR_CFLAGS += -DLUA_COMPAT_IOCSH
-    USR_CXXFLAGS += -DLUA_COMPAT_IOCSH
-endif
-endif
-
-ifdef BASE_3_16
-    USR_CFLAGS += -DLUA_COMPAT_IOCSH
-    USR_CXXFLAGS += -DLUA_COMPAT_IOCSH
-endif
-
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
 
