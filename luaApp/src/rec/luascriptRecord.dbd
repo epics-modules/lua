@@ -1,4 +1,4 @@
-menu(luascriptOOPT) 
+menu(luascriptOOPT)
 {
 	choice(luascriptOOPT_Every_Time,"Every Time")
 	choice(luascriptOOPT_On_Change,"On Change")
@@ -9,7 +9,7 @@ menu(luascriptOOPT)
 	choice(luascriptOOPT_Never,"Never")
 }
 
-menu(luascriptINAV) 
+menu(luascriptINAV)
 {
 	choice(luascriptINAV_EXT_NC,"Ext PV NC")
 	choice(luascriptINAV_EXT,"Ext PV OK")
@@ -17,7 +17,7 @@ menu(luascriptINAV)
 	choice(luascriptINAV_CON,"Constant")
 }
 
-menu(luascriptWAIT) 
+menu(luascriptWAIT)
 {
 	choice(luascriptWAIT_NoWait,"NoWait")
 	choice(luascriptWAIT_Wait,"Wait")
@@ -39,7 +39,7 @@ menu(luascriptSYNC)
 recordtype(luascript)
 {
 	include "dbCommon.dbd"
-	
+
 	field(STATE, DBF_NOACCESS)
 	{
 		prompt("Lua State")
@@ -47,8 +47,8 @@ recordtype(luascript)
 		size(4)
 		extra("void* state")
 	}
-	
-	field(RPVT,DBF_NOACCESS) 
+
+	field(RPVT,DBF_NOACCESS)
 	{
 		prompt("Record Private")
 		special(SPC_NOMOD)
@@ -56,28 +56,28 @@ recordtype(luascript)
 		size(4)
 		extra("void *rpvt")
 	}
-	
+
 	field(SYNC, DBF_MENU)
 	{
 		prompt("Sync/Async processing")
 		interest(1)
 		menu(luascriptSYNC)
 	}
-	
+
 	field(RELO, DBF_MENU)
 	{
 		prompt("When to reload state?")
 		interest(1)
 		menu(luascriptRELO)
 	}
-	
+
 	field(FRLD, DBF_SHORT)
 	{
 		prompt("Force Reload")
 		special(SPC_MOD)
 		interest(4)
 	}
-	
+
 	field(ERR, DBF_STRING)
 	{
 		prompt("Last Error Msg")
@@ -85,7 +85,7 @@ recordtype(luascript)
 		size(200)
 		interest(2)
 	}
-		
+
 	field(CODE, DBF_STRING)
 	{
 		prompt("LUA Code")
@@ -94,7 +94,7 @@ recordtype(luascript)
 		interest(1)
 		size(121)
 	}
-	
+
 	field(PCODE, DBF_NOACCESS)
 	{
 		prompt("Previous CODE")
@@ -102,7 +102,7 @@ recordtype(luascript)
 		size(4)
 		extra("char* pcode")
 	}
-	
+
 	field(OOPT, DBF_MENU)
 	{
 		prompt("Output Execute Opt")
@@ -110,14 +110,14 @@ recordtype(luascript)
 		interest(1)
 		menu(luascriptOOPT)
 	}
-	
-	field(WAIT,DBF_MENU) 
+
+	field(WAIT,DBF_MENU)
 	{
 		prompt("Wait for completion?")
 		interest(1)
 		menu(luascriptWAIT)
 	}
-	
+
 	field(INPA,DBF_INLINK) {
 		prompt("Input A")
 		special(SPC_MOD)
@@ -177,7 +177,7 @@ recordtype(luascript)
 		special(SPC_MOD)
 		promptgroup(GUI_CALC)
 		interest(1)
-	}	
+	}
 	field(INAA,DBF_INLINK) {
 		prompt("String input AA")
 		special(SPC_MOD)
@@ -237,13 +237,6 @@ recordtype(luascript)
 		special(SPC_MOD)
 		promptgroup(GUI_CALC)
 		interest(1)
-	}
-	field(OUTV,DBF_MENU) 
-	{
-		prompt("OUT PV Status")
-		special(SPC_NOMOD)
-		interest(1)
-		menu(luascriptINAV)
 	}
 	field(INAV,DBF_MENU) {
 		prompt("INPA PV Status")
@@ -385,150 +378,157 @@ recordtype(luascript)
 		menu(luascriptINAV)
 		initial("1")
 	}
-	
-	field(ADSC,DBF_STRING) 
+	field(OUTV,DBF_MENU)
+	{
+		prompt("OUT PV Status")
+		special(SPC_NOMOD)
+		interest(1)
+		menu(luascriptINAV)
+	}
+
+	field(ADSC,DBF_STRING)
 	{
 		prompt("Input A Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input A")
 	}
-	field(BDSC,DBF_STRING) 
+	field(BDSC,DBF_STRING)
 	{
 		prompt("Input B Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input B")
 	}
-	field(CDSC,DBF_STRING) 
+	field(CDSC,DBF_STRING)
 	{
 		prompt("Input C Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input C")
 	}
-	field(DDSC,DBF_STRING) 
+	field(DDSC,DBF_STRING)
 	{
 		prompt("Input D Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input D")
 	}
-	field(EDSC,DBF_STRING) 
+	field(EDSC,DBF_STRING)
 	{
 		prompt("Input E Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input E")
 	}
-	field(FDSC,DBF_STRING) 
+	field(FDSC,DBF_STRING)
 	{
 		prompt("Input F Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input F")
 	}
-	field(GDSC,DBF_STRING) 
+	field(GDSC,DBF_STRING)
 	{
 		prompt("Input G Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input G")
 	}
-	field(HDSC,DBF_STRING) 
+	field(HDSC,DBF_STRING)
 	{
 		prompt("Input H Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input H")
 	}
-	field(IDSC,DBF_STRING) 
+	field(IDSC,DBF_STRING)
 	{
 		prompt("Input I Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input I")
 	}
-	field(JDSC,DBF_STRING) 
+	field(JDSC,DBF_STRING)
 	{
 		prompt("Input J Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input J")
 	}
-	
-	field(AADN,DBF_STRING) 
+
+	field(AADN,DBF_STRING)
 	{
 		prompt("Input AA Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input AA")
 	}
-	field(BBDN,DBF_STRING) 
+	field(BBDN,DBF_STRING)
 	{
 		prompt("Input BB Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input BB")
 	}
-	field(CCDN,DBF_STRING) 
+	field(CCDN,DBF_STRING)
 	{
 		prompt("Input CC Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input CC")
 	}
-	field(DDDN,DBF_STRING) 
+	field(DDDN,DBF_STRING)
 	{
 		prompt("Input DD Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input DD")
 	}
-	field(EEDN,DBF_STRING) 
+	field(EEDN,DBF_STRING)
 	{
 		prompt("Input EE Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input EE")
 	}
-	field(FFDN,DBF_STRING) 
+	field(FFDN,DBF_STRING)
 	{
 		prompt("Input FF Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input FF")
 	}
-	field(GGDN,DBF_STRING) 
+	field(GGDN,DBF_STRING)
 	{
 		prompt("Input GG Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input GG")
 	}
-	field(HHDN,DBF_STRING) 
+	field(HHDN,DBF_STRING)
 	{
 		prompt("Input HH Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input HH")
 	}
-	field(IIDN,DBF_STRING) 
+	field(IIDN,DBF_STRING)
 	{
 		prompt("Input II Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input II")
 	}
-	field(JJDN,DBF_STRING) 
+	field(JJDN,DBF_STRING)
 	{
 		prompt("Input JJ Description")
 		asl(ASL0)
 		size(20)
 		#initial("Input JJ")
 	}
-	
-	
+
+
 	field(A,DBF_DOUBLE) {
 		prompt("Value of Input A")
 		promptgroup(GUI_COMMON)
@@ -769,51 +769,51 @@ recordtype(luascript)
 		size(4)
 		extra("char *pjj")
 	}
-	
-	field(OUT, DBF_OUTLINK) 
+
+	field(OUT, DBF_OUTLINK)
 	{
 		prompt("Output Link")
 		special(SPC_MOD)
 		promptgroup(GUI_OUTPUT)
 		interest(1)
 	}
-	
-	field(VAL,DBF_DOUBLE) 
+
+	field(VAL,DBF_DOUBLE)
 	{
 		prompt("Result")
 		asl(ASL0)
 	}
-	
-	field(SVAL,DBF_STRING) 
+
+	field(SVAL,DBF_STRING)
 	{
 		prompt("String result 1")
 		asl(ASL0)
 		size(40)
 	}
-	
+
 	field(PVAL,DBF_DOUBLE)
 	{
 		prompt("Previous Value")
 		special(SPC_NOMOD)
 		interest(4)
 	}
-	
-	field(PSVL,DBF_STRING) 
+
+	field(PSVL,DBF_STRING)
 	{
 		prompt("Previous string result")
 		special(SPC_NOMOD)
 		size(40)
 		interest(4)
 	}
-	
-	field(MDEL,DBF_DOUBLE) 
+
+	field(MDEL,DBF_DOUBLE)
 	{
 		prompt("Monitor Deadband")
 		promptgroup(GUI_DISPLAY)
 		interest(1)
 	}
-	
-	field(PREC,DBF_SHORT) 
+
+	field(PREC,DBF_SHORT)
 	{
 		prompt("Display Precision")
 		promptgroup(GUI_DISPLAY)
