@@ -2,7 +2,7 @@
 
 The lua shell is exposed as both a c function and is registered as an ioc shell function.
 Thus, the shell can either be invoked in a startup script or be run as the startup program
-in general. 
+in general.
 
 ## Lua Shell Inside The IOC Shell
 
@@ -24,9 +24,9 @@ the standard input, with a prompt set by the environment variable LUASH_PS1. Add
 within the shell, you can find and include other scripts by using the '<' character. Putting
 
     < script.lua
-    
+
 Will attempt to find script.lua by the same process as detailed above and include all the text
-of that file at the insertion point. When running any script the lua shell will exit at the end 
+of that file at the insertion point. When running any script the lua shell will exit at the end
 of the file being read. For both files and commands from the standard input, a single line with
 only the word 'exit' will close the session (Currently, this doesn't work within conditionals).
 
@@ -38,7 +38,7 @@ command inside the IOC shell. So your main.cpp file might look like:
 
     int main(int argc,char *argv[])
     {
-        if(argc>=2) {    
+        if(argc>=2) {
             luash(argv[1]);
             epicsThreadSleep(.2);
         }
@@ -46,7 +46,6 @@ command inside the IOC shell. So your main.cpp file might look like:
         epicsExit(0);
         return(0);
     }
-    
-This mode is really only useful if you are using a version of base that allows you to access
-the iocsh lua commands (base 3.15.6 and above). With that library built and included, you can
-call all the same commands as the IOC shell by using iocsh.<command_name>(*args*).
+
+When using the lua shell as a replacement for the IOC shell, you can call all the
+same commands as the IOC shell by using iocsh.<command_name>(*args*).
