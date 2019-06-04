@@ -15,9 +15,9 @@ epicsShareFunc std::string luaLocateFile(std::string filename);
 
 extern "C"
 {
-	
+
 #endif
-	
+
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -46,10 +46,6 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 epicsShareFunc void luaLoadRegistered(lua_State* state);
 
 epicsShareFunc lua_State* luaCreateState();
-
-#if GE_EPICSBASE(3,15,6,0)
-epicsShareFunc void luaEpicsLibrary(lua_State* state, const iocshCmdDef*);
-#endif
 
 #ifdef __cplusplus
 }
