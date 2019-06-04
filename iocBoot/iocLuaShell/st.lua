@@ -9,10 +9,9 @@ MODIFICATION = 0 + os.getenv("EPICS_VERSION_MINOR")
 VERSION_INT   = VERSION << 16 | REVISION << 8 | MODIFICATION;
 VERSION_CHECK = 3 << 16 | 15 << 8 | 6;
 
--- Require 3.15.6 or higher for the iocsh library
+-- Example to check if user is using a specific version of EPICS
 if (VERSION_INT < VERSION_CHECK) then
-	print("Requires Epics Base version 3.15.6 or higher")
-	os.exit()
+	print("You are using a version below base-3.15.6")
 end
 
 iocsh.epicsEnvSet("LUA_SCRIPT_PATH", "./scripts")
@@ -27,7 +26,7 @@ iocsh.iocInit()
 ---------------
 
 -- Runs a script in the background
-iocsh.luaSpawn("tick.lua")
+--iocsh.luaSpawn("tick.lua")
 
-iocsh.dbl()
+--iocsh.dbl()
 
