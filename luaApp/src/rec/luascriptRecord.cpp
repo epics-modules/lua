@@ -36,18 +36,28 @@
 #define CA_LINKS_ALL_OK 1
 #define CA_LINKS_NOT_OK 2
 
+#include "epicsVersion.h"
+#ifdef VERSION_INT
+# if EPICS_VERSION_INT < VERSION_INT(3,16,0,2)
+#  define RECSUPFUN_CAST (RECSUPFUN)
+# else
+#  define RECSUPFUN_CAST
+# endif
+#else
+# define RECSUPFUN_CAST (RECSUPFUN)
+#endif
 
 /* Lua variable names for numeric and string fields */
 static const char NUM_NAMES[NUM_ARGS][2] = {"A","B","C","D","E","F","G","H","I","J"};
 static const char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","HH","II","JJ"};
 
 
-static long init_record(luascriptRecord* record, int pass);
-static long process(luascriptRecord* record);
+static long init_record(dbCommon* common, int pass);
+static long process(dbCommon* common);
 static long special(dbAddr *paddr, int after);
-static long get_precision(dbAddr* paddr, long* precision);
+static long get_precision(const dbAddr* paddr, long* precision);
 
-typedef struct ScriptDSET 
+typedef struct ScriptDSET
 {
 	long       number;
 	DEVSUPFUN  dev_report;
@@ -73,15 +83,15 @@ rset luascriptRSET =
 	RSETNUMBER,
 	NULL,
 	NULL,
-	reinterpret_cast < RECSUPFUN > (init_record),
-	reinterpret_cast < RECSUPFUN > (process),
-	reinterpret_cast < RECSUPFUN > (special),
+	RECSUPFUN_CAST (init_record),
+	RECSUPFUN_CAST (process),
+	RECSUPFUN_CAST (special),
 	NULL,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	reinterpret_cast < RECSUPFUN > (get_precision),
+	RECSUPFUN_CAST (get_precision),
 	NULL,
 	NULL,
 	NULL,
@@ -98,13 +108,13 @@ static void logError(luascriptRecord* record)
 {
 	std::string err(lua_tostring((lua_State*) record->state, -1));
 	lua_pop((lua_State*) record->state, 1);
-	
-	
+
+
 	/* Get rid of everything up until the line number */
 	size_t split = err.find_first_of(':');
-	
+
 	if (split != std::string::npos)    { err.erase(0, split + 1); }
-	
+
 	strcpy(record->err, err.c_str());
 	db_post_events(record, &record->err, DBE_VALUE);
 }
@@ -144,7 +154,7 @@ static std::pair<std::string, std::string> parseCode(std::string& input)
  * in the CODE field.
  */
 static int parseParams(lua_State* state, std::string params)
-{	
+{
 	if (params.at(0) != '@')    { return 0; }
 
 	size_t start = params.find_first_of("(");
@@ -167,9 +177,9 @@ static long initState(luascriptRecord* record, int force_reload)
 	/* Clear existing errors */
 	memset(record->err, 0, 200);
 	db_post_events(record, &record->err, DBE_VALUE);
-	
+
 	lua_State* state = luaCreateState();
-	
+
 	std::string code(record->code);
 	std::string pcode(record->pcode);
 
@@ -185,7 +195,7 @@ static long initState(luascriptRecord* record, int force_reload)
 			/* Parse for filenames and functions */
 			std::pair<std::string, std::string> curr = parseCode(code);
 			std::pair<std::string, std::string> prev = parseCode(pcode);
-			
+
 			/* We'll always need to reload going from code to referencing a file */
 			if (pcode[0] == '@' && !force_reload)
 			{
@@ -205,11 +215,11 @@ static long initState(luascriptRecord* record, int force_reload)
 			}
 
 			status = luaLoadScript(state, curr.first.c_str());
-			
+
 			if (! status)    { lua_getglobal(state, curr.second.c_str()); }
 		}
 	}
-	
+
 	if (status == -1)    { printf("Invalid input or could not locate file\n"); status = 0;}
 
 	/* Cleanup any memory from previous state */
@@ -225,7 +235,7 @@ static long getFieldInfo(DBLINK* field, short* field_type, long* elements)
 {
 	dbAddr  Addr;
 	dbAddr* pAddr = &Addr;
-	
+
 	if (field->type == CA_LINK)
 	{
 		*field_type = dbCaGetLinkDBFtype(field);
@@ -236,13 +246,13 @@ static long getFieldInfo(DBLINK* field, short* field_type, long* elements)
 		*field_type = DBR_STRING;
 
 		long status = dbNameToAddr(field->value.pv_link.pvname, pAddr);
-		
+
 		if (status)    { return status; }
-		
+
 		*field_type = pAddr->field_type;
 		*elements   = pAddr->no_elements;
 	}
-	
+
 	return 0;
 }
 
@@ -290,7 +300,7 @@ static long loadStrings(luascriptRecord* record)
 	char tempstr[STRING_SIZE];
 
 	long status = 0;
-	
+
 	for (unsigned index = 0; index < STR_ARGS; index += 1)
 	{
 		strncpy(*prev_str, strvalue, STRING_SIZE);
@@ -299,16 +309,16 @@ static long loadStrings(luascriptRecord* record)
 		long elements = 1;
 
 		status = getFieldInfo(field, &field_type, &elements);
-		
+
 		if (status)    { return status; }
 
 		elements = std::min(elements, (long) STRING_SIZE - 1);
 		std::fill(tempstr, tempstr + elements, '\0');
-		
+
 		status = dbGetLink(field, field_type, tempstr, 0, &elements);
 
 		if (status)    { return status; }
-		
+
 		strncpy(strvalue, tempstr, STRING_SIZE);
 
 		lua_pushstring(state, tempstr);
@@ -318,10 +328,10 @@ static long loadStrings(luascriptRecord* record)
 		prev_str++;
 		strvalue += STRING_SIZE;
 	}
-	
+
 	lua_pushstring(state, record->name);
 	lua_setglobal(state, "self");
-	
+
 	return status;
 }
 
@@ -333,16 +343,16 @@ void checkLinks(luascriptRecord* record)
 	DBLINK* field = &record->inpa;
 	unsigned short* valid = &record->inav;
 	double* value = &record->a;
-	
+
 	int isCaLink = 0;
 	int isCaLinkNc = 0;
 	int isString;
 	int linkWorks;
-	
+
 	char tmpstr[100];
-	
+
 	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
-	
+
 	for (unsigned index = 0; index < NUM_ARGS + STR_ARGS + 1; index += 1)
 	{
 		if (field->type == CA_LINK)
@@ -350,21 +360,21 @@ void checkLinks(luascriptRecord* record)
 			isCaLink = 1;
 			isString = 0;
 			linkWorks = 0;
-			
+
 			if (dbCaIsLinkConnected(field))
 			{
 				if (index >= NUM_ARGS && index < NUM_ARGS + STR_ARGS)
 				{
 					isString = 1;
 					long status = dbGetLink(field, DBR_STRING, tmpstr, 0, 0);
-					
+
 					if (RTN_SUCCESS(status))
 					{
 						linkWorks = 1;
 					}
 				}
 			}
-			
+
 			if (dbCaIsLinkConnected(field) && (isString == linkWorks))
 			{
 				if (*valid == luascriptINAV_EXT_NC)
@@ -377,10 +387,10 @@ void checkLinks(luascriptRecord* record)
 					{
 						*valid = luascriptINAV_EXT;
 					}
-					
+
 					db_post_events(record, valid, DBE_VALUE);
 				}
-				
+
 				if (field == &record->out)
 				{
 					pvt->outlink_field_type = dbCaGetLinkDBFtype(field);
@@ -398,20 +408,20 @@ void checkLinks(luascriptRecord* record)
 					db_post_events(record, valid, DBE_VALUE);
 					isCaLinkNc = 1;
 				}
-				
+
 				if (field == &record->out)    { pvt->outlink_field_type = DBF_NOACCESS; }
 			}
 		}
-		
+
 		field++;
 		valid++;
 		value++;
 	}
-	
+
 	if      (isCaLinkNc)    { pvt->caLinkStat = CA_LINKS_NOT_OK; }
 	else if (isCaLink)      { pvt->caLinkStat = CA_LINKS_ALL_OK; }
 	else                    { pvt->caLinkStat = NO_CA_LINKS; }
-	
+
 	if (!pvt->wd_id_1_LOCK && isCaLinkNc)
 	{
 		pvt->wd_id_1_LOCK = 1;
@@ -424,12 +434,12 @@ static void checkLinksCallback(CALLBACK* callback)
 {
 	luascriptRecord* record;
 	void* temp;
-	
+
 	callbackGetUser(temp, callback);
 	record = (luascriptRecord*) temp;
-	
+
 	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
-	
+
 	if (false)
 	{
 	}
@@ -453,11 +463,11 @@ long setLinks(luascriptRecord* record)
 	double* value = &record->a;
 
 	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
-	
+
 	for (unsigned index = 0; index < NUM_ARGS + STR_ARGS + 1; index += 1)
 	{
 		if (field == &record->out)    { pvt->outlink_field_type = DBF_NOACCESS; }
-		
+
 		if (field->type == CONSTANT)
 		{
 			if (index < NUM_ARGS)
@@ -471,7 +481,7 @@ long setLinks(luascriptRecord* record)
 		else if (!dbNameToAddr(field->value.pv_link.pvname, paddress))
 		{
 			*valid = luascriptINAV_LOC;
-			
+
 			if (field == &record->out)
 			{
 				pvt->outlink_field_type = paddress->field_type;
@@ -482,20 +492,20 @@ long setLinks(luascriptRecord* record)
 			*valid = luascriptINAV_EXT_NC;
 			pvt->caLinkStat = CA_LINKS_NOT_OK;
 		}
-		
+
 		db_post_events(record, valid, DBE_VALUE);
-		
+
 		callbackSetCallback(checkLinksCallback, &pvt->checkLinkCb);
 		callbackSetPriority(0, &pvt->checkLinkCb);
 		callbackSetUser(record, &pvt->checkLinkCb);
 		pvt->wd_id_1_LOCK = 0;
-		
+
 		if (pvt->caLinkStat == CA_LINKS_NOT_OK)
 		{
 			callbackRequestDelayed(&pvt->checkLinkCb, 1.0);
 			pvt->wd_id_1_LOCK = 1;
 		}
-		
+
 		field++;
 		valid++;
 		value++;
@@ -507,28 +517,30 @@ long setLinks(luascriptRecord* record)
 
 
 
-static long init_record(luascriptRecord* record, int pass)
-{	
+static long init_record(dbCommon* common, int pass)
+{
+	luascriptRecord* record = (luascriptRecord*) common;
+
 	if (pass == 0)
 	{
 		record->pcode = (char *) calloc(121, sizeof(char));
 		record->rpvt = (void *) calloc(1, sizeof(struct rpvtStruct));
-		
+
 		int index;
 		char** init_str = (char**) &record->paa;
-		
+
 		for (index = 0; index < STR_ARGS; index += 1)
 		{
 			*init_str  = (char *) calloc(STRING_SIZE, sizeof(char));
 			init_str++;
 		}
-	
+
 		if (initState(record, 0))
 		{
 			logError(record);
 			return -1;
 		}
-		
+
 		return 0;
 	}
 
@@ -565,7 +577,7 @@ static bool checkValUpdate(luascriptRecord* record)
 		case luascriptOOPT_Never:
 			return false;
 	}
-	
+
 	return false;
 }
 
@@ -602,7 +614,7 @@ static bool checkSvalUpdate(luascriptRecord* record)
 		case luascriptOOPT_Never:
 			return false;
 	}
-	
+
 	return false;
 }
 
@@ -610,7 +622,7 @@ static void writeValue(luascriptRecord* record)
 {
 	ScriptDSET* pluascriptDSET = (ScriptDSET*) record->dset;
 
-	if (!pluascriptDSET || !pluascriptDSET->write) 
+	if (!pluascriptDSET || !pluascriptDSET->write)
 		{
 		errlogPrintf("%s DSET write does not exist\n", record->name);
 		recGblSetSevr(record, SOFT_ALARM, INVALID_ALARM);
@@ -630,7 +642,7 @@ static void processCallback(void* data)
 
 	/* Make a copy of the current code chunk */
 	lua_pushvalue(state, -1);
-	
+
 	/* Load Params */
 	int params = parseParams(state, std::string(record->code));
 
@@ -672,7 +684,7 @@ static void processCallback(void* data)
 	}
 
 	lua_pop(state, 1);
-	
+
 	double* new_val = &record->a;
 	double* old_val = &record->pa;
 
@@ -694,7 +706,7 @@ static void processCallback(void* data)
 		old_str++;
 		new_str += STRING_SIZE;
 	}
-	
+
 	recGblFwdLink(record);
 	record->pact = FALSE;
 }
@@ -711,10 +723,10 @@ static long runCode(luascriptRecord* record)
 	{
 		std::stringstream temp_stream;
 		std::string threadname;
-		
+
 		temp_stream << "Script Record Process (" << record->name << ")";
 		temp_stream >> threadname;
-		
+
 		epicsThreadCreate(threadname.c_str(),
 		                  epicsThreadPriorityLow,
 		                  epicsThreadGetStackSize(epicsThreadStackMedium),
@@ -724,21 +736,23 @@ static long runCode(luascriptRecord* record)
 	return 0;
 }
 
-static long process(luascriptRecord* record)
+static long process(dbCommon* common)
 {
+	luascriptRecord* record = (luascriptRecord*) common;
+
 	long status;
-	
+
 	/* Clear any existing error message */
 	memset(record->err, 0, 200);
 	db_post_events(record, &record->err, DBE_VALUE);
-	
+
 	record->pact = TRUE;
-	
+
 	/* luascriptRELO_Always indicates a state reload on every process */
 	if (record->relo == luascriptRELO_Always)
 	{
 		status = initState(record, 1);
-	
+
 		if (status) { return status; }
 	}
 
@@ -747,17 +761,17 @@ static long process(luascriptRecord* record)
 	if (status)    { return status; }
 
 	status = loadStrings(record);
-	
+
 	if (status)    { return status; }
 
 	status = runCode(record);
-	
+
 	if (status)
 	{
 		recGblFwdLink(record);
 		record->pact = FALSE;
 	}
-	
+
 	return status;
 }
 
@@ -766,11 +780,11 @@ static long special(dbAddr* paddr, int after)
 	if (!after)    { return 0; }
 
 	luascriptRecord* record = (luascriptRecord*) paddr->precord;
-	
+
 	int field_index = dbGetFieldIndex(paddr);
 
 	if (field_index == luascriptRecordCODE)
-	{ 
+	{
 		if (initState(record, 0))    { logError(record); }
 	}
 	else if (field_index == luascriptRecordFRLD && record->frld)
@@ -779,36 +793,36 @@ static long special(dbAddr* paddr, int after)
 		record->frld = 0;
 	}
 	else if (isLink(field_index))
-	{	
+	{
 		int offset = field_index - luascriptRecordINPA;
 
 		DBLINK* field = &record->inpa + offset;
 		double* value = &record->a + offset;
 		unsigned short* valid = &record->inav + offset;
 		char* name = field->value.pv_link.pvname;
-		
+
 		dbAddr address;
 		dbAddr* paddress = &address;
-		
+
 		rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
-		
+
 		if (field_index == luascriptRecordOUT)    { pvt->outlink_field_type = DBF_NOACCESS; }
-		
+
 		if (field->type == CONSTANT)
-		{		
+		{
 			if (field_index <= luascriptRecordINPJ)
 			{
 				recGblInitConstantLink(field, DBF_DOUBLE, value);
 				db_post_events(record, value, DBE_VALUE);
 			}
-			
+
 			*valid = luascriptINAV_CON;
 		}
 		else if (!dbNameToAddr(name, paddress))
 		{
 			short pvlMask = field->value.pv_link.pvlMask;
 			short isCA = pvlMask & (pvlOptCA | pvlOptCP | pvlOptCPP);
-		
+
 			if (field_index <= luascriptRecordINPJ || field_index > luascriptRecordINJJ || !isCA)
 			{
 				*valid = luascriptINAV_LOC;
@@ -816,7 +830,7 @@ static long special(dbAddr* paddr, int after)
 			else
 			{
 				*valid = luascriptINAV_EXT_NC;
-					
+
 				if (!pvt->wd_id_1_LOCK)
 				{
 					callbackRequestDelayed(&pvt->checkLinkCb, .5);
@@ -824,11 +838,11 @@ static long special(dbAddr* paddr, int after)
 					pvt->caLinkStat = CA_LINKS_NOT_OK;
 				}
 			}
-			
+
 			if (field_index == luascriptRecordOUT)
-			{ 
+			{
 				pvt->outlink_field_type = paddress->field_type;
-				
+
 				if (paddress->field_type >= DBF_INLINK && paddress->field_type <= DBF_FWDLINK)
 				{
 					if (! (pvlMask & pvlOptCA))
@@ -836,7 +850,7 @@ static long special(dbAddr* paddr, int after)
 						printf("luascriptRecord(%s):non-CA link to link field\n", name);
 					}
 				}
-				
+
 				if (record->wait && !(pvlMask & pvlOptCA))
 				{
 					printf("luascriptRecord(%s):Can't wait with non-CA link attribute\n", name);
@@ -846,7 +860,7 @@ static long special(dbAddr* paddr, int after)
 		else
 		{
 			*valid = luascriptINAV_EXT_NC;
-			
+
 			if (!pvt->wd_id_1_LOCK)
 			{
 				callbackRequestDelayed(&pvt->checkLinkCb,.5);
@@ -854,22 +868,22 @@ static long special(dbAddr* paddr, int after)
 				pvt->caLinkStat = CA_LINKS_NOT_OK;
 			}
 		}
-		
+
 		db_post_events(record, valid, DBE_VALUE);
 	}
 
 	return 0;
 }
 
-static long get_precision(dbAddr* paddr, long* precision)
+static long get_precision(const dbAddr* paddr, long* precision)
 {
 	luascriptRecord *record = (luascriptRecord *) paddr->precord;
 	int index = dbGetFieldIndex(paddr);
 
 	*precision = record->prec;
-	
+
 	if (index == luascriptRecordVAL) return 0;
-		
+
 	recGblGetPrec(paddr, precision);
 	return 0;
 }
