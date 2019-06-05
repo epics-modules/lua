@@ -26,7 +26,7 @@ iocsh.iocInit()
 ---------------
 
 -- Runs a script in the background
---iocsh.luaSpawn("tick.lua")
+iocsh.luaSpawn("tick.lua")
 
---iocsh.dbl()
+iocsh.dbl()
 
