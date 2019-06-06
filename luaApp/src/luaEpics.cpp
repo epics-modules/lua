@@ -216,7 +216,7 @@ static int l_call(lua_State* state)
 				break;
 
 			case LUA_TBOOLEAN:
-				parameters << (lua_toboolean(state, index + 2) ? "0" : "1");
+				parameters << (lua_toboolean(state, index + 2) ? "1" : "0");
 				break;
 
 			case LUA_TLIGHTUSERDATA:
