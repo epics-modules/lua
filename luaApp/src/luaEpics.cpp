@@ -220,8 +220,18 @@ static int l_call(lua_State* state)
 				break;
 
 			case LUA_TLIGHTUSERDATA:
-				parameters << "pdbbase";
+			{
+				void* userdata = lua_touserdata(state, index + 2);
+
+				lua_getglobal(state, "pdbbase");
+				void* pdb = lua_touserdata(state, -1);
+				lua_pop(state, 1);
+
+				if (userdata == pdb)    { parameters << "pdbbase"; }
+				else                    { parameters << "\"\""; }
+
 				break;
+			}
 
 			default:
 				parameters << "\"\"";
