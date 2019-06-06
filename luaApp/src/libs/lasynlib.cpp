@@ -1,10 +1,3 @@
-extern "C"
-{
-	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
-}
-
 #include <asynPortDriver.h>
 #include <asynPortClient.h>
 #include "stdio.h"
@@ -42,7 +35,7 @@ static int asyn_read(lua_State* state, const char* port, int addr, const char* p
 
 		if (output.empty())    { lua_pushnil(state); }
 		else                   { lua_pushstring(state, output.c_str()); }
-		
+
 		return 1;
 	}
 	catch (std::runtime_error& e)    { return luaL_error(state, "%s\n", e.what()); }
@@ -78,7 +71,7 @@ static int asyn_write(lua_State* state, const char* data, const char* port, int 
 static int l_read(lua_State* state)
 {
 	lua_settop(state, 3);
-	
+
 	const char* port = lua_tostring(state, 1);
 	int addr = (int) lua_tonumber(state, 2);
 	const char* param = lua_tostring(state, 3);
@@ -229,7 +222,7 @@ static int l_setIntegerParam(lua_State* state)
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
 	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-	
+
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -263,7 +256,7 @@ static int l_getIntegerParam(lua_State* state)
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
 	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-	
+
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -302,7 +295,7 @@ static int l_setDoubleParam(lua_State* state)
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
 	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-	
+
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -336,7 +329,7 @@ static int l_getDoubleParam(lua_State* state)
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
 	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-	
+
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -373,7 +366,7 @@ static int l_setStringParam(lua_State* state)
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
 	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-	
+
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -407,7 +400,7 @@ static int l_getStringParam(lua_State* state)
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
 	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-	
+
 	int index;
 
 	driver->findParam(addr, param, &index);
@@ -426,13 +419,13 @@ static int l_callParamCallbacks(lua_State* state)
 	const char* port = lua_tostring(state, 1);
 
 	if (port == NULL)    { return 0; }
-	
+
 	int addr = (int) lua_tonumber(state, 2);
 
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
 
 	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-	
+
 	driver->callParamCallbacks(addr);
 
 	return 0;
@@ -620,28 +613,28 @@ extern "C"
 			{"getInTerminator", l_portinget},
 			{NULL, NULL}
 		};
-		
+
 		luaL_newmetatable(state, "port_meta");
 		lua_pop(state, 1);
-	
+
 		lua_newtable(state);
 		luaL_setfuncs(state, port_funcs, 0);
-	
+
 		lua_pushstring(state, port_name);
 		lua_setfield(state, -2, "port_name");
-	
+
 		lua_pushstring(state, param);
 		lua_setfield(state, -2, "param_name");
-	
+
 		lua_pushnumber(state, addr);
 		lua_setfield(state, -2, "addr");
-	
+
 		lua_getglobal(state, "OutTerminator");
 		lua_setfield(state, -2, "out_term");
-	
+
 		lua_getglobal(state, "InTerminator");
 		lua_setfield(state, -2, "in_term");
-	
+
 		luaL_setmetatable(state, "port_meta");
 	}
 }
@@ -656,7 +649,7 @@ static int l_createport(lua_State* state)
 	const char* param = lua_tostring(state, 3);
 
 	if (port == NULL)    { return 0; }
-	
+
 	luaGeneratePort(state, port, addr, param);
 
 	return 1;
@@ -687,7 +680,7 @@ int luaopen_asyn (lua_State *L)
 		{"port", l_createport},
 		{NULL, NULL}  /* sentinel */
 	};
-	
+
 	luaL_newlib(L, mylib);
 	return 1;
 }

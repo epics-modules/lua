@@ -1,10 +1,3 @@
-extern "C"
-{
-	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
-}
-
 #include <cadef.h>
 #include <string>
 #include <stdio.h>
@@ -15,7 +8,7 @@ extern "C"
 static int epics_get(lua_State* state, const char* pv_name)
 {
 	if (pv_name == NULL)    { return 0; }
-	
+
 	ca_context_create(ca_enable_preemptive_callback);
 
 	chid id;
@@ -134,7 +127,7 @@ static int epics_get(lua_State* state, const char* pv_name)
 static int epics_put(lua_State* state, const char* pv_name, int offset)
 {
 	if (pv_name == NULL)    { return 0; }
-	
+
 	int status;
 
 	ca_context_create(ca_enable_preemptive_callback);
@@ -284,22 +277,22 @@ extern "C"
 			{"__newindex", l_pvsetval},
 			{NULL, NULL}
 		};
-		
+
 		static const luaL_Reg pv_funcs[] = {
 			{"getName", l_pvgetname},
 			{NULL, NULL}
 		};
-		
+
 		luaL_newmetatable(state, "pv_meta");
 		luaL_setfuncs(state, pv_meta, 0);
 		lua_pop(state, 1);
-	
+
 		lua_newtable(state);
 		luaL_setfuncs(state, pv_funcs, 0);
-	
+
 		lua_pushstring(state, pv_name);
 		lua_setfield(state, -2, "pv_name");
-	
+
 		luaL_setmetatable(state, "pv_meta");
 	}
 }
@@ -325,7 +318,7 @@ int luaopen_epics (lua_State *L)
 		{"pv", l_createpv},
 		{NULL, NULL}  /* sentinel */
 	};
-	
+
 	luaL_newlib(L, mylib);
 	return 1;
 }
