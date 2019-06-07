@@ -9,11 +9,13 @@ static int epics_get(lua_State* state, const char* pv_name)
 {
 	if (pv_name == NULL)    { return 0; }
 
-	ca_context_create(ca_enable_preemptive_callback);
+	int status = ca_context_create(ca_enable_preemptive_callback);
+	SEVCHK(status, NULL);
 
 	chid id;
 
-	int status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
+	status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
+	SEVCHK(status, NULL);
 
 	switch (status)
 	{
@@ -45,7 +47,7 @@ static int epics_get(lua_State* state, const char* pv_name)
 		{
 			struct dbr_time_string val;
 
-			ca_get(DBR_TIME_STRING, id, &val);
+			status = ca_get(DBR_TIME_STRING, id, &val);
 
 			lua_pushstring(state, val.value);
 			break;
@@ -55,7 +57,7 @@ static int epics_get(lua_State* state, const char* pv_name)
 		{
 			struct dbr_time_enum val;
 
-			ca_get(DBR_TIME_ENUM, id, &val);
+			status = ca_get(DBR_TIME_ENUM, id, &val);
 
 			lua_pushnumber(state, val.value);
 			break;
@@ -65,7 +67,7 @@ static int epics_get(lua_State* state, const char* pv_name)
 		{
 			struct dbr_time_char val;
 
-			ca_get(DBR_TIME_ENUM, id, &val);
+			status = ca_get(DBR_TIME_ENUM, id, &val);
 
 			lua_pushnumber(state, val.value);
 			break;
@@ -75,7 +77,7 @@ static int epics_get(lua_State* state, const char* pv_name)
 		{
 			struct dbr_time_short val;
 
-			ca_get(DBR_TIME_SHORT, id, &val);
+			status = ca_get(DBR_TIME_SHORT, id, &val);
 
 			lua_pushnumber(state, val.value);
 			break;
@@ -85,7 +87,7 @@ static int epics_get(lua_State* state, const char* pv_name)
 		{
 			struct dbr_time_long val;
 
-			ca_get(DBR_TIME_LONG, id, &val);
+			status = ca_get(DBR_TIME_LONG, id, &val);
 
 			lua_pushnumber(state, val.value);
 			break;
@@ -95,7 +97,7 @@ static int epics_get(lua_State* state, const char* pv_name)
 		{
 			struct dbr_time_float val;
 
-			ca_get(DBR_TIME_FLOAT, id, &val);
+			status = ca_get(DBR_TIME_FLOAT, id, &val);
 
 			lua_pushnumber(state, val.value);
 			break;
@@ -105,7 +107,7 @@ static int epics_get(lua_State* state, const char* pv_name)
 		{
 			struct dbr_time_double val;
 
-			ca_get(DBR_TIME_DOUBLE, id, &val);
+			status = ca_get(DBR_TIME_DOUBLE, id, &val);
 
 			lua_pushnumber(state, val.value);
 			break;
@@ -114,6 +116,8 @@ static int epics_get(lua_State* state, const char* pv_name)
 		case DBF_NO_ACCESS:
 			return 0;
 	}
+
+	SEVCHK(status, NULL);
 
 	ca_pend_io(0.1);
 
@@ -128,13 +132,13 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 {
 	if (pv_name == NULL)    { return 0; }
 
-	int status;
-
-	ca_context_create(ca_enable_preemptive_callback);
+	int status = ca_context_create(ca_enable_preemptive_callback);
+	SEVCHK(status, NULL);
 
 	chid id;
 
 	status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
+	SEVCHK(status, NULL);
 
 	switch (status)
 	{
@@ -162,21 +166,21 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 		case LUA_TNUMBER:
 		{
 			double data = lua_tonumber(state, offset);
-			ca_put(DBR_DOUBLE, id, &data);
+			status = ca_put(DBR_DOUBLE, id, &data);
 			break;
 		}
 
 		case LUA_TBOOLEAN:
 		{
 			short data = lua_toboolean(state, offset);
-			ca_put(DBR_INT, id, &data);
+			status = ca_put(DBR_INT, id, &data);
 			break;
 		}
 
 		case LUA_TSTRING:
 		{
 			const char* data = lua_tostring(state, offset);
-			ca_put(DBR_STRING, id, data);
+			status = ca_put(DBR_STRING, id, data);
 			break;
 		}
 
@@ -191,6 +195,8 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 			/* Unsupported types */
 			break;
 	}
+
+	SEVCHK(status, NULL);
 
 	ca_pend_io(0.1);
 
