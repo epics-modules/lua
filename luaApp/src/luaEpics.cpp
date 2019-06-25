@@ -97,23 +97,18 @@ static void strtolua(lua_State* state, std::string text)
 
 	text = text.substr(trim_front, trim_back - trim_front + 1);
 
-	double test;
-	std::stringstream convert(text);
-
-	/* Attempt to convert the parameter into a number */
-	if (convert >> test)    { lua_pushnumber(state, test); }
-	else
-	{
-		/* Othewise it's a string, remove quotes if necessary */
-		if (text.at(0) == '"' || text.at(0) == '\'')
-		{
-			lua_pushstring(state, text.substr(1, text.length() - 2).c_str());
-		}
-		else
-		{
-			lua_pushstring(state, text.c_str());
-		}
-	}
+	std::stringstream convert("return ");
+	convert << text;
+	
+	lua_State* sandbox = luaL_newstate();
+	luaL_dostring(sandbox, convert.str().c_str());
+	
+	int type = lua_type(sandbox, -1);
+	
+	if      (type == LUA_TNUMBER)  { lua_pushnumber(state, lua_tonumber(sandbox, -1)); }
+	else if (type == LUA_TSTRING)  { lua_pushstring(state, lua_tostring(sandbox, -1)); }
+	else if (type == LUA_TBOOLEAN) { lua_pushboolean(state, lua_toboolean(sandbox, -1)); }
+	else                           { lua_pushstring(state, text.c_str()); }
 }
 
 
