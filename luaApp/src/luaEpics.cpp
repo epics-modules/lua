@@ -97,8 +97,8 @@ static void strtolua(lua_State* state, std::string text)
 
 	text = text.substr(trim_front, trim_back - trim_front + 1);
 
-	std::stringstream convert("return ");
-	convert << text;
+	std::stringstream convert;
+	convert << "return " << text;
 	
 	lua_State* sandbox = luaL_newstate();
 	luaL_dostring(sandbox, convert.str().c_str());
