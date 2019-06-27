@@ -148,7 +148,7 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 }
 
 epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction library_func)
-{
+{	
 	std::pair<const char*, lua_CFunction> temp(library_name, library_func);
 
 	registered_libs.push_back(temp);
@@ -165,18 +165,46 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 	if (luaLoadFunctionHook)    { luaLoadFunctionHook(function_name, function); }
 }
 
+static int luaCheckLibrary(lua_State* state)
+{
+	std::string libname(lua_tostring(state, 1));
+	
+	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
+	{
+		if (libname == std::string(index->first))
+		{
+			lua_pushcfunction(state, index->second);
+			lua_pushnil(state);
+			return 2;
+		}
+	}
+	
+	std::stringstream funcname;
+	funcname << "\n\tno library registered '" << libname << "'";
+	
+	lua_pushstring(state, funcname.str().c_str());
+	return 1;
+}
 
 epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
+	/**
+	 * Add luaCheckLibrary as an additional function for 
+	 * lua to use to find libraries when using 'require'
+	 */
+	lua_getglobal(state, "package");
+	lua_getfield(state, -1, "searchers");
+	lua_len(state, -1);
+	int num_searchers = lua_tonumber(state, -1);
+	lua_pop(state, 1);
+	lua_pushcfunction(state, luaCheckLibrary);
+	lua_seti(state, -2, num_searchers + 1);
+	lua_pop(state, 2);
+	
 	for (reg_iter index = registered_funcs.begin(); index != registered_funcs.end(); index++)
 	{
 		lua_register( state, index->first, index->second);
-	}
-
-	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
-	{
-		luaL_requiref( state, index->first, index->second, 1 );
-	}
+	}	
 }
 
 

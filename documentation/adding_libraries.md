@@ -62,9 +62,7 @@ library is rather than giving it a path to find the library. In the luaEpics.h
 file, there is a function, *luaRegisterLibrary*. The function takes in a name for
 the library and a function with the same signature as the luaopen_xxxx that we used
 before. It would be good practice to just continue to use the same luaopen_xxxx
-naming convention. When the lua shell is run, all functions currently registered are run
-and the values that are returned get assigned to variables with the given library
-name.
+naming convention.
 
 The recommended way to get the libraries to be registered correctly for the shell is to
 use the dbd's registrar function.
@@ -85,8 +83,13 @@ use the dbd's registrar function.
 
     registrar(fooRegister)
 
-Then when you load the dbd file into your IOC, the library gets automatically registered and
-then opened when you start an instance of the lua shell.
+Then when you load the dbd file into your IOC, lua is given the link between "foo" and
+the luaopen_foo function, so when you use require to try to load the "foo" library,
+it will call the open function registered to that name.
+
+Lua will use the built-in means of searching for libraries first, before looking through
+the libraries registered with *luaRegisterLibrary* so if you have a lua file or shared
+library in your path or cpath, it will load that rather than the static library.
 
 
 # Adding Individual Functions
@@ -113,4 +116,5 @@ registers other functions, it just takes the functions directly.
         luaRegisterFunction("bar", l_bar);
     }
 
-Then, you can call the function bar in the lua shell.
+Then, you can call the function bar in the lua shell. Since these functions are
+not part of any library, you don't need to use *require* to load them.
