@@ -2,6 +2,7 @@
 -- function writes an HTTP request to a given ip port
 -- and then prints the result to the console.
 
+asyn = require("asyn")
 
 -- These values get used when the port object is created
 WriteTimeout = 4.0
