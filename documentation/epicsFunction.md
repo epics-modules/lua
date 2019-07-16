@@ -43,7 +43,7 @@ enable access to the epics runtime environment.
 
 
 
-**asyn.callParamCallbacks** (*portName, addr*)
+**asyn.callParamCallbacks** (*portName[, addr, parameter]*)
 
 	Tells an asyn port to call parameter callbacks on changed values.
 
@@ -51,6 +51,8 @@ enable access to the epics runtime environment.
 	portName   [string]   - A registered asyn port name.
 
 	addr       [number]   - The index of the parameter list to do callbacks on.
+        
+        parameter  [string]   - A specific parameter to do callbacks on.
 
 
 
@@ -112,7 +114,7 @@ enable access to the epics runtime environment.
 
 
 
-**asyn.write** (*data, portName, addr*)
+**asyn.write** (*data, portName[, addr, parameter]*)
 
 	Write a string to a given asynOctet port
 
@@ -124,10 +126,12 @@ enable access to the epics runtime environment.
 	portName   [string]   - A registered asyn port name.
 
 	addr       [number]   - The asyn address of the parameter.
+        
+        parameter  [string]   - An asyn parameter to write to
 
 
 
-**asyn.read** (*portName, addr*)
+**asyn.read** (*portName[, addr, parameter]*)
 
 	Read a string from a given asynOctet port
 
@@ -135,6 +139,8 @@ enable access to the epics runtime environment.
 	portName   [string]   - A registered asyn port name.
 
 	addr       [number]   - The asyn address of the parameter.
+        
+        parameter  [string]   - An asyn parameter to read from
 
 
 	returns a string containing all data read from the asynOctet port until encountering
@@ -143,7 +149,7 @@ enable access to the epics runtime environment.
 
 
 
-**asyn.writeread** (*data, portName, addr*)
+**asyn.writeread** (*data, portName[, addr, parameter]*)
 
 	Writes data to a port and then reads data from that same port.
 
@@ -151,6 +157,8 @@ enable access to the epics runtime environment.
 	portName   [string]   - A registered asyn port name.
 
 	addr       [number]   - The asyn address of the parameter.
+        
+        parameter  [string]   - An asyn parameter to read and write to
 
 
 	returns a string containing all data read from the asynOctet port until encountering
@@ -158,19 +166,20 @@ enable access to the epics runtime environment.
 	by the global variable ReadTimeout is reached.
 
 
-**asyn.port** (*portName, addr*)
+**asyn.client** (*portName[, addr, parameter]*)
 
-	Returns a table representing a port object. This object has the functions read
-	write, and readwrite, which work the same as the functions above, but the port
-	and address need not be specified. The port uses the global in and out terminators
-	by default, but has the functions setInTerminator and setOutTerminator to
-	change that functionality (as well as getInTerminator and getOutTerminator to
-	query those values).
+	Returns a table representing a asynOctetClient object. This object has the functions 
+        read, write, and readwrite, which work the same as the functions above, but the port
+	and address need not be specified. The client copies the global in and out terminators
+	at creation, but you can also set the table's InTerminator and/or OutTerminator fields 
+        manually to a different value. 
 
 
 	portName   [string]   - A registered asyn port name.
 
 	addr       [number]   - The asyn address of the parameter.
+        
+        parameter  [string]   - A specific asyn parameter.
 
 
 ## Epics Functions
