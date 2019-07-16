@@ -11,7 +11,7 @@ static std::string asyn_read(lua_State* state, asynOctetClient* port)
 	std::string output;
 
 	try
-	{
+	{		
 		char buffer[128];
 
 		size_t numread;
@@ -22,7 +22,7 @@ static std::string asyn_read(lua_State* state, asynOctetClient* port)
 			port->read(buffer, sizeof(buffer), &numread, &eomReason);
 			output += std::string(buffer, numread);
 		} while (eomReason & ASYN_EOM_CNT);
-		
+
 		return output;
 	}
 	catch (std::runtime_error& e)    { luaL_error(state, "%s\n", e.what()); }
@@ -598,6 +598,8 @@ extern "C"
 		lua_setfield(state, -2, "addr");
 		
 		asynOctetClient* port = new asynOctetClient(port_name, addr, param);
+		port->flush();
+		
 		lua_pushlightuserdata(state, port);
 		lua_setfield(state, -2, "client");
 
