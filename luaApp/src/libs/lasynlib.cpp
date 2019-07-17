@@ -407,7 +407,7 @@ static int l_portwrite(lua_State* state)
 {
 	luaL_checktype(state, 1, LUA_TTABLE);
 
-	if (! lua_isstring(state, 2))    { return 0; }
+	const char* output = luaL_checkstring(state, 2);
 
 	lua_getfield(state, 1, "client");
 	asynOctetClient* port = (asynOctetClient*) lua_touserdata(state, -1);
@@ -417,8 +417,6 @@ static int l_portwrite(lua_State* state)
 	if (! lua_isnil(state, -1))    { port->setTimeout(lua_tonumber(state, -1)); }
 	lua_pop(state, 1);
 	
-	const char* output = lua_tostring(state, 2);
-	
 	return asyn_write(state, port, output);
 }
 
@@ -426,7 +424,7 @@ static int l_portwriteread(lua_State* state)
 {
 	luaL_checktype(state, 1, LUA_TTABLE);
 
-	if (! lua_isstring(state, 2))    { return 0; }
+	const char* output = luaL_checkstring(state, 2);
 
 	lua_getfield(state, 1, "client");
 	asynOctetClient* port = (asynOctetClient*) lua_touserdata(state, -1);
@@ -435,8 +433,6 @@ static int l_portwriteread(lua_State* state)
 	lua_getfield(state, 1, "WriteReadTimeout");
 	if (! lua_isnil(state, -1))    { port->setTimeout(lua_tonumber(state, -1)); }
 	lua_pop(state, 1);
-	
-	const char* output = lua_tostring(state, 2);
 	
 	return asyn_writeread(state, port, output);
 }
@@ -508,6 +504,18 @@ static int l_portgc(lua_State* state)
 	return 0;
 }
 
+static int l_drivercallbacks(lua_State* state)
+{
+	luaL_checktype(state, 1, LUA_TTABLE);
+	
+	lua_getfield(state, 1, "driver");
+	asynPortDriver* port = (asynPortDriver*) lua_touserdata(state, -1);
+	lua_pop(state, 1);
+	
+	port->callParamCallbacks();
+	return 0;
+}
+
 static int l_driverindex(lua_State* state)
 {
 	std::string fieldname = std::string(lua_tostring(state, 2));
@@ -553,6 +561,7 @@ extern "C"
 		};
 		
 		static const luaL_Reg driver_funcs[] = {
+			{"callParamCallbacks", l_drivercallbacks},
 			{NULL, NULL}
 		};
 		
