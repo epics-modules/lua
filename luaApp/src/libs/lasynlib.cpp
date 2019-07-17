@@ -6,12 +6,24 @@
 #include <epicsExport.h>
 #include "luaEpics.h"
 
-static std::string asyn_read(lua_State* state, asynOctetClient* port)
+static asynPortDriver* find_driver(lua_State* state, const char* port_name)
 {
-	std::string output;
+	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port_name);
 
+	if (driver == NULL || std::string(driver->portName) != std::string(port_name) )
+	{ 
+		luaL_error(state, "No asynPortDriver found with name: %s\n", port_name);
+		return NULL;
+	}
+	
+	return driver;
+}
+
+static int asyn_read(lua_State* state, asynOctetClient* port)
+{
 	try
-	{		
+	{
+		std::string output;
 		char buffer[128];
 
 		size_t numread;
@@ -23,15 +35,20 @@ static std::string asyn_read(lua_State* state, asynOctetClient* port)
 			output += std::string(buffer, numread);
 		} while (eomReason & ASYN_EOM_CNT);
 
-		return output;
+		if (! output.empty())
+		{ 
+			lua_pushstring(state, output.c_str());
+			return 1;
+		}
 	}
 	catch (std::runtime_error& e)    { luaL_error(state, "%s\n", e.what()); }
 	catch (...)                      { luaL_error(state, "Unexpected exception while reading\n"); }
 
-	return "";
+	lua_pushnil(state);
+	return 1;
 }
 
-static void asyn_write(lua_State* state, asynOctetClient* port, const char* data)
+static int asyn_write(lua_State* state, asynOctetClient* port, const char* data)
 {
 	try
 	{
@@ -40,6 +57,39 @@ static void asyn_write(lua_State* state, asynOctetClient* port, const char* data
 	}
 	catch (std::runtime_error& e)    { luaL_error(state, "%s\n", e.what()); }
 	catch (...)                      { luaL_error(state, "Unexpected exception while writing\n"); }
+	
+	return 0;
+}
+
+static int asyn_writeread(lua_State* state, asynOctetClient* client, const char* data)
+{
+	try
+	{
+		std::string output;
+		size_t numwrite, numread;
+		char buffer[256];
+		int eomReason;
+
+		client->writeRead(data, strlen(data), buffer, sizeof(buffer), &numwrite, &numread, &eomReason);
+		output += std::string(buffer, numread);
+		
+		do
+		{
+			client->read(buffer, sizeof(buffer), &numread, &eomReason);
+			output += std::string(buffer, numread);
+		} while (eomReason & ASYN_EOM_CNT);
+		
+		if (! output.empty())
+		{ 
+			lua_pushstring(state, output.c_str());
+			return 1;
+		}
+	}
+	catch (std::runtime_error& e)    { luaL_error(state, "%s\n", e.what()); }
+	catch (...)                      { luaL_error(state, "Unexpected exception during writeread\n"); }
+
+	lua_pushnil(state);
+	return 1;
 }
 
 static int l_read(lua_State* state)
@@ -65,12 +115,7 @@ static int l_read(lua_State* state)
 	if (isnum)    { input.setTimeout(timeout); }
 	if (in_term)  { input.setInputEos(in_term, strlen(in_term)); }
 
-	std::string response = asyn_read(state, &input);
-	
-	if (response.empty())    { lua_pushnil(state); }
-	else                     { lua_pushstring(state, response.c_str()); }
-
-	return 1;
+	return asyn_read(state, &input);
 }
 
 static int l_write(lua_State* state)
@@ -97,26 +142,7 @@ static int l_write(lua_State* state)
 	if (isnum)       { output.setTimeout(timeout); }
 	if (out_term)    { output.setOutputEos(out_term, strlen(out_term)); }
 	
-	asyn_write(state, &output, data);
-	return 0;
-}
-
-static std::string asyn_writeread(lua_State* state, asynOctetClient* client, const char* data)
-{
-	try
-	{
-		size_t numwrite, numread;
-		char buffer[256];
-		int eomReason;
-
-		client->writeRead(data, strlen(data), buffer, sizeof(buffer), &numwrite, &numread, &eomReason);
-
-		return std::string(buffer, numread);
-	}
-	catch (std::runtime_error& e)    { luaL_error(state, "%s\n", e.what()); }
-	catch (...)                      { luaL_error(state, "Unexpected exception during writeread\n"); }
-
-	return "";
+	return asyn_write(state, &output, data);
 }
 
 static int l_writeread(lua_State* state)
@@ -148,45 +174,41 @@ static int l_writeread(lua_State* state)
 	if (out_term)    { client.setOutputEos(out_term, strlen(out_term)); }
 	if (in_term)     { client.setInputEos(in_term, strlen(in_term)); }
 
-	std::string response = asyn_writeread(state, &client, data);
-	
-	if (response.empty())    { lua_pushnil(state); }
-	else                     { lua_pushstring(state, response.c_str()); }
-	return 1;
+	return asyn_writeread(state, &client, data);
 }
 
 static int l_setOutTerminator(lua_State* state)
 {
-	if (lua_isstring(state, 1))    { lua_setglobal(state, "OutTerminator"); }
-
+	luaL_checkstring(state, 1);
+	lua_setglobal(state, "OutTerminator");
 	return 0;
 }
 
 static int l_setInTerminator(lua_State* state)
 {
-	if (lua_isstring(state, 1))    { lua_setglobal(state, "InTerminator"); }
-
+	luaL_checkstring(state, 1);
+	lua_setglobal(state, "InTerminator");
 	return 0;
 }
 
 static int l_setWriteTimeout(lua_State* state)
 {
-	if (lua_isnumber(state, 1))    { lua_setglobal(state, "WriteTimeout"); }
-
+	luaL_checknumber(state, 1);
+	lua_setglobal(state, "WriteTimeout");
 	return 0;
 }
 
 static int l_setReadTimeout(lua_State* state)
 {
-	if (lua_isnumber(state, 1))    { lua_setglobal(state, "ReadTimeout"); }
-
+	luaL_checknumber(state, 1);
+	lua_setglobal(state, "ReadTimeout");
 	return 0;
 }
 
 static int l_setWriteReadTimeout(lua_State* state)
 {
-	if (lua_isnumber(state, 1))    { lua_setglobal(state, "WriteReadTimeout"); }
-	
+	luaL_checknumber(state, 1);
+	lua_setglobal(state, "WriteReadTimeout");
 	return 0;
 }
 
@@ -196,241 +218,203 @@ static int l_getWriteTimeout(lua_State* state)     { return lua_getglobal(state,
 static int l_getReadTimeout(lua_State* state)      { return lua_getglobal(state, "ReadTimeout"); }
 static int l_getWriteReadTimeout(lua_State* state) { return lua_getglobal(state, "WriteReadTimeout"); }
 
+static int asyn_setparam(lua_State* state, asynPortDriver* port, int addr, const char* param, int val_index)
+{	
+	int index;
+		
+	asynStatus status = port->findParam(addr, param, &index);
+	
+	if (status == asynParamNotFound)    { return 0; }
+	
+	asynParamType partype;
+	
+	port->getParamType(addr, index, &partype);
+	
+	switch (partype)
+	{
+		case asynParamInt32:
+		{
+			epicsInt32 data = luaL_checkinteger(state, val_index);
+			port->setIntegerParam(addr, index, data);
+			return 0;
+		}
+		
+		case asynParamFloat64:
+		{
+			epicsFloat64 data = luaL_checknumber(state, val_index);
+			port->setDoubleParam(addr, index, data);
+			return 0;
+		}
+		
+		case asynParamOctet:
+		{
+			const char* data = luaL_checkstring(state, val_index);
+			port->setStringParam(addr, index, data);
+			return 0;
+		}
+		
+		default:
+			return 0;
+	}
+	
+	return 0;
+}
+
+static int asyn_getparam(lua_State* state, asynPortDriver* port, int addr, const char* param)
+{
+	int index;
+		
+	asynStatus status = port->findParam(addr, param, &index);
+	
+	if (status == asynParamNotFound)    { return 0; }
+	
+	asynParamType partype;
+	
+	port->getParamType(addr, index, &partype);
+	
+	switch (partype)
+	{
+		case asynParamInt32:
+		{
+			epicsInt32 data;
+			port->getIntegerParam(addr, index, &data);
+			lua_pushinteger(state, data);
+			return 1;
+		}
+		
+		case asynParamFloat64:
+		{
+			epicsFloat64 data;
+			port->getDoubleParam(addr, index, &data);
+			lua_pushnumber(state, data);
+			return 1;
+		}
+		
+		case asynParamOctet:
+		{
+			std::string data;
+			port->getStringParam(addr, index, data);
+			lua_pushstring(state, data.c_str());
+			return 1;
+		}
+		
+		default:
+			return 0;
+	}
+	
+	return 0;
+}
+
 
 static int l_setIntegerParam(lua_State* state)
 {
 	int num_ops = lua_gettop(state);
+	lua_settop(state, 4);
 
-	if (num_ops < 3 || num_ops > 4)    { return 0; }
-
-	if (! lua_isstring(state, 1))      { return 0; }
-
-	if (num_ops == 3 && ! lua_isstring(state, 2))    { return 0; }
-	if (num_ops == 4 && ! lua_isnumber(state, 2))    { return 0; }
-
-	if (num_ops == 3 && ! lua_isnumber(state, 3))    { return 0; }
-	if (num_ops == 4 && ! lua_isstring(state, 3))    { return 0; }
-
-	if (num_ops == 4 && ! lua_isnumber(state, 4))    { return 0; }
-
-	const char* port = lua_tostring(state, 1);
-	const char* param = lua_tostring(state, num_ops - 1);
-
+	const char* port = luaL_checkstring(state, 1);
+	
 	int addr = 0;
+	if (num_ops == 4)    { addr = luaL_checkinteger(state, 2); }
+	
+	const char* param = luaL_checkstring(state, num_ops - 1);
 
-	if (num_ops == 4)    { addr = (int) lua_tonumber(state, 2); }
-
-	int value = (int) lua_tonumber(state, num_ops);
-
-	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
-
-	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-
-	int index;
-
-	driver->findParam(addr, param, &index);
-	driver->setIntegerParam(addr, index, value);
-
-	return 0;
+	luaL_checkinteger(state, num_ops);
+	
+	asynPortDriver* driver = find_driver(state, port);
+	return asyn_setparam(state, driver, addr, param, num_ops); 
 }
 
 static int l_getIntegerParam(lua_State* state)
 {
 	int num_ops = lua_gettop(state);
-
-	if (num_ops < 2 || num_ops > 3)    { return 0; }
-
-	if (! lua_isstring(state, 1))      { return 0; }
-
-	if (num_ops == 2 && ! lua_isstring(state, 2))    { return 0; }
-	if (num_ops == 3 && ! lua_isnumber(state, 2))    { return 0; }
-
-	if (num_ops == 3 && ! lua_isstring(state, 3))    { return 0; }
-
-	const char* port = lua_tostring(state, 1);
-	const char* param = lua_tostring(state, num_ops);
+	lua_settop(state, 3);
+	
+	const char* port = luaL_checkstring(state, 1);
 
 	int addr = 0;
-
-	if (num_ops == 3)    { addr = (int) lua_tonumber(state, 2); }
-
-	int value;
-
-	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
-
-	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-
-	int index;
-
-	driver->findParam(addr, param, &index);
-	driver->getIntegerParam(addr, index, &value);
-
-	lua_pushnumber(state, value);
-	return 1;
+	if (num_ops == 3)    { addr = luaL_checkinteger(state, 2); }
+	
+	const char* param = luaL_checkstring(state, num_ops);
+	
+	asynPortDriver* driver = find_driver(state, port);
+	return asyn_getparam(state, driver, addr, param);
 }
 
 
 static int l_setDoubleParam(lua_State* state)
 {
 	int num_ops = lua_gettop(state);
+	lua_settop(state, 4);
 
-	if (num_ops < 3 || num_ops > 4)    { return 0; }
-
-	if (! lua_isstring(state, 1))      { return 0; }
-
-	if (num_ops == 3 && ! lua_isstring(state, 2))    { return 0; }
-	if (num_ops == 4 && ! lua_isnumber(state, 2))    { return 0; }
-
-	if (num_ops == 3 && ! lua_isnumber(state, 3))    { return 0; }
-	if (num_ops == 4 && ! lua_isstring(state, 3))    { return 0; }
-
-	if (num_ops == 4 && ! lua_isnumber(state, 4))    { return 0; }
-
-	const char* port = lua_tostring(state, 1);
-	const char* param = lua_tostring(state, num_ops - 1);
+	const char* port = luaL_checkstring(state, 1);
 
 	int addr = 0;
+	if (num_ops == 4)    { addr = luaL_checkinteger(state, 2); }
+	
+	const char* param = luaL_checkstring(state, num_ops - 1);
 
-	if (num_ops == 4)    { addr = (int) lua_tonumber(state, 2); }
-
-	double value = lua_tonumber(state, num_ops);
-
-	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
-
-	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-
-	int index;
-
-	driver->findParam(addr, param, &index);
-	driver->setDoubleParam(addr, index, value);
-
-	return 0;
+	luaL_checknumber(state, num_ops);
+	asynPortDriver* driver = find_driver(state, port);
+	return asyn_setparam(state, driver, addr, param, num_ops);
 }
 
 static int l_getDoubleParam(lua_State* state)
 {
 	int num_ops = lua_gettop(state);
+	lua_settop(state, 3);
 
-	if (num_ops < 2 || num_ops > 3)    { return 0; }
-
-	if (! lua_isstring(state, 1))      { return 0; }
-
-	if (num_ops == 2 && ! lua_isstring(state, 2))    { return 0; }
-	if (num_ops == 3 && ! lua_isnumber(state, 2))    { return 0; }
-
-	if (num_ops == 3 && ! lua_isstring(state, 3))    { return 0; }
-
-	const char* port = lua_tostring(state, 1);
-	const char* param = lua_tostring(state, num_ops);
+	const char* port = luaL_checkstring(state, 1);
 
 	int addr = 0;
+	if (num_ops == 3)    { addr = luaL_checkinteger(state, 2); }
+	
+	const char* param = luaL_checkstring(state, num_ops);
 
-	if (num_ops == 3)    { addr = (int) lua_tonumber(state, 2); }
-
-	double value;
-
-	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
-
-	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-
-	int index;
-
-	driver->findParam(addr, param, &index);
-	driver->getDoubleParam(addr, index, &value);
-
-	lua_pushnumber(state, value);
-	return 1;
+	asynPortDriver* driver = find_driver(state, port);
+	return asyn_getparam(state, driver, addr, param);
 }
 
 static int l_setStringParam(lua_State* state)
 {
 	int num_ops = lua_gettop(state);
+	lua_settop(state, 4);
 
-	if (num_ops < 3 || num_ops > 4)    { return 0; }
-
-	if (! lua_isstring(state, 1))      { return 0; }
-
-	if (num_ops == 3 && ! lua_isstring(state, 2))    { return 0; }
-	if (num_ops == 4 && ! lua_isnumber(state, 2))    { return 0; }
-
-	if (! lua_isstring(state, 3))      { return 0; }
-
-	if (num_ops == 4 && ! lua_isstring(state, 4))    { return 0; }
-
-	const char* port = lua_tostring(state, 1);
-	const char* param = lua_tostring(state, num_ops - 1);
-
+	const char* port = luaL_checkstring(state, 1);
+	
 	int addr = 0;
+	if (num_ops == 4)    { addr = luaL_checkinteger(state, 2); }
 
-	if (num_ops == 4)    { addr = (int) lua_tonumber(state, 2); }
+	const char* param = luaL_checkstring(state, num_ops - 1);
 
-	const char* value = lua_tostring(state, num_ops);
-
-	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
-
-	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-
-	int index;
-
-	driver->findParam(addr, param, &index);
-	driver->setStringParam(addr, index, value);
-
-	return 0;
+	luaL_checktype(state, num_ops, LUA_TSTRING);
+	asynPortDriver* driver = find_driver(state, port);
+	return asyn_setparam(state, driver, addr, param, num_ops);
 }
 
 static int l_getStringParam(lua_State* state)
 {	
 	int num_ops = lua_gettop(state);
+	lua_settop(state, 3);
 
-	if (num_ops < 2 || num_ops > 3)    { return 0; }
-
-	if (! lua_isstring(state, 1))      { return 0; }
-
-	if (num_ops == 2 && ! lua_isstring(state, 2))    { return 0; }
-	if (num_ops == 3 && ! lua_isnumber(state, 2))    { return 0; }
-
-	if (num_ops == 3 && ! lua_isstring(state, 3))    { return 0; }
-
-	const char* port = lua_tostring(state, 1);
-	const char* param = lua_tostring(state, num_ops);
+	const char* port = luaL_checkstring(state, 1);
 
 	int addr = 0;
+	if (num_ops == 3)    { addr = luaL_checkinteger(state, 2); }
+	
+	const char* param = luaL_checkstring(state, num_ops);
 
-	if (num_ops == 3)    { addr = (int) lua_tonumber(state, 2); }
-
-	char value[255];
-
-	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
-
-	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-
-	int index;
-
-	driver->findParam(addr, param, &index);
-	driver->getStringParam(addr, index, 255, value);
-
-	std::string temp(value);
-
-	lua_pushstring(state, temp.c_str());
-	return 1;
+	asynPortDriver* driver = find_driver(state, port);
+	return asyn_getparam(state, driver, addr, param);
 }
 
 static int l_callParamCallbacks(lua_State* state)
 {
 	lua_settop(state, 2);
 
-	const char* port = lua_tostring(state, 1);
+	const char* port = luaL_checkstring(state, 1);
+	int addr = lua_tointeger(state, 2);
 
-	if (port == NULL)    { return 0; }
-
-	int addr = (int) lua_tonumber(state, 2);
-
-	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port);
-
-	if (driver == NULL)    { return luaL_error(state, "No driver found with name: %s\n", port); }
-
-	driver->callParamCallbacks(addr);
-
+	find_driver(state, port)->callParamCallbacks(addr);
 	return 0;
 }
 
@@ -447,11 +431,7 @@ static int l_portread(lua_State* state)
 	if (! lua_isnil(state, -1))    { port->setTimeout(lua_tonumber(state, -1)); }
 	lua_pop(state, 1);
 	
-	std::string response = asyn_read(state, port);
-
-	if (response.empty())    { lua_pushnil(state); }
-	else                     { lua_pushstring(state, response.c_str()); }
-	return 1;
+	return asyn_read(state, port);
 }
 
 static int l_portwrite(lua_State* state)
@@ -469,13 +449,8 @@ static int l_portwrite(lua_State* state)
 	lua_pop(state, 1);
 	
 	const char* output = lua_tostring(state, 2);
-	lua_len(state, 2);
-	int data_len = lua_tointeger(state, -1);
-	lua_pop(state, 1);
 	
-	asyn_write(state, port, output);
-	
-	return 0;
+	return asyn_write(state, port, output);
 }
 
 static int l_portwriteread(lua_State* state)
@@ -493,15 +468,8 @@ static int l_portwriteread(lua_State* state)
 	lua_pop(state, 1);
 	
 	const char* output = lua_tostring(state, 2);
-	lua_len(state, 2);
-	int data_len = lua_tointeger(state, -1);
-	lua_pop(state, 1);
 	
-	std::string response = asyn_writeread(state, port, output);
-
-	if (response.empty())    { lua_pushnil(state); }
-	else                     { lua_pushstring(state, response.c_str()); }
-	return 1;
+	return asyn_writeread(state, port, output);
 }
 
 static int l_portindex(lua_State* state)
@@ -571,8 +539,67 @@ static int l_portgc(lua_State* state)
 	return 0;
 }
 
+static int l_driverindex(lua_State* state)
+{
+	std::string fieldname = std::string(lua_tostring(state, 2));
+	lua_getfield(state, 1, "driver");
+	asynPortDriver* port = (asynPortDriver*) lua_touserdata(state, -1);
+	lua_pop(state, 1);
+	
+	if      (fieldname == "portName")    { lua_pushstring(state, port->portName); }
+	else if (fieldname == "maxAddr")     { lua_pushinteger(state, port->maxAddr); }
+	else
+	{ 
+		return asyn_getparam(state, port, 0, fieldname.c_str());
+	}
+	
+	return 1;
+}
+
+static int l_drivernewindex(lua_State* state)
+{
+	std::string fieldname = std::string(lua_tostring(state, 2));
+	lua_getfield(state, 1, "driver");
+	asynPortDriver* port = (asynPortDriver*) lua_touserdata(state, -1);
+	lua_pop(state, 1);
+	
+	if      (fieldname == "portName")  { return 0; }
+	else if (fieldname == "maxAddr")   { return 0; }
+	else
+	{
+		return asyn_setparam(state, port, 0, fieldname.c_str(), 3);
+	}
+}
+
 extern "C"
 {
+	void luaGenerateDriver(lua_State* state, const char* port_name)
+	{
+		asynPortDriver* port = find_driver(state, port_name);
+		
+		static const luaL_Reg driver_meta[] = {
+			{"__index", l_driverindex},
+			{"__newindex", l_drivernewindex},
+			{NULL, NULL}
+		};
+		
+		static const luaL_Reg driver_funcs[] = {
+			{NULL, NULL}
+		};
+		
+		luaL_newmetatable(state, "driver_meta");
+		luaL_setfuncs(state, driver_meta, 0);
+		lua_pop(state, 1);
+		
+		lua_newtable(state);
+		luaL_setfuncs(state, driver_funcs, 0);
+		
+		lua_pushlightuserdata(state, port);
+		lua_setfield(state, -2, "driver");
+		
+		luaL_setmetatable(state, "driver_meta");
+	}
+	
 	void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param)
 	{
 		static const luaL_Reg port_meta[] = {
@@ -644,6 +671,16 @@ static int l_createport(lua_State* state)
 	return 1;
 }
 
+static int l_createdriver(lua_State* state)
+{
+	lua_settop(state, 3);
+
+	const char* port = luaL_checkstring(state, 1);
+
+	luaGenerateDriver(state, port);
+
+	return 1;
+}
 
 int luaopen_asyn (lua_State *L)
 {
@@ -669,6 +706,7 @@ int luaopen_asyn (lua_State *L)
 		{"getStringParam", l_getStringParam},
 		{"callParamCallbacks", l_callParamCallbacks},
 		{"client", l_createport},
+		{"driver", l_createdriver},
 		{NULL, NULL}  /* sentinel */
 	};
 

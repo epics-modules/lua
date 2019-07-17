@@ -5,9 +5,9 @@ enable access to the epics runtime environment.
 ## Asyn Functions
 
 
-**asyn.getStringParam** (*portName, addr, paramName*)
-**asyn.getDoubleParam** (*portName, addr, paramName*)
-**asyn.getIntegerParam** (*portName, addr, paramName*)
+**asyn.getStringParam** (*portName[, addr], paramName*)
+**asyn.getDoubleParam** (*portName[, addr], paramName*)
+**asyn.getIntegerParam** (*portName[, addr], paramName*)
 
 	Fetches the value of an asyn parameter.
 
@@ -24,9 +24,9 @@ enable access to the epics runtime environment.
 
 
 
-**asyn.setStringParam** (*portName, addr, paramName, value*)
-**asyn.setDoubleParam** (*portName, addr, paramName, value*)
-**asyn.setIntegerParam** (*portName, addr, paramName, value*)
+**asyn.setStringParam** (*portName[, addr], paramName, value*)
+**asyn.setDoubleParam** (*portName[, addr], paramName, value*)
+**asyn.setIntegerParam** (*portName[, addr], paramName, value*)
 
 	Sets the value of an asyn parameter.
 
@@ -168,7 +168,7 @@ enable access to the epics runtime environment.
 
 **asyn.client** (*portName[, addr, parameter]*)
 
-	Returns a table representing a asynOctetClient object. This object has the functions 
+	Returns a table representing an asynOctetClient object. This object has the functions 
         read, write, and readwrite, which work the same as the functions above, but the port
 	and address need not be specified. The client copies the global in and out terminators
 	at creation, but you can also set the table's InTerminator and/or OutTerminator fields 
@@ -181,6 +181,15 @@ enable access to the epics runtime environment.
         
         parameter  [string]   - A specific asyn parameter.
 
+**asyn.driver** (*portName*)
+
+        Returns a table representing an asynPortDriver object. You can read to and write to
+        keys in the table and the table will try to resolve the names as asyn parameters,
+        calling the correct get or set XXXParam function based on the asynParamType of the
+        parameter.
+        
+        portName  [string]   - A registered asynPortDriver port name
+        
 
 ## Epics Functions
 
