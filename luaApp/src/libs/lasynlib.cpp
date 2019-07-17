@@ -183,10 +183,18 @@ static int l_setReadTimeout(lua_State* state)
 	return 0;
 }
 
+static int l_setWriteReadTimeout(lua_State* state)
+{
+	if (lua_isnumber(state, 1))    { lua_setglobal(state, "WriteReadTimeout"); }
+	
+	return 0;
+}
+
 static int l_getOutTerminator(lua_State* state)    { return lua_getglobal(state, "OutTerminator"); }
 static int l_getInTerminator(lua_State* state)     { return lua_getglobal(state, "InTerminator"); }
 static int l_getWriteTimeout(lua_State* state)     { return lua_getglobal(state, "WriteTimeout"); }
 static int l_getReadTimeout(lua_State* state)      { return lua_getglobal(state, "ReadTimeout"); }
+static int l_getWriteReadTimeout(lua_State* state) { return lua_getglobal(state, "WriteReadTimeout"); }
 
 
 static int l_setIntegerParam(lua_State* state)
@@ -651,6 +659,8 @@ int luaopen_asyn (lua_State *L)
 		{"getWriteTimeout", l_getWriteTimeout},
 		{"setReadTimeout", l_setReadTimeout},
 		{"getReadTimeout", l_getReadTimeout},
+		{"setWriteReadTimeout", l_setWriteReadTimeout},
+		{"getWriteReadTimeout", l_getWriteReadTimeout},
 		{"setIntegerParam", l_setIntegerParam},
 		{"setDoubleParam", l_setDoubleParam},
 		{"setStringParam", l_setStringParam},
