@@ -4,7 +4,7 @@ enable access to the epics runtime environment.
 
 ## Asyn Functions
 
-
+**asyn.getParam** (*portName[, addr], paramName*)
 **asyn.getStringParam** (*portName[, addr], paramName*)
 **asyn.getDoubleParam** (*portName[, addr], paramName*)
 **asyn.getIntegerParam** (*portName[, addr], paramName*)
@@ -20,10 +20,11 @@ enable access to the epics runtime environment.
 	paramName  [string]   - The name of the parameter to fetch.
 
 
-	returns the value of the asyn parameter
+	returns the value of the asyn parameter as the type specified, if no
+        type was specified, uses the asynParamType of the parameter to determine
 
 
-
+**asyn.setParam** (*portName[, addr], paramName*)
 **asyn.setStringParam** (*portName[, addr], paramName, value*)
 **asyn.setDoubleParam** (*portName[, addr], paramName, value*)
 **asyn.setIntegerParam** (*portName[, addr], paramName, value*)

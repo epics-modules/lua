@@ -305,8 +305,7 @@ static int asyn_getparam(lua_State* state, asynPortDriver* port, int addr, const
 	return 0;
 }
 
-
-static int l_setIntegerParam(lua_State* state)
+static int l_setParam(lua_State* state)
 {
 	int num_ops = lua_gettop(state);
 	lua_settop(state, 4);
@@ -317,14 +316,12 @@ static int l_setIntegerParam(lua_State* state)
 	if (num_ops == 4)    { addr = luaL_checkinteger(state, 2); }
 	
 	const char* param = luaL_checkstring(state, num_ops - 1);
-
-	luaL_checkinteger(state, num_ops);
 	
 	asynPortDriver* driver = find_driver(state, port);
 	return asyn_setparam(state, driver, addr, param, num_ops); 
 }
 
-static int l_getIntegerParam(lua_State* state)
+static int l_getParam(lua_State* state)
 {
 	int num_ops = lua_gettop(state);
 	lua_settop(state, 3);
@@ -340,71 +337,43 @@ static int l_getIntegerParam(lua_State* state)
 	return asyn_getparam(state, driver, addr, param);
 }
 
+static int l_setIntegerParam(lua_State* state)
+{
+	luaL_checkinteger(state, lua_gettop(state));
+	return l_setParam(state);
+}
+
+static int l_getIntegerParam(lua_State* state)
+{
+	int ret = l_getParam(state);
+	luaL_checkinteger(state, -1);
+	return ret;
+}
 
 static int l_setDoubleParam(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-	lua_settop(state, 4);
-
-	const char* port = luaL_checkstring(state, 1);
-
-	int addr = 0;
-	if (num_ops == 4)    { addr = luaL_checkinteger(state, 2); }
-	
-	const char* param = luaL_checkstring(state, num_ops - 1);
-
-	luaL_checknumber(state, num_ops);
-	asynPortDriver* driver = find_driver(state, port);
-	return asyn_setparam(state, driver, addr, param, num_ops);
+	luaL_checknumber(state, lua_gettop(state));
+	return l_setParam(state);
 }
 
 static int l_getDoubleParam(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-	lua_settop(state, 3);
-
-	const char* port = luaL_checkstring(state, 1);
-
-	int addr = 0;
-	if (num_ops == 3)    { addr = luaL_checkinteger(state, 2); }
-	
-	const char* param = luaL_checkstring(state, num_ops);
-
-	asynPortDriver* driver = find_driver(state, port);
-	return asyn_getparam(state, driver, addr, param);
+	int ret = l_getParam(state);
+	luaL_checknumber(state, -1);
+	return ret;
 }
 
 static int l_setStringParam(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-	lua_settop(state, 4);
-
-	const char* port = luaL_checkstring(state, 1);
-	
-	int addr = 0;
-	if (num_ops == 4)    { addr = luaL_checkinteger(state, 2); }
-
-	const char* param = luaL_checkstring(state, num_ops - 1);
-
-	luaL_checktype(state, num_ops, LUA_TSTRING);
-	asynPortDriver* driver = find_driver(state, port);
-	return asyn_setparam(state, driver, addr, param, num_ops);
+	luaL_checktype(state, lua_gettop(state), LUA_TSTRING);
+	return l_setParam(state);
 }
 
 static int l_getStringParam(lua_State* state)
 {	
-	int num_ops = lua_gettop(state);
-	lua_settop(state, 3);
-
-	const char* port = luaL_checkstring(state, 1);
-
-	int addr = 0;
-	if (num_ops == 3)    { addr = luaL_checkinteger(state, 2); }
-	
-	const char* param = luaL_checkstring(state, num_ops);
-
-	asynPortDriver* driver = find_driver(state, port);
-	return asyn_getparam(state, driver, addr, param);
+	int ret = l_getParam(state);
+	luaL_checktype(state, -1, LUA_TSTRING);
+	return ret;
 }
 
 static int l_callParamCallbacks(lua_State* state)
@@ -701,9 +670,11 @@ int luaopen_asyn (lua_State *L)
 		{"setIntegerParam", l_setIntegerParam},
 		{"setDoubleParam", l_setDoubleParam},
 		{"setStringParam", l_setStringParam},
+		{"setParam", l_setParam},
 		{"getIntegerParam", l_getIntegerParam},
 		{"getDoubleParam", l_getDoubleParam},
 		{"getStringParam", l_getStringParam},
+		{"getParam", l_getParam},
 		{"callParamCallbacks", l_callParamCallbacks},
 		{"client", l_createport},
 		{"driver", l_createdriver},
