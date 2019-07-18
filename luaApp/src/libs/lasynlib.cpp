@@ -6,6 +6,11 @@
 #include <epicsExport.h>
 #include "luaEpics.h"
 
+extern "C" {
+	void luaGenerateDriver(lua_State* state, const char* port_name);
+	void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param);
+}
+
 static asynPortDriver* find_driver(lua_State* state, const char* port_name)
 {
 	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port_name);
@@ -518,16 +523,33 @@ static int l_drivercallbacks(lua_State* state)
 
 static int l_driverindex(lua_State* state)
 {
-	std::string fieldname = std::string(lua_tostring(state, 2));
 	lua_getfield(state, 1, "driver");
 	asynPortDriver* port = (asynPortDriver*) lua_touserdata(state, -1);
 	lua_pop(state, 1);
 	
-	if      (fieldname == "portName")    { lua_pushstring(state, port->portName); }
-	else if (fieldname == "maxAddr")     { lua_pushinteger(state, port->maxAddr); }
-	else
-	{ 
-		return asyn_getparam(state, port, 0, fieldname.c_str());
+	if (lua_isstring(state, 2))
+	{
+		std::string fieldname = std::string(lua_tostring(state, 2));
+		
+		if      (fieldname == "portName")    { lua_pushstring(state, port->portName); }
+		else if (fieldname == "maxAddr")     { lua_pushinteger(state, port->maxAddr); }
+		else
+		{
+			lua_getfield(state, 1, "addr");
+			int addr = lua_tointeger(state, -1);
+			lua_pop(state, 1);
+			
+			return asyn_getparam(state, port, addr, fieldname.c_str());
+		}
+	}
+	else if (lua_isinteger(state, 2))
+	{
+		if (lua_tointeger(state, 2) < port->maxAddr)
+		{
+			luaGenerateDriver(state, port->portName);
+			lua_pushvalue(state, 2);
+			lua_setfield(state, -2, "addr");
+		}
 	}
 	
 	return 1;
@@ -544,7 +566,11 @@ static int l_drivernewindex(lua_State* state)
 	else if (fieldname == "maxAddr")   { return 0; }
 	else
 	{
-		return asyn_setparam(state, port, 0, fieldname.c_str(), 3);
+		lua_getfield(state, 1, "addr");
+		int addr = lua_tointeger(state, -1);
+		lua_pop(state, 1);
+		
+		return asyn_setparam(state, port, addr, fieldname.c_str(), 3);
 	}
 }
 
@@ -574,6 +600,9 @@ extern "C"
 		
 		lua_pushlightuserdata(state, port);
 		lua_setfield(state, -2, "driver");
+		
+		lua_pushinteger(state, 0);
+		lua_setfield(state, -2, "addr");
 		
 		luaL_setmetatable(state, "driver_meta");
 	}
@@ -651,11 +680,8 @@ static int l_createport(lua_State* state)
 
 static int l_createdriver(lua_State* state)
 {
-	lua_settop(state, 3);
-
-	const char* port = luaL_checkstring(state, 1);
-
-	luaGenerateDriver(state, port);
+	lua_settop(state, 1);
+	luaGenerateDriver(state, luaL_checkstring(state, 1));
 
 	return 1;
 }
