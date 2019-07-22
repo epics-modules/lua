@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include <cstring>
 #include <string>
+#include <strings.h>
 #include <epicsExport.h>
 #include "luaEpics.h"
 
@@ -392,6 +393,148 @@ static int l_callParamCallbacks(lua_State* state)
 	return 0;
 }
 
+static void asyn_settrace(lua_State* state, const char* portname, int addr, const char* key, bool val)
+{
+	int mask = 0;
+	
+	if      (strcasecmp(key, "error") == 0)     { mask = 0x0001; }
+	else if (strcasecmp(key, "device") == 0)    { mask = 0x0002; }
+	else if (strcasecmp(key, "filter") == 0)    { mask = 0x0004; }
+	else if (strcasecmp(key, "driver") == 0)    { mask = 0x0008; }
+	else if (strcasecmp(key, "flow") == 0)      { mask = 0x0010; }
+	else if (strcasecmp(key, "warning") == 0)   { mask = 0x0020; }
+		
+	asynUser *pasynUser=NULL;
+    asynStatus status;
+
+	if (portname && (strlen(portname) > 0))
+	{
+		pasynUser = pasynManager->createAsynUser(0,0);
+		status = pasynManager->connectDevice(pasynUser,portname,addr);
+		
+		if(status!=asynSuccess) 
+		{
+			printf("%s\n",pasynUser->errorMessage);
+			pasynManager->freeAsynUser(pasynUser);
+			return;
+		}
+	}
+	
+	int prevmask = pasynTrace->getTraceMask(pasynUser);
+	
+	if (val)    { status = pasynTrace->setTraceMask(pasynUser, prevmask | mask); }
+	else        { status = pasynTrace->setTraceMask(pasynUser, prevmask & ~mask); }
+	
+	if (status!=asynSuccess)    { printf("%s\n",pasynUser->errorMessage); }
+	if (pasynUser)              { pasynManager->freeAsynUser(pasynUser); }
+}
+
+static void asyn_settraceio(lua_State* state, const char* portname, int addr, const char* key, bool val)
+{
+	int mask = 0;
+	
+	if      (strcasecmp(key, "nodata") == 0)   { mask = 0x0001; }
+	else if (strcasecmp(key, "ascii") == 0)    { mask = 0x0002; }
+	else if (strcasecmp(key, "escape") == 0)   { mask = 0x0004; }
+	else if (strcasecmp(key, "hex") == 0)      { mask = 0x0008; }
+		
+	asynUser *pasynUser=NULL;
+    asynStatus status;
+
+	if (portname && (strlen(portname) > 0))
+	{
+		pasynUser = pasynManager->createAsynUser(0,0);
+		status = pasynManager->connectDevice(pasynUser,portname,addr);
+		
+		if(status!=asynSuccess) 
+		{
+			printf("%s\n",pasynUser->errorMessage);
+			pasynManager->freeAsynUser(pasynUser);
+			return;
+		}
+	}
+	
+	int prevmask = pasynTrace->getTraceIOMask(pasynUser);
+	
+	if (val)    { status = pasynTrace->setTraceIOMask(pasynUser, prevmask | mask); }
+	else        { status = pasynTrace->setTraceIOMask(pasynUser, prevmask & ~mask); }
+	
+	if (status!=asynSuccess)    { printf("%s\n",pasynUser->errorMessage); }
+	if (pasynUser)              { pasynManager->freeAsynUser(pasynUser); }
+}
+
+static int l_setTrace(lua_State* state)
+{
+	int num_ops = lua_gettop(state);
+	lua_settop(state, 4);
+	
+	const char* portname = luaL_checkstring(state, 1);
+	
+	int addr = 0;
+	
+	if (lua_isnumber(state, 2))     { addr = luaL_checkinteger(state, 2); }
+	
+	if (lua_type(state, num_ops) != LUA_TTABLE)
+	{
+		const char* key = luaL_checkstring(state, num_ops - 1);
+		bool val = lua_toboolean(state, num_ops);
+		
+		asyn_settrace(state, portname, addr, key, val);
+	}
+	else
+	{
+		lua_pushnil(state);
+		
+		while(lua_next(state, num_ops))
+		{
+			lua_pushvalue(state, -2);
+			const char* key = lua_tostring(state, -1);
+			bool val = lua_toboolean(state, -2);
+			asyn_settrace(state, portname, addr, key, val);
+			
+			lua_pop(state, 2);
+		}
+	}
+	
+	return 0;
+}
+
+static int l_setTraceIO(lua_State* state)
+{
+	int num_ops = lua_gettop(state);
+	lua_settop(state, 4);
+	
+	const char* portname = luaL_checkstring(state, 1);
+	
+	int addr = 0;
+	
+	if (lua_isnumber(state, 2))     { addr = luaL_checkinteger(state, 2); }
+	
+	if (lua_type(state, num_ops) != LUA_TTABLE)
+	{
+		const char* key = luaL_checkstring(state, num_ops - 1);
+		bool val = lua_toboolean(state, num_ops);
+		
+		asyn_settraceio(state, portname, addr, key, val);
+	}
+	else
+	{
+		lua_pushnil(state);
+		
+		while(lua_next(state, num_ops))
+		{
+			lua_pushvalue(state, -2);
+			const char* key = lua_tostring(state, -1);
+			bool val = lua_toboolean(state, -2);
+			asyn_settraceio(state, portname, addr, key, val);
+			
+			lua_pop(state, 2);
+		}
+	}
+	
+	return 0;
+}
+
 
 static int l_portread(lua_State* state)
 {
@@ -440,6 +583,84 @@ static int l_portwriteread(lua_State* state)
 	lua_pop(state, 1);
 	
 	return asyn_writeread(state, port, output);
+}
+
+static int l_porttrace(lua_State* state)
+{
+	lua_settop(state, 3);
+	
+	lua_getfield(state, 1, "name");
+	const char* portname = lua_tostring(state, -1);
+	lua_pop(state, 1);
+	
+	lua_getfield(state, 1, "addr");
+	int addr = lua_tointeger(state, -1);
+	lua_pop(state, 1);
+	
+	luaL_checktype(state, 1, LUA_TTABLE);
+	
+	if (lua_type(state, 2) != LUA_TTABLE)
+	{
+		bool setval = true;
+		if (! lua_isnil(state, 3))    { setval = lua_toboolean(state, 3); }
+		
+		asyn_settrace(state, portname, addr, luaL_checkstring(state, 2), setval);
+	}
+	else
+	{
+		lua_pushnil(state);
+		
+		while(lua_next(state, 2))
+		{
+			lua_pushvalue(state, -2);
+			const char* key = lua_tostring(state, -1);
+			bool val = lua_toboolean(state, -2);
+			asyn_settrace(state, portname, addr, key, val);
+			
+			lua_pop(state, 2);
+		}
+	}
+	
+	return 0;
+}
+
+static int l_porttraceio(lua_State* state)
+{
+	lua_settop(state, 3);
+	
+	lua_getfield(state, 1, "name");
+	const char* portname = lua_tostring(state, -1);
+	lua_pop(state, 1);
+	
+	lua_getfield(state, 1, "addr");
+	int addr = lua_tointeger(state, -1);
+	lua_pop(state, 1);
+	
+	luaL_checktype(state, 1, LUA_TTABLE);
+	
+	if (lua_type(state, 2) != LUA_TTABLE)
+	{	
+		bool setval = true;
+		if (! lua_isnil(state, 3))    { setval = lua_toboolean(state, 3); }
+		
+		asyn_settraceio(state, portname, addr, luaL_checkstring(state, 2), setval);
+	}
+	else
+	{
+		lua_pushnil(state);
+		
+		while(lua_next(state, 2))
+		{
+			lua_pushvalue(state, -2);
+			const char* key = lua_tostring(state, -1);
+			bool val = lua_toboolean(state, -2);
+			asyn_settraceio(state, portname, addr, key, val);
+			
+			lua_pop(state, 2);
+		}
+	}
+	
+	return 0;
 }
 
 static int l_portindex(lua_State* state)
@@ -620,6 +841,8 @@ extern "C"
 			{"read", l_portread},
 			{"write", l_portwrite},
 			{"writeread", l_portwriteread},
+			{"trace", l_porttrace},
+			{"traceio", l_porttraceio},
 			{NULL, NULL}
 		};
 
@@ -711,6 +934,8 @@ int luaopen_asyn (lua_State *L)
 		{"getStringParam", l_getStringParam},
 		{"getParam", l_getParam},
 		{"callParamCallbacks", l_callParamCallbacks},
+		{"setTrace", l_setTrace},
+		{"setTraceIO", l_setTraceIO},
 		{"client", l_createport},
 		{"driver", l_createdriver},
 		{NULL, NULL}  /* sentinel */

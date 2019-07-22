@@ -113,8 +113,38 @@ enable access to the epics runtime environment.
 
 	Returns the value of the global variable ReadTimeout
 
+**asyn.setTrace** (*portName[, addr], key, val*)
+**asyn.setTrace** (*portName[, addr], {key1=val1, ...}*)
 
+        Turns on or off asyn's tracing for a mask on a given port. Valid keys are 
+        "error", "device", "filter", "driver", "flow", and "warning", case insensitive.
+        
+        
+        portName   [string]   - A registered asyn port name.
 
+	addr       [number]   - The asyn address of the parameter.
+        
+        key       [string]   - Which mask to change
+        
+        val       [boolean]  - Whether to turn on or off the mask
+        
+        
+**asyn.setTraceIO** (*portName[, addr], key, val*)
+**asyn.setTraceIO** (*portName[, addr], {key1=val1, ...}*)
+
+        Turns on or off asyn's tracing for a mask on a given port. Valid keys are 
+        "nodata", "ascii", "escape", and "hex", case insensitive.
+
+        
+        portName   [string]   - A registered asyn port name.
+
+	addr       [number]   - The asyn address of the parameter.
+        
+        key       [string]   - Which mask to change
+        
+        val       [boolean]  - Whether to turn on or off the mask
+
+        
 **asyn.write** (*data, portName[, addr, parameter]*)
 
 	Write a string to a given asynOctet port
@@ -182,6 +212,29 @@ enable access to the epics runtime environment.
         
         parameter  [string]   - A specific asyn parameter.
 
+        
+**client:trace** (*key, val*)
+**client:trace** (*{key1=val1, ...}*)
+
+        Turns on or off asyn's tracing for a given mask on the port this client is connected to.
+        Valid keys are "error", "device", "filter", "driver", "flow", and "warning", case
+        insensitive.
+        
+        key       [string]   - Which mask to change
+        
+        val       [boolean]  - Whether to turn on or off the mask
+        
+        
+**client::traceio** (*key, val*)
+**client::traceio** (*{key1=val1, ...}*)
+
+        Turns on or off asyn's tracing for a given mask on the port this client is connected to.
+        Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
+        
+        key       [string]   - Which mask to change
+        val       [boolean]  - Whether to turn on or off the mask
+        
+        
 **asyn.driver** (*portName*)
 
         Returns a table representing an asynPortDriver object. You can read to and write to
