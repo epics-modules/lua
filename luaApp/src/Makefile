@@ -53,7 +53,6 @@ lua_SRCS += lstrlib.c
 lua_SRCS += ltable.c
 lua_SRCS += ltablib.c
 lua_SRCS += ltm.c
-lua_SRCS += lua.c
 lua_SRCS += lundump.c
 lua_SRCS += lutf8lib.c
 lua_SRCS += lvm.c
