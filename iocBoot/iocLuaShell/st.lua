@@ -14,19 +14,19 @@ if (VERSION_INT < VERSION_CHECK) then
 	print("You are using a version below base-3.15.6")
 end
 
-iocsh.epicsEnvSet("LUA_SCRIPT_PATH", "./scripts")
+epicsEnvSet("LUA_SCRIPT_PATH", "./scripts")
 
-iocsh.dbLoadDatabase("../../dbd/testLuaShell.dbd")
-iocsh.testLuaShell_registerRecordDeviceDriver(pdbbase)
+dbLoadDatabase("../../dbd/testLuaShell.dbd")
+testLuaShell_registerRecordDeviceDriver(pdbbase)
 
 < load_userscripts.lua
 
 ---------------
-iocsh.iocInit()
+iocInit()
 ---------------
 
 -- Runs a script in the background
-iocsh.luaSpawn("tick.lua")
+luaSpawn("tick.lua")
 
-iocsh.dbl()
+dbl()
 
