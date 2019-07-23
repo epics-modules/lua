@@ -403,6 +403,9 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 	}
 	
 	shell_state = luaCreateState();
+	
+	lua_getglobal(shell_state, "_G");
+	luaL_setmetatable(shell_state, "iocsh_meta");
 
 	lua_pushlightuserdata(shell_state, *iocshPpdbbase);
 	lua_setglobal(shell_state, "pdbbase");
