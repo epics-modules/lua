@@ -1,3 +1,5 @@
+epics = require("epics")
+
 local flip = false
 
 for i = 1,10 do
