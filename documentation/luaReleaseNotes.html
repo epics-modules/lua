@@ -13,6 +13,10 @@ content="text/html; charset=iso-8859-1">
 <h2 align="center">Release master</h2>
 <ul>
 <li><p>"iocsh" library now available for any version of base
+<li><p>Calls to the "iocsh" library can omit the library name while within
+the luash interpreter, this makes the luash almost fully backwards compatible
+with iocsh scripts. The only problems come from comments, due to "#" being a
+command in lua.
 <li><p>Better error handling in "asyn" library
 <li><p>lua Script file location now allows full paths
 <li><p>loadRegistered function automatically triggered
