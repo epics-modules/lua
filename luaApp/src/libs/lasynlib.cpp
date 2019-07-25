@@ -295,12 +295,18 @@ static int asyn_getparam(lua_State* state, asynPortDriver* port, int addr, const
 	
 	port->getParamType(addr, index, &partype);
 	
+	asynUser* pasynuser = pasynManager->createAsynUser(NULL, NULL);
+	pasynManager->connectDevice(pasynuser, port->portName, addr);
+	
+	asynStandardInterfaces* interfaces = port->getAsynStdInterfaces();
+	
 	switch (partype)
 	{
 		case asynParamInt32:
 		{
 			epicsInt32 data;
-			port->getIntegerParam(addr, index, &data);
+			asynInt32* inter = (asynInt32*) interfaces->int32.pinterface;
+			inter->read(port, pasynuser, &data);
 			lua_pushinteger(state, data);
 			return 1;
 		}
@@ -308,16 +314,22 @@ static int asyn_getparam(lua_State* state, asynPortDriver* port, int addr, const
 		case asynParamFloat64:
 		{
 			epicsFloat64 data;
-			port->getDoubleParam(addr, index, &data);
+			asynFloat64* inter = (asynFloat64*) interfaces->float64.pinterface;
+			inter->read(port, pasynuser, &data);
 			lua_pushnumber(state, data);
 			return 1;
 		}
 		
 		case asynParamOctet:
 		{
-			std::string data;
-			port->getStringParam(addr, index, data);
-			lua_pushstring(state, data.c_str());
+			char buffer[256] = { '\0' };
+			
+			size_t num_trans;
+			int eomreason;
+			
+			asynOctet* inter = (asynOctet*) interfaces->octet.pinterface;
+			inter->read(port, pasynuser, buffer, 256, &num_trans, &eomreason);
+			lua_pushstring(state, buffer);
 			return 1;
 		}
 		
