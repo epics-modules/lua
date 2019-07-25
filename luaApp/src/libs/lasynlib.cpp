@@ -236,32 +236,49 @@ static int asyn_setparam(lua_State* state, asynPortDriver* port, int addr, const
 	
 	port->getParamType(addr, index, &partype);
 	
+	asynUser* pasynuser = pasynManager->createAsynUser(NULL, NULL);
+	pasynManager->connectDevice(pasynuser, port->portName, addr);
+	
+	asynStandardInterfaces* interfaces = port->getAsynStdInterfaces();
+	
 	switch (partype)
 	{
 		case asynParamInt32:
 		{
 			epicsInt32 data = luaL_checkinteger(state, val_index);
-			port->setIntegerParam(addr, index, data);
-			return 0;
+			
+			asynInt32* inter = (asynInt32*) interfaces->int32.pinterface;
+			inter->write(port, pasynuser, data);
+			
+			break;
 		}
 		
 		case asynParamFloat64:
 		{
 			epicsFloat64 data = luaL_checknumber(state, val_index);
-			port->setDoubleParam(addr, index, data);
-			return 0;
+			
+			asynFloat64* inter = (asynFloat64*) interfaces->float64.pinterface;
+			inter->write(port, pasynuser, data);
+			break;
 		}
 		
 		case asynParamOctet:
 		{
 			const char* data = luaL_checkstring(state, val_index);
-			port->setStringParam(addr, index, data);
-			return 0;
+			
+			asynOctet* inter = (asynOctet*) interfaces->octet.pinterface;
+			
+			size_t num_trans;
+			inter->write(port, pasynuser, data, strlen(data), &num_trans);
+			break;
 		}
 		
 		default:
-			return 0;
+			break;
 	}
+	
+	pasynManager->disconnect(pasynuser);
+	pasynManager->freeAsynUser(pasynuser);
 	
 	return 0;
 }
@@ -946,7 +963,10 @@ int luaopen_asyn (lua_State *L)
 }
 
 
-static void libasynRegister(void)    { luaRegisterLibrary("asyn", luaopen_asyn); }
+static void libasynRegister(void)
+{ 
+	luaRegisterLibrary("asyn", luaopen_asyn);
+}
 
 extern "C"
 {
