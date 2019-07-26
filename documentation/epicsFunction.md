@@ -259,8 +259,8 @@ enable access to the epics runtime environment.
         val       [boolean]  - Whether to turn on or off the mask
         
         
-**client::traceio** (*key, val*)
-**client::traceio** (*{key1=val1, ...}*)
+**client:traceio** (*key, val*)
+**client:traceio** (*{key1=val1, ...}*)
 
         Turns on or off asyn's tracing for a given mask on the port this client is connected to.
         Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
@@ -273,9 +273,26 @@ enable access to the epics runtime environment.
 
         Returns a table representing an asynPortDriver object. You can read to and write to
         keys in the table and the table will try to resolve the names as asyn parameters,
-        calling readParam or writeParam as necessary.
+        calling getParam or setParam as necessary. The table also indexes the addresses that
+        the asynPortDriver implements, so driver[1]["VAL"] gets the VAL param associated
+        with address 1, rather than the default 0.
         
         portName  [string]   - A registered asynPortDriver port name
+
+        
+**driver:readParam** (*paramName*)
+**driver:writeParam** (*paramName, value*)
+
+        Calls the read or write function of the correct asyn interface based upon
+        the asynParamType of the parameter being written to or read from.
+        
+        paramName [string]   - The name of a parameter in the driver
+        
+        value     [varies]   - The new value to have the driver write (for writeParam)
+        
+        
+        returns the value the the driver returns from the read function (for readParam)
+        
         
 
 ## Epics Functions

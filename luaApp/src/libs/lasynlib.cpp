@@ -908,7 +908,7 @@ static int l_driverindex(lua_State* state)
 			int addr = lua_tointeger(state, -1);
 			lua_pop(state, 1);
 			
-			return asyn_readparam(state, port, addr, fieldname.c_str());
+			return asyn_getparam(state, port, addr, fieldname.c_str());
 		}
 	}
 	else if (lua_isinteger(state, 2))
@@ -922,6 +922,21 @@ static int l_driverindex(lua_State* state)
 	}
 	
 	return 1;
+}
+
+static int l_driverread(lua_State* state)
+{
+	lua_getfield(state, 1, "driver");
+	asynPortDriver* port = (asynPortDriver*) lua_touserdata(state, -1);
+	lua_pop(state, 1);
+	
+	std::string fieldname = std::string(luaL_checkstring(state, 2));
+		
+	lua_getfield(state, 1, "addr");
+	int addr = lua_tointeger(state, -1);
+	lua_pop(state, 1);
+			
+	return asyn_readparam(state, port, addr, fieldname.c_str());
 }
 
 static int l_drivernewindex(lua_State* state)
@@ -939,8 +954,23 @@ static int l_drivernewindex(lua_State* state)
 		int addr = lua_tointeger(state, -1);
 		lua_pop(state, 1);
 		
-		return asyn_writeparam(state, port, addr, fieldname.c_str(), 3);
+		return asyn_setparam(state, port, addr, fieldname.c_str(), 3);
 	}
+}
+
+static int l_driverwrite(lua_State* state)
+{
+	std::string fieldname = std::string(luaL_checkstring(state, 2));
+	
+	lua_getfield(state, 1, "driver");
+	asynPortDriver* port = (asynPortDriver*) lua_touserdata(state, -1);
+	lua_pop(state, 1);
+	
+	lua_getfield(state, 1, "addr");
+	int addr = lua_tointeger(state, -1);
+	lua_pop(state, 1);
+		
+	return asyn_setparam(state, port, addr, fieldname.c_str(), 3);
 }
 
 extern "C"
@@ -956,6 +986,8 @@ extern "C"
 		};
 		
 		static const luaL_Reg driver_funcs[] = {
+			{"readParam", l_driverread},
+			{"writeParam", l_driverwrite},
 			{"callParamCallbacks", l_drivercallbacks},
 			{NULL, NULL}
 		};
