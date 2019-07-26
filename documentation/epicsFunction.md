@@ -9,7 +9,8 @@ enable access to the epics runtime environment.
 **asyn.getDoubleParam** (*portName[, addr], paramName*)
 **asyn.getIntegerParam** (*portName[, addr], paramName*)
 
-	Fetches the value of an asyn parameter.
+	Fetches the value of an asyn parameter. These work like the asynPortDriver
+        functions of the same name, retrieving the value from the param list.
 
 
 	portName   [string]   - The registered asyn port name that contains
@@ -23,13 +24,31 @@ enable access to the epics runtime environment.
 	returns the value of the asyn parameter as the type specified, if no
         type was specified, uses the asynParamType of the parameter to determine
 
+ 
+
+**asyn.readParam** (*portName[, addr], paramName*)
+
+	Calls the read function of the correct asyn interface
+
+	portName   [string]   - The registered asyn port name that contains
+	                        the parameter you are getting.
+
+	addr       [number]   - The asyn address of the parameter.
+
+	paramName  [string]   - The name of the parameter to fetch.
+
+
+	returns the value of the asyn parameter as the type specified, if no
+        type was specified, uses the asynParamType of the parameter to determine
+        
 
 **asyn.setParam** (*portName[, addr], paramName*)
 **asyn.setStringParam** (*portName[, addr], paramName, value*)
 **asyn.setDoubleParam** (*portName[, addr], paramName, value*)
 **asyn.setIntegerParam** (*portName[, addr], paramName, value*)
 
-	Sets the value of an asyn parameter.
+	Sets the value of an asyn parameter. These work like the asynPortDriver
+        functions of the same name, saving the value in the param list.
 
 
 	portName   [string]   - The registered asyn port name that contains
@@ -42,6 +61,21 @@ enable access to the epics runtime environment.
 	value      [varies]   - The value to set the parameter to. Type should
 	                        match the type of the parameter you are setting.
 
+                                
+ **asyn.writeParam** (*portName[, addr], paramName, value*)
+
+	Calls the write function of the correct asyn interface
+
+
+	portName   [string]   - The registered asyn port name that contains
+	                        the parameter you are setting.
+
+	addr       [number]   - The asyn address of the parameter.
+
+	paramName  [string]   - The name of the parameter to set.
+
+	value      [varies]   - The value to set the parameter to. Type should
+	                        match the type of the parameter you are setting.
 
 
 **asyn.callParamCallbacks** (*portName[, addr, parameter]*)
@@ -239,8 +273,7 @@ enable access to the epics runtime environment.
 
         Returns a table representing an asynPortDriver object. You can read to and write to
         keys in the table and the table will try to resolve the names as asyn parameters,
-        calling the correct get or set XXXParam function based on the asynParamType of the
-        parameter.
+        calling readParam or writeParam as necessary.
         
         portName  [string]   - A registered asynPortDriver port name
         
