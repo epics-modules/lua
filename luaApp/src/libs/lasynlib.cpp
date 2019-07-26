@@ -970,7 +970,7 @@ static int l_driverwrite(lua_State* state)
 	int addr = lua_tointeger(state, -1);
 	lua_pop(state, 1);
 		
-	return asyn_setparam(state, port, addr, fieldname.c_str(), 3);
+	return asyn_writeparam(state, port, addr, fieldname.c_str(), 3);
 }
 
 extern "C"
