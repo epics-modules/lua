@@ -3,9 +3,15 @@
 #include "stdio.h"
 #include <cstring>
 #include <string>
-#include <strings.h>
 #include <epicsExport.h>
 #include "luaEpics.h"
+
+#if defined(WIN32) || defined(_WIN32)
+#include <string.h>
+#define strcasecmp(x,y) strcmpi(x,y)
+#else
+#include <strings.h>
+#end
 
 extern "C" {
 	void luaGenerateDriver(lua_State* state, const char* port_name);
