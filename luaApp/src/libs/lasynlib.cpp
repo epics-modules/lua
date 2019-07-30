@@ -11,7 +11,7 @@
 #define strcasecmp(x,y) strcmpi(x,y)
 #else
 #include <strings.h>
-#end
+#endif
 
 extern "C" {
 	void luaGenerateDriver(lua_State* state, const char* port_name);
