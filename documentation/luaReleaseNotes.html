@@ -10,13 +10,13 @@ content="text/html; charset=iso-8859-1">
 
 <h1 align="center">lua Release Notes</h1>
 
-<h2 align="center">Release master</h2>
+<h2 align="center">Release 2-0</h2>
 <ul>
 <li><p>"iocsh" library now available for any version of base
 <li><p>Calls to the "iocsh" library can omit the library name while within
 the luash interpreter, this makes the luash almost fully backwards compatible
-with iocsh scripts. The only problems come from comments, due to "#" being a
-command in lua.
+with iocsh scripts. The only problems come from comments (due to "#" being a
+command in lua) and macros being different than global variables.
 <li><p>Better error handling in "asyn" library
 <li><p>lua Script file location now allows full paths
 <li><p>loadRegistered function automatically triggered
@@ -27,6 +27,9 @@ lua "require" functionality
 represent that it is creating an asynOctetClient not an asynPortDriver.
 InTerminator and OutTerminator changed to member fields rather than
 get/set functions.
+<li><p>'asyn' lua library new function "driver" creates an object representing
+an asynPortDriver. Allows you to get/set the value of parameters in the paramList
+and trigger the read and write functions of parameters.
 <li><p>Parameters supplied in luaRecord CODE field and macros provided to
 luaSpawn are now evaluated using a lua sandbox environment rather than a 
 custom parser.
