@@ -1,9 +1,9 @@
 -- Get the version of Epics we're running under
 
 -- Convert strings to numbers
-VERSION      = 0 + os.getenv("EPICS_VERSION_MAJOR")
-REVISION     = 0 + os.getenv("EPICS_VERSION_MIDDLE")
-MODIFICATION = 0 + os.getenv("EPICS_VERSION_MINOR")
+VERSION      = 0 + EPICS_VERSION_MAJOR
+REVISION     = 0 + EPICS_VERSION_MIDDLE
+MODIFICATION = 0 + EPICS_VERSION_MINOR
 
 -- Create a comparable number
 VERSION_INT   = VERSION << 16 | REVISION << 8 | MODIFICATION;

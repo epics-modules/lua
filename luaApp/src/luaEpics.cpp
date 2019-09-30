@@ -17,6 +17,7 @@
 #define epicsExportSharedSymbols
 #include "luaEpics.h"
 
+
 typedef std::vector<std::pair<const char*, lua_CFunction> >::iterator reg_iter;
 
 static std::vector<std::pair<const char*, lua_CFunction> > registered_libs;
@@ -276,13 +277,25 @@ static int l_call(lua_State* state)
 
 static int l_iocindex(lua_State* state)
 {
+	std::stringstream environ_check;
+	
+	environ_check << "return (os.getenv('";
+	environ_check << lua_tostring(state, 2);
+	environ_check << "'))";
+	
+	luaL_dostring(state, environ_check.str().c_str());
+	
+	if (! lua_isnil(state, -1)) { return 1; }
+	
+	lua_pop(state, 1);
+	
 	static const luaL_Reg func_meta[] = {
 		{"__call", l_call},
 		{NULL, NULL}
 	};
 
 	const char* func_name = lua_tostring(state, 2);
-
+	
 	luaL_newmetatable(state, "func_meta");
 	luaL_setfuncs(state, func_meta, 0);
 	lua_pop(state, 1);
