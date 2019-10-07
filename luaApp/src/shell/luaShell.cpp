@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
+#include <ctype.h>
 #include <cstdlib>
 #include <string.h>
 
@@ -194,8 +195,8 @@ static int multiline (lua_State *L, const char* prompt, void* readlineContext)
 	for (;;)  /* repeat until gets a complete statement */
 	{
 		size_t len;
-		const char *line = lua_tolstring(L, 1, &len);  /* get what it has */
-		int status = luaL_loadbuffer(L, line, len, "=stdin");  /* try it */
+		const char *buffer = lua_tolstring(L, 1, &len);  /* get what it has */
+		int status = luaL_loadbuffer(L, buffer, len, "=stdin");  /* try it */
 
 		/* cannot or should not try to add continuation line */
 		if (!incomplete(L, status))    { return status; }
@@ -203,9 +204,13 @@ static int multiline (lua_State *L, const char* prompt, void* readlineContext)
 		const char* raw = epicsReadline(subprompt, readlineContext);
 
 		if (!raw)       { return status; }
+		
+		std::string line(raw);
+		while (line.length() > 0 && isspace(line[0]))    { line.erase(0,1); }
+		
 		if (!prompt)    { printf("%s\n", raw); }
 
-		lua_pushstring(L, raw);
+		lua_pushstring(L, line.c_str());
 		lua_pushliteral(L, "\n");  /* add newline... */
 		lua_insert(L, -2);  /* ...between the two lines */
 		lua_concat(L, 3);  /* join them */
@@ -247,25 +252,29 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 		lua_settop(state, 0);
 
 		const char* raw = epicsReadline(prompt, readlineContext);
-
+		
 		if (raw == NULL)                 { return; }
-		if (strcmp(raw, "exit") == 0)    { return; }
+		
+		std::string line(raw);
+		
+		// Eliminate leading white space
+		while (line.length() > 0 && isspace(line[0]))    { line.erase(0,1); }
+		
+		if (line == "exit")    { return; }
 
-		if (raw[0] == '<')
+		if (line[0] == '<')
 		{
-			std::string line(raw);
-
 			// Get rid of < character
 			line.erase(0,1);
 
 			// Get rid of whitespace
-			line.erase(0, line.find_first_not_of(" 	"));
+			while (line.length() > 0 && isspace(line[0]))    { line.erase(0,1); }
 
 			luashBody(state, line.c_str());
 			continue;
 		}
 
-		lua_pushstring(state, raw);
+		lua_pushstring(state, line.c_str());
 
 		if (prompt == NULL)    { printf("%s\n", raw); }
 
