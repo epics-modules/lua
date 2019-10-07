@@ -1,3 +1,7 @@
+#ENABLE_HASH_COMMENTS
+
+#print("This won't get run")
+
 -- Get the version of Epics we're running under
 
 -- Convert strings to numbers
