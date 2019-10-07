@@ -309,6 +309,16 @@ static int l_iocindex(lua_State* state)
 	return 1;
 }
 
+static int l_iochash_enable(lua_State* state)
+{
+	lua_pushstring(state, "YES");
+	lua_setglobal(state, "enableHashComments");
+
+	lua_pushstring(state, "Accepting iocsh-style comments");
+	
+	return 1;
+}
+
 
 int luaopen_iocsh (lua_State* state)
 {
@@ -320,14 +330,27 @@ int luaopen_iocsh (lua_State* state)
 	static const luaL_Reg iocsh_funcs[] = {
 		{NULL, NULL}
 	};
+	
+	static const luaL_Reg hash_meta[] = {
+		{"__len", l_iochash_enable},
+		{NULL, NULL}
+	};
 
 	luaL_newmetatable(state, "iocsh_meta");
 	luaL_setfuncs(state, iocsh_meta, 0);
+	lua_pop(state, 1);
+	
+	luaL_newmetatable(state, "hash_enable_meta");
+	luaL_setfuncs(state, hash_meta, 0);
 	lua_pop(state, 1);
 
 	luaL_newlib(state, iocsh_funcs);
 	luaL_setmetatable(state, "iocsh_meta");
 
+	lua_newtable(state);
+	luaL_setmetatable(state, "hash_enable_meta");
+	lua_setglobal(state, "ENABLE_HASH_COMMENTS");
+	
 	return 1;
 }
 

@@ -34,7 +34,6 @@
 static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
-
 static lua_State* shell_state = NULL;
 
 static void luashBody(lua_State* state, const char* pathname);
@@ -272,6 +271,18 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 
 			luashBody(state, line.c_str());
 			continue;
+		}
+		
+		if (line[0] == '#')
+		{
+			lua_getglobal(state, "enableHashComments");
+			const char* yn = lua_tostring(state, -1);
+			lua_pop(state, 1);
+			if (yn && std::string(yn) == "YES")
+			{
+				if (prompt == NULL)    { printf("%s\n", raw); }
+				continue;
+			}
 		}
 
 		lua_pushstring(state, line.c_str());
