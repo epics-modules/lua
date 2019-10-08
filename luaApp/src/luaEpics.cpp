@@ -52,9 +52,14 @@ epicsShareFunc std::string luaLocateFile(std::string filename)
 
 	std::stringstream path;
 
-	if   (env_path)    { path.str(env_path); }
-	else               { path.str("."); }
-
+	if   (env_path)
+	{ 
+		path << env_path;
+		path << ":";
+	}
+	
+	path << ".";
+	
 	std::string segment;
 
 	while (std::getline(path, segment, ':'))
