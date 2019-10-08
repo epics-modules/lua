@@ -12,6 +12,8 @@
 
 #include <macLib.h>
 #include <iocsh.h>
+#include <epicsStdio.h>
+#include <epicsFindSymbol.h>
 #include <epicsExport.h>
 
 #define epicsExportSharedSymbols
@@ -279,13 +281,63 @@ static int l_call(lua_State* state)
 	return 0;
 }
 
+static bool parseHelp(const char* func_name)
+{
+	FILE* prev = epicsGetThreadStdout();
+	FILE* temp = tmpfile();
+	
+	epicsSetThreadStdout(temp);
+	iocshCmd("help()");
+	epicsSetThreadStdout(prev);
+	
+	long size = ftell(temp);
+	rewind(temp);
+	char* buffer = (char*) malloc(sizeof(char) * size);
+	
+	fread(buffer, 1, size, temp);
+	std::stringstream help_str;
+	
+	help_str.str(buffer);
+	
+	fclose(temp);
+	
+	std::string line;
+	std::string element;
+
+	int skipped_first_line = 0;
+	
+	while (std::getline(help_str, line, '\n'))
+	{
+		if (! skipped_first_line)
+		{
+			skipped_first_line = 1;
+			continue;
+		}
+		
+		std::stringstream check_line;
+		check_line.str(line);
+		
+		while (std::getline(check_line, element, ' '))
+		{
+			if(! element.empty() && element == func_name)
+			{
+				return true;
+			}
+		}
+	}
+			
+	return false;		
+}
+
 
 static int l_iocindex(lua_State* state)
 {
+	const char* symbol_name = lua_tostring(state, 2);
+	
 	std::stringstream environ_check;
 	
 	environ_check << "return (os.getenv('";
-	environ_check << lua_tostring(state, 2);
+	environ_check << symbol_name;
 	environ_check << "'))";
 	
 	luaL_dostring(state, environ_check.str().c_str());
@@ -294,12 +346,12 @@ static int l_iocindex(lua_State* state)
 	
 	lua_pop(state, 1);
 	
+	if (! parseHelp(symbol_name)) { return 0; }
+	
 	static const luaL_Reg func_meta[] = {
 		{"__call", l_call},
 		{NULL, NULL}
 	};
-
-	const char* func_name = lua_tostring(state, 2);
 	
 	luaL_newmetatable(state, "func_meta");
 	luaL_setfuncs(state, func_meta, 0);
@@ -308,7 +360,7 @@ static int l_iocindex(lua_State* state)
 	lua_newtable(state);
 	luaL_setmetatable(state, "func_meta");
 
-	lua_pushstring(state, func_name);
+	lua_pushstring(state, symbol_name);
 	lua_setfield(state, -2, "function_name");
 
 	return 1;
