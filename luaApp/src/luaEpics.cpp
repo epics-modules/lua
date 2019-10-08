@@ -418,6 +418,7 @@ epicsShareFunc lua_State* luaCreateState()
 	luaLoadRegistered(output);
 
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
+	lua_pop(output, 1);
 
 	return output;
 }
