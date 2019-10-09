@@ -85,11 +85,11 @@ static int asyn_writeread(lua_State* state, asynOctetClient* client, const char*
 		client->writeRead(data, strlen(data), buffer, sizeof(buffer), &numwrite, &numread, &eomReason);
 		output += std::string(buffer, numread);
 		
-		do
+		while (eomReason & ASYN_EOM_CNT)
 		{
 			client->read(buffer, sizeof(buffer), &numread, &eomReason);
 			output += std::string(buffer, numread);
-		} while (eomReason & ASYN_EOM_CNT);
+		}
 		
 		if (! output.empty())
 		{ 
