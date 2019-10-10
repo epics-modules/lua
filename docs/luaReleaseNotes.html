@@ -1,94 +1,83 @@
-<html>
+lua Release Notes
+=================
 
-<head>
-<meta http-equiv="Content-Type"
-content="text/html; charset=iso-8859-1">
-<title>luaReleaseNotes</title>
-</head>
+Release 2-0
+-----------
 
-<body bgcolor="#FFFFFF">
+-  "iocsh" library now available for any version of base
+-  Calls to the "iocsh" library can omit the library name while within
+   the luash interpreter, this makes the luash almost fully backwards
+   compatible with iocsh scripts. The only problems come from comments
+   (due to "#" being a command in lua) and macros being different than
+   global variables.
+-  Better error handling in "asyn" library
+-  lua Script file location now allows full paths
+-  loadRegistered function automatically triggered and no longer needed
+   for lua startup scripts
+-  Lua static library registration now setup to work with standard lua
+   "require" functionality
+-  'asyn' lua library function "port" changed to "client" to better
+   represent that it is creating an asynOctetClient not an
+   asynPortDriver. InTerminator and OutTerminator changed to member
+   fields rather than get/set functions.
+-  'asyn' lua library new function "driver" creates an object
+   representing an asynPortDriver. Allows you to get/set the value of
+   parameters in the paramList and trigger the read and write functions
+   of parameters.
+-  Parameters supplied in luaRecord CODE field and macros provided to
+   luaSpawn are now evaluated using a lua sandbox environment rather
+   than a custom parser.
 
-<h1 align="center">lua Release Notes</h1>
+Release 1-3
+-----------
 
-<h2 align="center">Release 2-0</h2>
-<ul>
-<li><p>"iocsh" library now available for any version of base
-<li><p>Calls to the "iocsh" library can omit the library name while within
-the luash interpreter, this makes the luash almost fully backwards compatible
-with iocsh scripts. The only problems come from comments (due to "#" being a
-command in lua) and macros being different than global variables.
-<li><p>Better error handling in "asyn" library
-<li><p>lua Script file location now allows full paths
-<li><p>loadRegistered function automatically triggered
-and no longer needed for lua startup scripts
-<li><p>Lua static library registration now setup to work with standard
-lua "require" functionality
-<li><p>'asyn' lua library function "port" changed to "client" to better
-represent that it is creating an asynOctetClient not an asynPortDriver.
-InTerminator and OutTerminator changed to member fields rather than
-get/set functions.
-<li><p>'asyn' lua library new function "driver" creates an object representing
-an asynPortDriver. Allows you to get/set the value of parameters in the paramList
-and trigger the read and write functions of parameters.
-<li><p>Parameters supplied in luaRecord CODE field and macros provided to
-luaSpawn are now evaluated using a lua sandbox environment rather than a 
-custom parser.
-</ul>
+-  Fixes compilation issues for Visual Studio 2010
+-  Dynamic library loading enabled for Linux architectures
+-  C functions can now be registered into lua libraries that will
+   automatically load on lua shell startup.
+-  Also set up a quick way to bind functions already loaded into the IOC
+   shell
+-  All libraries loaded into shell, device support, and luascript record
+-  luaEpics functions are now able to be used in C files
+-  Added luaSpawn function to allow for running scripts in the
+   background
+-  Full Documentation
 
-<h2 align="center">Release 1-3</h2>
-<ul>
-<li><p>Fixes compilation issues for Visual Studio 2010
-<li><p>Dynamic library loading enabled for Linux architectures
-<li><p>C functions can now be registered into lua libraries that
-will automatically load on lua shell startup.
-<li><p>Also set up a quick way to bind functions already loaded
-into the IOC shell
-<li><p>All libraries loaded into shell, device support, and luascript record
-<li><p>luaEpics functions are now able to be used in C files
-<li><p>Added luaSpawn function to allow for running scripts in the background
-<li><p>Full Documentation
-</ul>
+Release 1-2-2
+-------------
 
-<h2 align="center">Release 1-2-2</h2>
-<ul>
-<li><p>Fixed a compilation bug on vxWorks
-<li><p>First official synApps release
-</ul>
+-  Fixed a compilation bug on vxWorks
+-  First official synApps release
 
-<h2 align="center">Release 1-2-1</h2>
-<ul>
-<li><p>Fixed a bug where softChannel support wasn't working
-<li><p>luascript's CODE field is no longer saved by autosave on every luascript
-record, just for the user luascripts.
-</ul>
+Release 1-2-1
+-------------
 
-<h2 align="center">Release 1-2</h2>
-<ul>
-<li><p>Fixed building for Windows
-<li><p>Added global reference to the pdbbase variable, allows lua shell
-to be used as a full replacement for iocsh
-<li><p>Added '<' command to luash to include the contents of other scripts
-<li><p>luaScript input fields now can have descriptions of their contents
-<li><p>Fixed a bug where forward link processing wasn't happening
-<li><p>
-</ul>
+-  Fixed a bug where softChannel support wasn't working
+-  luascript's CODE field is no longer saved by autosave on every
+   luascript record, just for the user luascripts.
 
-<h2 align="center">Release 1-1</h2>
-<ul>
-<li><p>luash function now runs as a command shell or an interpreter
-<li><p>Lua asyn library function to access ports as lua objects
-<li><p>LUASH_PS1 variable for lua shell prompt
-</ul>
+Release 1-2
+-----------
 
-<h2 align="center">Release 1-0</h2>
-<ul>
-<li><p>First public release on github
-</ul>
+-  Fixed building for Windows
+-  Added global reference to the pdbbase variable, allows lua shell to
+   be used as a full replacement for iocsh
+-  Added '<' command to luash to include the contents of other scripts
+-  luaScript input fields now can have descriptions of their contents
+-  Fixed a bug where forward link processing wasn't happening
+-  
 
-<address>
-    Suggestions and Comments to: <br>
-    <a href="mailto:klang@aps.anl.gov">Keenan Lang</a>:
-    (klang@aps.anl.gov) <br>
-</address>
-</body>
-</html>
+Release 1-1
+-----------
+
+-  luash function now runs as a command shell or an interpreter
+-  Lua asyn library function to access ports as lua objects
+-  LUASH_PS1 variable for lua shell prompt
+
+Release 1-0
+-----------
+
+-  First public release on github
+
+| Suggestions and Comments to:
+| `Keenan Lang <mailto:klang@aps.anl.gov>`__: (klang@aps.anl.gov)
