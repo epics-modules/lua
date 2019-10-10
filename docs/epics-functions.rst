@@ -9,15 +9,19 @@ enable access to the epics runtime environment.
 Asyn Functions
 --------------
 
-**asyn.getParam** (*portName[, addr], paramName*)
-**asyn.getStringParam** (*portName[, addr], paramName*)
-**asyn.getDoubleParam** (*portName[, addr], paramName*)
-**asyn.getIntegerParam** (*portName[, addr], paramName*)
+
+**asyn.getParam** (*portName[, addr], paramName*)  
+
+**asyn.getStringParam** (*portName[, addr], paramName*)  
+
+**asyn.getDoubleParam** (*portName[, addr], paramName*)  
+
+**asyn.getIntegerParam** (*portName[, addr], paramName*)  
 
 ::
 
    Fetches the value of an asyn parameter. These work like the asynPortDriver
-       functions of the same name, retrieving the value from the param list.
+   functions of the same name, retrieving the value from the param list.
 
 
    portName   [string]   - The registered asyn port name that contains
@@ -29,7 +33,7 @@ Asyn Functions
 
 
    returns the value of the asyn parameter as the type specified, if no
-       type was specified, uses the asynParamType of the parameter to determine
+   type was specified, uses the asynParamType of the parameter to determine
 
 **asyn.readParam** (*portName[, addr], paramName*)
 
@@ -46,12 +50,15 @@ Asyn Functions
 
 
    returns the value of the asyn parameter as the type specified, if no
-       type was specified, uses the asynParamType of the parameter to determine
+   type was specified, uses the asynParamType of the parameter to determine
        
 
 **asyn.setParam** (*portName[, addr], paramName*)
+
 **asyn.setStringParam** (*portName[, addr], paramName, value*)
+
 **asyn.setDoubleParam** (*portName[, addr], paramName, value*)
+
 **asyn.setIntegerParam** (*portName[, addr], paramName, value*)
 
 ::
@@ -164,8 +171,9 @@ Asyn Functions
 
    Returns the value of the global variable ReadTimeout
 
-**asyn.setTrace** (*portName[, addr], key, val*) **asyn.setTrace**
-(*portName[, addr], {key1=val1, …}*)
+**asyn.setTrace** (*portName[, addr], key, val*) 
+
+**asyn.setTrace** (*portName[, addr], {key1=val1, …}*)
 
 ::
 
@@ -175,7 +183,7 @@ Asyn Functions
        
        portName   [string]   - A registered asyn port name.
 
-   addr       [number]   - The asyn address of the parameter.
+       addr       [number]   - The asyn address of the parameter.
        
        key       [string]   - Which mask to change
        
@@ -183,8 +191,9 @@ Asyn Functions
        
        
 
-**asyn.setTraceIO** (*portName[, addr], key, val*) **asyn.setTraceIO**
-(*portName[, addr], {key1=val1, …}*)
+**asyn.setTraceIO** (*portName[, addr], key, val*) 
+
+**asyn.setTraceIO** (*portName[, addr], {key1=val1, …}*)
 
 ::
 
@@ -194,7 +203,7 @@ Asyn Functions
 
        portName   [string]   - A registered asyn port name.
 
-   addr       [number]   - The asyn address of the parameter.
+       addr       [number]   - The asyn address of the parameter.
        
        key       [string]   - Which mask to change
        
@@ -215,7 +224,7 @@ Asyn Functions
 
    addr       [number]   - The asyn address of the parameter.
        
-       parameter  [string]   - An asyn parameter to write to
+   parameter  [string]   - An asyn parameter to write to
 
 **asyn.read** (*portName[, addr, parameter]*)
 
@@ -228,7 +237,7 @@ Asyn Functions
 
    addr       [number]   - The asyn address of the parameter.
        
-       parameter  [string]   - An asyn parameter to read from
+   parameter  [string]   - An asyn parameter to read from
 
 
    returns a string containing all data read from the asynOctet port until encountering
@@ -246,7 +255,7 @@ Asyn Functions
 
    addr       [number]   - The asyn address of the parameter.
        
-       parameter  [string]   - An asyn parameter to read and write to
+   parameter  [string]   - An asyn parameter to read and write to
 
 
    returns a string containing all data read from the asynOctet port until encountering
@@ -258,19 +267,21 @@ Asyn Functions
 ::
 
    Returns a table representing an asynOctetClient object. This object has the functions 
-       read, write, and readwrite, which work the same as the functions above, but the port
+   read, write, and readwrite, which work the same as the functions above, but the port
    and address need not be specified. The client copies the global in and out terminators
    at creation, but you can also set the table's InTerminator and/or OutTerminator fields 
-       manually to a different value. 
+   manually to a different value. 
 
 
    portName   [string]   - A registered asyn port name.
 
    addr       [number]   - The asyn address of the parameter.
        
-       parameter  [string]   - A specific asyn parameter.
+   parameter  [string]   - A specific asyn parameter.
 
-**client:trace** (*key, val*) **client:trace** (*{key1=val1, …}*)
+**client:trace** (*key, val*) 
+
+**client:trace** (*{key1=val1, …}*)
 
 ::
 
@@ -284,7 +295,9 @@ Asyn Functions
        
        
 
-**client:traceio** (*key, val*) **client:traceio** (*{key1=val1, …}*)
+**client:traceio** (*key, val*) 
+
+**client:traceio** (*{key1=val1, …}*)
 
 ::
 
@@ -308,8 +321,9 @@ Asyn Functions
        
        portName  [string]   - A registered asynPortDriver port name
 
-**driver:readParam** (*paramName*) **driver:writeParam** (*paramName,
-value*)
+**driver:readParam** (*paramName*) 
+
+**driver:writeParam** (*paramName, value*)
 
 ::
 
@@ -380,6 +394,6 @@ IOC Shell Functions
    Searches the list of registered IOC shell functions to find a function with the given
    name. If found, the arguments given are converted to the types that the function expects
    and the function is called. While within the luash interpreter, the iocsh library reference
-       can be ommitted.
+   can be ommitted.
 
    arguments...   [varies]    - A list of the arguments you would normally use in the IOC shell.
