@@ -6,5 +6,6 @@ Lua EPICS Module
 
 luascriptRecord
 --------
+.. luascriptRecord Documentation: :doc:`luascriptRecord`
 
-`luascriptRecord Documentation <http://htmlpreview.github.io/?https://github.com/epics-modules/lua/blob/master/docs/luascriptRecord.html>`_
+`luascriptRecord Documentation`_
