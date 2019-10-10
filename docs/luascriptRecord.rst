@@ -1,45 +1,13 @@
-lusscript - Lua Script Processing Record
+luascript - Lua Script Processing Record
 ========================================
 
-Contents
---------
-
-`1. - Introduction <#HEADING14-1>`__
-
-`2. - Scan Parameters <#HEADING14-11>`__
-
-`3. - Read Parameters <#HEADING14-13>`__
-
-`4. - Expressions <#HEADING14-16>`__
-
-`5. - Output Parameters <#HEADING14-98>`__
-
-`6. - Operator Display Parameters <#HEADING14-109>`__
-
-`7. - Alarm Parameters <#HEADING14-122>`__
-
-`8. - Monitor Parameters <#HEADING14-126>`__
-
-`9. - Run-time Parameters <#HEADING14-128>`__
-
-`10. - Record Support Routines <#HEADING14-132>`__
-
-`init_record <#HEADING14-133>`__
-
-`process <#HEADING14-136>`__
-
-`special <#HEADING14-138>`__
-
-`get_precision <#HEADING14-144>`__
-
-`11. - Record Processing <#HEADING14-156>`__
-
-`11.1. - process() <#HEADING14-157>`__
-
+.. contents::
+   :depth: 3
+..
 --------------
 
-1. Introduction
-===============
+Introduction
+---------------
 
 The lua script processing record or "luascript" record is derived from
 the Calcout record in EPICS base, but replaces the calc operation engine
@@ -70,10 +38,8 @@ PREC field) to zero.
 
  
 
---------------
-
-2. Scan Parameters
-==================
+Scan Parameters
+---------------
 
 The luascript record has the standard fields for specifying under what
 circumstances the record will be processed. These fields are listed in
@@ -85,12 +51,9 @@ explains how these fields are used. Since the luascript record supports
 no direct interfaces to hardware, it cannot be scanned on I/O interrupt,
 so its SCAN field cannot be ``I/O Intr``.
 
- 
 
---------------
-
-3. Read Parameters
-==================
+Read Parameters
+---------------
 
 The read parameters for the luascript record consist of 20 input links:
 10 to numeric fields (INPA -> A, INPB -> B, . . . INPJ -> J); and 10 to
@@ -130,12 +93,9 @@ INBB  Input Link BB INLINK Yes 0       Yes    Yes    N/A
 INJJ  Input Link JJ INLINK Yes 0       Yes    Yes    N/A
 ===== ============= ====== === ======= ====== ====== ================
 
- 
 
---------------
-
-4. Expressions
-==============
+Expressions
+-----------
 
 The luascript record has a CODE field into which you can enter an
 expression for the record to evaluate when it processes. The return
@@ -211,12 +171,9 @@ field(CODE, "@test.lua example(1, 'foo')")
 -  Runs the function 'example' from the file test.lua with two
    parameters, one a number, the other a string.
 
- 
 
---------------
-
-5. Output Parameters
-====================
+Output Parameters
+-----------------
 
 These parameters specify and control the output capabilities of the
 luascript record. They determine when to write the output, where to
@@ -265,12 +222,9 @@ specification
 
     field(DTYP,"Soft Channel") 
 
- 
 
---------------
-
-6. Operator Display Parameters
-==============================
+Operator Display Parameters
+---------------------------
 
 These parameters are used to present meaningful data to the operator.
 Some are also meant to represent the status of the record at run-time.
@@ -319,12 +273,9 @@ IBBV  Link Status of INBB  Menu        No  1       Yes    No     No             
 IJJV  Link Status of INJJ  Menu        No  1       Yes    No     No               No
 ===== ==================== =========== === ======= ====== ====== ================ ===
 
- 
 
---------------
-
-7. Alarm Parameters
-===================
+Alarm Parameters
+----------------
 
 The possible alarm conditions for the luascript record are the SCAN,
 READ, Calculation, and limit alarms. The SCAN and READ alarms are called
@@ -354,12 +305,10 @@ LLSV  Severity for a Lolo Alarm Menu   Yes 0       Yes    Yes    No             
 HYST  Alarm Deadband            DOUBLE Yes 0       Yes    Yes    No               No
 ===== ========================= ====== === ======= ====== ====== ================ ===
 
- 
 
---------------
 
-8. Monitor Parameters
-=====================
+Monitor Parameters
+------------------
 
 These parameters are used to determine when to send monitors for the
 value fields. The monitors are sent when the value field exceeds the
@@ -376,25 +325,19 @@ ADEL  Archive Deadband                     DOUBLE Yes 0       Yes    Yes    No  
 MDEL  Monitor, i.e. value change, Deadband DOUBLE Yes 0       Yes    Yes    No               No
 ===== ==================================== ====== === ======= ====== ====== ================ ==
 
- 
 
---------------
-
-9. Run-time Parameters
-======================
+Run-time Parameters
+-------------------
 
 These fields are not configurable using a configuration tool and none
 are modifiable at run-time. They are used to process the record.
 
  
-
---------------
-
-10. Record Support Routines
-===========================
+Record Support Routines
+-----------------------
 
 init_record
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 For each constant input link, the corresponding value field is
 initialized with the constant value if the input link is CONSTANT or a
@@ -407,35 +350,32 @@ bytecode.
  
 
 process
-~~~~~~~
+^^^^^^^
 
 See section 11.
 
  
 
 special
-~~~~~~~
+^^^^^^^
 
 This is called if CODE is changed.
 
  
 
 get_precision
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 Retrieves PREC.
-
---------------
-
  
 
-11. Record Processing
-=====================
+Record Processing
+-----------------
 
 .. _process-1:
 
-11.1. process()
----------------
+process()
+^^^^^^^^^
 
 The ``process()`` routine implements the following algorithm:
 
@@ -468,7 +408,3 @@ Monitors for A-J and AA-JJ are set whenever values are changed.
  
 
 6. Set PACT FALSE.
-
---------------
-
-Keenan Lang
