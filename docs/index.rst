@@ -6,4 +6,4 @@ Lua EPICS Module
 
 luascriptRecord
 --------
-:ref:`luascriptRecordDocumentation <luascriptRecord>`
+:doc:`luascriptRecord` Documentation
