@@ -1,3 +1,10 @@
-# HTML documentation
+=====
+Lua EPICS Module
+=====
 
-* [luascriptRecord.html](http://htmlpreview.github.io/?https://github.com/epics-modules/lua/blob/master/documentation/luascriptRecord.html)
+.. contents:: Contents
+
+luascriptRecord
+--------
+
+`luascriptRecord Documentation <http://htmlpreview.github.io/?https://github.com/epics-modules/lua/blob/master/documentation/luascriptRecord.html>`_
