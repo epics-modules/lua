@@ -1,3 +1,5 @@
+project = 'EPICS lua'
+
 master_doc = 'index'
 
 html_theme_options = {
