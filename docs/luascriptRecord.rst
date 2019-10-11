@@ -80,7 +80,9 @@ into a 40-character string.
  See the EPICS Record Reference Manual for information on how to specify
 database links.
 
-===== ============= ====== === ======= ====== ====== ================
+ .. tabularcolumns:: |l|l|c|c|c|c|c|L|
+
+===== ============= ====== === ======= ====== ====== ================        
 Field Summary       Type   DCT Initial Access Modify Rec Proc Monitor
 ===== ============= ====== === ======= ====== ====== ================
 INPA  Input Link A  INLINK Yes 0       Yes    Yes    N/A
@@ -92,7 +94,6 @@ INBB  Input Link BB INLINK Yes 0       Yes    Yes    N/A
 ...   ...           ...    ... ...     ...    ...    ...
 INJJ  Input Link JJ INLINK Yes 0       Yes    Yes    N/A
 ===== ============= ====== === ======= ====== ====== ================
-
 
 Expressions
 -----------
@@ -139,6 +140,7 @@ error encountered during processing.
   described in `Section 4, Output Parameters. <#MARKER-9-1>`__
 |  
 
+ .. tabularcolumns:: |l|l|l|c|c|c|c|L|c|
 ===== ===================== ============ === ======= ====== ====== ================ ==
 Field Summary               Type         DCT Initial Access Modify Rec Proc Monitor PP
 ===== ===================== ============ === ======= ====== ====== ================ ==
@@ -206,6 +208,8 @@ asynchronous manner. It is a menu field with two choices:
 -  ``Asynchronous`` -- process the record's lua code in a separate
    thread.
 
+ .. tabularcolumns:: |l|l|l|c|c|c|c|L|c|
+
 ===== ===================== ======= === ======= ====== ====== ================ ==
 Field Summary               Type    DCT Initial Access Modify Rec Proc Monitor PP
 ===== ===================== ======= === ======= ====== ====== ================ ==
@@ -254,6 +258,8 @@ possible values as the INAV-INJV fields.
 See the EPICS Record Reference Manual, for more on the record name
 (NAME) and description (DESC) fields.
 
+ .. tabularcolumns:: |l|l|l|c|c|c|c|L|c|
+ 
 ===== ==================== =========== === ======= ====== ====== ================ ===
 Field Summary              Type        DCT Initial Access Modify Rec Proc Monitor PP
 ===== ==================== =========== === ======= ====== ====== ================ ===
@@ -291,6 +297,8 @@ those conditions.
 Record Reference Manual for a complete explanation of alarms and these
 fields.
 
+ .. tabularcolumns:: |l|l|l|c|c|c|c|L|c|
+
 ===== ========================= ====== === ======= ====== ====== ================ ===
 Field Summary                   Type   DCT Initial Access Modify Rec Proc Monitor PP
 ===== ========================= ====== === ======= ====== ====== ================ ===
@@ -317,6 +325,8 @@ monitors and the MDEL field for all other types of monitors. If these
 fields have a value of zero, every time the value changes, monitors are
 triggered; if they have a value of -1, every time the record is scanned,
 monitors are triggered.
+
+ .. tabularcolumns:: |l|l|l|c|c|c|c|L|c|
 
 ===== ==================================== ====== === ======= ====== ====== ================ ==
 Field Summary                              Type   DCT Initial Access Modify Rec Proc Monitor PP
