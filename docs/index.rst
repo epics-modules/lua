@@ -41,7 +41,7 @@ lua Shell
 
 
 Available Libraries
-------------------
+-------------------
 :doc:`Epics Library Functions <epics-functions>`
 
 :doc:`Adding your own libraries <adding-libraries>`
