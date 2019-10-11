@@ -8,6 +8,7 @@
    }
 
    .wy-table-responsive {
+      font-size: 80% !important;
       overflow: visible !important;
    }
 }
