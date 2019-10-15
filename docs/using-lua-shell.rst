@@ -41,8 +41,8 @@ operations.
    luash> print(#"Check len")
    9
 
-Lua Shell Inside The IOC Shell
-------------------------------
+Calling the Lua Shell From Inside The IOC Shell
+-----------------------------------------------
 
 Once the dbd has been loaded and the registerRecordDeviceDriver command
 has been called on an IOC, you can call the *luash* command. Luash takes
