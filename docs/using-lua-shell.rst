@@ -2,9 +2,44 @@
 Using the Lua Shell
 ===================
 
-The lua shell is exposed as both a c function and is registered as an
-ioc shell function. Thus, the shell can either be invoked in a startup
-script or be run as the startup program in general.
+The lua shell is exposed as both a c function and is registered as a function
+with iocsh. Thus, the shell can either be invoked in a startup script or be 
+run as the startup program in general.
+
+The shell has been set up so as to be as backwards compatible with the iocsh
+style startup scripts as possible. While within the lua shell, the global
+environment is set up so that lookups of names that don't have an associated
+variable will attempt to pull values from, first, the running epics environment,
+and then, if no environment variable is found, try to find a matching function
+name. This means that functions that are registered with the ioc shell can
+be treated as if they were defined lua functions.
+
+::
+
+   luash> EPICS_VERSION_MAJOR
+   7
+   luash>
+   luash> epicsEnvShow
+   func_meta: 0x673150
+   luash>
+   luash> epicsEnvShow("EPICS_VERSION_MAJOR")
+   EPICS_VERSION_MAJOR=7
+
+As well, the special directive '#ENABLE_HASH_COMMENTS' is provided. While lua normally
+reserves the '#' character for determining the length of a table, putting the line
+'#ENABLE_HASH_COMMENTS' in your scripts will set the shell to accept iocsh style
+comments that use '#'. This setting only applies to lines where '#' is the first
+non-empty character in the line, it will not affect the use of '#' in normal lua
+operations.
+
+::
+
+   luash> #ENABLE_HASH_COMMENTS
+   Accepting iocsh-style comments
+   luash>
+   luash> #print("This won't print")
+   luash> print(#"Check len")
+   9
 
 Lua Shell Inside The IOC Shell
 ------------------------------
@@ -62,6 +97,3 @@ So your main.cpp file might look like:
        epicsExit(0);
        return(0);
    }
-
-When using the lua shell as a replacement for the IOC shell, you can
-call all the same commands as the IOC shell by using iocsh.(*args*).
