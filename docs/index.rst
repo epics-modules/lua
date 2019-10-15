@@ -12,9 +12,16 @@ or replacement of the ioc shell; and functions to allow easy use of
 lua in other modules.
 
 Currently, the lua module uses lua version 5.3.5. A reference manual
-describing the detals of the language can be found `here <https://www.lua.org/manual/5.3/>`.
+describing the detals of the language can be found :ref:`here <https://www.lua.org/manual/5.3/>`.
 
-`lua Module Release Notes <luaReleaseNotes>`
+:doc:`lua Module Release Notes <luaReleaseNotes>`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: lua Module
+   
+   luaReleaseNotes
 
 
 luascriptRecord
