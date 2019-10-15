@@ -4,6 +4,16 @@ Lua EPICS Module
 
 .. contents:: Contents
 
+The lua EPICS Module is an embedding of the lua language interpreter
+into an EPICS IOC. From there, the interpreter is exposed to the user
+in the form of the luascript record, which uses the interpreter to
+allow for scriptable record support; the lua shell, an addition to
+or replacement of the ioc shell; and functions to allow easy use of
+lua in other modules.
+
+Currently, the lua module uses lua version 5.3.5. A reference manual
+describing the detals of the language can be found :doc:`here <../_static/lua_manual_5_3.pdf>`.
+
 Release Notes
 -------------
 :doc:`lua Module Release Notes <luaReleaseNotes>`
