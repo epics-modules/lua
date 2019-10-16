@@ -291,8 +291,8 @@ asynOctetClient Object
 
 ::
 
-   Turns on or off asyn's tracing for a given mask on the port this client is connected to.
-   Valid keys are "error", "device", "filter", "driver", "flow", and "warning", case
+   Turns on or off asyn's tracing for a given mask on the port this client is connected 
+   to. Valid keys are "error", "device", "filter", "driver", "flow", and "warning", case
    insensitive.
 
    key         [string]  - Which mask to change
@@ -306,8 +306,8 @@ asynOctetClient Object
 
 ::
 
-   Turns on or off asyn's tracing for a given mask on the port this client is connected to.
-   Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
+   Turns on or off asyn's tracing for a given mask on the port this client is connected 
+   to. Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
 
    key         [string]  - Which mask to change
 
