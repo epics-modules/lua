@@ -266,7 +266,7 @@ Octet Communications
    by the global variable ReadTimeout is reached.
 
 asynOctetClient Object
----------------------
+----------------------
 
 **asyn.client** (*portName[, addr, parameter]*)
 
