@@ -2,6 +2,8 @@ project = 'EPICS lua'
 
 master_doc = 'index'
 
+highlight_language = 'none'
+
 html_theme_options = {
     'navbar_title': "EPICS lua"
 }
