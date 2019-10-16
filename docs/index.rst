@@ -23,6 +23,7 @@ describing the detals of the language can be `found here`_.
    :hidden:
    :caption: lua Module
    
+   index
    luaReleaseNotes
 
 
