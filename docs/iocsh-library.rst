@@ -11,4 +11,4 @@ IOC Shell Functions
    and the function is called. While within the luash interpreter, the iocsh library reference
    can be ommitted.
 
-   arguments...   [varies]    - A list of the arguments you would normally use in the IOC shell.
+   arguments   [varies] - A list of the arguments you would normally use in the IOC shell.
