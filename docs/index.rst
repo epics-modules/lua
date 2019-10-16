@@ -75,4 +75,5 @@ in the ioc shell.
    :caption: Shell Environment
    
    using-lua-shell
+   epics-functions
    adding-libraries
