@@ -19,7 +19,8 @@ Getting / Setting Parameters
    portName    [string] - The registered asyn port name that contains
                           the parameter you are getting.
 
-   addr        [number] - The asyn address of the parameter.
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
 
    paramName   [string] - The name of the parameter to fetch.
 
@@ -42,7 +43,8 @@ Getting / Setting Parameters
    portName    [string] - The registered asyn port name that contains
                           the parameter you are setting.
 
-   addr        [number] - The asyn address of the parameter.
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
 
    paramName   [string] - The name of the parameter to set.
 
@@ -59,9 +61,12 @@ Getting / Setting Parameters
 
    portName    [string] - A registered asyn port name.
 
-   addr        [number] - The index of the parameter list to do callbacks on.
+   addr        [number] - The index of the parameter list to do callbacks on. Optional,
+                          default value is 0.
        
-   parameter   [string] - A specific parameter to do callbacks on.
+   parameter   [string] - A specific parameter to do callbacks on. Optional,
+                          default is to perform callbacks on all values that have
+                          been changed.
 						
 						
 Reading / Writing Values
@@ -77,7 +82,8 @@ Reading / Writing Values
    portName    [string] - The registered asyn port name that contains
                           the parameter you are getting.
 
-   addr        [number] - The asyn address of the parameter.
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
 
    paramName   [string] - The name of the parameter to fetch.
 
@@ -96,11 +102,12 @@ Reading / Writing Values
    portName    [string] - The registered asyn port name that contains
                           the parameter you are setting.
 
-   addr        [number] - The asyn address of the parameter.
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
 
    paramName   [string] - The name of the parameter to set.
 
-   value       [varies] - The value to set the parameter to. Type should
+   value       [varies] - The value to write to the parameter. Type should
                           match the type of the parameter you are setting.
 
 Configuration Parameters
@@ -184,7 +191,8 @@ Debug Information
        
    portName    [string]  - A registered asyn port name.
 
-   addr        [number]  - The asyn address of the parameter.
+   addr        [number]  - The asyn address of the parameter. Optional,
+                           default value is 0.
 
    key         [string]  - Which mask to change
 
@@ -203,7 +211,8 @@ Debug Information
 
    portName    [string]  - A registered asyn port name.
 
-   addr        [number]  - The asyn address of the parameter.
+   addr        [number]  - The asyn address of the parameter. Optional,
+                           default value is 0.
 
    key         [string]  - Which mask to change
 
@@ -225,9 +234,10 @@ Octet Communications
 
    portName    [string] - A registered asyn port name.
 
-   addr        [number] - The asyn address of the parameter.
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
        
-   parameter   [string] - An asyn parameter to write to
+   parameter   [string] - An asyn parameter to write to. Optional.
 
 **asyn.read** (*portName[, addr, parameter]*)
 
@@ -238,9 +248,10 @@ Octet Communications
 
    portName    [string] - A registered asyn port name.
 
-   addr        [number] - The asyn address of the parameter.
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
        
-   parameter   [string] - An asyn parameter to read from
+   parameter   [string] - An asyn parameter to read from. Optional.
 
 
    Returns a string containing all data read from the asynOctet port until encountering
@@ -256,9 +267,10 @@ Octet Communications
 
    portName    [string] - A registered asyn port name.
 
-   addr        [number] - The asyn address of the parameter.
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
        
-   parameter   [string] - An asyn parameter to read and write to
+   parameter   [string] - An asyn parameter to read and write to. Optional.
 
 
    Returns a string containing all data read from the asynOctet port until encountering
@@ -281,9 +293,10 @@ asynOctetClient Object
 
    portName    [string] - A registered asyn port name.
 
-   addr        [number] - The asyn address of the parameter.
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
        
-   parameter   [string] - A specific asyn parameter.
+   parameter   [string] - A specific asyn parameter. Optional.
 
 
 * **client:trace** (*key, val*) 
