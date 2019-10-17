@@ -277,6 +277,25 @@ Octet Communications
    the input terminator set by the global variable InTerminator, or until the timeout set
    by the global variable ReadTimeout is reached.
 
+**asyn.setOption** (*portName[, addr], key, val*)
+
+::
+
+   Sets driver-specific options
+
+   
+   portName    [string] - A registered asyn port name.
+
+   addr        [number] - The asyn address of the parameter. Optional,
+                          default value is 0.
+
+   key         [string] - The name of the option you are setting.
+
+   val         [string] - The value to set the option to.
+
+
+   Returns the asynStatus value of the asynSetOption call.
+
 asynOctetClient Object
 ----------------------
 
@@ -325,7 +344,19 @@ asynOctetClient Object
    key         [string]  - Which mask to change
 
    val         [boolean] - Whether to turn on or off the mask
-       
+
+**client:setOption** (*key, val*)
+
+::
+
+   Sets an asynOption for the port this client is connected to.
+
+   key         [string] - The name of the option you are setting.
+
+   val         [string] - The value to set the option to.
+
+
+   Returns the asynStatus of the asynSetOption call.
 	
 asynPortDriver Object
 ---------------------

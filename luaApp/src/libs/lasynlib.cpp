@@ -1,5 +1,6 @@
 #include <asynPortDriver.h>
 #include <asynPortClient.h>
+#include <asynShellCommands.h>
 #include "stdio.h"
 #include <cstring>
 #include <string>
@@ -187,6 +188,25 @@ static int l_writeread(lua_State* state)
 	if (in_term)     { client.setInputEos(in_term, strlen(in_term)); }
 
 	return asyn_writeread(state, &client, data);
+}
+
+static int l_setOption(lua_State* state)
+{
+	int num_ops = lua_gettop(state);
+	lua_settop(state, 4);
+
+	const char* port = luaL_checkstring(state, 1);
+	
+	int addr = 0;
+	if (num_ops == 4)    { addr = luaL_checkinteger(state, 2); }
+	
+	const char* key = luaL_checkstring(state, num_ops - 1);
+	const char* val = luaL_checkstring(state, num_ops);
+	
+	int status = asynSetOption(port, addr, key, val);
+	
+	lua_pushinteger(state, status);
+	return 1;
 }
 
 static int l_setOutTerminator(lua_State* state)
@@ -817,6 +837,26 @@ static int l_porttraceio(lua_State* state)
 	return 0;
 }
 
+static int l_portoption(lua_State* state)
+{
+	lua_settop(state, 2);
+	
+	lua_getfield(state, 1, "name");
+	const char* portname = lua_tostring(state, -1);
+	lua_pop(state, 1);
+	
+	lua_getfield(state, 1, "addr");
+	int addr = lua_tointeger(state, -1);
+	lua_pop(state, 1);
+	
+	const char* key = luaL_checkstring(state, 1);
+	const char* val = luaL_checkstring(state, 2);
+	
+	int status = asynSetOption(portname, addr, key, val);
+	lua_pushinteger(state, status);
+	return 1;
+}
+
 static int l_portindex(lua_State* state)
 {
 	std::string fieldname = std::string(lua_tostring(state, 2));
@@ -1029,6 +1069,7 @@ extern "C"
 			{"writeread", l_portwriteread},
 			{"trace", l_porttrace},
 			{"traceio", l_porttraceio},
+			{"setOption", l_portoption},
 			{NULL, NULL}
 		};
 
@@ -1101,6 +1142,7 @@ int luaopen_asyn (lua_State *L)
 		{"read", l_read},
 		{"write", l_write},
 		{"writeread", l_writeread},
+		{"setOption", l_setOption},
 		{"setOutTerminator", l_setOutTerminator},
 		{"getOutTerminator", l_getOutTerminator},
 		{"setInTerminator", l_setInTerminator},
