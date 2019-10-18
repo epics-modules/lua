@@ -8,8 +8,8 @@ html_theme_options = {
     'navbar_title': "EPICS lua"
 }
 
-templates_path = ['_templates']
-html_static_path = ['_static']
+templates_path = ['_overrides']
+html_static_path = ['_overrides']
 
 html_css_files = [
     'theme_overrides.css',
