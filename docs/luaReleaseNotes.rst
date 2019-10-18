@@ -1,6 +1,32 @@
 lua Release Notes
 =================
 
+Release 2-1
+-----------
+
+-  LUA_SCRIPT_PATH now always includes the current directory. Makes more
+   sense when using '<' in the lua shell.
+-  Previously, the "iocsh" library was used only to lookup ioc shell functions,
+   now it will now also check for environment variables that match the given name.
+-  "iocsh" library lookups now also fixed to return nil when it can't find a
+   matching element (in R2-0 it was returning functions that, when called, stated
+   nothing was found).
+-  Added setOption function to the "asyn" library. works the same way as
+   asynSetOption. The asyn.client class received a matching function.
+-  Fixed bug in "asyn" library where writeread requests were attempting to read
+   twice, causing timeout waits.
+-  Added luashCmd function to ioc shell. Useful for running one-liners of lua code.
+-  lua shell now specially recognizes the line '#ENABLE_HASH_COMMENTS', 
+   when put into a lua shell script, the shell will ignore lines where
+   the first non-whitespace line is a '#' character. Allowing scripts to
+   appear more like regular ioc shell scripts.
+-  lua shell now ignores leading whitespace on lines, was only an issue
+   with the 'exit' and '<' commands.
+-  Fixed an issue where I was leaving a metatable reference on the lua
+   stack when luaCreateState was called.
+-  Documentation has been switched to use ReStructured text, now hosted
+   on :ref:`https://epics-lua.readthedocs.io/en/latest/`
+
 Release 2-0
 -----------
 
