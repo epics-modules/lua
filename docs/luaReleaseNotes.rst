@@ -25,7 +25,7 @@ Release 2-1
 -  Fixed an issue where I was leaving a metatable reference on the lua
    stack when luaCreateState was called.
 -  Documentation has been switched to use ReStructured text, now hosted
-   on :ref:`https://epics-lua.readthedocs.io/en/latest/`
+   on https://epics-lua.readthedocs.io/en/latest/
 
 Release 2-0
 -----------
