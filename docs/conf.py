@@ -1,6 +1,6 @@
 project = 'EPICS lua'
 
-master_doc = 'index'
+master_doc = 'readme'
 
 highlight_language = 'none'
 
