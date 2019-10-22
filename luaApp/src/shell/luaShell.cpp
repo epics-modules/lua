@@ -439,7 +439,7 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 	luaL_setmetatable(shell_state, "iocsh_meta");
 	lua_pop(shell_state, 1);
 
-	lua_pushlightuserdata(shell_state, *iocshPpdbbase);
+	lua_pushlightuserdata(shell_state, iocshPpdbbase);
 	lua_setglobal(shell_state, "pdbbase");
 
 	if (macros)    { luaLoadMacros(shell_state, macros); }
