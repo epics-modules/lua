@@ -96,7 +96,7 @@ SRC_DIRS += $(TOP)/luaApp/src/libs
 
 lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
-
+lua_SRCS += ldatabaselib.cpp
 
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
