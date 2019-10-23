@@ -22,14 +22,6 @@ extern "C"
 #include "lualib.h"
 #include "lauxlib.h"
 
-/* EPICS base version test.*/
-#ifndef EPICS_VERSION_INT
-#define VERSION_INT(V,R,M,P) ( ((V)<<24) | ((R)<<16) | ((M)<<8) | (P))
-#define EPICS_VERSION_INT VERSION_INT(EPICS_VERSION, EPICS_REVISION, EPICS_MODIFICATION, EPICS_PATCH_LEVEL)
-#endif
-#define LT_EPICSBASE(V,R,M,P) (EPICS_VERSION_INT < VERSION_INT((V),(R),(M),(P)))
-#define GE_EPICSBASE(V,R,M,P) (EPICS_VERSION_INT >= VERSION_INT((V),(R),(M),(P)))
-
 typedef void (*LUA_LIBRARY_LOAD_HOOK_ROUTINE)(const char* library_name, lua_CFunction library_func);
 typedef void (*LUA_FUNCTION_LOAD_HOOK_ROUTINE)(const char* function_name, lua_CFunction function);
 
