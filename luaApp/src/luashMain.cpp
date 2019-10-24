@@ -6,10 +6,14 @@
 
 #include <epicsThread.h>
 #include <epicsExit.h>
+#include <luaEpics.h>
 #include <luaShell.h>
 
 int main(int argc, char *argv[])
 {
+	luaNamedState("default");
+	luashSetCommonState("default");
+	
     if(argc>=2) {    
         luash(argv[1]);
         epicsThreadSleep(.2);

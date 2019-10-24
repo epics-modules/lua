@@ -38,6 +38,7 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 epicsShareFunc void luaLoadRegistered(lua_State* state);
 
 epicsShareFunc lua_State* luaCreateState();
+epicsShareFunc lua_State* luaNamedState(const char* name);
 
 #ifdef __cplusplus
 }

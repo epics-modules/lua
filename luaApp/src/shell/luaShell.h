@@ -14,6 +14,8 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 epicsShareFunc int epicsShareAPI luaCmd(const char* command, const char* macros);
 epicsShareFunc int epicsShareAPI luaSpawn(const char* pathname, const char* macros);
 
+epicsShareFunc void epicsShareAPI luashSetCommonState(const char* state_name);
+
 #ifdef __cplusplus
 }
 #endif

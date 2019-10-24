@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
+#include <map>
 
 #if defined(__vxworks) || defined(vxWorks)
 	#include <symLib.h>
@@ -24,6 +25,8 @@ typedef std::vector<std::pair<const char*, lua_CFunction> >::iterator reg_iter;
 
 static std::vector<std::pair<const char*, lua_CFunction> > registered_libs;
 static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
+
+static std::map<std::string, lua_State*> named_states;
 
 /* Hook Routines */
 
@@ -420,5 +423,23 @@ epicsShareFunc lua_State* luaCreateState()
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
 	lua_pop(output, 1);
 
+	return output;
+}
+
+epicsShareFunc lua_State* luaNamedState(const char* name)
+{
+	if (! name) { return NULL; }
+	
+	std::string state_name(name);
+	
+	if (named_states.find(state_name) != named_states.end())
+	{
+		return named_states[state_name];
+	}
+	
+	lua_State* output = luaCreateState();
+
+	named_states[state_name] = output;
+	
 	return output;
 }

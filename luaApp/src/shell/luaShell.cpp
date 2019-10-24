@@ -35,6 +35,7 @@ static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
 static lua_State* shell_state = NULL;
+static lua_State* default_state = NULL;
 
 static void luashBody(lua_State* state, const char* pathname);
 
@@ -422,6 +423,16 @@ static void spawnCallFunc(const iocshArgBuf* args)
 	luaSpawn(args[0].sval, args[1].sval);
 }
 
+static void initState(lua_State* state)
+{
+	lua_getglobal(state, "_G");
+	luaL_setmetatable(state, "iocsh_meta");
+	lua_pop(state, 1);
+
+	lua_pushlightuserdata(state, iocshPpdbbase);
+	lua_setglobal(state, "pdbbase");
+}
+
 extern "C"
 {
 
@@ -433,15 +444,19 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 		return 0;
 	}
 	
-	shell_state = luaCreateState();
+	// Make a copy to check after finishing the script, may have changed by then
+	lua_State* check_state = default_state;
 	
-	lua_getglobal(shell_state, "_G");
-	luaL_setmetatable(shell_state, "iocsh_meta");
-	lua_pop(shell_state, 1);
-
-	lua_pushlightuserdata(shell_state, iocshPpdbbase);
-	lua_setglobal(shell_state, "pdbbase");
-
+	if (check_state != NULL)
+	{ 
+		shell_state = default_state;
+	}
+	else
+	{
+		shell_state = luaCreateState();
+		initState(shell_state);
+	}
+	
 	if (macros)    { luaLoadMacros(shell_state, macros); }
 
 	previousLibraryHook = luaLoadLibraryHook;
@@ -452,7 +467,7 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 	
 	luashBody(shell_state, pathname);
 	
-	lua_close(shell_state);
+	if (check_state == NULL)    { lua_close(shell_state); }
 	
 	shell_state = NULL;
 
@@ -530,6 +545,13 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 	return 0;
 }
 
+epicsShareFunc void luashSetCommonState(const char* name)
+{
+	if (! name)    { default_state = NULL }
+	
+	default_state = luaNamedState(name);
+	initState(default_state);
+}
 
 static void luashRegister(void)
 {
