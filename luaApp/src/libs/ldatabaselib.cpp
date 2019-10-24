@@ -38,7 +38,7 @@ int l_setfield(lua_State* state)
 		if (dbPutString(entry, val))
 		{
 			dbFreeEntry(entry);
-			luaL_error("Error setting %s field on record %s to %s\n", field_name, record_name, val);
+			luaL_error(state, "Error setting %s field on record %s to %s\n", field_name, record_name, val);
 		}
 	}
 	
@@ -97,9 +97,9 @@ int luaopen_database (lua_State *L)
 		{NULL, NULL}
 	};
 	
-	luaL_newmetatable(state, "rec_meta");
-	luaL_setfuncs(state, rec_meta, 0);
-	lua_pop(state, 1);
+	luaL_newmetatable(L, "rec_meta");
+	luaL_setfuncs(L, rec_meta, 0);
+	lua_pop(L, 1);
 	
 	static const luaL_Reg mylib[] = {
 		{"record", l_record},
