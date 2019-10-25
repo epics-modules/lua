@@ -102,6 +102,14 @@ recordtype(luascript)
 		size(4)
 		extra("char* pcode")
 	}
+	
+	field(CALL, DBF_NOACCESS)
+	{
+		prompt("Function call subtring")
+		interest(4)
+		size(4)
+		extra("char* call")
+	}
 
 	field(OOPT, DBF_MENU)
 	{

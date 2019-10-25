@@ -73,6 +73,7 @@ typedef struct rpvtStruct {
 	short		wd_id_1_LOCK;
 	short		caLinkStat; /* NO_CA_LINKS,CA_LINKS_ALL_OK,CA_LINKS_NOT_OK */
 	short		outlink_field_type;
+	bool        my_state;
 } rpvtStruct;
 
 extern "C"
@@ -119,6 +120,30 @@ static void logError(luascriptRecord* record)
 	db_post_events(record, &record->err, DBE_VALUE);
 }
 
+/*
+** Try to compile line on the stack as 'return <line>'; on return, stack
+** has either compiled chunk or original line (if compilation failed).
+*/
+static int addreturn (lua_State *L)
+{
+	int status;
+	size_t len; const char *line;
+	lua_pushliteral(L, "return ");
+	lua_pushvalue(L, -2);  /* duplicate line */
+	lua_concat(L, 2);  /* new line is "return ..." */
+	line = lua_tolstring(L, -1, &len);
+
+	if ((status = luaL_loadbuffer(L, line, len, "=stdin")) == LUA_OK)
+	{
+		lua_remove(L, -3);  /* remove original line */
+	}
+	else
+	{
+		lua_pop(L, 2);  /* remove result from 'luaL_loadbuffer' and new line */
+	}
+
+	return status;
+}
 
 static bool isLink(int index)
 {
@@ -131,104 +156,72 @@ static bool isLink(int index)
  */
 static std::pair<std::string, std::string> parseCode(std::string& input)
 {
+	if (input.empty() || input.at(0) != '@')    { return std::make_pair("", input); }
+		
 	/* A space separates the name of the file and the function call */
 	size_t split = input.find(" ");
 
-	/* Function name goes to either the beginning of parameters, or end of string */
-	size_t end = input.find("(");
-
 	/* No function found */
-	if (split == std::string::npos)      { return std::make_pair("", ""); }
+	if (split == std::string::npos)      { return std::make_pair(input, ""); }
 
 	std::string filename = input.substr(1, split - 1);
-	std::string function;
-
-	if   (end == std::string::npos)    { function = input.substr(split + 1, end); }
-	else                               { function = input.substr(split + 1, end - split - 1); }
+	std::string function = input.substr(split + 1, std::string::npos);
 
 	return std::make_pair(filename, function);
 }
 
-/*
- * Parses the comma separated values in between the parentheses
- * in the CODE field.
- */
-static int parseParams(lua_State* state, std::string params)
+
+static int getState(luascriptRecord* record, std::string name)
 {
-	if (params.at(0) != '@')    { return 0; }
-
-	size_t start = params.find_first_of("(");
-	size_t end   = params.find_last_of(")");
-	size_t oob   = std::string::npos;
-
-	/* Syntax error */
-	if (end == oob || start == oob || start == end - 1) { return 0; }
-
-	return luaLoadParams(state, params.substr(start + 1, end - start - 1).c_str());
+	if (! name.empty() && luaLocateFile(name).empty())
+	{ 
+		record->state = luaNamedState(name.c_str());
+		((rpvtStruct*) record->rpvt)->my_state = false;
+		return 0; 
+	}
+	
+	record->state = luaCreateState();
+	((rpvtStruct*) record->rpvt)->my_state = true;
+	
+	if (name.empty())    { return 0; }
+	
+	long status = luaLoadScript((lua_State*) record->state, name.c_str());
+	
+	if (status)
+	{ 
+		printf("Error loading filename: %s, see ERR field\n", name.c_str());
+		logError(record);
+		return -1;
+	}
+	
+	return 0;
 }
+
 
 /*
  * Initializes/Reinitializes Lua state according to the CODE field
  */
-static long initState(luascriptRecord* record, int force_reload)
+static int initState(luascriptRecord* record)
 {
-	long status = 0;
-
 	/* Clear existing errors */
 	memset(record->err, 0, 200);
 	db_post_events(record, &record->err, DBE_VALUE);
 
-	lua_State* state = luaCreateState();
-
 	std::string code(record->code);
 	std::string pcode(record->pcode);
 
-	if (!code.empty())
-	{
-		/* @ signifies a call to a function in a file, otherwise treat it as code */
-		if (code[0] != '@')
-		{
-			if (code != pcode || force_reload)    { status = luaLoadString(state, code.c_str()); }
-		}
-		else
-		{
-			/* Parse for filenames and functions */
-			std::pair<std::string, std::string> curr = parseCode(code);
-			std::pair<std::string, std::string> prev = parseCode(pcode);
-
-			/* We'll always need to reload going from code to referencing a file */
-			if (pcode[0] == '@' && !force_reload)
-			{
-				if (curr == prev && record->relo != luascriptRELO_Always)    { return 0; }
-
-				/*
-				 * If only the functon name changes and the record is set to only
-				 * reload on file changes, all we have to do is pull the function
-				 * and put it at the top of the stack.
-				 */
-				if ((record->relo == luascriptRELO_NewFile) && (curr.first == prev.first))
-				{
-					lua_getglobal((lua_State*) record->state, curr.second.c_str());
-					strcpy(record->pcode, record->code);
-					return 0;
-				}
-			}
-
-			status = luaLoadScript(state, curr.first.c_str());
-
-			if (! status)    { lua_getglobal(state, curr.second.c_str()); }
-		}
-	}
-
-	if (status == -1)    { printf("Invalid input or could not locate file\n"); status = 0;}
-
-	/* Cleanup any memory from previous state */
-	if (record->state != NULL)    { lua_close((lua_State*) record->state); }
-
-	record->state = (void*) state;
+	/* Parse for filenames and functions */
+	std::pair<std::string, std::string> curr = parseCode(code);
+	std::pair<std::string, std::string> prev = parseCode(pcode);
+	
+	strcpy(record->call, curr.second.c_str());
 	strcpy(record->pcode, record->code);
-
-	return status;
+	
+	if (curr.first == prev.first && record->relo == luascriptRELO_NewFile)    { return 0; }
+	
+	if (((rpvtStruct*) record->rpvt)->my_state == true)   { lua_close((lua_State*) record->state); }
+	
+	return getState(record, curr.first);
 }
 
 static long getFieldInfo(DBLINK* field, short* field_type, long* elements)
@@ -515,8 +508,6 @@ long setLinks(luascriptRecord* record)
 }
 
 
-
-
 static long init_record(dbCommon* common, int pass)
 {
 	luascriptRecord* record = (luascriptRecord*) common;
@@ -524,6 +515,7 @@ static long init_record(dbCommon* common, int pass)
 	if (pass == 0)
 	{
 		record->pcode = (char *) calloc(121, sizeof(char));
+		record->call = (char *) calloc(121, sizeof(char));
 		record->rpvt = (void *) calloc(1, sizeof(struct rpvtStruct));
 
 		int index;
@@ -535,7 +527,7 @@ static long init_record(dbCommon* common, int pass)
 			init_str++;
 		}
 
-		if (initState(record, 0))
+		if (initState(record))
 		{
 			logError(record);
 			return -1;
@@ -640,20 +632,35 @@ static void processCallback(void* data)
 
 	lua_State* state = (lua_State*) record->state;
 
-	/* Make a copy of the current code chunk */
-	lua_pushvalue(state, -1);
-
-	/* Load Params */
-	int params = parseParams(state, std::string(record->code));
-
-	/* Call the chunk */
-	if (lua_pcall(state, params, 1, 0))
+	lua_pushstring(state, (const char*) record->call);
+	int status = addreturn(state);
+	
+	if (status != LUA_OK)
+	{
+		size_t len;
+		const char *buffer = lua_tolstring(state, 1, &len);  /* get what it has */
+		status = luaL_loadbuffer(state, buffer, len, "=stdin");  /* try it */
+	
+		if (status == LUA_ERRSYNTAX)
+		{
+			logError(record);
+			return;
+		}
+	}
+	
+	lua_remove(state, 1);
+	status = lua_pcall(state, 0, 1, lua_gettop(state));
+	
+	if (status)
 	{
 		logError(record);
-		record->pact = FALSE;
 		return;
 	}
+	
+	int top = lua_gettop(state);
 
+	if (top == 0) { record->pact = FALSE; return; }
+	
 	int rettype = lua_type(state, -1);
 
 	if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
@@ -751,18 +758,20 @@ static long process(dbCommon* common)
 	/* luascriptRELO_Always indicates a state reload on every process */
 	if (record->relo == luascriptRELO_Always)
 	{
-		status = initState(record, 1);
+		memset(record->pcode, 0, 121);
+	
+		status = initState(record);
 
-		if (status) { return status; }
+		if (status) { record->pact = FALSE; return status; }
 	}
 
 	status = loadNumbers(record);
 
-	if (status)    { return status; }
+	if (status)    { record->pact = FALSE; return status; }
 
 	status = loadStrings(record);
 
-	if (status)    { return status; }
+	if (status)    { record->pact = FALSE; return status; }
 
 	status = runCode(record);
 
@@ -785,11 +794,12 @@ static long special(dbAddr* paddr, int after)
 
 	if (field_index == luascriptRecordCODE)
 	{
-		if (initState(record, 0))    { logError(record); }
+		initState(record);
 	}
 	else if (field_index == luascriptRecordFRLD && record->frld)
 	{
-		if (initState(record, 1))    { logError(record); }
+		memset(record->pcode, 0, 121);
+		initState(record);
 		record->frld = 0;
 	}
 	else if (isLink(field_index))
