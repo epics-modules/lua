@@ -36,6 +36,10 @@
 #define CA_LINKS_ALL_OK 1
 #define CA_LINKS_NOT_OK 2
 
+/* mark in error messages for incomplete statements */
+#define EOFMARK		"<eof>"
+#define marklen		(sizeof(EOFMARK)/sizeof(char) - 1)
+
 #include "epicsVersion.h"
 #ifdef VERSION_INT
 # if EPICS_VERSION_INT < VERSION_INT(3,16,0,2)
@@ -216,7 +220,7 @@ static int initState(luascriptRecord* record)
 	
 	strcpy(record->call, curr.second.c_str());
 	strcpy(record->pcode, record->code);
-	
+		
 	if (curr.first == prev.first && record->relo == luascriptRELO_NewFile)    { return 0; }
 	
 	if (((rpvtStruct*) record->rpvt)->my_state == true)   { lua_close((lua_State*) record->state); }
@@ -626,12 +630,29 @@ static void writeValue(luascriptRecord* record)
 }
 
 
+static int incomplete(lua_State* L, int status)
+{
+	if (status == LUA_ERRSYNTAX)
+	{
+		size_t lmsg;
+		const char *msg = lua_tolstring(L, -1, &lmsg);
+
+		if (lmsg >= marklen && strcmp(msg + lmsg - marklen, EOFMARK) == 0)
+		{
+			lua_pop(L, 1);
+			return 1;
+		}
+	}
+	
+	return 0;
+}
+
 static void processCallback(void* data)
 {
 	luascriptRecord* record = (luascriptRecord*) data;
 
 	lua_State* state = (lua_State*) record->state;
-
+	
 	lua_pushstring(state, (const char*) record->call);
 	int status = addreturn(state);
 	
@@ -641,8 +662,9 @@ static void processCallback(void* data)
 		const char *buffer = lua_tolstring(state, 1, &len);  /* get what it has */
 		status = luaL_loadbuffer(state, buffer, len, "=stdin");  /* try it */
 	
-		if (status == LUA_ERRSYNTAX)
+		if (incomplete(state, status))
 		{
+			record->pact = FALSE;
 			logError(record);
 			return;
 		}
@@ -659,39 +681,40 @@ static void processCallback(void* data)
 	
 	int top = lua_gettop(state);
 
-	if (top == 0) { record->pact = FALSE; return; }
+	if (top > 0) 
+	{	
+		int rettype = lua_type(state, -1);
 	
-	int rettype = lua_type(state, -1);
-
-	if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
-	{
-		record->pval = record->val;
-		record->val = lua_tonumber(state, -1);
-
-		if (checkValUpdate(record))
+		if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
 		{
-			record->pact = FALSE;
-			writeValue(record);
-			record->pact = TRUE;
-			db_post_events(record, &record->val, DBE_VALUE);
+			record->pval = record->val;
+			record->val = lua_tonumber(state, -1);
+	
+			if (checkValUpdate(record))
+			{
+				record->pact = FALSE;
+				writeValue(record);
+				record->pact = TRUE;
+				db_post_events(record, &record->val, DBE_VALUE);
+			}
 		}
-	}
-	else if (rettype == LUA_TSTRING)
-	{
-		strncpy(record->psvl, record->sval, STRING_SIZE);
-		strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
-
-		if (checkSvalUpdate(record))
+		else if (rettype == LUA_TSTRING)
 		{
-			record->pact = FALSE;
-			writeValue(record);
-			record->pact = TRUE;
-			db_post_events(record, &record->sval, DBE_VALUE);
+			strncpy(record->psvl, record->sval, STRING_SIZE);
+			strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
+	
+			if (checkSvalUpdate(record))
+			{
+				record->pact = FALSE;
+				writeValue(record);
+				record->pact = TRUE;
+				db_post_events(record, &record->sval, DBE_VALUE);
+			}
 		}
+	
+		lua_pop(state, 1);
 	}
-
-	lua_pop(state, 1);
-
+	
 	double* new_val = &record->a;
 	double* old_val = &record->pa;
 
