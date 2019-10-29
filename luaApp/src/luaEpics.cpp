@@ -337,6 +337,12 @@ static int l_iocindex(lua_State* state)
 {
 	const char* symbol_name = lua_tostring(state, 2);
 	
+	if (std::string(symbol_name) == "exit")
+	{
+		lua_pushlightuserdata(state, NULL);
+		return lua_error(state);
+	}
+	
 	std::stringstream environ_check;
 	
 	environ_check << "return (os.getenv('";

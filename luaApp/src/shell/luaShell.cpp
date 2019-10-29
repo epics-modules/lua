@@ -25,6 +25,7 @@
 #define LUA_PROGNAME		"lua"
 #endif
 
+#define LUA_BREAKSHELL 666
 
 #if defined(__vxworks) || defined(vxWorks)
 	#include <symLib.h>
@@ -96,8 +97,21 @@ static int report (lua_State *L, int status)
 ** Message handler used to run all chunks
 */
 static int msghandler (lua_State *L)
-{
+{	
+	/* Unfortunately, we have to use the error system to perform script breaks
+	 * in the shell because of how the chunks are set up. Previous, just checked
+	 * if a line stated "exit", but that doesn't work within conditionals. Could
+	 * use just plain "return", but that wouldn't work on the general command line.
+	 * The current best option is to have "exit()" throw a specialized error that
+	 * we can catch here and trigger the shell to proceede.
+	 */
+	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA && lua_topointer(L, 1) == NULL)
+	{
+		return 1;
+	}
+
 	const char *msg = lua_tostring(L, 1);
+	
 	if (msg == NULL)  /* is error object not a string? */
 	{
 		if (luaL_callmeta(L, 1, "__tostring") &&  /* does it have a metamethod */
@@ -208,6 +222,8 @@ static int multiline (lua_State *L, const char* prompt, void* readlineContext)
 		std::string line(raw);
 		while (line.length() > 0 && isspace(line[0]))    { line.erase(0,1); }
 		
+		if (line == "exit")    { line = "exit()"; }
+		
 		if (!prompt)    { printf("%s\n", raw); }
 
 		lua_pushstring(L, line.c_str());
@@ -234,6 +250,14 @@ static int docall (lua_State *L, int narg, int nres)
 	signal(SIGINT, SIG_DFL);          /* reset C-signal handler */
 	lua_remove(L, base);              /* remove message handler from the stack */
 
+	if (status == LUA_ERRRUN)
+	{
+		if (lua_type(L, -1) == LUA_TLIGHTUSERDATA && lua_topointer(L, -1) == NULL)
+		{
+			return LUA_BREAKSHELL;
+		}
+	}
+	
 	return status;
 }
 
@@ -260,7 +284,7 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 		// Eliminate leading white space
 		while (line.length() > 0 && isspace(line[0]))    { line.erase(0,1); }
 		
-		if (line == "exit")    { return; }
+		if (line == "exit")    { line = "exit()"; }
 
 		if (line[0] == '<')
 		{
@@ -298,8 +322,9 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 
 		if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
 
-		if (status == LUA_OK)     { l_print(state); }
-		else                      { report(state, status); }
+		if (status == LUA_BREAKSHELL)    { return; }
+		if (status == LUA_OK)            { l_print(state); }
+		else                             { report(state, status); }
 	}
 }
 
