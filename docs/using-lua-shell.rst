@@ -73,9 +73,25 @@ include other scripts by using the ‘<’ character. Putting
 Will attempt to find script.lua by the same process as detailed above
 and include all the text of that file at the insertion point. When
 running any script the lua shell will exit at the end of the file being
-read. For both files and commands from the standard input, a single line
-with only the word ‘exit’ will close the session (Currently, this
-doesn’t work within conditionals).
+read. 
+
+For both files and commands from the standard input, a single line
+with only the word ‘exit’ will break from the current level of shell
+execution. In example, if you were to load the file script.lua as seen
+above, and the file had the following code within it
+
+::
+
+   if (true) then
+       exit
+   end
+
+That exit will end the reading of just the script.lua file and flow would
+resume to the shell that called script.lua.
+
+As a note, the use of 'exit' is replaced automatically with an actual call
+to a function 'exit()' by the shell. This is done to make the code proper
+in regards to lua syntax, while still being able to provide syntactic sugar.
 
 Lua Shell As A Replacement For The IOC Shell
 --------------------------------------------
