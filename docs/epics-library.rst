@@ -2,7 +2,7 @@
 Epics Functions
 ===============
 
-**epics.get** (*PV*)
+**epics.get** (*PV*[, timeout])
 
 ::
 
@@ -10,6 +10,9 @@ Epics Functions
 
 
    PV          [string] - The name of the PV to request.
+
+   timeout     [number] - Amount of seconds to search for pv before giving a timeout, 
+                          default is 1.0 (can be fractional).
 
 
    Returns the value of the PV given or Nil if the PV cannot be reached.

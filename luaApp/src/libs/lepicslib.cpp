@@ -5,7 +5,7 @@
 #include <epicsExport.h>
 #include "luaEpics.h"
 
-static int epics_get(lua_State* state, const char* pv_name)
+static int epics_get(lua_State* state, const char* pv_name, double timeout)
 {
 	if (pv_name == NULL)    { return 0; }
 
@@ -35,9 +35,9 @@ static int epics_get(lua_State* state, const char* pv_name)
 			break;
 	}
 
-	ca_pend_io(0.1);
+	status = ca_pend_io(timeout);
 	SEVCHK (status, NULL);
-
+	
 	switch (ca_field_type(id))
 	{
 		case -1:
@@ -48,7 +48,13 @@ static int epics_get(lua_State* state, const char* pv_name)
 			struct dbr_time_string val;
 
 			status = ca_get(DBR_TIME_STRING, id, &val);
-
+			
+			SEVCHK(status, NULL);
+			
+			status = ca_pend_io(timeout);
+			
+			if (status == ECA_TIMEOUT) { return 0; }
+			
 			lua_pushstring(state, val.value);
 			break;
 		}
@@ -59,6 +65,12 @@ static int epics_get(lua_State* state, const char* pv_name)
 
 			status = ca_get(DBR_TIME_ENUM, id, &val);
 
+			SEVCHK(status, NULL);
+			
+			status = ca_pend_io(timeout);
+			
+			if (status == ECA_TIMEOUT) { return 0; }
+			
 			lua_pushnumber(state, val.value);
 			break;
 		}
@@ -69,6 +81,12 @@ static int epics_get(lua_State* state, const char* pv_name)
 
 			status = ca_get(DBR_TIME_ENUM, id, &val);
 
+			SEVCHK(status, NULL);
+			
+			status = ca_pend_io(timeout);
+			
+			if (status == ECA_TIMEOUT) { return 0; }
+			
 			lua_pushnumber(state, val.value);
 			break;
 		}
@@ -79,6 +97,12 @@ static int epics_get(lua_State* state, const char* pv_name)
 
 			status = ca_get(DBR_TIME_SHORT, id, &val);
 
+			SEVCHK(status, NULL);
+			
+			status = ca_pend_io(timeout);
+			
+			if (status == ECA_TIMEOUT) { return 0; }
+			
 			lua_pushnumber(state, val.value);
 			break;
 		}
@@ -89,6 +113,12 @@ static int epics_get(lua_State* state, const char* pv_name)
 
 			status = ca_get(DBR_TIME_LONG, id, &val);
 
+			SEVCHK(status, NULL);
+			
+			status = ca_pend_io(timeout);
+			
+			if (status == ECA_TIMEOUT) { return 0; }
+			
 			lua_pushnumber(state, val.value);
 			break;
 		}
@@ -98,7 +128,13 @@ static int epics_get(lua_State* state, const char* pv_name)
 			struct dbr_time_float val;
 
 			status = ca_get(DBR_TIME_FLOAT, id, &val);
-
+			
+			SEVCHK(status, NULL);
+			
+			status = ca_pend_io(timeout);
+			
+			if (status == ECA_TIMEOUT) { return 0; }
+			
 			lua_pushnumber(state, val.value);
 			break;
 		}
@@ -109,6 +145,12 @@ static int epics_get(lua_State* state, const char* pv_name)
 
 			status = ca_get(DBR_TIME_DOUBLE, id, &val);
 
+			SEVCHK(status, NULL);
+			
+			status = ca_pend_io(timeout);
+			
+			if (status == ECA_TIMEOUT) { return 0; }
+			
 			lua_pushnumber(state, val.value);
 			break;
 		}
@@ -116,10 +158,8 @@ static int epics_get(lua_State* state, const char* pv_name)
 		case DBF_NO_ACCESS:
 			return 0;
 	}
-
+	
 	SEVCHK(status, NULL);
-
-	ca_pend_io(0.1);
 
 	ca_clear_channel(id);
 
@@ -210,9 +250,14 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 
 static int l_caget(lua_State* state)
 {
+	int num_ops = lua_gettop(state);
+	
 	const char* pv_name = lua_tostring(state, 1);
+	double timeout = 1.0;
+	
+	if (num_ops == 2)    { timeout = luaL_checknumber(state, 2); }
 
-	return epics_get(state, pv_name);
+	return epics_get(state, pv_name, timeout);
 }
 
 static int l_caput(lua_State* state)
@@ -243,7 +288,7 @@ static int l_pvgetval(lua_State* state)
 	full_name.append(".");
 	full_name.append(field_name);
 
-	return epics_get(state, full_name.c_str());
+	return epics_get(state, full_name.c_str(), 1.0);
 }
 
 static int l_pvsetval(lua_State* state)
