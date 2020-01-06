@@ -28,6 +28,8 @@ static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
 
 static std::map<std::string, lua_State*> named_states;
 
+static FILE* temp_help = tmpfile();
+
 /* Hook Routines */
 
 epicsShareDef LUA_LIBRARY_LOAD_HOOK_ROUTINE luaLoadLibraryHook = NULL;
@@ -286,23 +288,35 @@ static int l_call(lua_State* state)
 
 static bool parseHelp(const char* func_name)
 {
-	FILE* prev = epicsGetThreadStdout();
-	FILE* temp = tmpfile();
+	// If there was an issue with initial tmpfile, attempt retry
+	if (temp_help == NULL)
+	{
+		temp_help = tmpfile();
+		
+		/*
+		 * If things still don't work, then default to assuming 
+		 * everything is a potential iocsh function
+		 */
+		if (temp_help == NULL) { return true; }
+	}
 	
-	epicsSetThreadStdout(temp);
+	FILE* prev = epicsGetThreadStdout();
+	
+	epicsSetThreadStdout(temp_help);
 	iocshCmd("help()");
 	epicsSetThreadStdout(prev);
 	
-	long size = ftell(temp);
-	rewind(temp);
+	long size = ftell(temp_help);
+	rewind(temp_help);
 	char* buffer = (char*) malloc(sizeof(char) * size);
 	
-	fread(buffer, 1, size, temp);
+	fread(buffer, 1, size, temp_help);
 	std::stringstream help_str;
 	
 	help_str.str(buffer);
+	free(buffer);
 	
-	fclose(temp);
+	rewind(temp_help);
 	
 	std::string line;
 	std::string element;
