@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cmath>
+#include <vector>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -287,19 +288,40 @@ static long loadNumbers(luascriptRecord* record)
 	return status;
 }
 
+template <typename T>
+static int createTable(lua_State* state, DBLINK* field, short field_type, long* elements, bool integers)
+{
+	std::vector<T> data (*elements);
+	int status = dbGetLink(field, field_type, data.data(), 0, elements);
+	
+	if (status) { return status; }
+	
+	lua_createtable(state, *elements, 0);
+	
+	for (int elem = 0; elem < *elements; elem += 1)
+	{
+		if (integers)    { lua_pushinteger(state, data[elem]); }
+		else             { lua_pushnumber(state, data[elem]); }
+		
+		lua_rawseti(state, -2, elem + 1);
+	}
+	
+	return 0;
+}
+
 static long loadStrings(luascriptRecord* record)
 {
 	lua_State* state = (lua_State*) record->state;
 
 	DBLINK* field = &record->inaa;
+	
 	char*   strvalue = (char*) record->aa;
 	char**  prev_str = (char**) &record->paa;
-	char tempstr[STRING_SIZE];
 
 	long status = 0;
 
 	for (unsigned index = 0; index < STR_ARGS; index += 1)
-	{
+	{		
 		strncpy(*prev_str, strvalue, STRING_SIZE);
 
 		short field_type = 0;
@@ -308,18 +330,60 @@ static long loadStrings(luascriptRecord* record)
 		status = getFieldInfo(field, &field_type, &elements);
 
 		if (status)    { return status; }
+		
+		switch(field_type)
+		{
+			case DBF_CHAR:
+				elements = std::min(elements, (long) STRING_SIZE - 1);
+				//Intentional fall-through
+			
+			case DBF_STRING:
+			{
+				char tempstr[STRING_SIZE] = { '\0' };
+				status = dbGetLink(field, field_type, tempstr, 0, &elements);
+				if (status)    { break; }
+				
+				strncpy(strvalue, tempstr, STRING_SIZE);
 
-		elements = std::min(elements, (long) STRING_SIZE - 1);
-		std::fill(tempstr, tempstr + elements, '\0');
-
-		status = dbGetLink(field, field_type, tempstr, 0, &elements);
-
-		if (status)    { return status; }
-
-		strncpy(strvalue, tempstr, STRING_SIZE);
-
-		lua_pushstring(state, tempstr);
-		lua_setglobal(state, STR_NAMES[index]);
+				lua_pushstring(state, tempstr);
+				
+				break;
+			}
+				
+			case DBF_UCHAR:
+				status = createTable<epicsUInt8>(state, field, field_type, &elements, true);
+				break;
+			
+			case DBF_SHORT:
+				status = createTable<epicsInt16>(state, field, field_type, &elements, true);
+				break;
+			
+			case DBF_USHORT:
+				status = createTable<epicsUInt16>(state, field, field_type, &elements, true);
+				break;
+			
+			case DBF_LONG:
+				status = createTable<epicsInt32>(state, field, field_type, &elements, true);
+				break;
+			
+			case DBF_ULONG:
+				status = createTable<epicsUInt32>(state, field, field_type, &elements, true);
+				break;
+			
+			case DBF_FLOAT:
+				status = createTable<epicsFloat32>(state, field, field_type, &elements, false);
+				break;
+				
+			case DBF_DOUBLE:
+				status = createTable<epicsFloat64>(state, field, field_type, &elements, false);
+				break;
+			
+			default:
+				status = -1;
+				break;
+		}
+		
+		if (! status)    { lua_setglobal(state, STR_NAMES[index]); }
 
 		field++;
 		prev_str++;
