@@ -291,8 +291,8 @@ static long loadNumbers(luascriptRecord* record)
 template <typename T>
 static int createTable(lua_State* state, DBLINK* field, short field_type, long* elements, bool integers)
 {
-	std::vector<T> data (*elements);
-	int status = dbGetLink(field, field_type, data.data(), 0, elements);
+	T data[*elements];
+	int status = dbGetLink(field, field_type, data, 0, elements);
 	
 	if (status) { return status; }
 	
