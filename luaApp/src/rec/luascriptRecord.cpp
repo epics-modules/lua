@@ -291,7 +291,7 @@ static long loadNumbers(luascriptRecord* record)
 template <typename T>
 static int createTable(lua_State* state, DBLINK* field, short field_type, long* elements, bool integers)
 {
-	T data[*elements];
+	T *data = new T[*elements];
 	int status = dbGetLink(field, field_type, data, 0, elements);
 	
 	if (status) { return status; }
@@ -306,6 +306,7 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
 		lua_rawseti(state, -2, elem + 1);
 	}
 	
+	delete data;
 	return 0;
 }
 
