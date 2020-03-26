@@ -179,7 +179,7 @@ static std::pair<std::string, std::string> parseCode(std::string& input)
 static int getState(luascriptRecord* record, std::string name)
 {
 	if (! name.empty() && luaLocateFile(name).empty())
-	{ 
+	{
 		record->state = luaNamedState(name.c_str());
 		((rpvtStruct*) record->rpvt)->my_state = false;
 		return 0; 
@@ -834,6 +834,9 @@ static long runCode(luascriptRecord* record)
 static long process(dbCommon* common)
 {
 	luascriptRecord* record = (luascriptRecord*) common;
+	
+	/* No need to process if there's no code */
+	if (record->code[0] == '\0')    { return 0; }
 
 	long status;
 
