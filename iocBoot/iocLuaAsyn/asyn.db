@@ -1,4 +1,4 @@
-record(luascript, "$(P)$(Q)script")
+record(luascript, "$(P)$(R)script")
 {
 	field(CODE, "@asyn.lua get_html('$(PORT)')")
 }

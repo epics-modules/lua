@@ -1,15 +1,15 @@
-record(luascript, "$(P)$(Q)state_machine")
+record(luascript, "$(P)$(R)state_machine")
 {	
-	field(INAA, "$(P)$(Q)aaval.VAL")
-	field(INBB, "$(P)$(Q)bbval.VAL")
-	field(INCC, "$(P)$(Q)ccval.VAL")
-	field(INDD, "$(P)$(Q)ddval.VAL")
-	field(INEE, "$(P)$(Q)eeval.VAL")
-	field(INFF, "$(P)$(Q)ffval.VAL")
-	field(INGG, "$(P)$(Q)ggval.VAL")
-	field(INHH, "$(P)$(Q)hhval.VAL")
-	field(INII, "$(P)$(Q)iival.VAL")
-	field(INJJ, "$(P)$(Q)jjval.VAL")
+	field(INAA, "$(P)$(R)aaval.VAL")
+	field(INBB, "$(P)$(R)bbval.VAL")
+	field(INCC, "$(P)$(R)ccval.VAL")
+	field(INDD, "$(P)$(R)ddval.VAL")
+	field(INEE, "$(P)$(R)eeval.VAL")
+	field(INFF, "$(P)$(R)ffval.VAL")
+	field(INGG, "$(P)$(R)ggval.VAL")
+	field(INHH, "$(P)$(R)hhval.VAL")
+	field(INII, "$(P)$(R)iival.VAL")
+	field(INJJ, "$(P)$(R)jjval.VAL")
 	
 	field(PREC, 1)
 	
@@ -18,18 +18,18 @@ record(luascript, "$(P)$(Q)state_machine")
 	field(CODE, "@examples.lua state_demo()")
 }
 
-record(luascript, "$(P)$(Q)pattern_match")
+record(luascript, "$(P)$(R)pattern_match")
 {	
-	field(INAA, "$(P)$(Q)aaval.VAL")
-	field(INBB, "$(P)$(Q)bbval.VAL")
-	field(INCC, "$(P)$(Q)ccval.VAL")
-	field(INDD, "$(P)$(Q)ddval.VAL")
-	field(INEE, "$(P)$(Q)eeval.VAL")
-	field(INFF, "$(P)$(Q)ffval.VAL")
-	field(INGG, "$(P)$(Q)ggval.VAL")
-	field(INHH, "$(P)$(Q)hhval.VAL")
-	field(INII, "$(P)$(Q)iival.VAL")
-	field(INJJ, "$(P)$(Q)jjval.VAL")
+	field(INAA, "$(P)$(R)aaval.VAL")
+	field(INBB, "$(P)$(R)bbval.VAL")
+	field(INCC, "$(P)$(R)ccval.VAL")
+	field(INDD, "$(P)$(R)ddval.VAL")
+	field(INEE, "$(P)$(R)eeval.VAL")
+	field(INFF, "$(P)$(R)ffval.VAL")
+	field(INGG, "$(P)$(R)ggval.VAL")
+	field(INHH, "$(P)$(R)hhval.VAL")
+	field(INII, "$(P)$(R)iival.VAL")
+	field(INJJ, "$(P)$(R)jjval.VAL")
 	
 	field(PREC, 1)
 	
@@ -38,84 +38,84 @@ record(luascript, "$(P)$(Q)pattern_match")
 	field(CODE, "@examples.lua pattern_demo('%d+')")
 }
 
-record(ai, "$(P)$(Q)aval")
+record(ai, "$(P)$(R)aval")
 {
 	field(VAL, 1)
 }
-record(ai, "$(P)$(Q)bval")
+record(ai, "$(P)$(R)bval")
 {
 	field(VAL, 2)
 }
-record(ai, "$(P)$(Q)cval")
+record(ai, "$(P)$(R)cval")
 {
 	field(VAL, 3)
 }
-record(ai, "$(P)$(Q)dval")
+record(ai, "$(P)$(R)dval")
 {
 	field(VAL, 4)
 }
-record(ai, "$(P)$(Q)eval")
+record(ai, "$(P)$(R)eval")
 {
 	field(VAL, 5)
 }
-record(ai, "$(P)$(Q)fval")
+record(ai, "$(P)$(R)fval")
 {
 	field(VAL, 6)
 }
-record(ai, "$(P)$(Q)gval")
+record(ai, "$(P)$(R)gval")
 {
 	field(VAL, 7)
 }
-record(ai, "$(P)$(Q)hval")
+record(ai, "$(P)$(R)hval")
 {
 	field(VAL, 8)
 }
-record(ai, "$(P)$(Q)ival")
+record(ai, "$(P)$(R)ival")
 {
 	field(VAL, 42)
 }
-record(ai, "$(P)$(Q)jval")
+record(ai, "$(P)$(R)jval")
 {
 	field(VAL, 0)
 }
 
-record(stringout, "$(P)$(Q)aaval")
+record(stringout, "$(P)$(R)aaval")
 {
 	field(VAL, "Hello")
 }
-record(stringout, "$(P)$(Q)bbval")
+record(stringout, "$(P)$(R)bbval")
 {
 	field(VAL, "World")
 }
-record(stringout, "$(P)$(Q)ccval")
+record(stringout, "$(P)$(R)ccval")
 {
 	field(VAL, "123ABC")
 }
-record(stringout, "$(P)$(Q)ddval")
+record(stringout, "$(P)$(R)ddval")
 {
 	field(VAL, "A = ")
 }
-record(stringout, "$(P)$(Q)eeval")
+record(stringout, "$(P)$(R)eeval")
 {
 	field(VAL, "return DD .. A")
 }
-record(stringout, "$(P)$(Q)ffval")
+record(stringout, "$(P)$(R)ffval")
 {
 	field(VAL, "VOLTS?4.5,2.7,3.0")
 }
-record(stringout, "$(P)$(Q)ggval")
+record(stringout, "$(P)$(R)ggval")
 {
 	field(VAL, "")
 }
-record(stringout, "$(P)$(Q)hhval")
+record(stringout, "$(P)$(R)hhval")
 {
 	field(VAL, "")
 }
-record(stringout, "$(P)$(Q)iival")
+record(stringout, "$(P)$(R)iival")
 {
 	field(VAL, "")
 }
-record(stringout, "$(P)$(Q)jjval")
+record(stringout, "$(P)$(R)jjval")
 {
 	field(VAL, "")
 }

@@ -7,7 +7,7 @@ epicsEnvSet("LUA_SCRIPT_PATH","./scripts")
 
 drvAsynIPPortConfigure("IP", "www.google.com:80", 0,0,0)
 
-dbLoadRecords("./asyn.db", "P=lua:,Q=test:,PORT=IP")
+dbLoadRecords("./asyn.db", "P=lua:,R=test:,PORT=IP")
 
 #######
 iocInit
