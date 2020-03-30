@@ -220,9 +220,12 @@ static int initState(luascriptRecord* record)
 	std::pair<std::string, std::string> prev = parseCode(pcode);
 	
 	strcpy(record->call, curr.second.c_str());
-	strcpy(record->pcode, record->code);
-		
-	if (curr.first == prev.first && record->relo == luascriptRELO_NewFile)    { return 0; }
+	strcpy(record->pcode, record->code); 
+	
+	if (record->relo == luascriptRELO_NewFile)
+	{
+		if (curr.first == prev.first && record->state != NULL)    { return 0; }
+	}
 	
 	if (((rpvtStruct*) record->rpvt)->my_state == true)   { lua_close((lua_State*) record->state); }
 	
