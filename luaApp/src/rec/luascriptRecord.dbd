@@ -36,6 +36,13 @@ menu(luascriptSYNC)
 	choice(luascriptSYNC_Asynchronous, "Async")
 }
 
+menu(luascriptAVALType)
+{
+	choice(luascriptAVALType_Integer, "Int")
+	choice(luascriptAVALType_Double, "Double")
+	choice(luascriptAVALType_Char, "Char")
+}
+
 recordtype(luascript)
 {
 	include "dbCommon.dbd"
@@ -798,6 +805,26 @@ recordtype(luascript)
 		asl(ASL0)
 		size(40)
 	}
+	
+	field(AVAL, DBF_NOACCESS)
+	{
+		prompt("Array output pointer")
+		size(4)
+		extra("void* aval")
+	}
+	
+	field(ASIZ, DBF_LONG)
+	{
+		prompt("Array output size")
+		special(SPC_NOMOD)
+	}
+	
+	field(ATYP, DBF_MENU)
+	{
+		prompt("Array output type")
+		special(SPC_NOMOD)
+		menu(luascriptAVALType)
+	}
 
 	field(PVAL,DBF_DOUBLE)
 	{
@@ -812,6 +839,28 @@ recordtype(luascript)
 		special(SPC_NOMOD)
 		size(40)
 		interest(4)
+	}
+	
+	field(PAVL, DBF_NOACCESS)
+	{
+		prompt("Previous aval pointer")
+		size(4)
+		extra("void* pavl")
+	}
+	
+	field(PASZ, DBF_LONG)
+	{
+		prompt("Previous aval size")
+		special(SPC_NOMOD)
+		interest(4)
+	}
+	
+	field(PATP, DBF_MENU)
+	{
+		prompt("Previous aval type")
+		special(SPC_NOMOD)
+		interest(4)
+		menu(luascriptAVALType)
 	}
 
 	field(MDEL,DBF_DOUBLE)

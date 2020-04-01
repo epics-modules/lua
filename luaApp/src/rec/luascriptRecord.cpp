@@ -313,6 +313,79 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
 	return 0;
 }
 
+static void* convertTable(lua_State* state, int* generated_size, epicsEnum16* arraytype)
+{
+	lua_len(state, -1);
+	int array_size = lua_tonumber(state, -1);
+	lua_pop(state, 1);
+	
+	// Get type of first value
+	lua_geti(state, -1, 1);
+	int is_integer = lua_isinteger(state, -1);
+	int data_type = lua_type(state, -1);
+	lua_pop(state, 1);
+	
+	switch (data_type)
+	{
+		case LUA_TNUMBER:
+		{
+			if (! is_integer)
+			{
+				double* output = new double[array_size];
+				*generated_size = sizeof(double) * array_size;
+				*arraytype = luascriptAVALType_Double;
+				
+				for (int index = 0; index < array_size; index += 1)
+				{
+					lua_geti(state, -1, index + 1);
+					output[index] = lua_tonumber(state, -1);
+					lua_pop(state, 1);
+				}
+				
+				return output;
+			}
+			
+			//Intentional Fall-through for integers
+		}
+		
+		case LUA_TBOOLEAN:
+		{
+			int* output = new int[array_size];
+			*generated_size = sizeof(int) * array_size;
+			*arraytype = luascriptAVALType_Integer;
+			
+			for (int index = 0; index < array_size; index += 1)
+			{
+				lua_geti(state, -1, index + 1);
+				output[index] = lua_tonumber(state, -1);
+				lua_pop(state, 1);
+			}
+			
+			return output;
+		}
+		
+		case LUA_TSTRING:
+		{
+			char* output = new char[array_size];
+			*generated_size = sizeof(char) * array_size;
+			*arraytype = luascriptAVALType_Char;
+			
+			for (int index = 0; index < array_size; index += 1)
+			{
+				lua_geti(state, -1, index + 1);
+				output[index] = lua_tostring(state, -1)[0];
+				lua_pop(state, 1);
+			}
+			
+			return output;
+		}
+		
+		default:
+			*generated_size = 0;
+			return NULL;
+	}
+}
+
 static long loadStrings(luascriptRecord* record)
 {
 	lua_State* state = (lua_State*) record->state;
@@ -682,6 +755,39 @@ static bool checkSvalUpdate(luascriptRecord* record)
 	return false;
 }
 
+static bool checkAvalUpdate(luascriptRecord* record)
+{
+	if (record->aval == NULL) { return false; }
+	
+	bool definitely_changed = (record->pavl == NULL) || (record->pasz != record->asiz);
+	
+	switch (record->oopt)
+	{
+		case luascriptOOPT_Every_Time:
+			return true;
+			
+		case luascriptOOPT_On_Change:
+			return (definitely_changed || memcmp(record->pavl, record->aval, record->asiz));
+			
+		case luascriptOOPT_When_Zero:
+			return (record->asiz == 0);
+			
+		case luascriptOOPT_When_Non_zero:
+			return (record->asiz != 0);
+			
+		case luascriptOOPT_Transition_To_Zero:
+			return ((record->pasz != 0) && (record->asiz == 0)); 
+			
+		case luascriptOOPT_Transition_To_Non_zero:
+			return ((record->pasz == 0) && (record->asiz != 0));
+			
+		case luascriptOOPT_Never:
+			return false;
+	}
+	
+	return false;
+}
+
 static void writeValue(luascriptRecord* record)
 {
 	ScriptDSET* pluascriptDSET = (ScriptDSET*) record->dset;
@@ -779,6 +885,30 @@ static void processCallback(void* data)
 				db_post_events(record, &record->sval, DBE_VALUE);
 			}
 		}
+		else if (rettype == LUA_TTABLE)
+		{
+			if (record->pavl != NULL)
+			{
+				if (record->patp == luascriptAVALType_Integer)       { delete [] ((int*) record->pavl); }
+				else if (record->patp == luascriptAVALType_Double)   { delete [] ((double*) record->pavl); }
+				else if (record->patp == luascriptAVALType_Char)     { delete [] ((char*) record->pavl); }
+			}
+			
+			record->pavl = record->aval;
+			record->pasz = record->asiz;
+			record->patp = record->atyp;
+			
+			
+			record->aval = convertTable(state, &record->asiz, &record->atyp);
+			
+			if (checkAvalUpdate(record))
+			{
+				record->pact = FALSE;
+				writeValue(record);
+				record->pact = TRUE;
+				db_post_events(record, &record->aval, DBE_VALUE);
+			}
+		}	
 	
 		lua_pop(state, 1);
 	}
