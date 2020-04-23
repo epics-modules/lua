@@ -277,9 +277,11 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 
 		const char* raw = epicsReadline(prompt, readlineContext);
 		
-		if (raw == NULL)                 { return; }
+		if (raw == NULL)     { return; }
 		
 		std::string line(raw);
+		
+		if (line.empty())    { return; }
 		
 		// Eliminate leading white space
 		while (line.length() > 0 && isspace(line[0]))    { line.erase(0,1); }
