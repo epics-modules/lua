@@ -102,7 +102,8 @@ same parameters apply as when calling the command inside the IOC shell.
 So your main.cpp file might look like:
 
 ::
-
+   #include "luaShell.h"
+   
    int main(int argc,char *argv[])
    {
        if(argc>=2) {
@@ -136,7 +137,8 @@ above code changed to allow the interactive shell to reference code from
 the interpreted script would look like:
 
 ::
-
+   #include "luaShell.h"
+   
    int main(int argc,char *argv[])
    {
        luashSetCommonState("default");
