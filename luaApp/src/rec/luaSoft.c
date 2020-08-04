@@ -142,7 +142,11 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
-					char buffer[n_elements];
+					#if defined(_MSC_PLATFORM_TOOLSET) && (_MSC_PLATFORM_TOOLSET < 140)
+						char buffer[1024];
+					#else
+						char buffer[n_elements];
+					#endif
 					
 					for (index = 0; index < n_elements && index * sizeof(int) < record->asiz; index += 1)
 					{
@@ -163,7 +167,11 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
-					double buffer[n_elements];
+					#if defined(_MSC_PLATFORM_TOOLSET) && (_MSC_PLATFORM_TOOLSET < 140)
+						double buffer[1024];
+					#else
+						double buffer[n_elements];
+					#endif
 					
 					for (index = 0; index < n_elements && index * sizeof(int) < record->asiz; index += 1)
 					{
@@ -178,7 +186,11 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 			
 			case DBF_FLOAT:
 			{
-				float buffer[n_elements];
+				#if defined(_MSC_PLATFORM_TOOLSET) && (_MSC_PLATFORM_TOOLSET < 140)
+					float buffer[1024];
+				#else
+					float buffer[n_elements];
+				#endif
 				
 				if (record->atyp == luascriptAVALType_Double)
 				{
