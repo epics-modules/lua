@@ -645,7 +645,7 @@ static void resume (lua_State *L, void *ud) {
 }
 
 
-LUA_API int lua_resume (lua_State *L, lua_State *from, int nargs) {
+LUA_API int LUA_SHARE lua_resume (lua_State *L, lua_State *from, int nargs) {
   int status;
   unsigned short oldnny = L->nny;  /* save "number of non-yieldable" calls */
   lua_lock(L);
@@ -684,12 +684,12 @@ LUA_API int lua_resume (lua_State *L, lua_State *from, int nargs) {
 }
 
 
-LUA_API int lua_isyieldable (lua_State *L) {
+LUA_API int LUA_SHARE lua_isyieldable (lua_State *L) {
   return (L->nny == 0);
 }
 
 
-LUA_API int lua_yieldk (lua_State *L, int nresults, lua_KContext ctx,
+LUA_API int LUA_SHARE lua_yieldk (lua_State *L, int nresults, lua_KContext ctx,
                         lua_KFunction k) {
   CallInfo *ci = L->ci;
   luai_userstateyield(L, nresults);
