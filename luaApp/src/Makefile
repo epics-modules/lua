@@ -7,12 +7,6 @@ include $(TOP)/configure/CONFIG
 
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
-ifeq ($(OS_CLASS), WIN32)
-ifeq ($(STATIC_BUILD), NO)
-	USR_CPPFLAGS += -DLUA_BUILD_AS_DLL
-	USR_CFLAGS += -DLUA_BUILD_AS_DLL
-endif
-endif
 
 LIBRARY_IOC += lua
 
