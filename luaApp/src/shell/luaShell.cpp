@@ -57,9 +57,18 @@ static void lstop (lua_State *L, lua_Debug *ar)
 ** this function only sets a hook that, when called, will stop the
 ** interpreter.
 */
+#if (defined(__RTEMS_MAJOR__)&&\
+    (__RTEMS_MAJOR__<4)||\
+    (__RTEMS_MAJOR__==4 && __RTEMS_MINOR__<10))
+static void laction ()
+{
+	signal(SIG_INT, SIG_DFL);
+#else
 static void laction (int i)
 {
 	signal(i, SIG_DFL); /* if another SIGINT happens, terminate process */
+#endif
+	
 	lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
 
