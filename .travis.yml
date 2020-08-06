@@ -94,16 +94,6 @@ jobs:
     os: osx
     compiler: clang
 
-# Windows builds
-
-  - env: BASE=7.0 STATIC=YES
-    os: windows
-    compiler: vs2017
-    
-  - env: BASE=7.0 STATIC=NO
-    os: windows
-    compiler: vs2017
-
 # Older Base releases
 
   - env: BASE=R3.15.7
