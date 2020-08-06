@@ -10,7 +10,6 @@
 
 #include <limits.h>
 #include <stddef.h>
-#include <epicsExport.h>
 
 
 /*
@@ -252,24 +251,22 @@
 ** the libraries, you may want to use the following definition (define
 ** LUA_BUILD_AS_DLL to get it).
 */
-//#if defined(LUA_BUILD_AS_DLL)	/* { */
+#if defined(LUA_BUILD_AS_DLL)	/* { */
 
-//#if defined(LUA_CORE) || defined(LUA_LIB)	/* { */
-//#define LUA_API __declspec(dllexport)
-//#else						/* }{ */
-//#define LUA_API __declspec(dllimport)
-//#endif						/* } */
+#if defined(LUA_CORE) || defined(LUA_LIB)	/* { */
+#define LUA_API __declspec(dllexport)
+#else						/* }{ */
+#define LUA_API __declspec(dllimport)
+#endif						/* } */
 
-//#else				/* }{ */
+#else				/* }{ */
 
-//#define LUA_API		extern
+#define LUA_API		extern
 
-//#endif				/* } */
+#endif				/* } */
 
 
 /* more often than not the libs go together with the core */
-#define LUA_API epicsShareFunc
-#define LUA_SHARE epicsShareAPI
 #define LUALIB_API	LUA_API
 #define LUAMOD_API	LUALIB_API
 
