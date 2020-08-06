@@ -142,14 +142,14 @@ extern const char lua_ident[];
 /*
 ** state manipulation
 */
-LUA_API lua_State LUA_SHARE *(lua_newstate) (lua_Alloc f, void *ud);
+LUA_API lua_State* LUA_SHARE (lua_newstate) (lua_Alloc f, void *ud);
 LUA_API void LUA_SHARE (lua_close) (lua_State *L);
-LUA_API lua_State LUA_SHARE *(lua_newthread) (lua_State *L);
+LUA_API lua_State* LUA_SHARE (lua_newthread) (lua_State *L);
 
 LUA_API lua_CFunction LUA_SHARE (lua_atpanic) (lua_State *L, lua_CFunction panicf);
 
 
-LUA_API const LUA_SHARE lua_Number *(lua_version) (lua_State *L);
+LUA_API const lua_Number* LUA_SHARE (lua_version) (lua_State *L);
 
 
 /*
