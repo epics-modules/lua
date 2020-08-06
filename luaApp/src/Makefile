@@ -107,7 +107,8 @@ lua_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 #Build an IOC with the ioc shell
 
-PROD_IOC = testLuaIoc
+PROD_IOC_DEFAULT = testLuaIoc
+PROD_IOC_RTEMS = -nil-
 
 DBD += testLuaIoc.dbd
 testLuaIoc_DBD += base.dbd
@@ -127,7 +128,7 @@ testLuaIoc_SRCS_vxWorks += -nil-
 
 #And build an IOC with the luashell
 
-PROD_IOC += testLuaShell
+PROD_IOC_DEFAULT += testLuaShell
 
 DBD += testLuaShell.dbd
 testLuaShell_DBD += base.dbd
