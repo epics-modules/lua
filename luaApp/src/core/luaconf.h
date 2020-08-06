@@ -10,7 +10,7 @@
 
 #include <limits.h>
 #include <stddef.h>
-#include <shareLib.h>
+#include <epicsExport.h>
 
 
 /*
