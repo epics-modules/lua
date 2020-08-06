@@ -814,7 +814,7 @@ LUA_API void  LUA_SHARE lua_rawset (lua_State *L, int idx) {
 }
 
 
-LUA_API void LUA_SHARE lua_rawseti (lua_State *L, int idx, lua_Integer n) {
+LUA_API void lua_rawseti (lua_State *L, int idx, lua_Integer n) {
   StkId o;
   lua_lock(L);
   api_checknelems(L, 1);
@@ -827,7 +827,7 @@ LUA_API void LUA_SHARE lua_rawseti (lua_State *L, int idx, lua_Integer n) {
 }
 
 
-LUA_API void LUA_SHARE lua_rawsetp (lua_State *L, int idx, const void *p) {
+LUA_API void lua_rawsetp (lua_State *L, int idx, const void *p) {
   StkId o;
   TValue k, *slot;
   lua_lock(L);
