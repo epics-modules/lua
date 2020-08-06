@@ -8,7 +8,8 @@ include $(TOP)/configure/CONFIG
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
 
-LIBRARY_IOC += lua
+LIBRARY_IOC_DEFAULT += lua
+LIBRARY_IOC_RTEMS = -nil-
 
 DBD += luaSupport.dbd
 
