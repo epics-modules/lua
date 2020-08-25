@@ -14,3 +14,5 @@ test = asyn.driver("TEST")
 
 print(test:readParam("INCREMENTOR"))
 print(test:readParam("INCREMENTOR"))
+test:writeParam("SET_VALUE", 5)
+print(test:readParam("INCREMENTOR"))
