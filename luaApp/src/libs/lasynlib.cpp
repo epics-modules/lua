@@ -265,6 +265,8 @@ static int asyn_writeparam(lua_State* state, asynPortDriver* port, int addr, con
 	asynUser* pasynuser = pasynManager->createAsynUser(NULL, NULL);
 	pasynManager->connectDevice(pasynuser, port->portName, addr);
 	
+	pasynuser->reason = index;
+	
 	asynStandardInterfaces* interfaces = port->getAsynStdInterfaces();
 	
 	switch (partype)
@@ -323,6 +325,8 @@ static int asyn_readparam(lua_State* state, asynPortDriver* port, int addr, cons
 	
 	asynUser* pasynuser = pasynManager->createAsynUser(NULL, NULL);
 	pasynManager->connectDevice(pasynuser, port->portName, addr);
+	
+	pasynuser->reason = index;
 	
 	asynStandardInterfaces* interfaces = port->getAsynStdInterfaces();
 	
