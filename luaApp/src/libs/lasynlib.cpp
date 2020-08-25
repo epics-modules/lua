@@ -332,18 +332,28 @@ static int asyn_readparam(lua_State* state, asynPortDriver* port, int addr, cons
 		{
 			epicsInt32 data;
 			asynInt32* inter = (asynInt32*) interfaces->int32.pinterface;
-			inter->read(port, pasynuser, &data);
-			lua_pushinteger(state, data);
-			return 1;
+			
+			if(asynSuccess == inter->read(port, pasynuser, &data))
+			{
+				lua_pushinteger(state, data);
+				return 1;
+			}
+			
+			break;
 		}
 		
 		case asynParamFloat64:
 		{
 			epicsFloat64 data;
 			asynFloat64* inter = (asynFloat64*) interfaces->float64.pinterface;
-			inter->read(port, pasynuser, &data);
-			lua_pushnumber(state, data);
-			return 1;
+			
+			if(asynSuccess == inter->read(port, pasynuser, &data))
+			{
+				lua_pushnumber(state, data);
+				return 1;
+			}
+			
+			break;
 		}
 		
 		case asynParamOctet:
@@ -354,9 +364,13 @@ static int asyn_readparam(lua_State* state, asynPortDriver* port, int addr, cons
 			int eomreason;
 			
 			asynOctet* inter = (asynOctet*) interfaces->octet.pinterface;
-			inter->read(port, pasynuser, buffer, 256, &num_trans, &eomreason);
-			lua_pushstring(state, buffer);
-			return 1;
+			if (asynSuccess == inter->read(port, pasynuser, buffer, 256, &num_trans, &eomreason))
+			{
+				lua_pushstring(state, buffer);
+				return 1;
+			}
+			
+			break;
 		}
 		
 		default:
