@@ -204,11 +204,9 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	this->state = luaCreateState();
 	luaL_dostring(this->state, "asyn = require('asyn')");
 	
-	std::string line = "self = asyn.driver '";
-	line += port_name;
-	line += "'";
-	luaL_dostring(this->state, line.c_str());
-	
+	lua_pushstring(this->state, port_name);
+	lua_setglobal(this->state, "PORT");
+	luaL_dostring(this->state, "self = asyn.driver 'PORT'");
 	
 	luaL_newmetatable(this->state, "param_get");
 	luaL_setfuncs(this->state, param_get, 0);
