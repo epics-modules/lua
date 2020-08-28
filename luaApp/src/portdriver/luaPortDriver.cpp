@@ -8,6 +8,17 @@
 #include "luaPortDriver.h"
 #include "luaEpics.h"
 
+
+/*
+ * __call metatable function on the datatable once the
+ * name has been defined.
+ *
+ * Takes in a multi-line block of code for the parameter
+ * to run when read or written. Builds the code into lua
+ * bytecode and then transfers all the stored parts of
+ * the datatable into a single storage area named _params
+ * for the asyn port driver to read.
+ */
 static int l_call(lua_State* state)
 {
 	lua_getfield(state, 1, "name");
@@ -40,17 +51,14 @@ static int l_call(lua_State* state)
 		status = luaL_dostring(state, data.c_str());
 		if (!status) { lua_setfield(state, -2, "read_bind"); }
 	}
-	else
+	else if (direction == "write")
 	{ 
 		data = "return function(self, value) " + data + " end";
 		status = luaL_dostring(state, data.c_str());
 		if (!status) { lua_setfield(state, -2, "write_bind"); }
 	}
 	
-	if (status)
-	{
-		return luaL_error(state, lua_tostring(state, -1));
-	}
+	if (status)    { return luaL_error(state, lua_tostring(state, -1)); }
 	
 	lua_getfield(state, 1, "type");
 	lua_setfield(state, -2, "type");
@@ -61,6 +69,19 @@ static int l_call(lua_State* state)
 	return 0;
 }
 
+/*
+ * __call metatable function on the datatable once the parameter
+ * type declaration has finished.
+ * 
+ * Because lua has a syntactic sugar construct where a
+ * single argument function can be called without parentheses,
+ * we can abuse this a bit by making it look like a type
+ * being applied to a variable. So, what is technically 
+ * 'paramtype("name")' ends up being written as 'paramtype name'.
+ *
+ * This function adds the name parameter to the running datatable
+ * and then switches the __call metatable function to l_call.
+ */
 static int l_addname(lua_State* state)
 {
 	static const luaL_Reg data_set[] = {
@@ -74,8 +95,7 @@ static int l_addname(lua_State* state)
 	lua_pushstring(state, param_name);
 	lua_setfield(state, -2, "name");
 	
-	luaL_newmetatable(state, "data_set");
-	luaL_setfuncs(state, data_set, 0);
+	if (luaL_newmetatable(state, "data_set")) { luaL_setfuncs(state, data_set, 0); }
 	lua_pop(state, 1);
 	
 	luaL_setmetatable(state, "data_set");
@@ -83,6 +103,14 @@ static int l_addname(lua_State* state)
 	return 1;
 }
 
+/* 
+ * __index metatable function on the datatable after the asyn
+ * parameter type is specified.
+ *
+ * Recognizes the indices "read" and "write" and stores them
+ * in the datatable. Then sets the __call metatable function
+ * to l_addname.
+ */
 static int l_readwrite(lua_State* state)
 {
 	const char* readwrite = luaL_checkstring(state, 2);
@@ -100,8 +128,8 @@ static int l_readwrite(lua_State* state)
 		{NULL, NULL}
 	};
 	
-	luaL_newmetatable(state, "param_call");
-	luaL_setfuncs(state, param_call, 0);
+	//Try to create a new metatable, only set functions if it doesn't exist
+	if(luaL_newmetatable(state, "param_call"))    { luaL_setfuncs(state, param_call, 0); }
 	lua_pop(state, 1);
 	
 	luaL_setmetatable(state, "param_call");
@@ -109,6 +137,29 @@ static int l_readwrite(lua_State* state)
 	return 1;
 }
 
+/*
+ * __index metatable function for the datatable param
+ *
+ * This is syntactic sugar to allow for complex data
+ * type definitions. Users will be able to type:
+ *
+ *    param.<param_type>.<read/write>
+ *
+ * and lua will transform it into
+ * 
+ *    param.__index(<param_type>).__index(<read/write)
+ *
+ * Which allows us to store data in the param table
+ * about the values that are coming in and keep them
+ * until the entire parameter definition is finished.
+ * At that point, the data can be cleaned up and stored
+ * in a better form in a different table for the port
+ * driver to use.
+ *
+ * Stores the given data type into the table if it matches
+ * with a list of potential data types, then sets the
+ * table's __index metamethod to l_readwrite. 
+ */
 static int l_index(lua_State* state)
 {
 	const char* param_type = luaL_checkstring(state, 2);
@@ -128,8 +179,7 @@ static int l_index(lua_State* state)
 		{NULL, NULL}
 	};
 	
-	luaL_newmetatable(state, "in_out");
-	luaL_setfuncs(state, in_out, 0);
+	if (luaL_newmetatable(state, "in_out"))    { luaL_setfuncs(state, in_out, 0); }
 	lua_pop(state, 1);
 	
 	luaL_setmetatable(state, "in_out");
@@ -137,10 +187,13 @@ static int l_index(lua_State* state)
 	return 1;
 }
 
+
+luaPortDriver::~luaPortDriver()   { lua_close(this->state); }
+
 luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, const char* lua_macros)
 	:asynPortDriver(port_name, 1, 
-		asynInt32Mask | asynFloat64Mask, 
-		asynInt32Mask | asynFloat64Mask, 
+		asynInt32Mask | asynFloat64Mask | asynOctetMask, 
+		asynInt32Mask | asynFloat64Mask | asynOctetMask, 
 		0, 1, 0, 0)
 {
 	static const luaL_Reg param_get[] = {
@@ -179,6 +232,10 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 		return;
 	}
 	
+	//Clear params table, not needed anymore
+	lua_pushnil(this->state);
+	lua_setglobal(this->state, "params");
+
 	lua_newtable(this->state);
 	lua_setglobal(this->state, "_functions");
 	
@@ -214,6 +271,10 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	}
 	
 	lua_pop(this->state, 1);
+	
+	//Clear _params, not needed anymore
+	lua_pushnil(this->state);
+	lua_setglobal(this->state, "_params");
 }
 
 void luaPortDriver::getReadFunction(int index)
@@ -243,7 +304,7 @@ int luaPortDriver::callReadFunction()
 void luaPortDriver::getWriteFunction(int index)
 {
 	lua_getglobal(this->state, "_functions");
-	lua_geti(this->state, -1, index);
+	lua_geti(this->state, -1, index);	
 	lua_getfield(this->state, -1, "write");
 	lua_remove(this->state, -3);
 	lua_remove(this->state, -2);
@@ -396,11 +457,6 @@ asynStatus luaPortDriver::readInt32(asynUser* pasynuser, epicsInt32* value)
 	return asynSuccess;
 }
 
-luaPortDriver::~luaPortDriver()
-{
-	lua_close(this->state);
-}
-
 int lnewdriver(lua_State* state)
 {
 	lua_settop(state, 3);
@@ -413,9 +469,21 @@ int lnewdriver(lua_State* state)
 	return 0;
 }
 
+static const iocshArg newdriverCmdArg0 = { "asyn port name", iocshArgString };
+static const iocshArg newdriverCmdArg1 = { "filename of defintion file", iocshArgString };
+static const iocshArg newdriverCmdArg2 = { "macro definitions", iocshArgString };
+static const iocshArg* newdriverCmdArgs[3] = {&newdriverCmdArg0, &newdriverCmdArg1, &newdriverCmdArg2};
+static const iocshFuncDef newdriverFuncDef = {"luaPortDriver", 3, newdriverCmdArgs};
+
+static void newdriverCallFunc(const iocshArgBuf* args)
+{
+	new luaPortDriver(args[0].sval, args[1].sval, args[2].sval);
+}
+
 static void portDriverRegister(void)
 { 
 	luaRegisterFunction("luaPortDriver", lnewdriver);
+	iocshRegister(&newdriverFuncDef, newdriverCallFunc);
 }
 
 extern "C"
