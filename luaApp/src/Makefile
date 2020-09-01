@@ -137,6 +137,7 @@ PROD_IOC_DEFAULT += testLuaShell
 
 DBD += testLuaShell.dbd
 testLuaShell_DBD += base.dbd
+testLuaShell_DBD += asyn.dbd
 testLuaShell_DBD += drvAsynIPPort.dbd
 testLuaShell_DBD += luaSupport.dbd
 
