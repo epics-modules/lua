@@ -114,11 +114,12 @@ static void strtolua(lua_State* state, std::string text)
 	convert << "return " << text;
 	
 	lua_State* sandbox = luaL_newstate();
-	luaL_dostring(sandbox, convert.str().c_str());
+	int err = luaL_dostring(sandbox, convert.str().c_str());
 	
 	int type = lua_type(sandbox, -1);
 	
-	if      (type == LUA_TNUMBER)  { lua_pushnumber(state, lua_tonumber(sandbox, -1)); }
+	if      (err)                  { lua_pushstring(state, text.c_str()); }
+	else if (type == LUA_TNUMBER)  { lua_pushnumber(state, lua_tonumber(sandbox, -1)); }
 	else if (type == LUA_TSTRING)  { lua_pushstring(state, lua_tostring(sandbox, -1)); }
 	else if (type == LUA_TBOOLEAN) { lua_pushboolean(state, lua_toboolean(sandbox, -1)); }
 	else                           { lua_pushstring(state, text.c_str()); }
