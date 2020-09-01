@@ -1,14 +1,11 @@
 #include <dbStaticLib.h>
 #include <epicsExport.h>
+#include <iocsh.h>
 #include "luaEpics.h"
 
 int l_setfield(lua_State* state)
 {
-	lua_getglobal(state, "pdbbase");
-	DBBASE** pdbbase = (DBBASE**) lua_touserdata(state, -1);
-	lua_pop(state, 1);
-	
-	DBENTRY* entry = dbAllocEntry(*pdbbase);
+	DBENTRY* entry = dbAllocEntry(*iocshPpdbbase);
 	
 	lua_getfield(state, 1, "name");
 	const char* record_name = lua_tostring(state, -1);
@@ -52,14 +49,12 @@ int l_record(lua_State* state)
 
 	const char* type = luaL_checkstring(state, 1);
 	const char* name = luaL_checkstring(state, 2);
+
+	printf("Called with: %s, %s\n", type, name);
 	
-	lua_getglobal(state, "pdbbase");
-	DBBASE** pdbbase = (DBBASE**) lua_touserdata(state, -1);
-	lua_pop(state, 1);
+	if (! iocshPpdbbase)   { luaL_error(state, "No database definition found.\n"); }
 	
-	if (! pdbbase)   { luaL_error(state, "No database definition found.\n"); }
-	
-	DBENTRY* entry = dbAllocEntry(*pdbbase);
+	DBENTRY* entry = dbAllocEntry(*iocshPpdbbase);
 	
 	int status = dbFindRecordType(entry, type);
 	
