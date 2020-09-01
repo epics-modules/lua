@@ -49,8 +49,6 @@ int l_record(lua_State* state)
 
 	const char* type = luaL_checkstring(state, 1);
 	const char* name = luaL_checkstring(state, 2);
-
-	printf("Called with: %s, %s\n", type, name);
 	
 	if (! iocshPpdbbase)   { luaL_error(state, "No database definition found.\n"); }
 	
