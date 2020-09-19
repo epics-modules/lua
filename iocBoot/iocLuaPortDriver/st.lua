@@ -3,16 +3,22 @@ epicsEnvSet("LUA_SCRIPT_PATH", ".:./scripts")
 dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
 
-luaPortDriver("TEST", "driver.lua", "START=10")
+luaPortDriver("TEST", "driver.lua", "P=x:, R=y:, START=10")
 
 ---------------
 iocInit()
 ---------------
 
-asyn = require("asyn")
-test = asyn.driver("TEST")
+epics = require("epics")
 
-print(test:readParam("INCREMENTOR"))
-print(test:readParam("INCREMENTOR"))
-test:writeParam("SET_VALUE", 5)
-print(test:readParam("INCREMENTOR"))
+epics.get("x:y:Value")
+
+epics.put("x:y:Increment", 1)
+epics.get("x:y:Value")
+
+epics.put("x:y:Increment", 5)
+epics.get("x:y:Value")
+
+
+epics.put("x:y:Set", 5)
+epics.get("x:y:Value")

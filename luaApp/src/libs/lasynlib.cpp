@@ -1037,50 +1037,38 @@ static int l_driverwrite(lua_State* state)
 	return asyn_writeparam(state, port, addr, fieldname.c_str(), 3);
 }
 
-extern "C"
+void luaGenerateDriver(lua_State* state, asynPortDriver* port)
 {
+	static const luaL_Reg driver_funcs[] = {
+		{"readParam", l_driverread},
+		{"writeParam", l_driverwrite},
+		{"callParamCallbacks", l_drivercallbacks},
+		{NULL, NULL}
+	};
+	
+	lua_newtable(state);
+	luaL_setfuncs(state, driver_funcs, 0);
+	
+	lua_pushlightuserdata(state, port);
+	lua_setfield(state, -2, "driver");
+	
+	lua_pushinteger(state, 0);
+	lua_setfield(state, -2, "addr");
+	
+	luaL_setmetatable(state, "driver_meta");
+}
+
+extern "C"
+{	
 	void luaGenerateDriver(lua_State* state, const char* port_name)
 	{
 		asynPortDriver* port = find_driver(state, port_name);
 		
-		static const luaL_Reg driver_meta[] = {
-			{"__index", l_driverindex},
-			{"__newindex", l_drivernewindex},
-			{NULL, NULL}
-		};
-		
-		static const luaL_Reg driver_funcs[] = {
-			{"readParam", l_driverread},
-			{"writeParam", l_driverwrite},
-			{"callParamCallbacks", l_drivercallbacks},
-			{NULL, NULL}
-		};
-		
-		luaL_newmetatable(state, "driver_meta");
-		luaL_setfuncs(state, driver_meta, 0);
-		lua_pop(state, 1);
-		
-		lua_newtable(state);
-		luaL_setfuncs(state, driver_funcs, 0);
-		
-		lua_pushlightuserdata(state, port);
-		lua_setfield(state, -2, "driver");
-		
-		lua_pushinteger(state, 0);
-		lua_setfield(state, -2, "addr");
-		
-		luaL_setmetatable(state, "driver_meta");
+		luaGenerateDriver(state, port);
 	}
 	
 	void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param)
-	{
-		static const luaL_Reg port_meta[] = {
-			{"__gc", l_portgc},
-			{"__index", l_portindex},
-			{"__newindex", l_portnewindex},
-			{NULL, NULL}
-		};
-		
+	{		
 		static const luaL_Reg port_funcs[] = {
 			{"read", l_portread},
 			{"write", l_portwrite},
@@ -1090,10 +1078,6 @@ extern "C"
 			{"setOption", l_portoption},
 			{NULL, NULL}
 		};
-
-		luaL_newmetatable(state, "port_meta");
-		luaL_setfuncs(state, port_meta, 0);
-		lua_pop(state, 1);
 
 		lua_newtable(state);
 		luaL_setfuncs(state, port_funcs, 0);
@@ -1156,6 +1140,27 @@ static int l_createdriver(lua_State* state)
 
 int luaopen_asyn (lua_State *L)
 {
+	static const luaL_Reg port_meta[] = {
+		{"__gc", l_portgc},
+		{"__index", l_portindex},
+		{"__newindex", l_portnewindex},
+		{NULL, NULL}
+	};
+	
+	luaL_newmetatable(L, "port_meta");
+	luaL_setfuncs(L, port_meta, 0);
+	lua_pop(L, 1);
+	
+	static const luaL_Reg driver_meta[] = {
+		{"__index", l_driverindex},
+		{"__newindex", l_drivernewindex},
+		{NULL, NULL}
+	};
+	
+	luaL_newmetatable(L, "driver_meta");
+	luaL_setfuncs(L, driver_meta, 0);
+	lua_pop(L, 1);
+	
 	static const luaL_Reg mylib[] = {
 		{"read", l_read},
 		{"write", l_write},

@@ -8,6 +8,8 @@
 #include "luaPortDriver.h"
 #include "luaEpics.h"
 
+void luaGenerateDriver(lua_State* state, asynPortDriver* port);
+
 
 /*
  * __call metatable function on the datatable once the
@@ -43,7 +45,7 @@ static int l_call(lua_State* state)
 	lua_pushstring(state, param_name);
 	lua_setfield(state, -2, "name");
 	
-	int status;
+	int status = 0;
 	
 	if (direction == "read")
 	{
@@ -52,7 +54,7 @@ static int l_call(lua_State* state)
 		if (!status) { lua_setfield(state, -2, "read_bind"); }
 	}
 	else if (direction == "write")
-	{ 
+	{
 		data = "return function(self, value) " + data + " end";
 		status = luaL_dostring(state, data.c_str());
 		if (!status) { lua_setfield(state, -2, "write_bind"); }
@@ -166,10 +168,10 @@ static int l_index(lua_State* state)
 	
 	lua_newtable(state);
 	
-	if      (strcasecmp(param_type, "int32") == 0)         { lua_pushinteger(state, 1); }
+	if      (strcasecmp(param_type, "int32") == 0)         { lua_pushinteger(state, asynParamInt32); }
 	else if (strcasecmp(param_type, "uint32digital") == 0) { lua_pushinteger(state, 2); }
-	else if (strcasecmp(param_type, "float64") == 0)       { lua_pushinteger(state, 3); }
-	else if (strcasecmp(param_type, "string") == 0)        { lua_pushinteger(state, 4); }
+	else if (strcasecmp(param_type, "float64") == 0)       { lua_pushinteger(state, asynParamFloat64); }
+	else if (strcasecmp(param_type, "string") == 0)        { lua_pushinteger(state, asynParamOctet); }
 	else                                                   { lua_pushinteger(state, 0); }
 	
 	lua_setfield(state, -2, "type");
@@ -192,7 +194,7 @@ luaPortDriver::~luaPortDriver()   { lua_close(this->state); }
 
 luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, const char* lua_macros)
 	:asynPortDriver(port_name, 1, 
-		asynInt32Mask | asynFloat64Mask | asynOctetMask, 
+		asynInt32Mask | asynFloat64Mask | asynOctetMask | asynDrvUserMask, 
 		asynInt32Mask | asynFloat64Mask | asynOctetMask, 
 		0, 1, 0, 0)
 {
@@ -202,11 +204,11 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	};
 	
 	this->state = luaCreateState();
+	
 	luaL_dostring(this->state, "asyn = require('asyn')");
 	
 	lua_pushstring(this->state, port_name);
 	lua_setglobal(this->state, "PORT");
-	luaL_dostring(this->state, "self = asyn.driver 'PORT'");
 	
 	luaL_newmetatable(this->state, "param_get");
 	luaL_setfuncs(this->state, param_get, 0);
@@ -218,11 +220,11 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	
 	lua_newtable(state);
 	lua_setglobal(this->state, "_params");
-	
+
 	luaLoadMacros(this->state, lua_macros);
-	
+
 	int status = luaLoadScript(this->state, lua_filepath);
-	
+		
 	if (status) 
 	{ 
 		const char* msg = lua_tostring(state, -1); 
@@ -237,39 +239,41 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	lua_newtable(this->state);
 	lua_setglobal(this->state, "_functions");
 	
-	lua_getglobal(this->state, "_params");
+	lua_getglobal(this->state, "_params");	
 	lua_pushnil(this->state);
 	
-	int index;
+	int index = 0;
 	
 	while(lua_next(state, -2))
-	{
+	{		
 		lua_getfield(this->state, -1, "name");
 		const char* param_name = lua_tostring(this->state, -1);
 		lua_pop(this->state, 1);
-		
+
 		lua_getfield(this->state, -1, "type");
 		int param_type = luaL_optinteger(this->state, -1, 1);
 		lua_pop(this->state, 1);
 		
 		this->createParam(param_name, (asynParamType) param_type, &index);
-		
+				
 		lua_getglobal(this->state, "_functions");
 		lua_newtable(this->state);
 		
 		lua_getfield(this->state, -3, "read_bind");
 		lua_setfield(this->state, -2, "read");
 		
-		lua_getfield(this->state, -3, "write_bind");
+		lua_getfield(this->state, -3, "write_bind");		
 		lua_setfield(this->state, -2, "write");
 		
 		lua_seti(this->state, -2, index);
+		
+		index += 1;
 		
 		lua_pop(this->state, 2);
 	}
 	
 	lua_pop(this->state, 1);
-	
+
 	//Clear _params, not needed anymore
 	lua_pushnil(this->state);
 	lua_setglobal(this->state, "_params");
@@ -280,14 +284,14 @@ void luaPortDriver::getReadFunction(int index)
 	lua_getglobal(this->state, "_functions");
 	lua_geti(this->state, -1, index);
 	lua_remove(this->state, -2);
-	
 	lua_getfield(this->state, -1, "read");
 	lua_remove(this->state, -2);
 }
 
 int luaPortDriver::callReadFunction()
-{
-	lua_getglobal(this->state, "self");
+{	
+	luaGenerateDriver(this->state, this);
+	
 	int status = lua_pcall(this->state, 1, 1, 0);
 	
 	if (status)
@@ -300,9 +304,9 @@ int luaPortDriver::callReadFunction()
 }
 
 void luaPortDriver::getWriteFunction(int index)
-{
+{	
 	lua_getglobal(this->state, "_functions");
-	lua_geti(this->state, -1, index);	
+	lua_geti(this->state, -1, index);
 	lua_getfield(this->state, -1, "write");
 	lua_remove(this->state, -3);
 	lua_remove(this->state, -2);
@@ -310,7 +314,8 @@ void luaPortDriver::getWriteFunction(int index)
 
 int luaPortDriver::callWriteFunction()
 {
-	lua_getglobal(this->state, "self");
+	luaGenerateDriver(this->state, this);
+	
 	lua_pushvalue(this->state, -2);
 	lua_remove(this->state, -3);
 	
@@ -433,7 +438,7 @@ asynStatus luaPortDriver::readFloat64(asynUser* pasynuser, epicsFloat64* value)
 	
 
 asynStatus luaPortDriver::readInt32(asynUser* pasynuser, epicsInt32* value)
-{	
+{
 	this->getReadFunction(pasynuser->reason);
 	
 	if (lua_isnil(this->state, 1))

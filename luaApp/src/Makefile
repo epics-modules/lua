@@ -117,6 +117,7 @@ PROD_IOC_RTEMS = -nil-
 
 DBD += testLuaIoc.dbd
 testLuaIoc_DBD += base.dbd
+testLuaIoc_DBD += asyn.dbd
 testLuaIoc_DBD += drvAsynIPPort.dbd
 testLuaIoc_DBD += luaSupport.dbd
 
