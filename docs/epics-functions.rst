@@ -13,7 +13,7 @@ primarily for use as an easy debugging tool for devices that
 have a command-response style control scheme, or a framework to 
 allow control of said devices.
 
-The 'db' Library - :doc: `Documentation <database-library>` -
+The 'db' Library - :doc:`Documentation <database-library>` -
 This library contains functions to allow users to generate 
 database records like one would using the dbLoadDatabase function
 to load a db file. Instead, all records can be generated entirely
