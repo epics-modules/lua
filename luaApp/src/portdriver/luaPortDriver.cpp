@@ -8,6 +8,7 @@
 #include "luaPortDriver.h"
 #include "luaEpics.h"
 
+
 void luaGenerateDriver(lua_State* state, asynPortDriver* port);
 
 
@@ -55,7 +56,7 @@ static int l_call(lua_State* state)
 	}
 	else if (direction == "write")
 	{
-		data = "return function(self, value) " + data + " end";
+		data = "return function(value, self) " + data + " end";
 		status = luaL_dostring(state, data.c_str());
 		if (!status) { lua_setfield(state, -2, "write_bind"); }
 	}
@@ -279,6 +280,11 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	lua_setglobal(this->state, "_params");
 }
 
+/*
+ * Finds the defined read function according to the
+ * asynuser reason and leaves it as the only addition
+ * to the stack.
+ */
 void luaPortDriver::getReadFunction(int index)
 {
 	lua_getglobal(this->state, "_functions");
@@ -288,6 +294,12 @@ void luaPortDriver::getReadFunction(int index)
 	lua_remove(this->state, -2);
 }
 
+/*
+ * Pushes a lua asyn driver object onto the
+ * stack for the parameter 'self'. Then
+ * runs the function that's currently on the
+ * stack.
+ */
 int luaPortDriver::callReadFunction()
 {	
 	luaGenerateDriver(this->state, this);
@@ -303,6 +315,12 @@ int luaPortDriver::callReadFunction()
 	return status;
 }
 
+
+/*
+ * Finds the defined write function according to the
+ * asynuser reason and leaves it as the only addition
+ * to the stack.
+ */
 void luaPortDriver::getWriteFunction(int index)
 {	
 	lua_getglobal(this->state, "_functions");
@@ -312,12 +330,18 @@ void luaPortDriver::getWriteFunction(int index)
 	lua_remove(this->state, -2);
 }
 
+
+/*
+ * Pushes a lua asyn driver object onto the
+ * stack for the parameter 'self'. This function
+ * assumes that the caller has already pushed the 
+ * value coming in from asyn onto the stack to be
+ * used for the parameter 'value'. Then, it calls
+ * the function on the stack.
+ */
 int luaPortDriver::callWriteFunction()
 {
 	luaGenerateDriver(this->state, this);
-	
-	lua_pushvalue(this->state, -2);
-	lua_remove(this->state, -3);
 	
 	int status = lua_pcall(this->state, 2, 0, 0);
 	
