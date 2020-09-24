@@ -35,8 +35,12 @@ static FILE* temp_help = tmpfile();
 epicsShareDef LUA_LIBRARY_LOAD_HOOK_ROUTINE luaLoadLibraryHook = NULL;
 epicsShareDef LUA_FUNCTION_LOAD_HOOK_ROUTINE luaLoadFunctionHook = NULL;
 
+/*
+ * Attempts to find a given filename within the folders listed
+ * in the environment variable "LUA_SCRIPT_PATH"
+ */
 epicsShareFunc std::string luaLocateFile(std::string filename)
-{
+{	
 	/* Check if the filename is an absolute path */
 	if (filename.at(0) == '/' && std::ifstream(filename.c_str()).good())    { return filename; }
 
@@ -81,6 +85,10 @@ epicsShareFunc std::string luaLocateFile(std::string filename)
 }
 
 
+/*
+ * Finds the given file, loads it as bytecode, and runs it. Returns
+ * any erros that occur in this process.
+ */
 epicsShareFunc int luaLoadScript(lua_State* state, const char* script_file)
 {
 	std::string found = luaLocateFile(std::string(script_file));
@@ -96,6 +104,12 @@ epicsShareFunc int luaLoadScript(lua_State* state, const char* script_file)
 
 }
 
+
+/*
+ * Helper wrapper around luaL_loadstring that returns an error on
+ * an empty string rather than a success code. Cleans up some
+ * other code so that it doesn't have to check for empty strings.
+ */
 epicsShareFunc int luaLoadString(lua_State* state, const char* lua_code)
 {
 	if (std::string(lua_code).empty())    { return -1; }
@@ -103,6 +117,14 @@ epicsShareFunc int luaLoadString(lua_State* state, const char* lua_code)
 	return luaL_loadstring(state, lua_code);
 }
 
+
+/*
+ * Converts a string into a lua value and pushes it to the stack.
+ * Runs the string in a sandbox environment and parses the output
+ * type to determine what to push to the stack. Any values that aren't
+ * recognized or aren't parsed as a number, string, or boolean are
+ * treated like strings in order to allow for unquoted strings.
+ */
 static void strtolua(lua_State* state, std::string text)
 {
 	size_t trim_front = text.find_first_not_of(" ");
@@ -126,6 +148,12 @@ static void strtolua(lua_State* state, std::string text)
 }
 
 
+/*
+ * Takes a set of comma-separated values, parses them, and pushes
+ * the equivalent lua values to the stack. Returns the number of
+ * values in the list. Useful for allowing epics strings to contain
+ * text that looks like a function call.
+ */
 epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
 {
 	std::stringstream parse(param_list);
@@ -142,6 +170,12 @@ epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
 	return num_params;
 }
 
+
+/*
+ * Takes a set of comma-separated macro definitions in the form of
+ * key-value pairs. Sets global variables according to the keys
+ * parsed.
+ */
 epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 {
 	char** pairs;
@@ -161,6 +195,13 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 	}
 }
 
+
+/*
+ * Takes a library name and a function that pushes a table of functions to the stack.
+ * When a library is called to be included in a lua script, the name is attempted to
+ * be matched against the given library name. Used to allow libraries to be registered
+ * during the ioc registrar calls.
+ */
 epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction library_func)
 {	
 	std::pair<const char*, lua_CFunction> temp(library_name, library_func);
@@ -170,6 +211,11 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 	if (luaLoadLibraryHook)    { luaLoadLibraryHook(library_name, library_func); }
 }
 
+
+/*
+ * Binds a given lua function to the given name in every state created with the 
+ * luaCreateState function.
+ */
 epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction function)
 {
 	std::pair<const char*, lua_CFunction> temp(function_name, function);
@@ -179,6 +225,11 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 	if (luaLoadFunctionHook)    { luaLoadFunctionHook(function_name, function); }
 }
 
+
+/*
+ * Search function that gets added to lua. Gets called when "include" is used.
+ * Searches for the named library in the list of registered libraries.
+ */
 static int luaCheckLibrary(lua_State* state)
 {
 	std::string libname(lua_tostring(state, 1));
@@ -200,6 +251,12 @@ static int luaCheckLibrary(lua_State* state)
 	return 1;
 }
 
+
+/*
+ * Called on every state created with luaCreateState. Adds the above 
+ * function into the list of lua package searchers and then registers
+ * all the functions within the registered_funcs list.
+ */
 epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
 	/**
@@ -222,6 +279,12 @@ epicsShareFunc void luaLoadRegistered(lua_State* state)
 }
 
 
+/*
+ * Function to be run when an ioc shell object is called.
+ * Constructs a line of iocsh code and then uses iocshCmd
+ * to run the line. Necessary due to epics base removal of
+ * access to the ioc function registrar.
+ */
 static int l_call(lua_State* state)
 {
 	lua_getfield(state, 1, "function_name");
@@ -287,6 +350,13 @@ static int l_call(lua_State* state)
 	return 0;
 }
 
+
+/*
+ * Parses the output of the iocsh help command to try
+ * and find a given function name. Necessary due to the
+ * removal of epics base access to the ioc function registrar.
+ * Returns true/false if it finds a matching name.
+ */
 static bool parseHelp(const char* func_name)
 {
 	// If there was an issue with initial tmpfile, attempt retry
@@ -348,6 +418,13 @@ static bool parseHelp(const char* func_name)
 }
 
 
+/*
+ * Replaces the basic index call function within lua in order
+ * to recognize ioc shell functions. Any unknown variable
+ * name is checked against the list of functions registered
+ * in the ioc shell, if it exists, return a function object,
+ * otherwise return Nil as normal.
+ */
 static int l_iocindex(lua_State* state)
 {
 	const char* symbol_name = lua_tostring(state, 2);
@@ -390,6 +467,13 @@ static int l_iocindex(lua_State* state)
 	return 1;
 }
 
+
+/*
+ * Put as a size-of function to trick lua into allowing
+ * #ENABLE_HASH_COMMENTS, adds a global variable that
+ * gets used by the lua shell to ignore lines that start
+ * with '#' to enable some backwards compatibility.
+ */
 static int l_iochash_enable(lua_State* state)
 {
 	lua_pushstring(state, "YES");
@@ -435,6 +519,12 @@ int luaopen_iocsh (lua_State* state)
 	return 1;
 }
 
+
+/*
+ * Generates a new lua state for the caller,
+ * binds in the defined epics libraries and
+ * functions.
+ */
 epicsShareFunc lua_State* luaCreateState()
 {
 	lua_State* output = luaL_newstate();
@@ -447,6 +537,14 @@ epicsShareFunc lua_State* luaCreateState()
 	return output;
 }
 
+
+/*
+ * Creates a new named lua_State or returns an existing
+ * one. Used to allow data to be shared between different
+ * epics uses of lua. Most notably, allowing variables from
+ * startup scripts able to continue into another call of
+ * luash.
+ */
 epicsShareFunc lua_State* luaNamedState(const char* name)
 {
 	if (! name) { return NULL; }
