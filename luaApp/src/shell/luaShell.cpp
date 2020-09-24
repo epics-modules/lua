@@ -463,6 +463,12 @@ static void initState(lua_State* state)
 extern "C"
 {
 
+/* 
+ * Wrapper around the core shell loop, checks if there is already a shell running
+ * to allow for nested shell calls. Otherwise, creates a new state and loads hooks
+ * in case a dbd file is loaded during operation. After the shell is done running,
+ * clean up the resources.
+ */
 epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* macros)
 {
 	if (shell_state != NULL)
@@ -501,11 +507,18 @@ epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* ma
 	return 0;
 }
 
+
+/*
+ * Epics function to call the shell
+ */
 epicsShareFunc int epicsShareAPI luash(const char* pathname)
 {
 	return luashBegin(pathname, NULL);
 }
 
+/*
+ * Epics function for one-liner lua commands
+ */
 epicsShareFunc int epicsShareAPI luaCmd(const char* command, const char* macros)
 {
 	if (! command)    { return -1; }
@@ -533,6 +546,11 @@ epicsShareFunc int epicsShareAPI luaCmd(const char* command, const char* macros)
 	return 0;
 }
 
+
+/*
+ * Epics function to create a background process and execute a script 
+ * in that thread.
+ */
 epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macros)
 {
 	lua_State* state = luaCreateState();
