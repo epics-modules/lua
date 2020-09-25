@@ -176,6 +176,11 @@ static std::pair<std::string, std::string> parseCode(std::string& input)
 }
 
 
+/*
+ * Checks if a given name is either a filename or a name of an
+ * already created state. Creates a new state from a found
+ * file, or loads the named state.
+ */
 static int getState(luascriptRecord* record, std::string name)
 {
 	if (! name.empty() && luaLocateFile(name).empty())
@@ -291,6 +296,12 @@ static long loadNumbers(luascriptRecord* record)
 	return status;
 }
 
+
+/* 
+ * Pull elements number of values from a multi-element link,
+ * put them into a lua table, and then put the table onto
+ * the stack.
+ */
 template <typename T>
 static int createTable(lua_State* state, DBLINK* field, short field_type, long* elements, bool integers)
 {
@@ -313,8 +324,16 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
 	return 0;
 }
 
+
+/*
+ * Converts a lua table into a generated array of basic elements
+ * so that it can be written to an epics PV. The type of the
+ * returned array is based on the type of the first element of
+ * the array in lua.
+ */
 static void* convertTable(lua_State* state, int* generated_size, epicsEnum16* arraytype)
 {
+	// Get the length of the array
 	lua_len(state, -1);
 	int array_size = lua_tonumber(state, -1);
 	lua_pop(state, 1);
@@ -472,6 +491,7 @@ static long loadStrings(luascriptRecord* record)
 
 	return status;
 }
+
 
 void checkLinks(luascriptRecord* record)
 {
@@ -793,7 +813,7 @@ static void writeValue(luascriptRecord* record)
 	ScriptDSET* pluascriptDSET = (ScriptDSET*) record->dset;
 
 	if (!pluascriptDSET || !pluascriptDSET->write)
-		{
+	{
 		errlogPrintf("%s DSET write does not exist\n", record->name);
 		recGblSetSevr(record, SOFT_ALARM, INVALID_ALARM);
 		record->pact = TRUE;
@@ -853,6 +873,7 @@ static void processCallback(void* data)
 		return;
 	}
 	
+	// Process the returned values
 	int top = lua_gettop(state);
 
 	if (top > 0) 
@@ -897,7 +918,6 @@ static void processCallback(void* data)
 			record->pavl = record->aval;
 			record->pasz = record->asiz;
 			record->patp = record->atyp;
-			
 			
 			record->aval = convertTable(state, &record->asiz, &record->atyp);
 			
