@@ -556,6 +556,11 @@ epicsShareFunc int epicsShareAPI luash(const char* pathname)
 	return luash(NULL, pathname, NULL);
 }
 
+epicsShareFunc int epicsShareAPI luashLoad(const char* pathname, const char* macros)
+{
+	return luash(NULL, pathname, macros);
+}
+
 /*
  * Epics function for one-liner lua commands
  */
