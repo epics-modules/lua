@@ -1,6 +1,6 @@
-==================
-Database Functions
-==================
+==============================
+Database Library Documentation
+==============================
 
 **db.record** (recordtype, recordname)
 

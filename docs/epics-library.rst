@@ -1,6 +1,6 @@
-===============
-Epics Functions
-===============
+===========================
+Epics Library Documentation
+===========================
 
 **epics.get** (*PV*[, timeout])
 
