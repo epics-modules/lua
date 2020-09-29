@@ -11,14 +11,13 @@
 
 int main(int argc, char *argv[])
 {
-	luaNamedState("default");
-	luashSetCommonState("default");
+	lua_State* state = luaNamedState("shell");
 	
     if(argc>=2) {    
-        luash(argv[1]);
+        luash(state, argv[1]);
         epicsThreadSleep(.2);
     }
-    luash(NULL);
+    luash(state, NULL);
 	epicsExit(0);
     return(0);
 }

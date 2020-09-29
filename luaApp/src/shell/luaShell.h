@@ -9,15 +9,23 @@ extern "C" {
 
 
 epicsShareFunc int epicsShareAPI luash(const char* pathname);
-epicsShareFunc int epicsShareAPI luashBegin(const char* pathname, const char* macros);
-
 epicsShareFunc int epicsShareAPI luaCmd(const char* command, const char* macros);
 epicsShareFunc int epicsShareAPI luaSpawn(const char* pathname, const char* macros);
 
-epicsShareFunc void epicsShareAPI luashSetCommonState(const char* state_name);
+epicsShareFunc void epicsShareAPI luashSetCommonState(const char* name);
 
 #ifdef __cplusplus
+
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+
 }
+
+epicsShareFunc int epicsShareAPI luash(lua_State* state, const char* pathname);
+epicsShareFunc int epicsShareAPI luash(lua_State* state, const char* pathname, const char* macros);
+
+epicsShareFunc int epicsShareAPI luaCmd(lua_State* state, const char* command, const char* macros);
 #endif
 
 
