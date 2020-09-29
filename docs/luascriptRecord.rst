@@ -58,25 +58,20 @@ Read Parameters
 
 The read parameters for the luascript record consist of 20 input links:
 10 to numeric fields (INPA -> A, INPB -> B, . . . INPJ -> J); and 10 to
-string fields (INAA -> AA, INBB -> BB, ...INJJ -> JJ). The fields can be
-database links, channel access links, or constants. If they are links,
-they must specify another record's field. If they are constants, they
-will be initialized with the value they are configured with and can be
-changed via ``dbPuts``. These fields cannot be hardware addresses. In
-addition, the luascript record contains the fields INAV, INBV, . . .
+non-numeric fields (INAA -> AA, INBB -> BB, ...INJJ -> JJ). The fields 
+can be database links, channel access links, or constants. If they are 
+links, they must specify another record's field. If they are constants, 
+they will be initialized with the value they are configured with and can 
+be changed via ``dbPuts``. Non-numeric input links check the field type
+of the link provided and fetch data as either strings or as an array of 
+values.
+
+In addition, the luascript record contains the fields INAV, INBV, . . .
 INJV, which indicate the status of the links to numeric fields, and the
 fields IAAV, IBBV, . . . IJJV, which indicate the status of the links to
 string fields.  These fields indicate whether or not the specified PV
 was found and a link to it established. See `Section 5, Operator Display
 Parameters <#MARKER-9-2>`__ for an explanation of these fields.
-
-From most types of PV's, the luascript record's string input links fetch
-data as strings, and depend on EPICS to convert a PV's native value to
-string. But when a luascript record's string input link names a PV whose
-data type is an array of DBF_CHAR or DBF_UCHAR, the record fetches up to
-39 array elements from the array in their native form, translates the
-result using epicsStrSnPrintEscaped(), and truncates the result to fit
-into a 40-character string.
 
  See the EPICS Record Reference Manual for information on how to specify
 database links.
@@ -183,20 +178,23 @@ determines the condition that causes the output link to be written to.
 It's a menu field that has six choices:
 
 -  ``Every Time`` -- write output every time record is processed.
--  ``On Change`` -- write output every time VAL/SVAL changes, i.e.,
-   every time the result of the expression changes.
+-  ``On Change`` -- write output every time VAL/SVAL/AVAL changes, i.e.,
+   every time the result of the expression changes to a value different
+   than the one immediately previous.
 -  ``When Zero`` -- when record is processed, write output if VAL is
-   zero or if SVAL is an empty string.
+   zero, if SVAL is an empty string, or if AVAL is a 0-sized array.
 -  ``When Non-zero`` -- when record is processed, write output if VAL is
-   non-zero or SVAL is a non-empty string.
+   non-zero, SVAL is a non-empty string, or if AVAL has any elements.
 -  ``Transition to Zero`` -- when record is processed, write output only
    if VAL is zero and last value was non-zero. If SVAL was changed,
    write output only if SVAL is an empty string and the last value was a
-   non-empty string.
+   non-empty string. If AVAL was changed, write output only if AVAL has
+   zero elements and the last array had at least one element.
 -  ``Transition to Non-zero`` -- when record is processed, write output
    only if VAL is non-zero and last value was zero. If SVAL was changed,
    write output only if SVAL is a non-empty string and the last value
-   was a empty string.
+   was a empty string. If AVAL was changed, write output only if AVAL
+   has at least one element and the last value had no elements.
 -  ``Never`` -- Don't write output ever.
 
 The SYNC field controls whether the record processes in a synchronous or
