@@ -173,6 +173,7 @@ static int l_index(lua_State* state)
 	else if (strcasecmp(param_type, "uint32digital") == 0) { lua_pushinteger(state, 2); }
 	else if (strcasecmp(param_type, "float64") == 0)       { lua_pushinteger(state, asynParamFloat64); }
 	else if (strcasecmp(param_type, "string") == 0)        { lua_pushinteger(state, asynParamOctet); }
+	else if (strcasecmp(param_type, "octet") == 0)         { lua_pushinteger(state, asynParamOctet); }
 	else                                                   { lua_pushinteger(state, 0); }
 	
 	lua_setfield(state, -2, "type");
