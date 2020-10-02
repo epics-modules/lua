@@ -50,6 +50,25 @@ Full documentation can be found :doc:`here <luascriptRecord>`
    
    luascriptRecord
 
+
+luaPortDriver
+-------------
+
+luaPortDriver support is included to generate asynPortDrivers with
+parameters generated from a lua script. Each parameter gets snippets
+of lua code associated with its reading and writing that get called
+when the asyn callbacks are triggered.
+
+Full documentation can be found :doc:`here <luaPortDriver>`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: lua-based asynPortDriver
+   
+   luaPortDriver
+
+
 lua Shell
 ---------
 
