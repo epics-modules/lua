@@ -1,6 +1,6 @@
-=========================================
-luaPortDriver - scriptable asynPortDriver
-=========================================
+=============
+luaPortDriver
+=============
 
 Within the lua module support is the lua and IOC shell function luaPortDriver.
 This function takes in the name of an asyn port, a lua script, and a string of

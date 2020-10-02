@@ -64,7 +64,7 @@ Full documentation can be found :doc:`here <luaPortDriver>`
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: lua-based asynPortDriver
+   :caption: scriptable asynPortDriver
    
    luaPortDriver
 
