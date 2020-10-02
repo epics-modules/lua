@@ -1,6 +1,30 @@
 lua Release Notes
 =================
 
+Release 3-0
+-----------
+
+-  Lua language version updated to 5.4.0
+-  "db" library added. Allows users to generate records within lua scripts
+   during IOC startup. 
+-  luaPortDriver added. Generates an asynPortDriver based off of a lua
+   script. Each parameter is defined within lua and links to a snippet
+   of lua code, with the code being run whenever the parameter is read
+   or written (depending on how the parameter is defined).
+-  Named lua states added. Can create lua_States that can be shared between
+   instances of lua scripts by name.
+-  The command exit in the lua shell changed from a specially recognized
+   word to a lua function so that it can be properly parsed within a chunk.
+   Allows it to be used in a conditional or loop.
+-  luascriptRecord AA-JJ inputs can now take in arrays and the record can
+   also write out to array records.
+-  luaShell.h API changed, luashBegin renamed to luashLoad to match IOC shell
+   naming conventions, C++ overloads of luash command to allow for lua_States
+   to be given to shell to set the environment.
+-  Fixed an issue with too many temp files being created and deleted by the
+   iocsh library.
+
+
 Release 2-1
 -----------
 
