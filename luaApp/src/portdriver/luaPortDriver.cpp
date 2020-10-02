@@ -37,15 +37,6 @@ static int l_call(lua_State* state)
 	lua_getglobal(state, "_params");
 	lua_getfield(state, -1, param_name);
 	
-	if (lua_isnil(state, -1))
-	{
-		lua_pop(state, 1);
-		lua_newtable(state);
-	}
-	
-	lua_pushstring(state, param_name);
-	lua_setfield(state, -2, "name");
-	
 	int status = 0;
 	
 	if (direction == "read")
@@ -62,9 +53,6 @@ static int l_call(lua_State* state)
 	}
 	
 	if (status)    { return luaL_error(state, lua_tostring(state, -1)); }
-	
-	lua_getfield(state, 1, "type");
-	lua_setfield(state, -2, "type");
 	
 	lua_setfield(state, -2, param_name);
 	lua_pop(state, 1);
@@ -86,22 +74,46 @@ static int l_call(lua_State* state)
  * and then switches the __call metatable function to l_call.
  */
 static int l_addname(lua_State* state)
-{
+{	
 	static const luaL_Reg data_set[] = {
 		{"__call", l_call},
 		{NULL, NULL}
 	};
 	
-	const char* param_name = luaL_checkstring(state, 2);
-	
-	lua_pushvalue(state, 1);
-	lua_pushstring(state, param_name);
-	lua_setfield(state, -2, "name");
-	
 	if (luaL_newmetatable(state, "data_set")) { luaL_setfuncs(state, data_set, 0); }
 	lua_pop(state, 1);
 	
+	const char* param_name = luaL_checkstring(state, 2);
+	
+	lua_pushvalue(state, 1);
 	luaL_setmetatable(state, "data_set");
+	
+	lua_pushstring(state, param_name);
+	lua_setfield(state, -2, "name");
+	
+	
+	/* 
+	 * Add name to list of parameters here so that
+	 * Basic parameters can be created without need
+	 * to bind code to them.
+	 */ 
+	lua_getglobal(state, "_params");
+	lua_getfield(state, -1, param_name);
+	
+	if (lua_isnil(state, -1))
+	{
+		lua_pop(state, 1);
+		lua_newtable(state);
+	}
+	
+	lua_pushstring(state, param_name);
+	lua_setfield(state, -2, "name");
+	
+	lua_getfield(state, 1, "type");
+	lua_setfield(state, -2, "type");
+
+	lua_setfield(state, -2, param_name);
+	lua_pop(state, 1);
 	
 	return 1;
 }
@@ -125,18 +137,7 @@ static int l_readwrite(lua_State* state)
 	else                                           { lua_pop(state, 1); return 0;  }
 	
 	lua_setfield(state, -2, "direction");
-	
-	static const luaL_Reg param_call[] = {
-		{"__call", l_addname},
-		{NULL, NULL}
-	};
-	
-	//Try to create a new metatable, only set functions if it doesn't exist
-	if(luaL_newmetatable(state, "param_call"))    { luaL_setfuncs(state, param_call, 0); }
-	lua_pop(state, 1);
-	
-	luaL_setmetatable(state, "param_call");
-	
+
 	return 1;
 }
 
@@ -180,6 +181,7 @@ static int l_index(lua_State* state)
 	
 	static const luaL_Reg in_out[] = {
 		{"__index", l_readwrite},
+		{"__call", l_addname},
 		{NULL, NULL}
 	};
 	
@@ -255,7 +257,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 		lua_getfield(this->state, -1, "type");
 		int param_type = luaL_optinteger(this->state, -1, 1);
 		lua_pop(this->state, 1);
-		
+				
 		this->createParam(param_name, (asynParamType) param_type, &index);
 				
 		lua_getglobal(this->state, "_functions");
@@ -268,9 +270,6 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 		lua_setfield(this->state, -2, "write");
 		
 		lua_seti(this->state, -2, index);
-		
-		index += 1;
-		
 		lua_pop(this->state, 2);
 	}
 	
