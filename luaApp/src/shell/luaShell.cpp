@@ -471,7 +471,11 @@ static void initState(lua_State* state)
  */
 static int luashBegin(const char* pathname, const char* macros, lua_State* state)
 {
-	if (state)    { shell_state = state; }
+	if (state)
+	{
+		initState(state);
+		shell_state = state; 
+	}
 	
 	if (shell_state != NULL)
 	{
