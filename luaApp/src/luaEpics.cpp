@@ -477,7 +477,7 @@ static int l_iocindex(lua_State* state)
 static int l_iochash_enable(lua_State* state)
 {
 	lua_pushstring(state, "YES");
-	lua_setglobal(state, "enableHashComments");
+	lua_setfield(state, LUA_REGISTRYINDEX, "LEPICS_HASH_COMMENTS");
 
 	lua_pushstring(state, "Accepting iocsh-style comments");
 	
