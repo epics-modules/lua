@@ -389,6 +389,8 @@ static void luashBody(lua_State* state, const char* pathname, const char* macros
 	epicsThreadSetOkToBlock( wasOkToBlock);
 	epicsReadlineEnd(readlineContext);
 	lua_settop(state, 0);  /* clear stack */
+	
+	if (macros)    { luaPopScope(state); }
 }
 
 void spawn_thread_callback(void* arg)
@@ -454,9 +456,8 @@ static void spawnCallFunc(const iocshArgBuf* args)
 
 static void initState(lua_State* state)
 {
-	lua_getglobal(state, "_G");
-	luaL_setmetatable(state, "iocsh_meta");
-	lua_pop(state, 1);
+	luaL_getmetatable(state, "iocsh_meta");	
+	luaPushScope(state);
 
 	lua_pushlightuserdata(state, iocshPpdbbase);
 	lua_setglobal(state, "pdbbase");

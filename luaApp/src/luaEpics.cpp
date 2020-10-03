@@ -173,8 +173,8 @@ epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
 
 /*
  * Takes a set of comma-separated macro definitions in the form of
- * key-value pairs. Sets global variables according to the keys
- * parsed.
+ * key-value pairs. Adds a scope of global variables according to 
+ * the keys parsed. Variables can be popped off with luaPopScope
  */
 epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 {
@@ -182,17 +182,56 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 
 	if (macro_list)
 	{
+		lua_newtable(state);
+	
 		macParseDefns(NULL, macro_list, &pairs);
-
+		
 		for ( ; pairs && pairs[0]; pairs += 2)
 		{
 			std::string param(pairs[1]);
 
 			strtolua(state, param);
 
-			lua_setglobal(state, pairs[0]);
+			lua_setfield(state, -2, pairs[0]);
 		}
+		
+		lua_pushvalue(state, -1);
+		lua_setfield(state, -2, "__index");
+		luaPushScope(state);
 	}
+}
+
+
+/*
+ * Assumes that there is a table with a defined __index field
+ * at the top of the stack. Creates a scope of global variables 
+ * that can be removed with luaPopScope.
+ */
+epicsShareFunc void luaPushScope(lua_State* state)
+{
+	lua_getglobal(state, "_G");
+	
+	/*
+	 * If there's an existing scope, push it down
+	 * as the metatable of the table being added.
+	 */
+	if( lua_getmetatable(state, -1) )
+	{
+		lua_setmetatable(state, -3);
+	}
+	
+	lua_pushvalue(state, -2);
+	lua_setmetatable(state, -2);
+	lua_pop(state, 2);
+}
+
+epicsShareFunc void luaPopScope(lua_State* state)
+{
+	lua_getglobal(state, "_G");
+	lua_getmetatable(state, -1);
+	lua_getmetatable(state, -1);
+	lua_setmetatable(state, -2);
+	lua_pop(state, 1);
 }
 
 
