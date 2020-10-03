@@ -21,6 +21,8 @@ Release 3-0
 -  luaShell.h API changed, luashBegin renamed to luashLoad to match IOC shell
    naming conventions, C++ overloads of luash command to allow for lua_States
    to be given to shell to set the environment.
+-  Added functions to luaEpics.h to provide scoped environment variables,
+   changed luaLoadMacros to use scopes.
 -  Fixed an issue with too many temp files being created and deleted by the
    iocsh library.
 
