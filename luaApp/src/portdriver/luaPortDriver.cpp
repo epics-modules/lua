@@ -34,7 +34,7 @@ static int l_call(lua_State* state)
 	
 	std::string data(luaL_checkstring(state, 2));
 	
-	lua_getglobal(state, "_params");
+	lua_getfield(state, LUA_REGISTRYINDEX, "LPORTDRIVER_PARAMS");
 	lua_getfield(state, -1, param_name);
 	
 	int status = 0;
@@ -97,7 +97,7 @@ static int l_addname(lua_State* state)
 	 * Basic parameters can be created without need
 	 * to bind code to them.
 	 */ 
-	lua_getglobal(state, "_params");
+	lua_getfield(state, LUA_REGISTRYINDEX, "LPORTDRIVER_PARAMS");
 	lua_getfield(state, -1, param_name);
 	
 	if (lua_isnil(state, -1))
@@ -223,7 +223,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	lua_setglobal(this->state, "param");
 	
 	lua_newtable(state);
-	lua_setglobal(this->state, "_params");
+	lua_setfield(this->state, LUA_REGISTRYINDEX, "LPORTDRIVER_PARAMS");
 
 	luaLoadMacros(this->state, lua_macros);
 
@@ -236,14 +236,13 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 		return;
 	}
 	
-	//Clear params table, not needed anymore
 	lua_pushnil(this->state);
-	lua_setglobal(this->state, "params");
+	lua_setglobal(this->state, "param");
 
 	lua_newtable(this->state);
-	lua_setglobal(this->state, "_functions");
+	lua_setfield(this->state, LUA_REGISTRYINDEX, "LPORTDRIVER_FUNCTIONS");
 	
-	lua_getglobal(this->state, "_params");	
+	lua_getfield(this->state, LUA_REGISTRYINDEX, "LPORTDRIVER_PARAMS");	
 	lua_pushnil(this->state);
 	
 	int index = 0;
@@ -260,7 +259,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 				
 		this->createParam(param_name, (asynParamType) param_type, &index);
 				
-		lua_getglobal(this->state, "_functions");
+		lua_getfield(this->state, LUA_REGISTRYINDEX, "LPORTDRIVER_FUNCTIONS");
 		lua_newtable(this->state);
 		
 		lua_getfield(this->state, -3, "read_bind");
@@ -277,7 +276,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 
 	//Clear _params, not needed anymore
 	lua_pushnil(this->state);
-	lua_setglobal(this->state, "_params");
+	lua_setfield(this->state, LUA_REGISTRYINDEX, "LPORTDRIVER_PARAMS");
 }
 
 /*
@@ -287,7 +286,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
  */
 void luaPortDriver::getReadFunction(int index)
 {
-	lua_getglobal(this->state, "_functions");
+	lua_getfield(this->state, LUA_REGISTRYINDEX, "LPORTDRIVER_FUNCTIONS");
 	lua_geti(this->state, -1, index);
 	lua_remove(this->state, -2);
 	lua_getfield(this->state, -1, "read");
@@ -323,7 +322,7 @@ int luaPortDriver::callReadFunction()
  */
 void luaPortDriver::getWriteFunction(int index)
 {	
-	lua_getglobal(this->state, "_functions");
+	lua_getfield(this->state, LUA_REGISTRYINDEX, "LPORTDRIVER_FUNCTIONS");
 	lua_geti(this->state, -1, index);
 	lua_getfield(this->state, -1, "write");
 	lua_remove(this->state, -3);
