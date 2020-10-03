@@ -41,66 +41,66 @@ volatile int devLuaSoftDebug = 0;
 epicsExportAddress(int, devLuaSoftDebug);
 
 static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct link* out)
-{	
+{
 	long    status;
 	long    n_elements = 1;
 	short   field_type = 0;
-	
+
 	field_type = dbCaGetLinkDBFtype(out);
-	
+
 	if (devLuaSoftDebug)
 		{ printf("write_Script: field_type=%d\n", field_type); }
-	
+
 	switch (field_type)
 	{
-		case DBF_STRING: 
-		case DBF_ENUM: 
-		case DBF_MENU: 
+		case DBF_STRING:
+		case DBF_ENUM:
+		case DBF_MENU:
 		case DBF_DEVICE:
-		case DBF_INLINK: 
-		case DBF_OUTLINK: 
-		case DBF_FWDLINK: 
+		case DBF_INLINK:
+		case DBF_OUTLINK:
+		case DBF_FWDLINK:
 			if (devLuaSoftDebug)
 				{ printf("write_Script: calling dbCPLCB..DBR_STRING\n"); }
-			
+
 			status = dbCaPutLinkCallback(out, DBR_STRING, sval, 1, (dbCaCallback) dbCaCallbackProcess, out);
-				
+
 			break;
-			
+
 		default:
 			dbCaGetNelements(out, &n_elements);
-			
+
 			if (n_elements>sizeof(sval))    { n_elements = sizeof(sval); }
-			
-			if (((field_type==DBF_CHAR) || (field_type==DBF_UCHAR)) && (n_elements>1)) 
+
+			if (((field_type==DBF_CHAR) || (field_type==DBF_UCHAR)) && (n_elements>1))
 			{
 				if (devLuaSoftDebug)
 					{ printf("write_Script: dbCaPutLinkCallback %ld characters\n", n_elements); }
-				
+
 				status = dbCaPutLinkCallback(out, DBF_CHAR, sval, n_elements, (dbCaCallback) dbCaCallbackProcess, out);
-			} 
-			else 
+			}
+			else
 			{
 				if (devLuaSoftDebug)
 					{ printf("write_Script: calling dbCPLCB..DBR_DOUBLE\n"); }
-				
+
 				status = dbCaPutLinkCallback(out, DBR_DOUBLE, val, 1, (dbCaCallback)dbCaCallbackProcess, out);
 			}
-			
+
 			break;
 	}
-	
-	if (status) 
+
+	if (status)
 	{
 		if (devLuaSoftDebug)    { printf("write_Script: dbCPLCB returned error\n"); }
-			
+
 		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
-		
+
 		return status;
 	}
-	
+
 	record->pact = TRUE;
-	
+
 	return status;
 }
 
@@ -110,7 +110,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 	short   field_type = 0;
 	dbAddr  Addr;
 	dbAddr* pAddr = &Addr;
-	
+
 	if (out->type == CA_LINK)
 	{
 		field_type = dbCaGetLinkDBFtype(out);
@@ -124,13 +124,13 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 			n_elements = pAddr->no_elements;
 		}
 	}
-	
+
 	if (n_elements > 1)
 	{
 		int index;
-	
+
 		if (n_elements > record->asiz) { return 0; }
-	
+
 		switch (field_type)
 		{
 			case DBF_CHAR:
@@ -142,23 +142,23 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
-					#if defined(_MSC_VER) && (_MSC_VER < 1920)
+					#if defined(_MSC_VER)
 						char buffer[1024];
 					#else
 						char buffer[n_elements];
 					#endif
-					
+
 					for (index = 0; index < n_elements && index * sizeof(int) < record->asiz; index += 1)
 					{
 						buffer[index] = (char) ((int*) record->aval)[index];
 					}
-					
+
 					return dbPutLink(out, DBF_CHAR, buffer, n_elements);
 				}
-				
+
 				return 0;
 			}
-			
+
 			case DBF_DOUBLE:
 			{
 				if (record->atyp == luascriptAVALType_Double)
@@ -167,38 +167,38 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
-					#if defined(_MSC_VER) && (_MSC_VER < 1920)
+					#if defined(_MSC_VER)
 						double buffer[1024];
 					#else
 						double buffer[n_elements];
 					#endif
-					
+
 					for (index = 0; index < n_elements && index * sizeof(int) < record->asiz; index += 1)
 					{
 						buffer[index] = ((int*) record->aval)[index];
 					}
-					
+
 					return dbPutLink(out, DBF_DOUBLE, buffer, n_elements);
 				}
-				
+
 				return 0;
 			}
-			
+
 			case DBF_FLOAT:
 			{
-				#if defined(_MSC_VER) && (_MSC_VER < 1920)
+				#if defined(_MSC_VER)
 					float buffer[1024];
 				#else
 					float buffer[n_elements];
 				#endif
-				
+
 				if (record->atyp == luascriptAVALType_Double)
 				{
 					for(index = 0; index < n_elements && index * sizeof(double) < record->asiz; index += 1)
 					{
 						buffer[index] = (float) ((double*) record->aval)[index];
 					}
-					
+
 					return dbPutLink(out, DBF_FLOAT, buffer, n_elements);
 				}
 				else if(record->atyp == luascriptAVALType_Integer)
@@ -207,55 +207,55 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 					{
 						buffer[index] = (float) ((int*) record->aval)[index];
 					}
-					
+
 					return dbPutLink(out, DBF_FLOAT, buffer, n_elements);
 				}
-				
+
 				return 0;
 			}
-			
+
 			default:
 			{
 				if (record->atyp == luascriptAVALType_Integer)
 				{
 					dbPutLink(out, DBF_LONG, record->aval, n_elements);
 				}
-				
+
 				return 0;
 			}
 		}
 	}
-	
-	
+
+
 	switch (field_type)
 	{
-		case DBF_STRING: 
-		case DBF_ENUM: 
-		case DBF_MENU: 
+		case DBF_STRING:
+		case DBF_ENUM:
+		case DBF_MENU:
 		case DBF_DEVICE:
-		case DBF_INLINK: 
-		case DBF_OUTLINK: 
+		case DBF_INLINK:
+		case DBF_OUTLINK:
 		case DBF_FWDLINK:
 			return dbPutLink(out, DBR_STRING, sval, 1);
-			
+
 		default:
 			return dbPutLink(out, DBR_DOUBLE, val, 1);
 	}
 }
 
 static long write_Script(luascriptRecord* record)
-{	
+{
 	long status = 0;
-	
+
 	double* val  = &record->val;
 	char*   sval = (char*) &record->sval;
-	
+
 	struct link* out = &record->out;
 
 	if (devLuaSoftDebug)    { printf("write_Script: pact=%d\n", record->pact); }
-	
+
 	if (record->pact)    { return 0; }
-	
+
 	if ((out->type == CA_LINK) && (record->wait))
 	{
 		status = asyncWrite(record, val, sval, out);
@@ -266,6 +266,6 @@ static long write_Script(luascriptRecord* record)
 		status = syncWrite(record, val, sval, out);
 		if (status)    { return status; }
 	}
-	
+
 	return 0;
 }
