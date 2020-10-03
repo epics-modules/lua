@@ -532,10 +532,9 @@ epicsShareFunc int epicsShareAPI luaCmd(lua_State* state, const char* command, c
 	if (state)    { environ = state; }
 	else          { environ = luaCreateState(); }
 	
-	lua_getglobal(environ, "_G");
-	luaL_setmetatable(environ, "iocsh_meta");
-	lua_pop(environ, 1);
-	
+	luaL_getmetatable(environ, "iocsh_meta");
+	luaPushScope(state);
+		
 	if (macros)    { luaLoadMacros(environ, macros); }
 	
 	int status = luaL_loadbuffer(environ, command, strlen(command), "=stdin");
@@ -544,6 +543,12 @@ epicsShareFunc int epicsShareAPI luaCmd(lua_State* state, const char* command, c
 
 	if (status == LUA_OK)     { l_print(environ); }
 	else                      { report(environ, status); }
+	
+	//Pop macro scope
+	if (macros)    { luaPopScope(state); }
+	
+	//Pop iocsh_meta scope
+	luaPopScope(state);
 	
 	if (!state)    { lua_close(environ); }
 	
@@ -582,10 +587,7 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 {
 	lua_State* state = luaCreateState();
 	
-	if (macros)
-	{
-		luaLoadMacros(state, macros);
-	}
+	if (macros)    { luaLoadMacros(state, macros); }
 	
 	std::string temp(filename);
 	std::string found = luaLocateFile(temp);
