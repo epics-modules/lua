@@ -14,7 +14,7 @@
 
     #include <strings.h>
 
-#end
+#endif
 
 #include <epicsExport.h>
 #include "luaPortDriver.h"
