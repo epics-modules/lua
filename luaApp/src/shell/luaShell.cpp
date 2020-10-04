@@ -515,7 +515,7 @@ static int luashBegin(const char* pathname, const char* macros, lua_State* state
 
 epicsShareFunc int epicsShareAPI luash(lua_State* state, const char* pathname, const char* macros)
 {
-	luashBegin(pathname, macros, state);
+	return luashBegin(pathname, macros, state);
 }
 
 epicsShareFunc int epicsShareAPI luash(lua_State* state, const char* pathname)
