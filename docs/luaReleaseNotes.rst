@@ -1,12 +1,18 @@
 lua Release Notes
 =================
 
+Release 3-0-1
+-------------
+
+-  Fix issues for windows builds.
+
+
 Release 3-0
 -----------
 
 -  Lua language version updated to 5.4.0
 -  "db" library added. Allows users to generate records within lua scripts
-   during IOC startup. 
+   during IOC startup.
 -  luaPortDriver added. Generates an asynPortDriver based off of a lua
    script. Each parameter is defined within lua and links to a snippet
    of lua code, with the code being run whenever the parameter is read
@@ -42,7 +48,7 @@ Release 2-1
 -  Fixed bug in "asyn" library where writeread requests were attempting to read
    twice, causing timeout waits.
 -  Added luashCmd function to ioc shell. Useful for running one-liners of lua code.
--  lua shell now specially recognizes the line '#ENABLE_HASH_COMMENTS', 
+-  lua shell now specially recognizes the line '#ENABLE_HASH_COMMENTS',
    when put into a lua shell script, the shell will ignore lines where
    the first non-whitespace line is a '#' character. Allowing scripts to
    appear more like regular ioc shell scripts.
@@ -117,7 +123,7 @@ Release 1-2
 -  Added '<' command to luash to include the contents of other scripts
 -  luaScript input fields now can have descriptions of their contents
 -  Fixed a bug where forward link processing wasn't happening
--  
+-
 
 Release 1-1
 -----------
