@@ -441,7 +441,7 @@ static long loadStrings(luascriptRecord* record)
 				if (field_type == DBF_ENUM)
 				{
 					status = dbGetLink(field, DBF_STRING, tempstr, 0, &elements);
-				]
+				}
 				else
 				{
 					status = dbGetLink(field, field_type, tempstr, 0, &elements);
