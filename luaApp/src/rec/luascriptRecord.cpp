@@ -433,10 +433,20 @@ static long loadStrings(luascriptRecord* record)
 				elements = std::min(elements, (long) STRING_SIZE - 1);
 				//Intentional fall-through
 			
+			case DBF_ENUM:
 			case DBF_STRING:
 			{
 				char tempstr[STRING_SIZE] = { '\0' };
-				status = dbGetLink(field, field_type, tempstr, 0, &elements);
+				
+				if (field_type == DBF_ENUM)
+				{
+					status = dbGetLink(field, DBF_STRING, tempstr, 0, &elements);
+				]
+				else
+				{
+					status = dbGetLink(field, field_type, tempstr, 0, &elements);
+				}
+					
 				if (status)    { break; }
 				
 				strncpy(strvalue, tempstr, STRING_SIZE);
