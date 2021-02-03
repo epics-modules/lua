@@ -440,6 +440,14 @@ static long loadStrings(luascriptRecord* record)
 			{
 				char tempstr[STRING_SIZE] = { '\0' };
 				
+				// Use AA .. JJ if INAA..INJJ are empty
+				if (! field->text || ! strcmp(field->text, ""))
+				{
+					strncpy(tempstr, strvalue, STRING_SIZE);
+ 					lua_pushstring(state, tempstr);
+ 					break;
+				}
+				
 				if (field_type == DBF_ENUM)
 				{
 					status = dbGetLink(field, DBF_STRING, tempstr, 0, &elements);
