@@ -121,6 +121,8 @@ static void logError(luascriptRecord* record)
 
 	if (split != std::string::npos)    { err.erase(0, split + 1); }
 
+	errlogPrintf("Calling %s resulted in error: %s\n", record->call, err.c_str());
+	
 	strcpy(record->err, err.c_str());
 	db_post_events(record, &record->err, DBE_VALUE);
 }
@@ -875,7 +877,7 @@ static void processCallback(void* data)
 	}
 	
 	lua_remove(state, 1);
-	status = lua_pcall(state, 0, 1, lua_gettop(state));
+	status = lua_pcall(state, 0, 1, 0);
 	
 	if (status)
 	{
