@@ -124,13 +124,26 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 			n_elements = pAddr->no_elements;
 		}
 	}
-
+	
+	int bytes_per_elem = 1;
+	
+	if (record->atyp == luascriptAVALType_Integer)   { bytes_per_elem = sizeof(int); }
+	if (record->atyp == luascriptAVALType_Double)    { bytes_per_elem = sizeof(double); }
+	if (record->atyp == luascriptAVALType_Char)      { bytes_per_elem = sizeof(char); }
+	
+	
+	int array_len = (int) record->asiz / bytes_per_elem;
+	
 	if (n_elements > 1)
 	{
 		int index;
-
-		if (n_elements > record->asiz) { return 0; }
-
+		
+		if (array_len > n_elements) 
+		{
+			errlogPrintf("%s: Array too large to write to output\n", record->name);
+			return 0;
+		}
+		
 		switch (field_type)
 		{
 			case DBF_CHAR:
@@ -138,7 +151,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 			{
 				if (record->atyp == luascriptAVALType_Char)
 				{
-					return dbPutLink(out, DBF_CHAR, record->aval, n_elements);
+					return dbPutLink(out, DBF_CHAR, record->aval, array_len);
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
@@ -148,12 +161,12 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 						char buffer[n_elements];
 					#endif
 
-					for (index = 0; index < n_elements && index * sizeof(int) < record->asiz; index += 1)
+					for (index = 0; index < n_elements && index < array_len; index += 1)
 					{
 						buffer[index] = (char) ((int*) record->aval)[index];
 					}
 
-					return dbPutLink(out, DBF_CHAR, buffer, n_elements);
+					return dbPutLink(out, DBF_CHAR, buffer, array_len);
 				}
 
 				return 0;
@@ -163,7 +176,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 			{
 				if (record->atyp == luascriptAVALType_Double)
 				{
-					return dbPutLink(out, DBF_DOUBLE, record->aval, n_elements);
+					return dbPutLink(out, DBF_DOUBLE, record->aval, array_len);
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
@@ -173,12 +186,12 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 						double buffer[n_elements];
 					#endif
 
-					for (index = 0; index < n_elements && index * sizeof(int) < record->asiz; index += 1)
+					for (index = 0; index < n_elements && index < array_len; index += 1)
 					{
 						buffer[index] = ((int*) record->aval)[index];
 					}
 
-					return dbPutLink(out, DBF_DOUBLE, buffer, n_elements);
+					return dbPutLink(out, DBF_DOUBLE, buffer, array_len);
 				}
 
 				return 0;
@@ -194,21 +207,21 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 
 				if (record->atyp == luascriptAVALType_Double)
 				{
-					for(index = 0; index < n_elements && index * sizeof(double) < record->asiz; index += 1)
+					for(index = 0; index < n_elements && index < array_len; index += 1)
 					{
 						buffer[index] = (float) ((double*) record->aval)[index];
 					}
 
-					return dbPutLink(out, DBF_FLOAT, buffer, n_elements);
+					return dbPutLink(out, DBF_FLOAT, buffer, array_len);
 				}
 				else if(record->atyp == luascriptAVALType_Integer)
 				{
-					for(index = 0; index < n_elements && index * sizeof(int) < record->asiz; index += 1)
+					for(index = 0; index < n_elements && index < array_len; index += 1)
 					{
 						buffer[index] = (float) ((int*) record->aval)[index];
 					}
 
-					return dbPutLink(out, DBF_FLOAT, buffer, n_elements);
+					return dbPutLink(out, DBF_FLOAT, buffer, array_len);
 				}
 
 				return 0;
@@ -218,7 +231,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 			{
 				if (record->atyp == luascriptAVALType_Integer)
 				{
-					dbPutLink(out, DBF_LONG, record->aval, n_elements);
+					dbPutLink(out, DBF_LONG, record->aval, array_len);
 				}
 
 				return 0;
@@ -253,9 +266,9 @@ static long write_Script(luascriptRecord* record)
 	struct link* out = &record->out;
 
 	if (devLuaSoftDebug)    { printf("write_Script: pact=%d\n", record->pact); }
-
+	
 	if (record->pact)    { return 0; }
-
+	
 	if ((out->type == CA_LINK) && (record->wait))
 	{
 		status = asyncWrite(record, val, sval, out);
