@@ -148,7 +148,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 		{
 			case DBF_CHAR:
 			case DBF_UCHAR:
-			{
+			{				
 				if (record->atyp == luascriptAVALType_Char)
 				{
 					return dbPutLink(out, DBF_CHAR, record->aval, array_len);
@@ -158,7 +158,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 					#if defined(_MSC_VER)
 						char buffer[1024];
 					#else
-						char buffer[n_elements];
+						char buffer[array_len];
 					#endif
 
 					for (index = 0; index < n_elements && index < array_len; index += 1)
@@ -183,7 +183,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 					#if defined(_MSC_VER)
 						double buffer[1024];
 					#else
-						double buffer[n_elements];
+						double buffer[array_len];
 					#endif
 
 					for (index = 0; index < n_elements && index < array_len; index += 1)
@@ -202,7 +202,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 				#if defined(_MSC_VER)
 					float buffer[1024];
 				#else
-					float buffer[n_elements];
+					float buffer[array_len];
 				#endif
 
 				if (record->atyp == luascriptAVALType_Double)
