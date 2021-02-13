@@ -43,11 +43,17 @@
 
 #include "epicsVersion.h"
 #ifdef VERSION_INT
+
 # if EPICS_VERSION_INT < VERSION_INT(3,16,0,2)
 #  define RECSUPFUN_CAST (RECSUPFUN)
 # else
 #  define RECSUPFUN_CAST
 # endif
+
+# if EPICS_VERSION_INT < VERSION_INT(3,16,0,0)
+#  define USE_NEW_DB_FUNCS
+# endif
+
 #else
 # define RECSUPFUN_CAST (RECSUPFUN)
 #endif
@@ -122,7 +128,7 @@ static void logError(luascriptRecord* record)
 	if (split != std::string::npos)    { err.erase(0, split + 1); }
 
 	errlogPrintf("Calling %s resulted in error: %s\n", record->call, err.c_str());
-	
+
 	strcpy(record->err, err.c_str());
 	db_post_events(record, &record->err, DBE_VALUE);
 }
@@ -164,7 +170,7 @@ static bool isLink(int index)
 static std::pair<std::string, std::string> parseCode(std::string& input)
 {
 	if (input.empty() || input.at(0) != '@')    { return std::make_pair("", input); }
-		
+
 	/* A space separates the name of the file and the function call */
 	size_t split = input.find(" ");
 
@@ -189,23 +195,23 @@ static int getState(luascriptRecord* record, std::string name)
 	{
 		record->state = luaNamedState(name.c_str());
 		((rpvtStruct*) record->rpvt)->my_state = false;
-		return 0; 
+		return 0;
 	}
-	
+
 	record->state = luaCreateState();
 	((rpvtStruct*) record->rpvt)->my_state = true;
-	
+
 	if (name.empty())    { return 0; }
-	
+
 	long status = luaLoadScript((lua_State*) record->state, name.c_str());
-	
+
 	if (status)
-	{ 
+	{
 		printf("Error loading filename: %s, see ERR field\n", name.c_str());
 		logError(record);
 		return -1;
 	}
-	
+
 	return 0;
 }
 
@@ -225,17 +231,17 @@ static int initState(luascriptRecord* record)
 	/* Parse for filenames and functions */
 	std::pair<std::string, std::string> curr = parseCode(code);
 	std::pair<std::string, std::string> prev = parseCode(pcode);
-	
+
 	strcpy(record->call, curr.second.c_str());
-	strcpy(record->pcode, record->code); 
-	
+	strcpy(record->pcode, record->code);
+
 	if (record->relo == luascriptRELO_NewFile)
 	{
 		if (curr.first == prev.first && record->state != NULL)    { return 0; }
 	}
-	
+
 	if (((rpvtStruct*) record->rpvt)->my_state == true)   { lua_close((lua_State*) record->state); }
-	
+
 	return getState(record, curr.first);
 }
 
@@ -299,7 +305,7 @@ static long loadNumbers(luascriptRecord* record)
 }
 
 
-/* 
+/*
  * Pull elements number of values from a multi-element link,
  * put them into a lua table, and then put the table onto
  * the stack.
@@ -309,19 +315,19 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
 {
 	T *data = new T[*elements];
 	int status = dbGetLink(field, field_type, data, 0, elements);
-	
+
 	if (status) { return status; }
-	
+
 	lua_createtable(state, *elements, 0);
-	
+
 	for (int elem = 0; elem < *elements; elem += 1)
 	{
 		if (integers)    { lua_pushinteger(state, data[elem]); }
 		else             { lua_pushnumber(state, data[elem]); }
-		
+
 		lua_rawseti(state, -2, elem + 1);
 	}
-	
+
 	delete data;
 	return 0;
 }
@@ -339,13 +345,13 @@ static void* convertTable(lua_State* state, int* generated_size, epicsEnum16* ar
 	lua_len(state, -1);
 	int array_size = lua_tonumber(state, -1);
 	lua_pop(state, 1);
-	
+
 	// Get type of first value
 	lua_geti(state, -1, 1);
 	int is_integer = lua_isinteger(state, -1);
 	int data_type = lua_type(state, -1);
 	lua_pop(state, 1);
-	
+
 	switch (data_type)
 	{
 		case LUA_TNUMBER:
@@ -355,52 +361,52 @@ static void* convertTable(lua_State* state, int* generated_size, epicsEnum16* ar
 				double* output = new double[array_size];
 				*generated_size = sizeof(double) * array_size;
 				*arraytype = luascriptAVALType_Double;
-				
+
 				for (int index = 0; index < array_size; index += 1)
 				{
 					lua_geti(state, -1, index + 1);
 					output[index] = lua_tonumber(state, -1);
 					lua_pop(state, 1);
 				}
-				
+
 				return output;
 			}
-			
+
 			//Intentional Fall-through for integers
 		}
-		
+
 		case LUA_TBOOLEAN:
 		{
 			int* output = new int[array_size];
 			*generated_size = sizeof(int) * array_size;
 			*arraytype = luascriptAVALType_Integer;
-			
+
 			for (int index = 0; index < array_size; index += 1)
 			{
 				lua_geti(state, -1, index + 1);
 				output[index] = lua_tonumber(state, -1);
 				lua_pop(state, 1);
 			}
-			
+
 			return output;
 		}
-		
+
 		case LUA_TSTRING:
 		{
 			char* output = new char[array_size];
 			*generated_size = sizeof(char) * array_size;
 			*arraytype = luascriptAVALType_Char;
-			
+
 			for (int index = 0; index < array_size; index += 1)
 			{
 				lua_geti(state, -1, index + 1);
 				output[index] = lua_tostring(state, -1)[0];
 				lua_pop(state, 1);
 			}
-			
+
 			return output;
 		}
-		
+
 		default:
 			*generated_size = 0;
 			return NULL;
@@ -412,14 +418,14 @@ static long loadStrings(luascriptRecord* record)
 	lua_State* state = (lua_State*) record->state;
 
 	DBLINK* field = &record->inaa;
-	
+
 	char*   strvalue = (char*) record->aa;
 	char**  prev_str = (char**) &record->paa;
 
 	long status = 0;
 
 	for (unsigned index = 0; index < STR_ARGS; index += 1)
-	{		
+	{
 		strncpy(*prev_str, strvalue, STRING_SIZE);
 
 		short field_type = 0;
@@ -428,18 +434,18 @@ static long loadStrings(luascriptRecord* record)
 		status = getFieldInfo(field, &field_type, &elements);
 
 		if (status)    { return status; }
-		
+
 		switch(field_type)
 		{
 			case DBF_CHAR:
 				elements = std::min(elements, (long) STRING_SIZE - 1);
 				//Intentional fall-through
-			
+
 			case DBF_ENUM:
 			case DBF_STRING:
 			{
 				char tempstr[STRING_SIZE] = { '\0' };
-				
+
 				// Use AA .. JJ if INAA..INJJ are empty
 				if ( field->type == CONSTANT )
 				{
@@ -447,7 +453,7 @@ static long loadStrings(luascriptRecord* record)
  					lua_pushstring(state, tempstr);
  					break;
 				}
-				
+
 				if (field_type == DBF_ENUM)
 				{
 					status = dbGetLink(field, DBF_STRING, tempstr, 0, &elements);
@@ -456,49 +462,49 @@ static long loadStrings(luascriptRecord* record)
 				{
 					status = dbGetLink(field, field_type, tempstr, 0, &elements);
 				}
-					
+
 				if (status)    { break; }
-				
+
 				strncpy(strvalue, tempstr, STRING_SIZE);
 
 				lua_pushstring(state, tempstr);
-				
+
 				break;
 			}
-				
+
 			case DBF_UCHAR:
 				status = createTable<epicsUInt8>(state, field, field_type, &elements, true);
 				break;
-			
+
 			case DBF_SHORT:
 				status = createTable<epicsInt16>(state, field, field_type, &elements, true);
 				break;
-			
+
 			case DBF_USHORT:
 				status = createTable<epicsUInt16>(state, field, field_type, &elements, true);
 				break;
-			
+
 			case DBF_LONG:
 				status = createTable<epicsInt32>(state, field, field_type, &elements, true);
 				break;
-			
+
 			case DBF_ULONG:
 				status = createTable<epicsUInt32>(state, field, field_type, &elements, true);
 				break;
-			
+
 			case DBF_FLOAT:
 				status = createTable<epicsFloat32>(state, field, field_type, &elements, false);
 				break;
-				
+
 			case DBF_DOUBLE:
 				status = createTable<epicsFloat64>(state, field, field_type, &elements, false);
 				break;
-			
+
 			default:
 				status = -1;
 				break;
 		}
-		
+
 		if (! status)    { lua_setglobal(state, STR_NAMES[index]); }
 
 		field++;
@@ -646,8 +652,11 @@ long setLinks(luascriptRecord* record)
 	{
 		if (field == &record->out)    { pvt->outlink_field_type = DBF_NOACCESS; }
 
-		if (field->type == CONSTANT)
-		{
+		#ifdef USE_NEW_DB_FUNCS
+		if (dbLinkIsConstant(field)) {
+		#else
+		if (field->type == CONSTANT) {
+		#endif
 			if (index < NUM_ARGS)
 			{
 				recGblInitConstantLink(field, DBF_DOUBLE, value);
@@ -656,6 +665,23 @@ long setLinks(luascriptRecord* record)
 
 			*valid = luascriptINAV_CON;
 		}
+		#ifdef USE_NEW_DB_FUNCS
+		else if (dbLinkIsVolatile(field))
+		{
+			if (dbIsLinkConnected(field))
+			{
+				*valid = luascriptINAV_EXT; }
+			else
+			{
+				*valid = luascriptINAV_EXT_NC;
+				pvt->caLinkStat = CA_LINKS_NOT_OK;
+			}
+		}
+		else
+		{
+			*valid = luascriptINAV_LOC;
+		}
+		#else
 		else if (!dbNameToAddr(field->value.pv_link.pvname, paddress))
 		{
 			*valid = luascriptINAV_LOC;
@@ -670,6 +696,7 @@ long setLinks(luascriptRecord* record)
 			*valid = luascriptINAV_EXT_NC;
 			pvt->caLinkStat = CA_LINKS_NOT_OK;
 		}
+		#endif
 
 		db_post_events(record, valid, DBE_VALUE);
 
@@ -798,33 +825,33 @@ static bool checkSvalUpdate(luascriptRecord* record)
 static bool checkAvalUpdate(luascriptRecord* record)
 {
 	if (record->aval == NULL) { return false; }
-	
+
 	bool definitely_changed = (record->pavl == NULL) || (record->pasz != record->asiz);
-	
+
 	switch (record->oopt)
 	{
 		case luascriptOOPT_Every_Time:
 			return true;
-			
+
 		case luascriptOOPT_On_Change:
 			return (definitely_changed || memcmp(record->pavl, record->aval, record->asiz));
-			
+
 		case luascriptOOPT_When_Zero:
 			return (record->asiz == 0);
-			
+
 		case luascriptOOPT_When_Non_zero:
 			return (record->asiz != 0);
-			
+
 		case luascriptOOPT_Transition_To_Zero:
-			return ((record->pasz != 0) && (record->asiz == 0)); 
-			
+			return ((record->pasz != 0) && (record->asiz == 0));
+
 		case luascriptOOPT_Transition_To_Non_zero:
 			return ((record->pasz == 0) && (record->asiz != 0));
-			
+
 		case luascriptOOPT_Never:
 			return false;
 	}
-	
+
 	return false;
 }
 
@@ -857,7 +884,7 @@ static int incomplete(lua_State* L, int status)
 			return 1;
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -866,16 +893,16 @@ static void processCallback(void* data)
 	luascriptRecord* record = (luascriptRecord*) data;
 
 	lua_State* state = (lua_State*) record->state;
-	
+
 	lua_pushstring(state, (const char*) record->call);
 	int status = addreturn(state);
-	
+
 	if (status != LUA_OK)
 	{
 		size_t len;
 		const char *buffer = lua_tolstring(state, 1, &len);  /* get what it has */
 		status = luaL_loadbuffer(state, buffer, len, "=stdin");  /* try it */
-	
+
 		if (incomplete(state, status))
 		{
 			record->pact = FALSE;
@@ -883,28 +910,28 @@ static void processCallback(void* data)
 			return;
 		}
 	}
-	
+
 	lua_remove(state, 1);
 	status = lua_pcall(state, 0, 1, 0);
-	
+
 	if (status)
 	{
 		logError(record);
 		return;
 	}
-	
+
 	// Process the returned values
 	int top = lua_gettop(state);
 
-	if (top > 0) 
-	{	
+	if (top > 0)
+	{
 		int rettype = lua_type(state, -1);
-	
+
 		if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
 		{
 			record->pval = record->val;
 			record->val = lua_tonumber(state, -1);
-	
+
 			if (checkValUpdate(record))
 			{
 				record->pact = FALSE;
@@ -917,7 +944,7 @@ static void processCallback(void* data)
 		{
 			strncpy(record->psvl, record->sval, STRING_SIZE);
 			strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
-	
+
 			if (checkSvalUpdate(record))
 			{
 				record->pact = FALSE;
@@ -934,13 +961,13 @@ static void processCallback(void* data)
 				else if (record->patp == luascriptAVALType_Double)   { delete [] ((double*) record->pavl); }
 				else if (record->patp == luascriptAVALType_Char)     { delete [] ((char*) record->pavl); }
 			}
-			
+
 			record->pavl = record->aval;
 			record->pasz = record->asiz;
 			record->patp = record->atyp;
-			
+
 			record->aval = convertTable(state, &record->asiz, &record->atyp);
-			
+
 			if (checkAvalUpdate(record))
 			{
 				record->pact = FALSE;
@@ -948,11 +975,11 @@ static void processCallback(void* data)
 				record->pact = TRUE;
 				db_post_events(record, &record->aval, DBE_VALUE);
 			}
-		}	
-	
+		}
+
 		lua_pop(state, 1);
 	}
-	
+
 	double* new_val = &record->a;
 	double* old_val = &record->pa;
 
@@ -1007,7 +1034,7 @@ static long runCode(luascriptRecord* record)
 static long process(dbCommon* common)
 {
 	luascriptRecord* record = (luascriptRecord*) common;
-	
+
 	/* No need to process if there's no code */
 	if (record->code[0] == '\0')    { return 0; }
 
@@ -1023,7 +1050,7 @@ static long process(dbCommon* common)
 	if (record->relo == luascriptRELO_Always)
 	{
 		memset(record->pcode, 0, 121);
-	
+
 		status = initState(record);
 
 		if (status) { record->pact = FALSE; return status; }
