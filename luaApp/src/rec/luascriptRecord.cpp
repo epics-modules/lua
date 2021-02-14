@@ -57,6 +57,8 @@
 
 #else
 # define RECSUPFUN_CAST (RECSUPFUN)
+# define dbLinkIsConstant(lnk) ((lnk)->type == CONSTANT)
+# define dbLinkIsVolatile(lnk) ((lnk)->type == CA_LINK)
 #endif
 
 /* Lua variable names for numeric and string fields */
