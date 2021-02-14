@@ -50,8 +50,9 @@
 #  define RECSUPFUN_CAST
 # endif
 
-# if EPICS_VERSION_INT < VERSION_INT(3,16,0,0)
-#  define USE_NEW_DB_FUNCS
+# if EPICS_VERSION_INT < VERSION_INT(3,16,0,1)
+#   define dbLinkIsConstant(lnk) ((lnk)->type == CONSTANT)
+#   define dbLinkIsVolatile(lnk) ((lnk)->type == CA_LINK)
 # endif
 
 #else
@@ -650,13 +651,8 @@ long setLinks(luascriptRecord* record)
 
 	for (unsigned index = 0; index < NUM_ARGS + STR_ARGS + 1; index += 1)
 	{
-		if (field == &record->out)    { pvt->outlink_field_type = DBF_NOACCESS; }
-
-		#ifdef USE_NEW_DB_FUNCS
-		if (dbLinkIsConstant(field)) {
-		#else
-		if (field->type == CONSTANT) {
-		#endif
+		if (dbLinkIsConstant(field))
+		{
 			if (index < NUM_ARGS)
 			{
 				recGblInitConstantLink(field, DBF_DOUBLE, value);
@@ -665,7 +661,6 @@ long setLinks(luascriptRecord* record)
 
 			*valid = luascriptINAV_CON;
 		}
-		#ifdef USE_NEW_DB_FUNCS
 		else if (dbLinkIsVolatile(field))
 		{
 			if (dbIsLinkConnected(field))
@@ -681,22 +676,6 @@ long setLinks(luascriptRecord* record)
 		{
 			*valid = luascriptINAV_LOC;
 		}
-		#else
-		else if (!dbNameToAddr(field->value.pv_link.pvname, paddress))
-		{
-			*valid = luascriptINAV_LOC;
-
-			if (field == &record->out)
-			{
-				pvt->outlink_field_type = paddress->field_type;
-			}
-		}
-		else
-		{
-			*valid = luascriptINAV_EXT_NC;
-			pvt->caLinkStat = CA_LINKS_NOT_OK;
-		}
-		#endif
 
 		db_post_events(record, valid, DBE_VALUE);
 
