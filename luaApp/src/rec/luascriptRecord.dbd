@@ -109,7 +109,7 @@ recordtype(luascript)
 		size(4)
 		extra("char* pcode")
 	}
-	
+
 	field(CALL, DBF_NOACCESS)
 	{
 		prompt("Function call subtring")
@@ -251,6 +251,13 @@ recordtype(luascript)
 		prompt("String input JJ")
 		special(SPC_MOD)
 		promptgroup(GUI_CALC)
+		interest(1)
+	}
+	field(OUT, DBF_OUTLINK)
+	{
+		prompt("Output Link")
+		special(SPC_MOD)
+		promptgroup(GUI_OUTPUT)
 		interest(1)
 	}
 	field(INAV,DBF_MENU) {
@@ -785,14 +792,6 @@ recordtype(luascript)
 		extra("char *pjj")
 	}
 
-	field(OUT, DBF_OUTLINK)
-	{
-		prompt("Output Link")
-		special(SPC_MOD)
-		promptgroup(GUI_OUTPUT)
-		interest(1)
-	}
-
 	field(VAL,DBF_DOUBLE)
 	{
 		prompt("Result")
@@ -805,20 +804,20 @@ recordtype(luascript)
 		asl(ASL0)
 		size(40)
 	}
-	
+
 	field(AVAL, DBF_NOACCESS)
 	{
 		prompt("Array output pointer")
 		size(4)
 		extra("void* aval")
 	}
-	
+
 	field(ASIZ, DBF_LONG)
 	{
 		prompt("Array output size")
 		special(SPC_NOMOD)
 	}
-	
+
 	field(ATYP, DBF_MENU)
 	{
 		prompt("Array output type")
@@ -840,21 +839,21 @@ recordtype(luascript)
 		size(40)
 		interest(4)
 	}
-	
+
 	field(PAVL, DBF_NOACCESS)
 	{
 		prompt("Previous aval pointer")
 		size(4)
 		extra("void* pavl")
 	}
-	
+
 	field(PASZ, DBF_LONG)
 	{
 		prompt("Previous aval size")
 		special(SPC_NOMOD)
 		interest(4)
 	}
-	
+
 	field(PATP, DBF_MENU)
 	{
 		prompt("Previous aval type")
