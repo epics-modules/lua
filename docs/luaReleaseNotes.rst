@@ -1,6 +1,14 @@
 lua Release Notes
 =================
 
+Release 3-0-2
+-------------
+
+- Various bug fixes relating to proper link handling
+- Fixed another windows build issue relating to order of includes
+- Enum input field support added, fields are grabbed as string value.
+
+
 Release 3-0-1
 -------------
 
