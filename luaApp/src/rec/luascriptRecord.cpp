@@ -720,11 +720,7 @@ static long init_record(dbCommon* common, int pass)
 			init_str++;
 		}
 
-		if (initState(record))
-		{
-			logError(record);
-			return -1;
-		}
+		if (initState(record))    { return -1; }
 
 		return 0;
 	}
