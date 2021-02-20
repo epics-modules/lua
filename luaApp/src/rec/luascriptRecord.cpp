@@ -894,6 +894,7 @@ static void processCallback(void* data)
 	if (status)
 	{
 		logError(record);
+		record->pact = FALSE;
 		return;
 	}
 
