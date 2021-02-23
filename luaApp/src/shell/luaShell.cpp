@@ -302,7 +302,7 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 
 		if (line[0] == '#')
 		{
-			lua_getfield(state, LUA_REGISTRYINDEX, "LEPICS_HASH_COMMENTS");
+			lua_getglobal(state, "LEPICS_HASH_COMMENTS");
 			const char* yn = lua_tostring(state, -1);
 			lua_pop(state, 1);
 			if (yn && std::string(yn) == "YES")

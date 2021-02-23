@@ -40,7 +40,7 @@ epicsShareDef LUA_FUNCTION_LOAD_HOOK_ROUTINE luaLoadFunctionHook = NULL;
  * in the environment variable "LUA_SCRIPT_PATH"
  */
 epicsShareFunc std::string luaLocateFile(std::string filename)
-{	
+{
 	/* Check if the filename is an absolute path */
 	if (filename.at(0) == '/' && std::ifstream(filename.c_str()).good())    { return filename; }
 
@@ -64,13 +64,13 @@ epicsShareFunc std::string luaLocateFile(std::string filename)
 	std::stringstream path;
 
 	if   (env_path)
-	{ 
+	{
 		path << env_path;
 		path << ":";
 	}
-	
+
 	path << ".";
-	
+
 	std::string segment;
 
 	while (std::getline(path, segment, ':'))
@@ -134,12 +134,12 @@ static void strtolua(lua_State* state, std::string text)
 
 	std::stringstream convert;
 	convert << "return " << text;
-	
+
 	lua_State* sandbox = luaL_newstate();
 	int err = luaL_dostring(sandbox, convert.str().c_str());
-	
+
 	int type = lua_type(sandbox, -1);
-	
+
 	if      (err)                  { lua_pushstring(state, text.c_str()); }
 	else if (type == LUA_TNUMBER)  { lua_pushnumber(state, lua_tonumber(sandbox, -1)); }
 	else if (type == LUA_TSTRING)  { lua_pushstring(state, lua_tostring(sandbox, -1)); }
@@ -173,7 +173,7 @@ epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
 
 /*
  * Takes a set of comma-separated macro definitions in the form of
- * key-value pairs. Adds a scope of global variables according to 
+ * key-value pairs. Adds a scope of global variables according to
  * the keys parsed. Variables can be popped off with luaPopScope
  */
 epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
@@ -183,9 +183,9 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 	if (macro_list)
 	{
 		lua_newtable(state);
-	
+
 		macParseDefns(NULL, macro_list, &pairs);
-		
+
 		for ( ; pairs && pairs[0]; pairs += 2)
 		{
 			std::string param(pairs[1]);
@@ -194,7 +194,7 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 
 			lua_setfield(state, -2, pairs[0]);
 		}
-		
+
 		lua_pushvalue(state, -1);
 		lua_setfield(state, -2, "__index");
 		luaPushScope(state);
@@ -204,13 +204,13 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 
 /*
  * Assumes that there is a table with a defined __index field
- * at the top of the stack. Creates a scope of global variables 
+ * at the top of the stack. Creates a scope of global variables
  * that can be removed with luaPopScope.
  */
 epicsShareFunc void luaPushScope(lua_State* state)
 {
 	lua_getglobal(state, "_G");
-	
+
 	/*
 	 * If there's an existing scope, push it down
 	 * as the metatable of the table being added.
@@ -219,7 +219,7 @@ epicsShareFunc void luaPushScope(lua_State* state)
 	{
 		lua_setmetatable(state, -3);
 	}
-	
+
 	lua_pushvalue(state, -2);
 	lua_setmetatable(state, -2);
 	lua_pop(state, 2);
@@ -242,7 +242,7 @@ epicsShareFunc void luaPopScope(lua_State* state)
  * during the ioc registrar calls.
  */
 epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction library_func)
-{	
+{
 	std::pair<const char*, lua_CFunction> temp(library_name, library_func);
 
 	registered_libs.push_back(temp);
@@ -252,7 +252,7 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 
 
 /*
- * Binds a given lua function to the given name in every state created with the 
+ * Binds a given lua function to the given name in every state created with the
  * luaCreateState function.
  */
 epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction function)
@@ -272,7 +272,7 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 static int luaCheckLibrary(lua_State* state)
 {
 	std::string libname(lua_tostring(state, 1));
-	
+
 	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
 	{
 		if (libname == std::string(index->first))
@@ -282,24 +282,24 @@ static int luaCheckLibrary(lua_State* state)
 			return 2;
 		}
 	}
-	
+
 	std::stringstream funcname;
 	funcname << "\n\tno library registered '" << libname << "'";
-	
+
 	lua_pushstring(state, funcname.str().c_str());
 	return 1;
 }
 
 
 /*
- * Called on every state created with luaCreateState. Adds the above 
+ * Called on every state created with luaCreateState. Adds the above
  * function into the list of lua package searchers and then registers
  * all the functions within the registered_funcs list.
  */
 epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
 	/**
-	 * Add luaCheckLibrary as an additional function for 
+	 * Add luaCheckLibrary as an additional function for
 	 * lua to use to find libraries when using 'require'
 	 */
 	lua_getglobal(state, "package");
@@ -310,11 +310,11 @@ epicsShareFunc void luaLoadRegistered(lua_State* state)
 	lua_pushcfunction(state, luaCheckLibrary);
 	lua_seti(state, -2, num_searchers + 1);
 	lua_pop(state, 2);
-	
+
 	for (reg_iter index = registered_funcs.begin(); index != registered_funcs.end(); index++)
 	{
 		lua_register( state, index->first, index->second);
-	}	
+	}
 }
 
 
@@ -402,37 +402,37 @@ static bool parseHelp(const char* func_name)
 	if (temp_help == NULL)
 	{
 		temp_help = tmpfile();
-		
+
 		/*
-		 * If things still don't work, then default to assuming 
+		 * If things still don't work, then default to assuming
 		 * everything is a potential iocsh function
 		 */
 		if (temp_help == NULL) { return true; }
 	}
-	
+
 	FILE* prev = epicsGetThreadStdout();
-	
+
 	epicsSetThreadStdout(temp_help);
 	iocshCmd("help()");
 	epicsSetThreadStdout(prev);
-	
+
 	long size = ftell(temp_help);
 	rewind(temp_help);
 	char* buffer = (char*) malloc(sizeof(char) * size);
-	
+
 	fread(buffer, 1, size, temp_help);
 	std::stringstream help_str;
-	
+
 	help_str.str(buffer);
 	free(buffer);
-	
+
 	rewind(temp_help);
-	
+
 	std::string line;
 	std::string element;
 
 	int skipped_first_line = 0;
-	
+
 	while (std::getline(help_str, line, '\n'))
 	{
 		if (! skipped_first_line)
@@ -440,10 +440,10 @@ static bool parseHelp(const char* func_name)
 			skipped_first_line = 1;
 			continue;
 		}
-		
+
 		std::stringstream check_line;
 		check_line.str(line);
-		
+
 		while (std::getline(check_line, element, ' '))
 		{
 			if(! element.empty() && element == func_name)
@@ -452,8 +452,8 @@ static bool parseHelp(const char* func_name)
 			}
 		}
 	}
-			
-	return false;		
+
+	return false;
 }
 
 
@@ -467,32 +467,32 @@ static bool parseHelp(const char* func_name)
 static int l_iocindex(lua_State* state)
 {
 	const char* symbol_name = lua_tostring(state, 2);
-	
+
 	if (std::string(symbol_name) == "exit")
 	{
 		lua_pushlightuserdata(state, NULL);
 		return lua_error(state);
 	}
-	
+
 	std::stringstream environ_check;
-	
+
 	environ_check << "return (os.getenv('";
 	environ_check << symbol_name;
 	environ_check << "'))";
-	
+
 	luaL_dostring(state, environ_check.str().c_str());
-	
+
 	if (! lua_isnil(state, -1)) { return 1; }
-	
+
 	lua_pop(state, 1);
-	
+
 	if (! parseHelp(symbol_name)) { return 0; }
-	
+
 	static const luaL_Reg func_meta[] = {
 		{"__call", l_call},
 		{NULL, NULL}
 	};
-	
+
 	luaL_newmetatable(state, "func_meta");
 	luaL_setfuncs(state, func_meta, 0);
 	lua_pop(state, 1);
@@ -516,10 +516,10 @@ static int l_iocindex(lua_State* state)
 static int l_iochash_enable(lua_State* state)
 {
 	lua_pushstring(state, "YES");
-	lua_setfield(state, LUA_REGISTRYINDEX, "LEPICS_HASH_COMMENTS");
+	lua_setglobal(state, "LEPICS_HASH_COMMENTS");
 
 	lua_pushstring(state, "Accepting iocsh-style comments");
-	
+
 	return 1;
 }
 
@@ -534,7 +534,7 @@ int luaopen_iocsh (lua_State* state)
 	static const luaL_Reg iocsh_funcs[] = {
 		{NULL, NULL}
 	};
-	
+
 	static const luaL_Reg hash_meta[] = {
 		{"__len", l_iochash_enable},
 		{NULL, NULL}
@@ -543,7 +543,7 @@ int luaopen_iocsh (lua_State* state)
 	luaL_newmetatable(state, "iocsh_meta");
 	luaL_setfuncs(state, iocsh_meta, 0);
 	lua_pop(state, 1);
-	
+
 	luaL_newmetatable(state, "hash_enable_meta");
 	luaL_setfuncs(state, hash_meta, 0);
 	lua_pop(state, 1);
@@ -554,7 +554,7 @@ int luaopen_iocsh (lua_State* state)
 	lua_newtable(state);
 	luaL_setmetatable(state, "hash_enable_meta");
 	lua_setglobal(state, "ENABLE_HASH_COMMENTS");
-	
+
 	return 1;
 }
 
@@ -587,17 +587,17 @@ epicsShareFunc lua_State* luaCreateState()
 epicsShareFunc lua_State* luaNamedState(const char* name)
 {
 	if (! name) { return NULL; }
-	
+
 	std::string state_name(name);
-	
+
 	if (named_states.find(state_name) != named_states.end())
 	{
 		return named_states[state_name];
 	}
-	
+
 	lua_State* output = luaCreateState();
 
 	named_states[state_name] = output;
-	
+
 	return output;
 }
