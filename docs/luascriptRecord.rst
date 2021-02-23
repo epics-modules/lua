@@ -200,8 +200,8 @@ It's a menu field that has six choices:
 The SYNC field controls whether the record processes in a synchronous or
 asynchronous manner. It is a menu field with two choices:
 
--  ``Synchronous`` -- process the record's lua code synchronously.
--  ``Asynchronous`` -- process the record's lua code in a separate
+-  ``Sync`` -- process the record's lua code synchronously.
+-  ``Async`` -- process the record's lua code in a separate
    thread.
 
 .. csv-table:: 
