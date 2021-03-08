@@ -100,6 +100,7 @@ lua_SRCS += luaPortDriver.cpp
 # Build lua libraries
 SRC_DIRS += $(TOP)/luaApp/src/libs
 
+lua_SRCS += losilib.cpp
 lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
 lua_SRCS += ldatabaselib.cpp
