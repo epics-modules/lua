@@ -78,8 +78,8 @@ int luaopen_osi (lua_State *L)
 	lua_setfield(L, LUA_REGISTRYINDEX, "OSI_REDIRECTS_STACK");
 
 	static const luaL_Reg mylib[] = {
-		{"startRedirect", l_setStdout},
-		{"endRedirect", l_resetStdout},
+		{"startRedirectOut", l_setStdout},
+		{"endRedirectOut", l_resetStdout},
 		{"sleep", l_osisleep},
 		{NULL, NULL}  /* sentinel */
 	};
