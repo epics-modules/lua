@@ -459,6 +459,8 @@ static void initState(lua_State* state)
 	luaL_getmetatable(state, "iocsh_meta");
 	luaPushScope(state);
 
+	luaL_dostring(state, "print = iocsh.print");
+
 	lua_pushlightuserdata(state, iocshPpdbbase);
 	lua_setglobal(state, "pdbbase");
 }

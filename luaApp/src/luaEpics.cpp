@@ -524,6 +524,45 @@ static int l_iochash_enable(lua_State* state)
 }
 
 
+
+/*
+ * Replacement print function to be used instead
+ * of the normal lua print. Used so that epics
+ * stdout redirection will affect the lua print
+ * statements.
+ */
+static int l_replaceprint(lua_State* state)
+{
+	int num_args = lua_gettop(state);  /* number of arguments */
+	lua_getglobal(state, "tostring");
+
+	for (int index = 1; index <= num_args; index += 1)
+	{
+		const char *s;
+		size_t l;
+
+		lua_pushvalue(state, -1);  /* function to be called */
+		lua_pushvalue(state, index);   /* value to print */
+		lua_call(state, 1, 1);
+
+		s = lua_tolstring(state, -1, &l);  /* get result */
+
+		if (s == NULL)
+		{
+			return luaL_error(state, "'tostring' must return a string to 'print'");
+		}
+
+		if (index > 1) { epicsStdoutPrintf("\t"); }
+
+		epicsStdoutPrintf("%s", s);
+		lua_pop(state, 1);  /* pop result */
+	}
+
+	epicsStdoutPrintf("\n");
+	return 0;
+}
+
+
 int luaopen_iocsh (lua_State* state)
 {
 	static const luaL_Reg iocsh_meta[] = {
@@ -532,6 +571,7 @@ int luaopen_iocsh (lua_State* state)
 	};
 
 	static const luaL_Reg iocsh_funcs[] = {
+		{"print", l_replaceprint},
 		{NULL, NULL}
 	};
 
