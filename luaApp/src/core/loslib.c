@@ -7,8 +7,11 @@
 #define loslib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#ifdef vxWorks
+  int sysClkRateGet();
+#endif
 
+#include "lprefix.h"
 
 #include <errno.h>
 #include <locale.h>
