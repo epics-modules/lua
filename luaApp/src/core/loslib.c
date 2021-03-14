@@ -9,6 +9,9 @@
 
 #include "lprefix.h"
 
+#ifdef vxWorks
+  int sysClkRateGet();
+#endif
 
 #include <errno.h>
 #include <locale.h>
