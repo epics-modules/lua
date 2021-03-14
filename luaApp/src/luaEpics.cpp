@@ -571,7 +571,6 @@ int luaopen_iocsh (lua_State* state)
 	};
 
 	static const luaL_Reg iocsh_funcs[] = {
-		{"print", l_replaceprint},
 		{NULL, NULL}
 	};
 
@@ -609,6 +608,8 @@ epicsShareFunc lua_State* luaCreateState()
 	lua_State* output = luaL_newstate();
 	luaL_openlibs(output);
 	luaLoadRegistered(output);
+
+	lua_register(output, "print", l_replaceprint);
 
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
 	lua_pop(output, 1);

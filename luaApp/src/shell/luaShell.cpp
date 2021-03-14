@@ -13,6 +13,7 @@
 #include <epicsExport.h>
 #include <epicsReadline.h>
 #include <epicsThread.h>
+#include <epicsStdio.h>
 
 #include "luaEpics.h"
 #include "luaShell.h"
@@ -404,6 +405,85 @@ void spawn_thread_callback(void* arg)
 	lua_close(state);
 }
 
+static int l_execcode(lua_State* state)
+{
+	lua_settop(state, 1);
+
+	int datatype = lua_type(state, -1);
+
+	const char* str = NULL;
+	const char* in  = NULL;
+	const char* out = NULL;
+
+
+	/* If using named parameters, check for input/in and output/out */
+
+	if (datatype == LUA_TTABLE)
+	{
+		lua_geti(state, -1, 1);
+		if (!lua_isnil(state, -1))    { str = lua_tostring(state, -1); }
+		lua_pop(state, 1);
+
+		lua_getfield(state, -1, "output");
+		if (!lua_isnil(state, -1))    { out = lua_tostring(state, -1); }
+		lua_pop(state, 1);
+
+		lua_getfield(state, -1, "out");
+		if (!lua_isnil(state, -1))    { out = lua_tostring(state, -1); }
+		lua_pop(state, 1);
+
+		lua_getfield(state, -1, "input");
+		if (!lua_isnil(state, -1))    { in = lua_tostring(state, -1); }
+		lua_pop(state, 1);
+
+		lua_getfield(state, -1, "in");
+		if (!lua_isnil(state, -1))    { in = lua_tostring(state, -1); }
+		lua_pop(state, 1);
+	}
+	else if (datatype == LUA_TSTRING)
+	{
+		str = lua_tostring(state, 1);
+	}
+
+
+	/* Output redirects */
+	FILE* new_out = NULL;
+	FILE* old_out = epicsGetThreadStdout();
+
+	if (out)
+	{
+		new_out = fopen(out, "w");
+
+		if (new_out == NULL)
+		{
+			return luaL_error(state, "Error in opening file(%s)\n", new_out);
+		}
+
+		epicsSetThreadStdout(new_out);
+	}
+
+	int status = LUA_OK;
+
+	/* prioritize file input over command definition */
+	if (in)        { luashBody(state, in, NULL); }
+	else if (str)
+	{
+		status = luaL_dostring(state, str);
+	}
+
+	/* Return to previous output */
+	if (out)
+	{
+		epicsSetThreadStdout(old_out);
+		fclose(new_out);
+	}
+
+	if (status != LUA_OK)    { return luaL_error(state, "Error (%d) running string (%s)\n", status, str); }
+
+	return 0;
+}
+
+
 static LUA_LIBRARY_LOAD_HOOK_ROUTINE previousLibraryHook=NULL;
 static LUA_FUNCTION_LOAD_HOOK_ROUTINE previousFunctionHook=NULL;
 
@@ -459,7 +539,10 @@ static void initState(lua_State* state)
 	luaL_getmetatable(state, "iocsh_meta");
 	luaPushScope(state);
 
-	luaL_dostring(state, "print = iocsh.print");
+	lua_newtable(state);
+	lua_setfield(state, LUA_REGISTRYINDEX, "OSI_REDIRECTS_STACK");
+
+	lua_register(state, "exec", l_execcode);
 
 	lua_pushlightuserdata(state, iocshPpdbbase);
 	lua_setglobal(state, "pdbbase");
