@@ -1,4 +1,4 @@
-epics = require("epics")
+osi = require("osi")
 
 local flip = false
 
@@ -11,5 +11,5 @@ for i = 1,10 do
 		print("Tock")
 	end
 	
-	epics.sleep(1.0)
+	osi.sleep(1.0)
 end
