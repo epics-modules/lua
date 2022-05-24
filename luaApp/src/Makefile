@@ -7,6 +7,9 @@ include $(TOP)/configure/CONFIG
 
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
+ifeq ($(CXX11_SUPPORT), YES)
+  USR_CXXFLAGS += -std=c++11
+endif
 
 LIBRARY_IOC_DEFAULT += lua
 LIBRARY_IOC_RTEMS = -nil-
@@ -59,6 +62,10 @@ lua_SRCS += lutf8lib.c
 lua_SRCS += lvm.c
 lua_SRCS += lzio.c
 
+
+# Include luaaa library
+SRC_DIRS += $(TOP)/luaApp/src/luaaa
+INC += luaaa.hpp
 
 # Include device support
 SRC_DIRS += $(TOP)/luaApp/src/devSupport

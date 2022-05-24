@@ -4,8 +4,14 @@
 #include <shareLib.h>
 #include <iocsh.h>
 #include <epicsVersion.h>
+#include <assert.h>
+
 
 #ifdef __cplusplus
+
+#if __cplusplus >= 201103L
+	#include "luaaa.hpp"
+#endif
 
 #include <string>
 
@@ -15,12 +21,13 @@ epicsShareFunc std::string luaLocateFile(std::string filename);
 
 extern "C"
 {
-
+	
 #endif
 
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+
 
 typedef void (*LUA_LIBRARY_LOAD_HOOK_ROUTINE)(const char* library_name, lua_CFunction library_func);
 typedef void (*LUA_FUNCTION_LOAD_HOOK_ROUTINE)(const char* function_name, lua_CFunction function);
