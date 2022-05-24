@@ -484,15 +484,7 @@ static int l_execcode(lua_State* state)
 }
 
 
-static LUA_LIBRARY_LOAD_HOOK_ROUTINE previousLibraryHook=NULL;
 static LUA_FUNCTION_LOAD_HOOK_ROUTINE previousFunctionHook=NULL;
-
-static void newLibraryLoadedHook(const char* library_name, lua_CFunction library_func)
-{
-	if (previousLibraryHook)    { previousLibraryHook(library_name, library_func); }
-
-	luaL_requiref(shell_state, library_name, library_func, 1);
-}
 
 static void newFunctionLoadedHook(const char* function_name, lua_CFunction function)
 {
@@ -594,10 +586,7 @@ static int luashBegin(const char* pathname, const char* macros, lua_State* state
 
 epicsShareFunc int epicsShareAPI luash(lua_State* state, const char* pathname, const char* macros)
 {
-	previousLibraryHook = luaLoadLibraryHook;
 	previousFunctionHook = luaLoadFunctionHook;
-
-	luaLoadLibraryHook = newLibraryLoadedHook;
 	luaLoadFunctionHook = newFunctionLoadedHook;
 	
 	return luashBegin(pathname, macros, state);
