@@ -582,12 +582,6 @@ static int luashBegin(const char* pathname, const char* macros, lua_State* state
 		initState(shell_state);
 	}
 
-	previousLibraryHook = luaLoadLibraryHook;
-	previousFunctionHook = luaLoadFunctionHook;
-
-	luaLoadLibraryHook = newLibraryLoadedHook;
-	luaLoadFunctionHook = newFunctionLoadedHook;
-
 	luashBody(shell_state, pathname, macros);
 
 	if (check_state == NULL)    { lua_close(shell_state); }
@@ -600,6 +594,12 @@ static int luashBegin(const char* pathname, const char* macros, lua_State* state
 
 epicsShareFunc int epicsShareAPI luash(lua_State* state, const char* pathname, const char* macros)
 {
+	previousLibraryHook = luaLoadLibraryHook;
+	previousFunctionHook = luaLoadFunctionHook;
+
+	luaLoadLibraryHook = newLibraryLoadedHook;
+	luaLoadFunctionHook = newFunctionLoadedHook;
+	
 	return luashBegin(pathname, macros, state);
 }
 
