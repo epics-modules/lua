@@ -266,7 +266,7 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 
 
 /*
- * Search function that gets added to lua. Gets called when "include" is used.
+ * Search function that gets added to lua. Gets called when "require" is used.
  * Searches for the named library in the list of registered libraries.
  */
 static int luaCheckLibrary(lua_State* state)
