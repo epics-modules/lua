@@ -105,7 +105,12 @@ INC += luaPortDriver.h
 lua_SRCS += luaPortDriver.cpp
 
 # Build lua libraries
-SRC_DIRS += $(TOP)/luaApp/src/libs
+
+ifeq ($(CXX11_SUPPORT), YES)
+    SRC_DIRS += $(TOP)/luaApp/src/libs
+else
+    SRC_DIRS += $(TOP)/luaApp/src/libs/basic
+endif
 
 lua_SRCS += losilib.cpp
 lua_SRCS += lasynlib.cpp
