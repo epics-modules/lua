@@ -11,6 +11,7 @@
 
 #if __cplusplus >= 201103L
 	#include "luaaa.hpp"
+	using namespace luaaa;
 #endif
 
 #include <string>
