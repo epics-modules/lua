@@ -20,10 +20,6 @@
 #include "luaPortDriver.h"
 #include "luaEpics.h"
 
-
-void luaGenerateDriver(lua_State* state, asynPortDriver* port);
-
-
 /*
  * __call metatable function on the datatable once the
  * name has been defined.

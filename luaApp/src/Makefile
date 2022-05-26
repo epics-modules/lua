@@ -99,10 +99,10 @@ INC += luaShell.h
 lua_SRCS += luaShell.cpp
 
 # Build luaPortDriver
-SRC_DIRS += $(TOP)/luaApp/src/portdriver
-INC += luaPortDriver.h
+#SRC_DIRS += $(TOP)/luaApp/src/portdriver
+#INC += luaPortDriver.h
 
-lua_SRCS += luaPortDriver.cpp
+#lua_SRCS += luaPortDriver.cpp
 
 # Build lua libraries
 
