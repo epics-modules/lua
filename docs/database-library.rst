@@ -6,8 +6,9 @@ Database Library Documentation
 
 ::
 
-   Creates a DBENTRY pointer which can be used with all implemented static database access functions.
-   dbFreeEntry will be called on the pointer automatically when the entry is garbage collected.
+   Creates a DBENTRY pointer which can be used with all implemented static database 
+   access functions. dbFreeEntry will be called on the pointer automatically when the 
+   entry is garbage collected.
 
 
 Static Database Access
