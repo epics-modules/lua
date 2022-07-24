@@ -94,7 +94,7 @@ instances of the dbentry class will be used, created with the aforementioned db.
    With lua syntactical sugar, the generation and calling of the table can be combined.
    An example of this would be:
 
-   db.record("ai
+   db.record("ai", "x:y:z") {
       DTYP = "asynInt32",
       INP = "@asyn(A_PORT,0,1)PARAM_NAME"
    }
