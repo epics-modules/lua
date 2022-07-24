@@ -2,6 +2,13 @@
 #include <iocsh.h>
 #include <epicsExport.h>
 #include "luaEpics.h"
+#include "epicsVersion.h"
+
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 4, 0)
+	#define WITH_DBFTYPE
+#endif
+
+
 
 class _entry
 {
@@ -143,11 +150,14 @@ int numFields(_entry* in)       { return dbGetNFields(in->entry, 0); }
 int numRecords(_entry* in)      { return dbGetNRecords(in->entry); }
 int numAliases(_entry* in)      { return dbGetNAliases(in->entry); }
 int numRecordTypes(_entry* in)  { return dbGetNRecordTypes(in->entry); }
-int fieldType(_entry* in)       { return dbGetFieldDbfType(in->entry); }
 int promptGroup(_entry* in)     { return dbGetPromptGroup(in->entry); }
 int numChoices(_entry* in)      { return dbGetNMenuChoices(in->entry); }
 int getIndex(_entry* in)        { return dbGetMenuIndex(in->entry); }
 int numLinks(_entry* in)        { return dbGetNLinks(in->entry); }
+
+#ifdef WITH_DBFTYPE
+int fieldType(_entry* in)       { return dbGetFieldDbfType(in->entry); }
+#endif
 
 int getIndexFromMenu(_entry* in, const char* name)    { return dbGetMenuIndexFromString(in->entry, name); }
 
@@ -248,8 +258,11 @@ int luaopen_database (lua_State *L)
 	dbmod.fun("getNFields", numFields);
 	dbmod.fun("firstField", firstField);
 	dbmod.fun("nextField", nextField);
-	dbmod.fun("getFieldDbfType", fieldType);
 	dbmod.fun("getFieldName", fieldName);
+	
+	#ifdef WITH_DBFTYPE
+	dbmod.fun("getFieldDbfType", fieldType);
+	#endif
 
 	dbmod.fun("getDefault", defaultVal);
 	
