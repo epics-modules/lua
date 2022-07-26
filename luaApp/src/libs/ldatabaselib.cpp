@@ -3,11 +3,16 @@
 #include <epicsExport.h>
 #include "luaEpics.h"
 #include "epicsVersion.h"
+#include <functional>
+#include "dbAccess.h"
+#include "macLib.h"
 
 #if EPICS_VERSION_INT >= VERSION_INT(7, 0, 4, 0)
 	#define WITH_DBFTYPE
 #endif
 
+
+static DB_LOAD_RECORDS_HOOK_ROUTINE previousHook=NULL;
 
 
 class _entry
@@ -239,10 +244,76 @@ int l_record(lua_State* state)
 	return 1;
 }
 
+static void myDatabaseHook(lua_State* state, const char* fname, const char* macro)
+{
+	char* full_name = macEnvExpand(fname);
+	
+	lua_getfield(state, LUA_REGISTRYINDEX, "LDB_HOOKS");
+	lua_len(state, -1);
+	
+	int length = lua_tointeger(state, -1);
+	
+	lua_pop(state, 1);
+	
+	for (int i = 1; i <= length; i += 1)
+	{
+		lua_geti(state, -1, i);
+		lua_pushstring(state, full_name);
+		lua_pushstring(state, macro);
+		
+		int status = lua_pcall(state, 2, 1, 0);
+		
+		if (status)    
+		{
+			std::string err(lua_tostring(state, -1));
+			
+			luaL_error(state, err.c_str());
+		}
+	}
+	
+	
+	lua_pop(state, 1);
+	
+	if (previousHook)    { previousHook(fname, macro); }
+}
+
+
+int test(lua_State* state)
+{
+	myDatabaseHook(state, "A", "B");
+	return 0;
+}
+
+
+int registerDbHook(lua_State* state)
+{
+	if ( lua_type(state, -1) != LUA_TFUNCTION)
+	{
+		luaL_error(state, "Database hook must be a function\n");
+	}
+	
+	lua_getfield(state, LUA_REGISTRYINDEX, "LDB_HOOKS");
+	
+	// DB_HOOKS[ length + 1] = new_hook
+	lua_len(state, -1);
+	
+	int next_val = 1 + lua_tointeger(state, -1);
+	
+	lua_pop(state, 1);
+	
+	lua_pushvalue(state, -2);
+	lua_seti(state, -2, next_val);
+	lua_pop(state, 2);
+	
+	return 0;
+}
 
 
 int luaopen_database (lua_State *L)
 {
+	lua_newtable(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, "LDB_HOOKS");
+	
 	LuaClass<_entry> lua_ew(L, "dbentry");
 	lua_ew.ctor<void, lua_State*>("new",&_entry::create, &_entry::destroy);
 	
@@ -315,6 +386,10 @@ int luaopen_database (lua_State *L)
 	dbmod.fun("deleteInfo", deleteInfo);
 	dbmod.fun("getInfo", getInfo);
 	
+	
+	dbmod.fun("registerDatabaseHook", registerDbHook);
+	
+	dbmod.fun("test", test);
 	
 	static const luaL_Reg rec_meta[] = {
 		{"__call", l_setfield},
