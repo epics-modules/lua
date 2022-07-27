@@ -80,7 +80,7 @@ instances of the dbentry class will be used, created with the aforementioned db.
    Registers the provided function so that it is invoked each time the dbLoadRecords 
    function is called by the IOC. The callback hook is invoked with two parameters;
    the first being the filepath to the database file being loaded, and the other 
-   being the macro list provided to dbLoadRecords.
+   being a table of the macro definitions provided to dbLoadRecords.
 
    dbhook    [function]  - The callback function to be invoked
 

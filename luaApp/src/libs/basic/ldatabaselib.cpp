@@ -98,6 +98,9 @@ int l_record(lua_State* state)
 static void myDatabaseHook(const char* fname, const char* macro)
 {
 	char* full_name = macEnvExpand(fname);
+	char** pairs;
+	
+	macParseDefns(NULL, macro, &pairs);
 	
 	state_lock.lock();
 	for (state_it it = hook_states.begin(); it != hook_states.end(); it++)
@@ -113,7 +116,14 @@ static void myDatabaseHook(const char* fname, const char* macro)
 		{
 			lua_geti(*it, -1, i);
 			lua_pushstring(*it, full_name);
-			lua_pushstring(*it, macro);
+			lua_newtable(*it);
+			
+			for ( ; pairs && pairs[0]; pairs += 2)
+			{
+				lua_pushstring(*it, pairs[0]);
+				lua_pushstring(*it, pairs[1]);
+				lua_settable(*it, -3);
+			}
 			
 			int status = lua_pcall(*it, 2, 1, 0);
 			
