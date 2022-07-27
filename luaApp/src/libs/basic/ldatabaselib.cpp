@@ -1,7 +1,20 @@
+#include <vector>
+
 #include <dbStaticLib.h>
 #include <iocsh.h>
 #include <epicsExport.h>
+#include <epicsThread.h>
 #include "luaEpics.h"
+#include "dbAccess.h"
+#include "macLib.h"
+
+static std::vector<lua_State*> hook_states;
+typedef std::vector<lua_State*>::iterator state_it;
+
+static epicsMutex state_lock;
+static DB_LOAD_RECORDS_HOOK_ROUTINE previousHook=NULL;
+
+
 
 int l_setfield(lua_State* state)
 {
@@ -82,9 +95,110 @@ int l_record(lua_State* state)
 }
 
 
+static void myDatabaseHook(const char* fname, const char* macro)
+{
+	char* full_name = macEnvExpand(fname);
+	
+	state_lock.lock();
+	for (state_it it = hook_states.begin(); it != hook_states.end(); it++)
+	{
+		lua_getfield(*it, LUA_REGISTRYINDEX, "LDB_HOOKS");
+		lua_len(*it, -1);
+		
+		int length = lua_tointeger(*it, -1);
+		
+		lua_pop(*it, 1);
+		
+		for (int i = 1; i <= length; i += 1)
+		{
+			lua_geti(*it, -1, i);
+			lua_pushstring(*it, full_name);
+			lua_pushstring(*it, macro);
+			
+			int status = lua_pcall(*it, 2, 1, 0);
+			
+			if (status)    
+			{
+				std::string err(lua_tostring(*it, -1));
+				
+				state_lock.unlock();
+				luaL_error(*it, err.c_str());
+			}
+		}
+		
+		lua_pop(*it, 1);
+	}
+	state_lock.unlock();
+	
+	if (previousHook)    { previousHook(fname, macro); }
+}
+
+int registerDbHook(lua_State* state)
+{
+	if ( lua_type(state, -1) != LUA_TFUNCTION)
+	{
+		luaL_error(state, "Database hook must be a function\n");
+	}
+	
+	lua_getfield(state, LUA_REGISTRYINDEX, "LDB_HOOKS");
+	
+	// DB_HOOKS[ length + 1] = new_hook
+	lua_len(state, -1);
+	
+	int next_val = 1 + lua_tointeger(state, -1);
+	
+	lua_pop(state, 1);
+	
+	lua_pushvalue(state, -2);
+	lua_seti(state, -2, next_val);
+	lua_pop(state, 2);
+	
+	return 0;
+}
+
+int l_deregister(lua_State* state)
+{
+	state_lock.lock();
+	for (state_it it = hook_states.begin(); it != hook_states.end(); it++)
+	{
+		if (*it == state)
+		{
+			hook_states.erase(it);
+			break;
+		}
+	}
+	state_lock.unlock();
+	
+	return 0;
+}
+
+
+
 
 int luaopen_database (lua_State *L)
 {
+	/*
+	 * Add lua_State to list of states that potentially contain dbLoad callbacks.
+	 * Then, set up a table to hold the callbacks with a garbage collection
+	 * function to remove the lua_State when it is closed.
+	 */
+	state_lock.lock();
+		hook_states.push_back(L);
+	state_lock.unlock();
+	
+	static const luaL_Reg dereg_meta[] = {
+		{"__gc", l_deregister},
+		{NULL, NULL}
+	};
+	
+	luaL_newmetatable(L, "deregister_meta");
+	luaL_setfuncs(L, dereg_meta, 0);
+	lua_pop(L, 1);
+	
+	lua_newtable(L);
+	luaL_setmetatable(L, "deregister_meta");
+	lua_setfield(L, LUA_REGISTRYINDEX, "LDB_HOOKS");
+	
 	static const luaL_Reg rec_meta[] = {
 		{"__call", l_setfield},
 		{NULL, NULL}
@@ -96,6 +210,7 @@ int luaopen_database (lua_State *L)
 
 	static const luaL_Reg mylib[] = {
 		{"record", l_record},
+		{"registerDatabaseHook", registerDbHook},
 		{NULL, NULL}  /* sentinel */
 	};
 
@@ -103,7 +218,12 @@ int luaopen_database (lua_State *L)
 	return 1;
 }
 
-static void libdatabaseRegister(void)    { luaRegisterLibrary("db", luaopen_database); }
+static void libdatabaseRegister(void)    
+{ 
+	previousHook = dbLoadRecordsHook;
+	dbLoadRecordsHook = myDatabaseHook;
+	luaRegisterLibrary("db", luaopen_database); 
+}
 
 extern "C"
 {
