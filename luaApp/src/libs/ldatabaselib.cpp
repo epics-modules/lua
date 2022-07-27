@@ -1,17 +1,23 @@
+#include <functional>
+#include <vector>
+
 #include <dbStaticLib.h>
 #include <iocsh.h>
 #include <epicsExport.h>
+#include <epicsThread.h>
 #include "luaEpics.h"
 #include "epicsVersion.h"
-#include <functional>
 #include "dbAccess.h"
 #include "macLib.h"
+
 
 #if EPICS_VERSION_INT >= VERSION_INT(7, 0, 4, 0)
 	#define WITH_DBFTYPE
 #endif
 
 
+static std::vector<lua_State*> hook_states;
+static epicsMutex state_lock;
 static DB_LOAD_RECORDS_HOOK_ROUTINE previousHook=NULL;
 
 
@@ -244,46 +250,43 @@ int l_record(lua_State* state)
 	return 1;
 }
 
-static void myDatabaseHook(lua_State* state, const char* fname, const char* macro)
+static void myDatabaseHook(const char* fname, const char* macro)
 {
 	char* full_name = macEnvExpand(fname);
 	
-	lua_getfield(state, LUA_REGISTRYINDEX, "LDB_HOOKS");
-	lua_len(state, -1);
-	
-	int length = lua_tointeger(state, -1);
-	
-	lua_pop(state, 1);
-	
-	for (int i = 1; i <= length; i += 1)
+	state_lock.lock();
+	for (auto it = hook_states.begin(); it != hook_states.end(); it++)
 	{
-		lua_geti(state, -1, i);
-		lua_pushstring(state, full_name);
-		lua_pushstring(state, macro);
+		lua_getfield(*it, LUA_REGISTRYINDEX, "LDB_HOOKS");
+		lua_len(*it, -1);
 		
-		int status = lua_pcall(state, 2, 1, 0);
+		int length = lua_tointeger(*it, -1);
 		
-		if (status)    
+		lua_pop(*it, 1);
+		
+		for (int i = 1; i <= length; i += 1)
 		{
-			std::string err(lua_tostring(state, -1));
+			lua_geti(*it, -1, i);
+			lua_pushstring(*it, full_name);
+			lua_pushstring(*it, macro);
 			
-			luaL_error(state, err.c_str());
+			int status = lua_pcall(*it, 2, 1, 0);
+			
+			if (status)    
+			{
+				std::string err(lua_tostring(*it, -1));
+				
+				state_lock.unlock();
+				luaL_error(*it, err.c_str());
+			}
 		}
+		
+		lua_pop(*it, 1);
 	}
-	
-	
-	lua_pop(state, 1);
+	state_lock.unlock();
 	
 	if (previousHook)    { previousHook(fname, macro); }
 }
-
-
-int test(lua_State* state)
-{
-	myDatabaseHook(state, "A", "B");
-	return 0;
-}
-
 
 int registerDbHook(lua_State* state)
 {
@@ -308,11 +311,48 @@ int registerDbHook(lua_State* state)
 	return 0;
 }
 
+int l_deregister(lua_State* state)
+{
+	state_lock.lock();
+	for (auto it = hook_states.begin(); it != hook_states.end(); it++)
+	{
+		if (*it == state)
+		{
+			hook_states.erase(it);
+			break;
+		}
+	}
+	state_lock.unlock();
+	
+	return 0;
+}
 
 int luaopen_database (lua_State *L)
 {
+	/*
+	 * Add lua_State to list of states that potentially contain dbLoad callbacks.
+	 * Then, set up a table to hold the callbacks with a garbage collection
+	 * function to remove the lua_State when it is closed.
+	 */
+	state_lock.lock();
+		hook_states.push_back(L);
+	state_lock.unlock();
+	
+	static const luaL_Reg dereg_meta[] = {
+		{"__gc", l_deregister},
+		{NULL, NULL}
+	};
+	
+	luaL_newmetatable(L, "deregister_meta");
+	luaL_setfuncs(L, dereg_meta, 0);
+	lua_pop(L, 1);
+	
 	lua_newtable(L);
+	luaL_setmetatable(L, "deregister_meta");
 	lua_setfield(L, LUA_REGISTRYINDEX, "LDB_HOOKS");
+	
+	
+	// DBENTRY* wrapper and all associated functions
 	
 	LuaClass<_entry> lua_ew(L, "dbentry");
 	lua_ew.ctor<void, lua_State*>("new",&_entry::create, &_entry::destroy);
@@ -389,8 +429,8 @@ int luaopen_database (lua_State *L)
 	
 	dbmod.fun("registerDatabaseHook", registerDbHook);
 	
-	dbmod.fun("test", test);
 	
+	// record generation functions
 	static const luaL_Reg rec_meta[] = {
 		{"__call", l_setfield},
 		{NULL, NULL}
@@ -406,7 +446,12 @@ int luaopen_database (lua_State *L)
 	return 1;
 }
 
-static void libdatabaseRegister(void)    { luaRegisterLibrary("db", luaopen_database); }
+static void libdatabaseRegister(void)    
+{ 
+	previousHook = dbLoadRecordsHook;
+	dbLoadRecordsHook = myDatabaseHook;
+	luaRegisterLibrary("db", luaopen_database); 
+}
 
 extern "C"
 {
