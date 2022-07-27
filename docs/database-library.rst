@@ -73,6 +73,18 @@ instances of the dbentry class will be used, created with the aforementioned db.
 
 
 
+**db.registerDatabaseHook** (dbhook)
+
+::
+   
+   Registers the provided function so that it is invoked each time the dbLoadRecords 
+   function is called by the IOC. The callback hook is invoked with two parameters;
+   the first being the filepath to the database file being loaded, and the other 
+   being the macro list provided to dbLoadRecords.
+
+   dbhook    [function]  - The callback function to be invoked
+
+
 
 **db.record** (recordtype, recordname)
 
