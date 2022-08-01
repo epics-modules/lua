@@ -86,25 +86,39 @@ instances of the dbentry class will be used, created with the aforementioned db.
 
 
 
-**db.record** (recordtype, recordname)
+**db.record** ([recordtype,] recordname)
 
 ::
 
-   Adds a record of the given type and name to the IOC
+   Creates an instance of the dbrecord class, a wrapper around record creation/access.
 
+   recordtype   [string] - The typename of the record (ai, mbbo, calc, etc) Optional. 
+                           If the typename is left out, constructor will operate only
+                           to find a record, not create one.
+						
+   recordname   [string] - The name of the record. If the name already exists, the
+                           returned instance will refer to the existing record. If
+                           there is no record by that name, the constructor will
+                           create one.
 
-   recordtype   [string] - The typename of the record to create (ai, mbbo, calc, etc)
+   Returns a class instance with two instance methods, field and info. Both functions 
+   take in two strings as parameters, the first a name and the second a value. 'field'
+   attempts to find the record field with a given name and then calls dbPutString to 
+   set the value. While 'info' calls dbPutInfo to add a new info field with the given
+   name and value to the record.
+   
+   
+   rec = db.record("stringin", "x:y:z")
+   rec:field("VAL", "test")
+   rec:info("autosave", "VAL")
+   
+   
+   The class instance itself can also be called as a function, taking in a dictionary
+   of name-vale pairs. In doing so, the 'field' function is called for each pair, 
+   passing through the names and values to the function.
 
-   recordname   [string] - The name to create the record with
-
-
-   Returns a table that can be called as a function that takes a single table as input.
-   Each key-value pair in that input table are treated as a field definition, with the
-   key as the name of the field, and the value in the table as the value to set the
-   field to.
-
-   With lua syntactical sugar, the generation and calling of the table can be combined.
-   An example of this would be:
+   With lua syntactical sugar, you can chain together the record creation and the
+   setting of fields like so:
 
    db.record("ai", "x:y:z") {
       DTYP = "asynInt32",
