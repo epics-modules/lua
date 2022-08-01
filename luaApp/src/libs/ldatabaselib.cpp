@@ -47,14 +47,14 @@ class _record
 		// Create an instance associated with existing record
 		_record(std::string name)
 		{
-			this->name = name;
+			this->_name = name;
 			this->record_entry = dbAllocEntry(*iocshPpdbbase);
 			
 			dbFindRecord(this->record_entry, name.c_str());
 			dbGetRecordAttribute(this->record_entry, "RTYP");
 			
 			char* type_str = dbGetString(this->record_entry);
-			this->type = std::string(type_str);
+			this->_type = std::string(type_str);
 			
 			dbFindRecord(this->record_entry, name.c_str());
 		}
@@ -62,16 +62,16 @@ class _record
 		// Try to find an existing record, create a new record if not found
 		_record(std::string type, std::string name)    
 		{ 
-			this->type = type;
-			this->name = name;
+			this->_type = type;
+			this->_name = name;
 			
 			this->record_entry = dbAllocEntry(*iocshPpdbbase);
 			
 			if (dbFindRecord(this->record_entry, name.c_str()))
 			{
 				// Record doesn't exist, so we'll make it
-				dbFindRecordType(this->record_entry, this->type.c_str());
-				dbCreateRecord(this->record_entry, this->name.c_str());
+				dbFindRecordType(this->record_entry, type.c_str());
+				dbCreateRecord(this->record_entry, name.c_str());
 			}
 		}
 		
@@ -81,21 +81,21 @@ class _record
 		{
 			if (dbFindField(this->record_entry, fieldname.c_str()))
 			{
-				dbFindRecord(this->record_entry, this->name.c_str());
-				luaL_error(state, "Unable to find %s field for record: %s\n", fieldname.c_str(), this->name.c_str());
+				dbFindRecord(this->record_entry, this->_name.c_str());
+				luaL_error(state, "Unable to find %s field for record: %s\n", fieldname.c_str(), this->_name.c_str());
 			}
 			
 			if (dbPutString(this->record_entry, value.c_str()) )
 			{
-				dbFindRecord(this->record_entry, this->name.c_str());
-				luaL_error(state, "Error setting %s field on record %s to %s\n", fieldname.c_str(), this->name.c_str(), value.c_str());
+				dbFindRecord(this->record_entry, this->_name.c_str());
+				luaL_error(state, "Error setting %s field on record %s to %s\n", fieldname.c_str(), this->_name.c_str(), value.c_str());
 			}
 		
-			dbFindRecord(this->record_entry, this->name.c_str());
+			dbFindRecord(this->record_entry, this->_name.c_str());
 		}
 		
-		std::string type;
-		std::string name;
+		std::string _type;
+		std::string _name;
 		DBENTRY* record_entry;
 		
 	public:
@@ -137,8 +137,8 @@ class _record
 		}
 		
 		static void destroy(_record* instance)    { delete instance; }
-		std::string name()    { return this->name; }
-		std::string type()    { return this->type; }
+		std::string name()    { return this->_name; }
+		std::string type()    { return this->_type; }
 		
 		void setField(lua_State* state)
 		{
@@ -160,11 +160,11 @@ class _record
 			
 			if (dbPutInfo(this->record_entry, info.c_str(), value.c_str()) )
 			{
-				dbFindRecord(this->record_entry, this->name.c_str());
-				luaL_error(state, "Error adding info to record %s: %s: %s\n", this->name.c_str(), info.c_str(), value.c_str());
+				dbFindRecord(this->record_entry, this->_name.c_str());
+				luaL_error(state, "Error adding info to record %s: %s: %s\n", this->_name.c_str(), info.c_str(), value.c_str());
 			}
 		
-			dbFindRecord(this->record_entry, this->name.c_str());
+			dbFindRecord(this->record_entry, this->_name.c_str());
 		}
 		
 		void init(lua_State* state)
@@ -494,7 +494,7 @@ int luaopen_database (lua_State *L)
 	lua_rw.fun("field", &_record::setField);
 	lua_rw.fun("info", &_record::setInfo);
 	lua_rw.fun("name", &_record::name);
-	lua_rw.fun("type", &_record::type):
+	lua_rw.fun("type", &_record::type);
 	lua_rw.fun("__call", &_record::init);
 	
 	// DBENTRY* wrapper and all associated functions
