@@ -25,7 +25,7 @@ class _entry
 {
 	private:
 		_entry()    { this->entry = dbAllocEntry(*iocshPpdbbase); }
-		~_entry()   { dbFreeEntry(this->entry); }
+		~_entry()   { if(this->entry) { dbFreeEntry(this->entry); } }
 		
 	public:
 		DBENTRY* entry = NULL;
@@ -435,8 +435,7 @@ int luaopen_database (lua_State *L)
 	dbmod.fun("putInfo", putInfo);
 	dbmod.fun("deleteInfo", deleteInfo);
 	dbmod.fun("getInfo", getInfo);
-	
-	
+		
 	dbmod.fun("registerDatabaseHook", registerDbHook);
 	
 	
