@@ -507,7 +507,7 @@ int luaopen_database (lua_State *L)
 	dbmod.fun("entry", genEntry);
 	dbmod.fun("record", genRecord);
 	
-	dbmod.fun("listRecords", all_records);
+	dbmod.fun("list", all_records);
 	
 	dbmod.fun("getNRecordTypes", numRecordTypes);
 	dbmod.fun("findRecordType", findRecordType);
