@@ -51,6 +51,9 @@
 #define LUA_USE_WINDOWS  /* enable goodies for regular Windows */
 #endif
 
+#if defined(__vxworks) || defined(vxWorks)
+#define LUA_USE_VXWORKS
+#endif
 
 #if defined(LUA_USE_WINDOWS)
 #define LUA_DL_DLL	/* enable support for DLL */
@@ -61,6 +64,11 @@
 #if defined(LUA_USE_LINUX)
 #define LUA_USE_POSIX
 #define LUA_USE_DLOPEN		/* needs an extra library: -ldl */
+#endif
+
+
+#if defined(LUA_USE_VXWORKS)
+#define LUA_USE_C89
 #endif
 
 
