@@ -351,15 +351,16 @@ std::list<std::string> all_records(lua_State* state)
 	
 	int rtyp_status = dbFirstRecordType(primary);
 	
-	while (rtyp_status)
+	while (rtyp_status == 0)
 	{
 		DBENTRY* secondary = dbCopyEntry(primary);
 		
 		int rec_status = dbFirstRecord(secondary);
 		
-		while (rec_status)
+		while (rec_status == 0)
 		{
 			char* rec_name = dbGetRecordName(secondary);
+			
 			output.push_back(std::string(rec_name));
 			
 			rec_status = dbNextRecord(secondary);
