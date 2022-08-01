@@ -341,11 +341,11 @@ int fieldType(_entry* in)       { return dbGetFieldDbfType(in->entry); }
 
 int getIndexFromMenu(_entry* in, const char* name)    { return dbGetMenuIndexFromString(in->entry, name); }
 
-std::list<std::string> all_records(lua_State* state)
+int all_records(lua_State* state)
 {
 	if (! iocshPpdbbase)    { luaL_error(state, "No database definition found.\n"); }
 	
-	std::list<std::string> output;
+	std::string output = "return {";
 	
 	DBENTRY* primary = dbAllocEntry(*iocshPpdbbase);
 	
@@ -359,9 +359,11 @@ std::list<std::string> all_records(lua_State* state)
 		
 		while (rec_status == 0)
 		{
-			char* rec_name = dbGetRecordName(secondary);
+			char* rec_str = dbGetRecordName(secondary);
+			std::string rec_name(rec_str);
 			
-			output.push_back(std::string(rec_name));
+			
+			output += "db.record(\"" + rec_name + "\"), ";
 			
 			rec_status = dbNextRecord(secondary);
 		}
@@ -372,7 +374,11 @@ std::list<std::string> all_records(lua_State* state)
 	
 	dbFreeEntry(primary);
 	
-	return output;
+	output += "}";
+	
+	luaL_dostring(state, output.c_str());
+	
+	return 1;
 }
 
 
