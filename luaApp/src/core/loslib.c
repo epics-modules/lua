@@ -10,7 +10,7 @@
 #include "lprefix.h"
 
 #ifdef vxWorks
-  int sysClkRateGet()
+  int sysClkRateGet();
 #endif
 
 
