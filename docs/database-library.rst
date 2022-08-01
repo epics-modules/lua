@@ -101,11 +101,14 @@ instances of the dbentry class will be used, created with the aforementioned db.
                            there is no record by that name, the constructor will
                            create one.
 
-   Returns a class instance with two instance methods, field and info. Both functions 
-   take in two strings as parameters, the first a name and the second a value. 'field'
-   attempts to find the record field with a given name and then calls dbPutString to 
-   set the value. While 'info' calls dbPutInfo to add a new info field with the given
-   name and value to the record.
+   Returns a class instance with four instance methods, name, type, field, and info. 
+   'name' and 'type' are accessor methods that will return the record name and the
+   RTYP of the record. 
+
+   'field' and 'info' are both functions that take in two strings as parameters, the 
+   first being a name and the second a value. 'field' attempts to find the record 
+   field with the given name and then calls dbPutString to set the value. While 'info' 
+   calls dbPutInfo to add a new info field with the given name and value to the record.
    
    
    rec = db.record("stringin", "x:y:z")
@@ -125,3 +128,11 @@ instances of the dbentry class will be used, created with the aforementioned db.
       INP = "@asyn(A_PORT,0,1)PARAM_NAME"
    }
 
+
+
+**db.list** ()
+
+::
+
+   Returns a list of all the PVs currently defined in the IOC. Each element of the
+   list is a db.record instance.
