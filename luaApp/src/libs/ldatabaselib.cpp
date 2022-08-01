@@ -137,6 +137,8 @@ class _record
 		}
 		
 		static void destroy(_record* instance)    { delete instance; }
+		std::string name()    { return this->name; }
+		std::string type()    { return this->type; }
 		
 		void setField(lua_State* state)
 		{
@@ -456,6 +458,8 @@ int luaopen_database (lua_State *L)
 	lua_rw.ctor("find", &_record::find);
 	lua_rw.fun("field", &_record::setField);
 	lua_rw.fun("info", &_record::setInfo);
+	lua_rw.fun("name", &_record::name);
+	lua_rw.fun("type", &_record::type):
 	lua_rw.fun("__call", &_record::init);
 	
 	// DBENTRY* wrapper and all associated functions
