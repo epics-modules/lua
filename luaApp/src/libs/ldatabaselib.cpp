@@ -341,6 +341,41 @@ int fieldType(_entry* in)       { return dbGetFieldDbfType(in->entry); }
 
 int getIndexFromMenu(_entry* in, const char* name)    { return dbGetMenuIndexFromString(in->entry, name); }
 
+std::list<std::string> all_records(lua_State* state)
+{
+	if (! iocshPpdbbase)    { luaL_error(state, "No database definition found.\n"); }
+	
+	std::list<std::string> output;
+	
+	DBENTRY* primary = dbAllocEntry(*iocshPpdbbase);
+	
+	int rtyp_status = dbFirstRecordType(primary);
+	
+	while (rtyp_status)
+	{
+		DBENTRY* secondary = dbCopyEntry(primary);
+		
+		int rec_status = dbFirstRecord(secondary);
+		
+		while (rec_status)
+		{
+			char* rec_name = dbGetRecordName(secondary);
+			output.push_back(std::string(rec_name));
+			
+			rec_status = dbNextRecord(secondary);
+		}
+		
+		dbFreeEntry(secondary);
+		rtyp_status = dbNextRecordType(primary);
+	}
+	
+	dbFreeEntry(primary);
+	
+	return output;
+}
+
+
+
 static void myDatabaseHook(const char* fname, const char* macro)
 {
 	char* full_name = macEnvExpand(fname);
@@ -470,6 +505,8 @@ int luaopen_database (lua_State *L)
 	LuaModule dbmod (L, "db");
 	dbmod.fun("entry", genEntry);
 	dbmod.fun("record", genRecord);
+	
+	dbmod.fun("listRecords", all_records);
 	
 	dbmod.fun("getNRecordTypes", numRecordTypes);
 	dbmod.fun("findRecordType", findRecordType);
