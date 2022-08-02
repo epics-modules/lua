@@ -47,49 +47,50 @@ jobs:
           - os: ubuntu-20.04
             cmp: gcc
             configuration: default
-            set: "stable-7-0"
+            test: "test"
+            set: stable_7_0
             name: "Linux stable 7.0"
 
           - os: ubuntu-20.04
             cmp: gcc
             configuration: default
-            set: "stable-3-16"
+            set: stable_3_16
             name: "Linux stable 3.16"
             
           - os: ubuntu-20.04
             cmp: gcc
             configuration: default
-            set: "stable-3-15"
+            set: stable_3_15
             name: "Linux stable 3.15"
             
           - os: ubuntu-20.04
             cmp: gcc
             configuration: default
-            set: "master-7-0"
+            set: master_7_0
             name: "Linux master 7.0"
 
           - os: ubuntu-20.04
             cmp: gcc
             configuration: default
-            set: "master-3-16"
+            set: master_3_16
             name: "Linux master 3.16"
             
           - os: ubuntu-20.04
             cmp: gcc
             configuration: default
-            set: "master-3-15"
+            set: master_3_15
             name: "Linux master 3.15"
             
           - os: macos-latest
             cmp: clang
             configuration: default
-            set: "master-7-0"
+            set: master_7_0
             name: "MacOS master 7.0"
 
           - os: windows-2022
             cmp: vs2022
             configuration: static
-            set: "master-7-0"
+            set: master_7_0
             name: "Windows master 7.0"
 
     steps:
