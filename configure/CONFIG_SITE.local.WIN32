@@ -3,3 +3,4 @@ ifeq ($(SHARED_LIBRARIES), YES)
 	USR_CXXFLAGS += -DLUA_BUILD_AS_DLL
 endif
 
+USR_CXXFLAGS += /Zc:__cplusplus
