@@ -1,5 +1,5 @@
-BASE=7.0.4.1
+BASE=R7.0.4.1
 
-MODULES="asyn"
+MODULES=asyn
 
 ASYN=R4-42

@@ -45,37 +45,37 @@ jobs:
         # Job names also name artifacts, character limitations apply
         include:
           - os: ubuntu-20.04
-            cmp: gcc-8
+            cmp: gcc
             configuration: default
             set: stable-7-0
             name: "Linux stable 7.0"
 
           - os: ubuntu-20.04
-            cmp: gcc-8
+            cmp: gcc
             configuration: default
             set: stable-3-16
             name: "Linux stable 3.16"
             
           - os: ubuntu-20.04
-            cmp: gcc-8
+            cmp: gcc
             configuration: default
             set: stable-3-15
             name: "Linux stable 3.15"
             
           - os: ubuntu-20.04
-            cmp: gcc-8
+            cmp: gcc
             configuration: default
             set: master-7-0
             name: "Linux master 7.0"
 
           - os: ubuntu-20.04
-            cmp: gcc-8
+            cmp: gcc
             configuration: default
             set: master-3-16
             name: "Linux master 3.16"
             
           - os: ubuntu-20.04
-            cmp: gcc-8
+            cmp: gcc
             configuration: default
             set: master-3-15
             name: "Linux master 3.15"

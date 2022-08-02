@@ -1,5 +1,5 @@
 BASE=7.0
 
-MODULES="asyn"
+MODULES=asyn
 
 ASYN=master
