@@ -39,6 +39,7 @@ jobs:
       RTEMS_TARGET: ${{ matrix.rtems_target }}
       EXTRA: ${{ matrix.extra }}
       TEST: ${{ matrix.test }}
+      SET: ${{ matrix.set }}
     strategy:
       fail-fast: false
       matrix:
@@ -47,7 +48,6 @@ jobs:
           - os: ubuntu-20.04
             cmp: gcc
             configuration: default
-            test: "test"
             set: stable_7_0
             name: "Linux stable 7.0"
 
