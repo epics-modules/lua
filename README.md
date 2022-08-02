@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/epics-modules/lua.svg?branch=master)](https://travis-ci.org/epics-modules/lua)
+[![LUA](https://github.com/epics-modules/lua/actions/workflows/ci-scripts-build.yml/badge.svg)](https://github.com/epics-modules/lua/actions/workflows/ci-scripts-build.yml)
 
 # lua
 Lua Utilities for EPICS
