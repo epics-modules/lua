@@ -1,5 +1,0 @@
-BASE=3.15
-
-MODULES=asyn
-
-ASYN=R4-42
