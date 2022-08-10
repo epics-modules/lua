@@ -20,7 +20,7 @@ on:
   pull_request:
 
 env:
-  SETUP_PATH: .ci-local:.ci
+  SETUP_PATH: .github/workflows:.ci
   # For the sequencer on Linux/Windows/MacOS
   APT: re2c
   CHOCO: re2c
