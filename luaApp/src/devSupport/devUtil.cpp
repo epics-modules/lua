@@ -76,7 +76,9 @@ extern "C"
 		
 		if (status)
 		{
-			//log error
+			std::string err(lua_tostring(proto->state, -1));
+			
+			printf("Calling %s in %s resulted in error: %s\n", proto->function_name, proto->filename, err.c_str());
 		}
 	}
 }
