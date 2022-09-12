@@ -10,52 +10,6 @@
 
 #include "luaEpics.h"
 
-static int parseParams(Protocol* proto)
-{
-	if (strlen(proto->param_list) == 0)    { return 0; }
-
-	std::string params(proto->param_list);
-	
-	int num_params = 0;
-
-	size_t curr = 0;
-	size_t next;
-
-	do
-	{
-		/* Get the next parameter */
-		next = params.find(",", curr);
-
-		std::string a_param;
-
-		/* If we find the end of the string, just take everything */
-		if   (next == std::string::npos)    { a_param = params.substr(curr); }
-		else                                { a_param = params.substr(curr, next - curr); }
-
-		size_t trim_front = a_param.find_first_not_of(" ");
-		size_t trim_back  = a_param.find_last_not_of(" ");
-
-		a_param = a_param.substr(trim_front, trim_back - trim_front + 1);
-		
-		/* Treat anything with quotes as a string, anything else as a number */
-		if (a_param.at(0) == '"' || a_param.at(0) == '\'')
-		{
-			lua_pushstring(proto->state, a_param.substr(1, a_param.length() - 2).c_str());
-		}
-		else
-		{
-			lua_pushnumber(proto->state, strtod(a_param.c_str(), NULL));
-		}
-
-		num_params += 1;
-		curr = next + 1;
-	} while (curr);
-
-	return num_params;
-}
-
-
-
 extern "C"
 {
 	Protocol* parseINPOUT(const struct link* inpout)
@@ -116,7 +70,7 @@ extern "C"
 	
 	void runFunction(Protocol* proto)
 	{
-		int params = parseParams(proto);
+		int params = luaLoadParams(proto->state, proto->param_list);
 		
 		long status = lua_pcall(proto->state, params + 1, 1, 0);
 		
