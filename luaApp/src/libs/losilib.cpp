@@ -63,29 +63,20 @@ static int l_resetStdout(lua_State* state)
 	return 0;
 }
 
-static int l_osisleep(lua_State* state)
-{
-	double seconds = lua_tonumber(state, 1);
-
-	epicsThreadSleep(seconds);
-
-	return 0;
-}
+static void l_osisleep(double seconds)    { epicsThreadSleep(seconds); }
 
 int luaopen_osi (lua_State *L)
 {
+	LuaModule osimod (L, "osi");
+	osimod.fun("startRedirectOut", l_setStdout);
+	osimod.fun("endRedirectOut", l_resetStdout);
+	osimod.fun("sleep", l_osisleep);
+	
 	lua_newtable(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, "OSI_REDIRECTS_STACK");
 
-	static const luaL_Reg mylib[] = {
-		{"startRedirectOut", l_setStdout},
-		{"endRedirectOut", l_resetStdout},
-		{"sleep", l_osisleep},
-		{NULL, NULL}  /* sentinel */
-	};
-
-	luaL_newlib(L, mylib);
-
+	lua_getglobal(L, "osi");
+	
 	return 1;
 }
 
