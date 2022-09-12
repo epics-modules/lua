@@ -364,15 +364,15 @@ static int l_createpv(lua_State* state)
 
 int luaopen_epics (lua_State *L)
 {
-	static const luaL_Reg mylib[] = {
-		{"get", l_caget},
-		{"put", l_caput},
-		{"sleep", l_epicssleep},
-		{"pv", l_createpv},
-		{NULL, NULL}  /* sentinel */
-	};
-
-	luaL_newlib(L, mylib);
+	LuaModule epicsmod(L, "epics");
+	
+	epicsmod.fun("get", l_caget);
+	epicsmod.fun("put", l_caput);
+	epicsmod.fun("sleep", l_epicssleep);
+	epicsmod.fun("pv", l_createpv);
+	
+	lua_getglobal(L, "epics");
+	
 	return 1;
 }
 
