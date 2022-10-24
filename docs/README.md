@@ -18,11 +18,7 @@ or replacement of the ioc shell; and functions to allow easy use of
 lua in other modules.
 
 Currently, the lua module uses lua version 5.4.0. A reference manual
-describing the details of the language can be `found here`_.
-
-.. _found here: https://www.lua.org/manual/5.4/
-
-:doc:`lua Module Release Notes <luaReleaseNotes>`
+describing the details of the language can be [found here](https://www.lua.org/manual/5.4/)
 
 
 luascriptRecord
@@ -34,13 +30,13 @@ record is processeed, lua code is executed and any returned variables
 are outputted to an OUT_LINK. The record has both double and string
 input links that get exposed as global variables for the code to use.
 
-The record has access to a set of :doc:`library functions <epics-functions>`
+The record has access to a set of [library functions](epics-functions)
 that allow it to get and put values from other PV's or asyn port
 parameters, sleep, call iocsh functions, send commands to a device,
-or you can :doc:`bind your own functions <adding-libraries>` to extend
+or you can [bind your own functions](adding-libraries) to extend
 its functionality.
 
-Full documentation can be found :doc:`here <luascriptRecord>`
+Full documentation can be found [here](luascriptRecord)
 
 
 luaPortDriver
@@ -51,7 +47,7 @@ parameters generated from a lua script. Each parameter gets snippets
 of lua code associated with its reading and writing that get called
 when the asyn callbacks are triggered.
 
-Full documentation can be found :doc:`here <luaPortDriver>`
+Full documentation can be found [here](luaPortDriver)
 
 
 lua Shell
@@ -63,12 +59,12 @@ shells, while also providing the ability to conditionally
 execute code, calculate necessary values, construct loops over
 code, and define functions within startup scripts.
 
-The lua Shell is able to access all the same :doc:`epics lua libraries <epics-functions>`
+The lua Shell is able to access all the same [epics lua libraries](epics-functions)
 as the luascriptRecord, including any functions or libraries that
 you :doc:`build yourself <adding-libraries>` into your IOC. The shell
 even implicitly loads the iocsh library, which means you can call
 iocsh-registered functions in the lua shell exactly like you would 
 in the ioc shell. 
 
-:doc:`Further Information <using-lua-shell>`
+[Further Information](using-lua-shell)
 
