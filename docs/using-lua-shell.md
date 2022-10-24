@@ -1,6 +1,11 @@
-===================
-Using the Lua Shell
-===================
+---
+layout: default
+title: Lua Shell
+nav_order: 5
+---
+
+
+# Using the Lua Shell
 
 The lua shell is exposed as both a c function and is registered as a function
 with iocsh. Thus, the shell can either be invoked in a startup script or be 

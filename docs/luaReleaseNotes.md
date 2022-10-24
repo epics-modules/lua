@@ -5,7 +5,7 @@ nav_order: 2
 ---
 
 
-#lua Release Notes
+# lua Release Notes
 
 
 Release 3-0-2
