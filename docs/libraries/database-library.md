@@ -8,6 +8,10 @@ nav_order: 2
 
 # Database Library Documentation
 
+
+Static Database Access
+----------------------
+
 <br>
 
 **db.entry** ()
@@ -16,10 +20,6 @@ nav_order: 2
 >access functions. dbFreeEntry will be called on the pointer automatically when the 
 >entry is garbage collected.
 
-<br>
-
-Static Database Access
-----------------------
 
 <br>
 
@@ -122,7 +122,7 @@ instances of the dbentry class will be used, created with the aforementioned db.
 >With lua syntactical sugar, you can chain together the record creation and the
 >setting of fields like so:
 >
->```
+>```lua
 >db.record("ai", "x:y:z") {
 >    DTYP = "asynInt32",
 >    INP = "@asyn(A_PORT,0,1)PARAM_NAME"

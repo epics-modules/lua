@@ -37,7 +37,7 @@ value must be one of the following: "No", "Yes", "0", or "1". To ensure
 that numeric values are converted to integers, set the precision (the
 PREC field) to zero.
 
- 
+
 Scan Parameters
 ---------------
 
@@ -131,14 +131,14 @@ The record also has a second set of calculation-related fields
   
 
 
-
+| Field | Summary | Type | DCT | Initial | Access | Modify | Rec Proc Monitor | PP |
 |:-|:--|:-|:-|:-|:-|:-|:-|:-|
-|  CODE  |  Script  |                STRING[120]  |  Yes  | 0  |       Yes  |    Yes  |    Yes  |   No  |
+|  CODE  |  Script  |                STRING[120]  |  Yes  | ""  |       Yes  |    Yes  |    Yes  |   No  |
 |  VAL  |   Value  |                 DOUBLE  |       No  |  0  |       Yes  |    Yes  |    Yes  |   No  |
 |  SVAL  |  String value  |          STRING (40)  |  No  |  0  |       Yes  |    Yes  |    Yes  |   No  |
 |  RELO  |  When to reload state?  | Menu  |         Yes  | 0  |       Yes  |    Yes  |    No  |    No  |
 |  FRLD  |  Force Reload  |          Short  |        Yes  | 0  |       Yes  |    Yes  |    No  |    No  |
-|  ERR  |   Last Error  |            String (200)  | No  |  0  |       Yes  |    Yes  |    No  |    No  |
+|  ERR  |   Last Error  |            String (200)  | No  |  ""  |       Yes  |    Yes  |    No  |    No  |
 
 
 ### Examples
@@ -263,8 +263,8 @@ See the EPICS Record Reference Manual, for more on the record name
 |   ...  |   ...  |                  ...  |         ...  | ...  |     ...  |    ...  |    ...  |              ...|
 |   INJV  |  Link Status of INPJ  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
 |   OUTV  |  OUT PV Status  |        Menu  |        No  |  0  |       Yes  |    No  |     No  |               No |
-|   NAME  |  Record Name  |          STRING [29]  | Yes  | 0  |       Yes  |    No  |     No  |               No |
-|   DESC  |  Description  |          STRING [29]  | Yes  | Null  |    Yes  |    Yes  |    No  |               No |
+|   NAME  |  Record Name  |          STRING [29]  | Yes  | ""  |       Yes  |    No  |     No  |               No |
+|   DESC  |  Description  |          STRING [29]  | Yes  | ""  |    Yes  |    Yes  |    No  |               No |
 |   IAAV  |  Link Status of INAA  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
 |   IBBV  |  Link Status of INBB  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
 |   ...  |   ...  |                  ...  |         ...  | ...  |     ...  |    ...  |    ...  |              ...|
@@ -317,7 +317,7 @@ monitors are triggered.
 | Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
 |:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |   ADEL  |  Archive Deadband  |                     DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |             No  |
-|   MDEL  |  "Monitor  | i.e. value change  | Deadband"  | DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |       No  |
+|   MDEL  |  Monitor  | i.e. value change  | Deadband  | DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |       No  |
 
 
 Run-time Parameters
@@ -326,7 +326,7 @@ Run-time Parameters
 These fields are not configurable using a configuration tool and none
 are modifiable at run-time. They are used to process the record.
 
- 
+
 Record Support Routines
 -----------------------
 
