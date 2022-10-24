@@ -1,6 +1,12 @@
-=======================================
-Adding Libraries to the lua Environment
-=======================================
+---
+layout: default
+title: Adding Addtional Libraries
+parent: Included Libraries
+nav_order: 5
+---
+
+
+# Adding Libraries to the lua Environment
 
 Dynamic Libraries
 -----------------

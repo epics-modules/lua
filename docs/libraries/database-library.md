@@ -1,6 +1,13 @@
-==============================
-Database Library Documentation
-==============================
+---
+layout: default
+title: db
+parent: Included Libraries
+nav_order: 2
+---
+
+
+# Database Library Documentation
+
 
 **db.entry** ()
 

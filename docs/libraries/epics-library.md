@@ -1,6 +1,11 @@
-===========================
-Epics Library Documentation
-===========================
+---
+layout: default
+title: epics
+parent: Included Libraries
+nav_order: 3
+---
+
+# Epics Library Documentation
 
 **epics.get** (*PV*[, timeout])
 
