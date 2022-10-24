@@ -17,23 +17,22 @@ Getting / Setting Parameters
 * **asyn.getDoubleParam** (*portName[, addr], paramName*)  
 * **asyn.getIntegerParam** (*portName[, addr], paramName*)  
 
-::
-
-   Fetches the value of an asyn parameter. These work like the asynPortDriver
-   functions of the same name, retrieving the value from the param list.
-
-
-   portName    [string] - The registered asyn port name that contains
-                          the parameter you are getting.
-
-   addr        [number] - The asyn address of the parameter. Optional,
-                          default value is 0.
-
-   paramName   [string] - The name of the parameter to fetch.
-
-
-   Returns the value of the asyn parameter as the type specified, if no
-   type was specified, uses the asynParamType of the parameter to determine       
+{: .highlight }
+>Fetches the value of an asyn parameter. These work like the asynPortDriver
+>functions of the same name, retrieving the value from the param list.
+>
+>
+>portName    [string] - The registered asyn port name that contains
+>                       the parameter you are getting.
+>
+>addr        [number] - The asyn address of the parameter. Optional,
+>                       default value is 0.
+>
+>paramName   [string] - The name of the parameter to fetch.
+>
+>
+>Returns the value of the asyn parameter as the type specified, if no
+>type was specified, uses the asynParamType of the parameter to determine       
 
 
 * **asyn.setParam** (*portName[, addr], paramName*)
@@ -41,39 +40,37 @@ Getting / Setting Parameters
 * **asyn.setDoubleParam** (*portName[, addr], paramName, value*)
 * **asyn.setIntegerParam** (*portName[, addr], paramName, value*)
 
-::
-
-   Sets the value of an asyn parameter. These work like the asynPortDriver
-   functions of the same name, saving the value in the param list.
-
-
-   portName    [string] - The registered asyn port name that contains
-                          the parameter you are setting.
-
-   addr        [number] - The asyn address of the parameter. Optional,
-                          default value is 0.
-
-   paramName   [string] - The name of the parameter to set.
-
-   value       [varies] - The value to set the parameter to. Type should
-                          match the type of the parameter you are setting.
+{: .highlight }
+>   Sets the value of an asyn parameter. These work like the asynPortDriver
+>   functions of the same name, saving the value in the param list.
+>
+>
+>   portName    [string] - The registered asyn port name that contains
+>                          the parameter you are setting.
+>
+>   addr        [number] - The asyn address of the parameter. Optional,
+>                          default value is 0.
+>
+>   paramName   [string] - The name of the parameter to set.
+>
+>   value       [varies] - The value to set the parameter to. Type should
+>                          match the type of the parameter you are setting.
 
 						
 **asyn.callParamCallbacks** (*portName[, addr, parameter]*)
 
-::
-
-   Tells an asyn port to call parameter callbacks on changed values.
-
-
-   portName    [string] - A registered asyn port name.
-
-   addr        [number] - The index of the parameter list to do callbacks on. Optional,
-                          default value is 0.
-       
-   parameter   [string] - A specific parameter to do callbacks on. Optional,
-                          default is to perform callbacks on all values that have
-                          been changed.
+{: .highlight }
+>   Tells an asyn port to call parameter callbacks on changed values.
+>
+>
+>   portName    [string] - A registered asyn port name.
+>
+>   addr        [number] - The index of the parameter list to do callbacks on. Optional,
+>                          default value is 0.
+>       
+>   parameter   [string] - A specific parameter to do callbacks on. Optional,
+>                          default is to perform callbacks on all values that have
+>                          been changed.
 						
 						
 Reading / Writing Values
@@ -82,53 +79,50 @@ Reading / Writing Values
 						
 **asyn.readParam** (*portName[, addr], paramName*)
 
-::
-
-   Calls the read function of the correct asyn interface
-
-   portName    [string] - The registered asyn port name that contains
-                          the parameter you are getting.
-
-   addr        [number] - The asyn address of the parameter. Optional,
-                          default value is 0.
-
-   paramName   [string] - The name of the parameter to fetch.
-
-
-   Returns the value of the asyn parameter as the type specified, if no
-   type was specified, uses the asynParamType of the parameter to determine
+{: .highlight }
+>   Calls the read function of the correct asyn interface
+>
+>   portName    [string] - The registered asyn port name that contains
+>                          the parameter you are getting.
+>
+>   addr        [number] - The asyn address of the parameter. Optional,
+>                          default value is 0.
+>
+>   paramName   [string] - The name of the parameter to fetch.
+>
+>
+>   Returns the value of the asyn parameter as the type specified, if no
+>   type was specified, uses the asynParamType of the parameter to determine
 
 						
 **asyn.writeParam** (*portName[, addr], paramName, value*)
 
-::
-
-   Calls the write function of the correct asyn interface
-
-
-   portName    [string] - The registered asyn port name that contains
-                          the parameter you are setting.
-
-   addr        [number] - The asyn address of the parameter. Optional,
-                          default value is 0.
-
-   paramName   [string] - The name of the parameter to set.
-
-   value       [varies] - The value to write to the parameter. Type should
-                          match the type of the parameter you are setting.
+{: .highlight }
+>   Calls the write function of the correct asyn interface
+>
+>
+>   portName    [string] - The registered asyn port name that contains
+>                          the parameter you are setting.
+>
+>   addr        [number] - The asyn address of the parameter. Optional,
+>                          default value is 0.
+>
+>   paramName   [string] - The name of the parameter to set.
+>
+>   value       [varies] - The value to write to the parameter. Type should
+>                          match the type of the parameter you are setting.
 
 Configuration Parameters
 ------------------------
 						
 **asyn.setOutTerminator** (*terminator*)
 
-::
-
-   Sets the global variable OutTerminator, which controls asyn write commands
-
-
-   terminator  [string] - The string value to append to the end of all asyn
-                          write calls.
+{: .highlight }
+>   Sets the global variable OutTerminator, which controls asyn write commands
+>
+>
+>   terminator  [string] - The string value to append to the end of all asyn
+>                          write calls.
 
 **asyn.getOutTerminator** ()
 
