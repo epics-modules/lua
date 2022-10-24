@@ -12,20 +12,20 @@ In addition to the standard lua libraries, the following are
 additional libraries built into the lua runtime interpreter to 
 help with common epics tasks.
 
-The 'asyn' Library - [Documentation](libraries/asyn-library) -
+The 'asyn' Library - [Documentation](asyn-library) -
 This library contains functions to allow users to get and set 
 asyn parameters and communicate over an asyn octet port. It is 
 primarily for use as an easy debugging tool for devices that 
 have a command-response style control scheme, or a framework to 
 allow control of said devices.
 
-The 'db' Library - [Documentation](libraries/database-library) -
+The 'db' Library - [Documentation](database-library) -
 This library contains functions to allow users to generate 
 database records like one would using the dbLoadDatabase function
 to load a db file. Instead, all records can be generated entirely
 within lua.
 
-The 'epics' Library - [Documentation](libraries/epics-library) - 
+The 'epics' Library - [Documentation](epics-library) - 
 This library contains functions to get and set pv values, as well 
 as operating system independent tasks, like letting a thread sleep.
 

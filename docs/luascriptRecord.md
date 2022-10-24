@@ -42,8 +42,8 @@ PREC field) to zero.
 
 The luascript record has the standard fields for specifying under what
 circumstances the record will be processed. These fields are listed in
-[Scan Fields, Chapter 2](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html#MARKER-9-2).
-In addition, [Scanning Specification, Chapter 1](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-2)
+[Scan Fields, Chapter 2](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html).
+In addition, [Scanning Specification, Chapter 1](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html)
 explains how these fields are used. Since the luascript record supports
 no direct interfaces to hardware, it cannot be scanned on I/O interrupt,
 so its SCAN field cannot be ``I/O Intr``.
@@ -73,7 +73,7 @@ database links.
 
 
 | "Field" | "Summary" | "Type" | "DCT" | "Initial" | "Access" | "Modify" | "Rec Proc Monitor" |
-|:-|:--|:-|:-|:-|:-|:-|:-|:-|
+|:- |:-- |:- |:- |:- |:- |:- |:- |
 | INPA | Input Link A   | INLINK | Yes | 0   | Yes  | Yes | N/A |
 | INPB | Input Link B   | INLINK | Yes | 0   | Yes  | Yes | N/A |
 | ...  | ...            | ...    | ... | ... | ...  | ... | ... |
@@ -236,8 +236,6 @@ The INAV-INJV and IAAV-IJJV fields indicate the status of the link to
 the PVs specified in the INPA-INPJ and INAA-INJJ fields, respectively.
 The fields can have three possible values:
 
-
-|:--- |:--------------------|
 |Ext PV NC | the PV wasn't found on this IOC and a Channel Access link hasn't been established. |
 |Ext PV OK | the PV wasn't found on this IOC and a Channel Access link has been established. |
 |Local PV  | the PV was found on this IOC. |
@@ -356,10 +354,6 @@ Retrieves PREC.
  
 
 ## Record Processing
-
-
-.. _process-1:
-
 
 ### process()
 
