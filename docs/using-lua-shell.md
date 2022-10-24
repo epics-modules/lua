@@ -19,8 +19,8 @@ and then, if no environment variable is found, try to find a matching function
 name. This means that functions that are registered with the ioc shell can
 be treated as if they were defined lua functions.
 
-::
 
+```
    luash> EPICS_VERSION_MAJOR
    7
    luash>
@@ -29,7 +29,8 @@ be treated as if they were defined lua functions.
    luash>
    luash> epicsEnvShow("EPICS_VERSION_MAJOR")
    EPICS_VERSION_MAJOR=7
-
+```
+    
 As well, the special directive '#ENABLE_HASH_COMMENTS' is provided. While lua normally
 reserves the '#' character for determining the length of a table, putting the line
 '#ENABLE_HASH_COMMENTS' in your scripts will set the shell to accept iocsh style
@@ -37,15 +38,16 @@ comments that use '#'. This setting only applies to lines where '#' is the first
 non-empty character in the line, it will not affect the use of '#' in normal lua
 operations.
 
-::
 
+```
    luash> #ENABLE_HASH_COMMENTS
    Accepting iocsh-style comments
    luash>
    luash> #print("This won't print")
    luash> print(#"Check len")
    9
-
+```
+    
 Calling the Lua Shell From Inside The IOC Shell
 -----------------------------------------------
 
@@ -71,10 +73,11 @@ commands from the standard input, with a prompt set by the environment
 variable LUASH_PS1. Additionally, within the shell, you can find and
 include other scripts by using the ‘<’ character. Putting
 
-::
 
+```
    < script.lua
-
+```
+    
 Will attempt to find script.lua by the same process as detailed above
 and include all the text of that file at the insertion point. When
 running any script the lua shell will exit at the end of the file being
@@ -85,11 +88,12 @@ with only the word ‘exit’ will break from the current level of shell
 execution. In example, if you were to load the file script.lua as seen
 above, and the file had the following code within it
 
-::
 
+```lua
    if (true) then
        exit
    end
+```
 
 That exit will end the reading of just the script.lua file and flow would
 resume to the shell that called script.lua.
@@ -106,7 +110,7 @@ used on vxWorks or as a replacement for the IOC shell in a soft IOC. The
 same parameters apply as when calling the command inside the IOC shell.
 So your main.cpp file might look like:
 
-::
+```c++
    #include "luaShell.h"
    
    int main(int argc,char *argv[])
@@ -119,7 +123,7 @@ So your main.cpp file might look like:
        epicsExit(0);
        return(0);
    }
-
+```
 
 Common Lua Environments
 -----------------------
@@ -141,7 +145,7 @@ environment, otherwise it will create a new state with that name. So the
 above code changed to allow the interactive shell to reference code from
 the interpreted script would look like:
 
-::
+```c++
    #include "luaShell.h"
    
    int main(int argc,char *argv[])
@@ -156,3 +160,4 @@ the interpreted script would look like:
        epicsExit(0);
        return(0);
    }
+```

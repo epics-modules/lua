@@ -138,7 +138,7 @@ Release 1-2
 -  Added '<' command to luash to include the contents of other scripts
 -  luaScript input fields now can have descriptions of their contents
 -  Fixed a bug where forward link processing wasn't happening
--
+
 
 Release 1-1
 -----------

@@ -5,7 +5,7 @@ nav_order: 1
 ---
 
 
-#Lua EPICS Module
+# Lua EPICS Module
 
 The lua EPICS Module is an embedding of the lua language interpreter
 into an EPICS IOC. From there, the interpreter is exposed to the user
