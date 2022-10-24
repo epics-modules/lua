@@ -1,8 +1,14 @@
+---
+layout: default
+title: Home
+nav_order: 1
+---
+
+
+
 ================
 Lua EPICS Module
 ================
-
-.. contents:: Contents
 
 The lua EPICS Module is an embedding of the lua language interpreter
 into an EPICS IOC. From there, the interpreter is exposed to the user
@@ -17,13 +23,6 @@ describing the details of the language can be `found here`_.
 .. _found here: https://www.lua.org/manual/5.4/
 
 :doc:`lua Module Release Notes <luaReleaseNotes>`
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: lua Module
-   
-   luaReleaseNotes
 
 
 luascriptRecord
@@ -43,13 +42,6 @@ its functionality.
 
 Full documentation can be found :doc:`here <luascriptRecord>`
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: luascript Record Type
-   
-   luascriptRecord
-
 
 luaPortDriver
 -------------
@@ -60,13 +52,6 @@ of lua code associated with its reading and writing that get called
 when the asyn callbacks are triggered.
 
 Full documentation can be found :doc:`here <luaPortDriver>`
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: scriptable asynPortDriver
-   
-   luaPortDriver
 
 
 lua Shell
@@ -87,11 +72,3 @@ in the ioc shell.
 
 :doc:`Further Information <using-lua-shell>`
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: Shell Environment
-   
-   using-lua-shell
-   epics-functions
-   adding-libraries
