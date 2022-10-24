@@ -7,7 +7,8 @@ nav_order: 3
 
 # luascript - Lua Script Processing Record
 
-## Introduction
+Introduction
+------------
 
 The lua script processing record or "luascript" record is derived from
 the Calcout record in EPICS base, but replaces the calc operation engine
@@ -37,8 +38,8 @@ that numeric values are converted to integers, set the precision (the
 PREC field) to zero.
 
  
-
-## Scan Parameters
+Scan Parameters
+---------------
 
 The luascript record has the standard fields for specifying under what
 circumstances the record will be processed. These fields are listed in
@@ -49,7 +50,8 @@ no direct interfaces to hardware, it cannot be scanned on I/O interrupt,
 so its SCAN field cannot be ``I/O Intr``.
 
 
-## Read Parameters
+Read Parameters
+---------------
 
 The read parameters for the luascript record consist of 20 input links:
 10 to numeric fields (INPA -> A, INPB -> B, . . . INPJ -> J); and 10 to
@@ -72,7 +74,7 @@ Parameters}(#operator-display-parameters) for an explanation of these fields.
 database links.
 
 
-| "Field" | "Summary" | "Type" | "DCT" | "Initial" | "Access" | "Modify" | "Rec Proc Monitor" |
+| Field | Summary | Type | DCT | Initial | Access | Modify | Rec Proc Monitor |
 |:- |:-- |:- |:- |:- |:- |:- |:- |
 | INPA | Input Link A   | INLINK | Yes | 0   | Yes  | Yes | N/A |
 | INPB | Input Link B   | INLINK | Yes | 0   | Yes  | Yes | N/A |
@@ -129,7 +131,7 @@ The record also has a second set of calculation-related fields
   
 
 
-| "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
+
 |:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |  CODE  |  Script  |                STRING[120]  |  Yes  | 0  |       Yes  |    Yes  |    Yes  |   No  |
 |  VAL  |   Value  |                 DOUBLE  |       No  |  0  |       Yes  |    Yes  |    Yes  |   No  |
@@ -168,7 +170,8 @@ field(CODE, "@test.lua example(1, 'foo')")
    parameters, one a number, the other a string.
 
 
-## Output Parameters
+Output Parameters
+-----------------
 
 These parameters specify and control the output capabilities of the
 luascript record. They determine when to write the output, where to
@@ -206,7 +209,7 @@ asynchronous manner. It is a menu field with two choices:
 
 
 
-| "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
+| Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
 |:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |   OUT  |   Output Specification  |  OUTLINK  | Yes  | 0  |       Yes  |    Yes  |    N/A  |              No |
 |   OOPT  |  Output Execute Option  | Menu  |    Yes  | 0  |       Yes  |    Yes  |    No  |               No |
@@ -221,7 +224,8 @@ specification
     field(DTYP,"Soft Channel") 
 ```
 
-## Operator Display Parameters
+Operator Display Parameters
+---------------------------
 
 These parameters are used to present meaningful data to the operator.
 Some are also meant to represent the status of the record at run-time.
@@ -249,7 +253,7 @@ See the EPICS Record Reference Manual, for more on the record name
 (NAME) and description (DESC) fields.
 
 
-| "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
+| Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
 |:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |   PREC  |  Display Precision  |    SHORT  |       Yes  | 0  |       Yes  |    Yes  |    No  |               No |
 |   HOPR  |  High Operating Range  | FLOAT  |       Yes  | 0  |       Yes  |    Yes  |    No  |               No |
@@ -267,7 +271,8 @@ See the EPICS Record Reference Manual, for more on the record name
 |   IJJV  |  Link Status of INJJ  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
 
 
-## Alarm Parameters
+Alarm Parameters
+----------------
 
 The possible alarm conditions for the luascript record are the SCAN,
 READ, Calculation, and limit alarms. The SCAN and READ alarms are called
@@ -284,7 +289,7 @@ Record Reference Manual for a complete explanation of alarms and these
 fields.
 
 
-| "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
+| Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
 |:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |   HIHI  |  Hihi Alarm Limit  |          FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
 |   HIGH  |  High Alarm Limit  |          FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
@@ -297,7 +302,8 @@ fields.
 |   HYST  |  Alarm Deadband  |            DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |               No  |
 
 
-## Monitor Parameters
+Monitor Parameters
+------------------
 
 These parameters are used to determine when to send monitors for the
 value fields. The monitors are sent when the value field exceeds the
@@ -308,19 +314,21 @@ triggered; if they have a value of -1, every time the record is scanned,
 monitors are triggered.
 
 
-|  "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
+| Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
 |:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |   ADEL  |  Archive Deadband  |                     DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |             No  |
 |   MDEL  |  "Monitor  | i.e. value change  | Deadband"  | DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |       No  |
 
 
-## Run-time Parameters
+Run-time Parameters
+-------------------
 
 These fields are not configurable using a configuration tool and none
 are modifiable at run-time. They are used to process the record.
 
  
-## Record Support Routines
+Record Support Routines
+-----------------------
 
 ### init_record
 
@@ -353,7 +361,8 @@ This is called if CODE is changed.
 Retrieves PREC.
  
 
-## Record Processing
+Record Processing
+-----------------
 
 ### process()
 
