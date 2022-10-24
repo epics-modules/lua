@@ -58,7 +58,7 @@ code, and define functions within startup scripts.
 
 The lua Shell is able to access all the same [epics lua libraries](libraries/epics-functions)
 as the luascriptRecord, including any functions or libraries that
-you [build yourself](adding-libraries) into your IOC. The shell
+you [build yourself](libraries/adding-libraries) into your IOC. The shell
 even implicitly loads the iocsh library, which means you can call
 iocsh-registered functions in the lua shell exactly like you would 
 in the ioc shell. 
