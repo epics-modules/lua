@@ -141,20 +141,28 @@ The record also has a second set of calculation-related fields
 
 ### Examples
 
+```
 field(CODE, "return A + B")
+```
 
 -  Sets VAL to the result of A + B
 
+```
 field(CODE, "return AA .. BB")
+```
 
 -  Sets SVAL to the concatenation of AA and BB
 
+```
 field(CODE, "@test.lua example")
+```
 
 -  Runs the function 'example' from the file test.lua with zero
    parameters.
 
+```
 field(CODE, "@test.lua example(1, 'foo')")
+```
 
 -  Runs the function 'example' from the file test.lua with two
    parameters, one a number, the other a string.
@@ -334,13 +342,11 @@ bytecode.
 
 See section 11.
 
- 
 
 ### special
 
 
 This is called if CODE is changed.
-
  
 
 ### get_precision
@@ -354,37 +360,26 @@ Retrieves PREC.
 
 .. _process-1:
 
+
 ### process()
 
 
 The ``process()`` routine implements the following algorithm:
 
- 
-
 1. Recompile the CODE field if the RELO field is set to "Every
 Processing".
 
- 
-
 2. Push the values of all input links to global lua variables.
-
- 
 
 3. Run the compiled code in a separate thread. Process the returned
 value from the code to determine if it is a numeric value or a string
 value. Update VAL or SVAL accordingly.
 
- 
-
 4. Determine if the Output Execution Option (OOPT) is met. If it is met,
 execute the output link (and output event).
 
- 
-
 5. Check to see if monitors should be invoked.
 
-Monitors for A-J and AA-JJ are set whenever values are changed.
-
- 
+    Monitors for A-J and AA-JJ are set whenever values are changed.
 
 6. Set PACT FALSE.
