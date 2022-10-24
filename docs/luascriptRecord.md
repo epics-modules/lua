@@ -7,8 +7,7 @@ nav_order: 3
 
 # luascript - Lua Script Processing Record
 
-Introduction
-------------
+## Introduction
 
 The lua script processing record or "luascript" record is derived from
 the Calcout record in EPICS base, but replaces the calc operation engine
@@ -39,8 +38,7 @@ PREC field) to zero.
 
  
 
-Scan Parameters
----------------
+## Scan Parameters
 
 The luascript record has the standard fields for specifying under what
 circumstances the record will be processed. These fields are listed in
@@ -51,8 +49,7 @@ no direct interfaces to hardware, it cannot be scanned on I/O interrupt,
 so its SCAN field cannot be ``I/O Intr``.
 
 
-Read Parameters
----------------
+## Read Parameters
 
 The read parameters for the luascript record consist of 20 input links:
 10 to numeric fields (INPA -> A, INPB -> B, . . . INPJ -> J); and 10 to
@@ -68,15 +65,15 @@ In addition, the luascript record contains the fields INAV, INBV, . . .
 INJV, which indicate the status of the links to numeric fields, and the
 fields IAAV, IBBV, . . . IJJV, which indicate the status of the links to
 string fields.  These fields indicate whether or not the specified PV
-was found and a link to it established. See `Section 5, Operator Display
-Parameters <#MARKER-9-2>`__ for an explanation of these fields.
+was found and a link to it established. See [Section 5, Operator Display
+Parameters}(#operator-display-parameters) for an explanation of these fields.
 
  See the EPICS Record Reference Manual for information on how to specify
 database links.
 
 
 | "Field" | "Summary" | "Type" | "DCT" | "Initial" | "Access" | "Modify" | "Rec Proc Monitor" |
-|:--|:---|:--|:-|:--|:--|:--|:--|:---|
+|:-|:--|:-|:-|:-|:-|:-|:-|:-|
 | INPA | Input Link A   | INLINK | Yes | 0   | Yes  | Yes | N/A |
 | INPB | Input Link B   | INLINK | Yes | 0   | Yes  | Yes | N/A |
 | ...  | ...            | ...    | ... | ... | ...  | ... | ... |
@@ -87,8 +84,7 @@ database links.
 | INJJ | Input Link JJ  | INLINK | Yes | 0   | Yes  | Yes | N/A |
 
 
-Expressions
------------
+### Expressions
 
 The luascript record has a CODE field into which you can enter an
 expression for the record to evaluate when it processes. The return
@@ -134,7 +130,7 @@ The record also has a second set of calculation-related fields
 
 
 | "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
-|:-- |:--- |:--- |:-- |:- |:-- |:-- |:-- |:-- |   
+|:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |  CODE  |  Script  |                STRING[120]  |  Yes  | 0  |       Yes  |    Yes  |    Yes  |   No  |
 |  VAL  |   Value  |                 DOUBLE  |       No  |  0  |       Yes  |    Yes  |    Yes  |   No  |
 |  SVAL  |  String value  |          STRING (40)  |  No  |  0  |       Yes  |    Yes  |    Yes  |   No  |
@@ -143,8 +139,7 @@ The record also has a second set of calculation-related fields
 |  ERR  |   Last Error  |            String (200)  | No  |  0  |       Yes  |    Yes  |    No  |    No  |
 
 
-Examples
-^^^^^^^^
+### Examples
 
 field(CODE, "return A + B")
 
@@ -165,8 +160,7 @@ field(CODE, "@test.lua example(1, 'foo')")
    parameters, one a number, the other a string.
 
 
-Output Parameters
------------------
+## Output Parameters
 
 These parameters specify and control the output capabilities of the
 luascript record. They determine when to write the output, where to
@@ -202,13 +196,13 @@ asynchronous manner. It is a menu field with two choices:
 -  ``Async`` -- process the record's lua code in a separate
    thread.
 
-.. csv-table:: 
-   :header: "Field", "Summary", "Type", "DCT", "Initial", "Access", "Modify", "Rec Proc Monitor", "PP"
-   :widths: 2, 3, 2, 1, 2, 2, 2, 3, 1
 
-   OUT,   Output Specification,  OUTLINK, Yes, 0,       Yes,    Yes,    N/A,              No
-   OOPT,  Output Execute Option, Menu,    Yes, 0,       Yes,    Yes,    No,               No
-   SYNC,  Synchronicity,         Menu,    Yes, 0,       Yes,    Yes,    No,               No
+
+| "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
+|:-|:--|:-|:-|:-|:-|:-|:-|:-|
+|   OUT  |   Output Specification  |  OUTLINK  | Yes  | 0  |       Yes  |    Yes  |    N/A  |              No |
+|   OOPT  |  Output Execute Option  | Menu  |    Yes  | 0  |       Yes  |    Yes  |    No  |               No |
+|   SYNC  |  Synchronicity  |         Menu  |    Yes  | 0  |       Yes  |    Yes  |    No  |               No |
 
 The luascript record uses device support to write to the ``OUT`` link.
 Soft device supplied with the record is selected with the .dbd
@@ -219,8 +213,7 @@ specification
     field(DTYP,"Soft Channel") 
 ```
 
-Operator Display Parameters
----------------------------
+## Operator Display Parameters
 
 These parameters are used to present meaningful data to the operator.
 Some are also meant to represent the status of the record at run-time.
@@ -251,7 +244,7 @@ See the EPICS Record Reference Manual, for more on the record name
 
 
 | "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
-|:-- |:--- |:-- |:- |:-- |:-- |:-- |:--- |:- |
+|:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |   PREC  |  Display Precision  |    SHORT  |       Yes  | 0  |       Yes  |    Yes  |    No  |               No |
 |   HOPR  |  High Operating Range  | FLOAT  |       Yes  | 0  |       Yes  |    Yes  |    No  |               No |
 |   LOPR  |  Low Operating Range  |  FLOAT  |       Yes  | 0  |       Yes  |    Yes  |    No  |               No |
@@ -268,8 +261,7 @@ See the EPICS Record Reference Manual, for more on the record name
 |   IJJV  |  Link Status of INJJ  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
 
 
-Alarm Parameters
-----------------
+## Alarm Parameters
 
 The possible alarm conditions for the luascript record are the SCAN,
 READ, Calculation, and limit alarms. The SCAN and READ alarms are called
@@ -287,7 +279,7 @@ fields.
 
 
 | "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
-|:-- |:--- |:-- |:- |:-- |:-- |:-- |:--- |:- |  
+|:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |   HIHI  |  Hihi Alarm Limit  |          FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
 |   HIGH  |  High Alarm Limit  |          FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
 |   LOW  |   Low Alarm Limit  |           FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
@@ -299,8 +291,7 @@ fields.
 |   HYST  |  Alarm Deadband  |            DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |               No  |
 
 
-Monitor Parameters
-------------------
+## Monitor Parameters
 
 These parameters are used to determine when to send monitors for the
 value fields. The monitors are sent when the value field exceeds the
@@ -312,23 +303,21 @@ monitors are triggered.
 
 
 |  "Field"  | "Summary"  | "Type"  | "DCT"  | "Initial"  | "Access"  | "Modify"  | "Rec Proc Monitor"  | "PP" |
-|:-- |:--- |:-- |:- |:-- |:-- |:-- |:--- |:- |
+|:-|:--|:-|:-|:-|:-|:-|:-|:-|
 |   ADEL  |  Archive Deadband  |                     DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |             No  |
 |   MDEL  |  "Monitor  | i.e. value change  | Deadband"  | DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |       No  |
 
 
-Run-time Parameters
--------------------
+## Run-time Parameters
 
 These fields are not configurable using a configuration tool and none
 are modifiable at run-time. They are used to process the record.
 
  
-Record Support Routines
------------------------
+## Record Support Routines
 
-init_record
-^^^^^^^^^^^
+### init_record
+
 
 For each constant input link, the corresponding value field is
 initialized with the constant value if the input link is CONSTANT or a
@@ -340,33 +329,33 @@ bytecode.
 
  
 
-process
-^^^^^^^
+### process
+
 
 See section 11.
 
  
 
-special
-^^^^^^^
+### special
+
 
 This is called if CODE is changed.
 
  
 
-get_precision
-^^^^^^^^^^^^^
+### get_precision
+
 
 Retrieves PREC.
  
 
-Record Processing
------------------
+## Record Processing
+
 
 .. _process-1:
 
-process()
-^^^^^^^^^
+### process()
+
 
 The ``process()`` routine implements the following algorithm:
 
