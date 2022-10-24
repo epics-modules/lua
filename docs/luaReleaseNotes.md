@@ -152,5 +152,5 @@ Release 1-0
 
 -  First public release on github
 
-| Suggestions and Comments to:
-| `Keenan Lang <mailto:klang@aps.anl.gov>`__: (klang@aps.anl.gov)
+| Suggestions and Comments to:  
+| [Keenan Lang](mailto:klang@anl.gov)
