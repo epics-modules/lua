@@ -5,10 +5,7 @@ nav_order: 1
 ---
 
 
-
-================
-Lua EPICS Module
-================
+#Lua EPICS Module
 
 The lua EPICS Module is an embedding of the lua language interpreter
 into an EPICS IOC. From there, the interpreter is exposed to the user
@@ -61,7 +58,7 @@ code, and define functions within startup scripts.
 
 The lua Shell is able to access all the same [epics lua libraries](epics-functions)
 as the luascriptRecord, including any functions or libraries that
-you :doc:`build yourself <adding-libraries>` into your IOC. The shell
+you [build yourself](adding-libraries) into your IOC. The shell
 even implicitly loads the iocsh library, which means you can call
 iocsh-registered functions in the lua shell exactly like you would 
 in the ioc shell. 

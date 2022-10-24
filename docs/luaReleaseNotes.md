@@ -1,5 +1,12 @@
-lua Release Notes
-=================
+---
+layout: default
+title: Release Notes
+nav_order: 2
+---
+
+
+#lua Release Notes
+
 
 Release 3-0-2
 -------------

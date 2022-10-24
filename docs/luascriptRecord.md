@@ -1,14 +1,14 @@
-luascript - Lua Script Processing Record
-========================================
+---
+layout: default
+title: luascript Record
+nav_order: 3
+---
 
-.. contents::
-   :depth: 3
-..
 
---------------
+#luascript - Lua Script Processing Record
 
 Introduction
----------------
+------------
 
 The lua script processing record or "luascript" record is derived from
 the Calcout record in EPICS base, but replaces the calc operation engine
@@ -44,10 +44,8 @@ Scan Parameters
 
 The luascript record has the standard fields for specifying under what
 circumstances the record will be processed. These fields are listed in
-`Scan Fields, Chapter 2,
-2 <http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html#MARKER-9-2>`__.
-In addition, `Scanning Specification, Chapter 1,
-1 <http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-2>`__,
+[Scan Fields, Chapter 2](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html#MARKER-9-2).
+In addition, [Scanning Specification, Chapter 1](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-2)
 explains how these fields are used. Since the luascript record supports
 no direct interfaces to hardware, it cannot be scanned on I/O interrupt,
 so its SCAN field cannot be ``I/O Intr``.
