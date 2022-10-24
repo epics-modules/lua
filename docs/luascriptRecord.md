@@ -74,16 +74,16 @@ Parameters}(#operator-display-parameters) for an explanation of these fields.
 database links.
 
 
-| Field | Summary | Type | DCT | Initial | Access | Modify | Rec Proc Monitor |
-|:- |:-- |:- |:- |:- |:- |:- |:- |
-| INPA | Input Link A   | INLINK | Yes | 0   | Yes  | Yes | N/A |
-| INPB | Input Link B   | INLINK | Yes | 0   | Yes  | Yes | N/A |
-| ...  | ...            | ...    | ... | ... | ...  | ... | ... |
-| INPL | Input Link J   | INLINK | Yes | 0   | Yes  | Yes | N/A |
-| INAA | Input Link AA  | INLINK | Yes | 0   | Yes  | Yes | N/A |
-| INBB | Input Link BB  | INLINK | Yes | 0   | Yes  | Yes | N/A |
-| ...  | ...            | ...    | ... | ... | ...  | ... | ... |
-| INJJ | Input Link JJ  | INLINK | Yes | 0   | Yes  | Yes | N/A |
+| Field |    Summary     |  Type  | DCT | Initial | Access | Modify | Rec Proc Monitor |
+|-------|----------------|--------|-----|---------|--------|--------|------------------|
+|  INPA | Input Link A   | INLINK | Yes |    0    |   Yes  |   Yes  |       N/A        |
+|  INPB | Input Link B   | INLINK | Yes |    0    |   Yes  |   Yes  |       N/A        |
+|  ...  | ...            | ...    | ... |   ...   |   ...  |   ...  |       ...        |
+|  INPL | Input Link J   | INLINK | Yes |    0    |   Yes  |   Yes  |       N/A        |
+|  INAA | Input Link AA  | INLINK | Yes |    0    |   Yes  |   Yes  |       N/A        |
+|  INBB | Input Link BB  | INLINK | Yes |    0    |   Yes  |   Yes  |       N/A        |
+|  ...  | ...            | ...    | ... |   ...   |   ...  |   ...  |       ...        |
+|  INJJ | Input Link JJ  | INLINK | Yes |    0    |   Yes  |   Yes  |       N/A        |
 
 
 ### Expressions
@@ -131,14 +131,14 @@ The record also has a second set of calculation-related fields
   
 
 
-| Field | Summary | Type | DCT | Initial | Access | Modify | Rec Proc Monitor | PP |
-|:-|:--|:-|:-|:-|:-|:-|:-|:-|
-|  CODE  |  Script  |                STRING[120]  |  Yes  | ""  |       Yes  |    Yes  |    Yes  |   No  |
-|  VAL  |   Value  |                 DOUBLE  |       No  |  0  |       Yes  |    Yes  |    Yes  |   No  |
-|  SVAL  |  String value  |          STRING (40)  |  No  |  0  |       Yes  |    Yes  |    Yes  |   No  |
-|  RELO  |  When to reload state?  | Menu  |         Yes  | 0  |       Yes  |    Yes  |    No  |    No  |
-|  FRLD  |  Force Reload  |          Short  |        Yes  | 0  |       Yes  |    Yes  |    No  |    No  |
-|  ERR  |   Last Error  |            String (200)  | No  |  ""  |       Yes  |    Yes  |    No  |    No  |
+|  Field |        Summary          |     Type     | DCT | Initial | Access |  Modify | Rec Proc Monitor | PP |
+|--------|-------------------------|--------------|-----|---------|--------|---------|------------------|----|
+|  CODE  |  Script                 | STRING[120]  | Yes |    ""   |   Yes  |    Yes  |        Yes       | No |
+|  VAL   |  Value                  | DOUBLE       | No  |    0    |   Yes  |    Yes  |        Yes       | No |
+|  SVAL  |  String value           | STRING (40)  | No  |    ""   |   Yes  |    Yes  |        Yes       | No |
+|  RELO  |  When to reload state?  | Menu         | Yes |    0    |   Yes  |    Yes  |        No        | No |
+|  FRLD  |  Force Reload           | Short        | Yes |    0    |   Yes  |    Yes  |        No        | No |
+|  ERR   |  Last Error             | String (200) | No  |    ""   |   Yes  |    Yes  |        No        | No |
 
 
 ### Examples
@@ -209,11 +209,11 @@ asynchronous manner. It is a menu field with two choices:
 
 
 
-| Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
-|:-|:--|:-|:-|:-|:-|:-|:-|:-|
-|   OUT  |   Output Specification  |  OUTLINK  | Yes  | 0  |       Yes  |    Yes  |    N/A  |              No |
-|   OOPT  |  Output Execute Option  | Menu  |    Yes  | 0  |       Yes  |    Yes  |    No  |               No |
-|   SYNC  |  Synchronicity  |         Menu  |    Yes  | 0  |       Yes  |    Yes  |    No  |               No |
+|  Field |        Summary          |     Type     | DCT | Initial | Access |  Modify | Rec Proc Monitor | PP |
+|--------|-------------------------|--------------|-----|---------|--------|---------|------------------|----|
+|  OUT   |  Output Specification   |    OUTLINK   | Yes |    0    |   Yes  |    Yes  |        N/A       | No |
+|  OOPT  |  Output Execute Option  |    Menu      | Yes |    0    |   Yes  |    Yes  |        No        | No |
+|  SYNC  |  Synchronicity          |    Menu      | Yes |    0    |   Yes  |    Yes  |        No        | No |
 
 The luascript record uses device support to write to the ``OUT`` link.
 Soft device supplied with the record is selected with the .dbd
@@ -253,22 +253,22 @@ See the EPICS Record Reference Manual, for more on the record name
 (NAME) and description (DESC) fields.
 
 
-| Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
-|:-|:--|:-|:-|:-|:-|:-|:-|:-|
-|   PREC  |  Display Precision  |    SHORT  |       Yes  | 0  |       Yes  |    Yes  |    No  |               No |
-|   HOPR  |  High Operating Range  | FLOAT  |       Yes  | 0  |       Yes  |    Yes  |    No  |               No |
-|   LOPR  |  Low Operating Range  |  FLOAT  |       Yes  | 0  |       Yes  |    Yes  |    No  |               No |
-|   INAV  |  Link Status of INPA  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
-|   INBV  |  Link Status of INPB  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
-|   ...  |   ...  |                  ...  |         ...  | ...  |     ...  |    ...  |    ...  |              ...|
-|   INJV  |  Link Status of INPJ  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
-|   OUTV  |  OUT PV Status  |        Menu  |        No  |  0  |       Yes  |    No  |     No  |               No |
-|   NAME  |  Record Name  |          STRING [29]  | Yes  | ""  |       Yes  |    No  |     No  |               No |
-|   DESC  |  Description  |          STRING [29]  | Yes  | ""  |    Yes  |    Yes  |    No  |               No |
-|   IAAV  |  Link Status of INAA  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
-|   IBBV  |  Link Status of INBB  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
-|   ...  |   ...  |                  ...  |         ...  | ...  |     ...  |    ...  |    ...  |              ...|
-|   IJJV  |  Link Status of INJJ  |  Menu  |        No  |  1  |       Yes  |    No  |     No  |               No |
+|  Field |        Summary          |       Type      | DCT | Initial | Access |  Modify | Rec Proc Monitor | PP |
+|--------|-------------------------|-----------------|-----|---------|--------|---------|------------------|----|
+|  PREC  |  Display Precision      |     SHORT       | Yes |    0    |   Yes  |    Yes  |       No         | No |
+|  HOPR  |  High Operating Range   |     FLOAT       | Yes |    0    |   Yes  |    Yes  |       No         | No |
+|  LOPR  |  Low Operating Range    |     FLOAT       | Yes |    0    |   Yes  |    Yes  |       No         | No |
+|  INAV  |  Link Status of INPA    |     Menu        | No  |    1    |   Yes  |    No   |       No         | No |
+|  INBV  |  Link Status of INPB    |     Menu        | No  |    1    |   Yes  |    No   |       No         | No |
+|  ...   |  ...                    |     ...         | ... |   ...   |   ...  |    ...  |       ...        | ...|
+|  INJV  |  Link Status of INPJ    |     Menu        | No  |    1    |   Yes  |    No   |       No         | No |
+|  OUTV  |  OUT PV Status          |     Menu        | No  |    0    |   Yes  |    No   |       No         | No |
+|  NAME  |  Record Name            |     STRING [29] | Yes |    ""   |   Yes  |    No   |       No         | No |
+|  DESC  |  Description            |     STRING [29] | Yes |    ""   |   Yes  |    Yes  |       No         | No |
+|  IAAV  |  Link Status of INAA    |     Menu        | No  |    1    |   Yes  |    No   |       No         | No |
+|  IBBV  |  Link Status of INBB    |     Menu        | No  |    1    |   Yes  |    No   |       No         | No |
+|  ...   |  ...                    |     ...         | ... |   ...   |   ...  |    ...  |       ...        | ...|
+|  IJJV  |  Link Status of INJJ    |     Menu        | No  |    1    |   Yes  |    No   |       No         | No |
 
 
 Alarm Parameters
@@ -289,17 +289,17 @@ Record Reference Manual for a complete explanation of alarms and these
 fields.
 
 
-| Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
-|:-|:--|:-|:-|:-|:-|:-|:-|:-|
-|   HIHI  |  Hihi Alarm Limit  |          FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
-|   HIGH  |  High Alarm Limit  |          FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
-|   LOW  |   Low Alarm Limit  |           FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
-|   LOLO  |  Lolo Alarm Limit  |          FLOAT  |  Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
-|   HHSV  |  Severity for a Hihi Alarm  | Menu  |   Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
-|   HSV  |   Severity for a High Alarm  | Menu  |   Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
-|   LSV  |   Severity for a Low Alarm  |  Menu  |   Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
-|   LLSV  |  Severity for a Lolo Alarm  | Menu  |   Yes  | 0  |       Yes  |    Yes  |    No  |               Yes |
-|   HYST  |  Alarm Deadband  |            DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |               No  |
+|  Field |          Summary            |       Type      | DCT | Initial | Access |  Modify | Rec Proc Monitor | PP |
+|--------|-----------------------------|-----------------|-----|---------|--------|---------|------------------|----|
+|   HIHI |  Hihi Alarm Limit           |    FLOAT        | Yes |    0    |   Yes  |    Yes  |       No         |Yes |
+|   HIGH |  High Alarm Limit           |    FLOAT        | Yes |    0    |   Yes  |    Yes  |       No         |Yes |
+|   LOW  |  Low Alarm Limit            |    FLOAT        | Yes |    0    |   Yes  |    Yes  |       No         |Yes |
+|   LOLO |  Lolo Alarm Limit           |    FLOAT        | Yes |    0    |   Yes  |    Yes  |       No         |Yes |
+|   HHSV |  Severity for a Hihi Alarm  |    Menu         | Yes |    0    |   Yes  |    Yes  |       No         |Yes |
+|   HSV  |  Severity for a High Alarm  |    Menu         | Yes |    0    |   Yes  |    Yes  |       No         |Yes |
+|   LSV  |  Severity for a Low Alarm   |    Menu         | Yes |    0    |   Yes  |    Yes  |       No         |Yes |
+|   LLSV |  Severity for a Lolo Alarm  |    Menu         | Yes |    0    |   Yes  |    Yes  |       No         |Yes |
+|   HYST |  Alarm Deadband             |    DOUBLE       | Yes |    0    |   Yes  |    Yes  |       No         |No  |
 
 
 Monitor Parameters
@@ -314,10 +314,10 @@ triggered; if they have a value of -1, every time the record is scanned,
 monitors are triggered.
 
 
-| Field  | Summary  | Type  | DCT  | Initial  | Access  | Modify  | Rec Proc Monitor  | PP |
-|:-|:--|:-|:-|:-|:-|:-|:-|:-|
-|   ADEL  |  Archive Deadband  |                     DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |             No  |
-|   MDEL  |  Monitor  | i.e. value change  | Deadband  | DOUBLE  | Yes  | 0  |       Yes  |    Yes  |    No  |       No  |
+|  Field |          Summary            |       Type      | DCT | Initial | Access |  Modify | Rec Proc Monitor | PP |
+|--------|-----------------------------|-----------------|-----|---------|--------|---------|------------------|----|
+|  ADEL  |  Archive Deadband           |      DOUBLE     | Yes |    0    |   Yes  |    Yes  |       No         | No |
+|  MDEL  |  Monitor, i.e. value change |      DOUBLE     | Yes |    0    |   Yes  |    Yes  |       No         | No |
 
 
 Run-time Parameters
