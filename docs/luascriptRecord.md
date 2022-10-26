@@ -5,7 +5,12 @@ nav_order: 3
 ---
 
 # luascript - Lua Script Processing Record
+{: .no_toc}
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
 {:toc}
 
 Introduction
