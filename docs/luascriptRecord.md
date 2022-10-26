@@ -4,8 +4,9 @@ title: luascript Record
 nav_order: 3
 ---
 
-
 # luascript - Lua Script Processing Record
+
+{:toc}
 
 Introduction
 ------------
