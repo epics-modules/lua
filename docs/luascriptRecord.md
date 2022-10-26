@@ -75,7 +75,7 @@ database links.
 
 
 | Field |    Summary     |  Type  | DCT | Default | Read | Write | Rec Proc Monitor |
-|-------|----------------|--------|-----|---------|------|-------|------------------|
+|-------|----------------|--------|:---:|:-------:|:----:|:-----:|:----------------:|
 |  INPA | Input Link A   | INLINK | Yes |    0    |  Yes |  Yes  |       N/A        |
 |  INPB | Input Link B   | INLINK | Yes |    0    |  Yes |  Yes  |       N/A        |
 |  ...  | ...            | ...    | ... |   ...   |  ... |  ...  |       ...        |
@@ -132,7 +132,7 @@ The record also has a second set of calculation-related fields
 
 
 |  Field |        Summary          |     Type     | DCT | Default | Read |  Write | Rec Proc Monitor | PP |
-|--------|-------------------------|--------------|-----|---------|------|--------|------------------|----|
+|--------|-------------------------|--------------|:---:|:-------:|:----:|:------:|:----------------:|:--:|
 |  CODE  |  Script                 | STRING [120] | Yes |    ""   | Yes  |   Yes  |        Yes       | No |
 |  VAL   |  Value                  | DOUBLE       | No  |    0    | Yes  |   Yes  |        Yes       | No |
 |  SVAL  |  String value           | STRING [40]  | No  |    ""   | Yes  |   Yes  |        Yes       | No |
@@ -210,7 +210,7 @@ asynchronous manner. It is a menu field with two choices:
 
 
 |  Field |        Summary          |     Type     | DCT | Default | Read |  Write | Rec Proc Monitor | PP |
-|--------|-------------------------|--------------|-----|---------|------|--------|------------------|----|
+|--------|-------------------------|--------------|:---:|:-------:|:----:|:------:|:----------------:|:--:|
 |  OUT   |  Output Specification   |    OUTLINK   | Yes |    0    |  Yes |   Yes  |        N/A       | No |
 |  OOPT  |  Output Execute Option  |    Menu      | Yes |    0    |  Yes |   Yes  |        No        | No |
 |  SYNC  |  Synchronicity          |    Menu      | Yes |    0    |  Yes |   Yes  |        No        | No |
@@ -254,7 +254,7 @@ See the EPICS Record Reference Manual, for more on the record name
 
 
 |  Field |        Summary          |       Type      | DCT | Default | Read |  Write | Rec Proc Monitor | PP |
-|--------|-------------------------|-----------------|-----|---------|------|--------|------------------|----|
+|--------|-------------------------|-----------------|:---:|:-------:|:----:|:------:|:----------------:|:--:|
 |  PREC  |  Display Precision      |     SHORT       | Yes |    0    |  Yes |   Yes  |       No         | No |
 |  HOPR  |  High Operating Range   |     FLOAT       | Yes |    0    |  Yes |   Yes  |       No         | No |
 |  LOPR  |  Low Operating Range    |     FLOAT       | Yes |    0    |  Yes |   Yes  |       No         | No |
@@ -290,7 +290,7 @@ fields.
 
 
 |  Field |          Summary            |       Type      | DCT | Default | Read |  Write | Rec Proc Monitor | PP |
-|--------|-----------------------------|-----------------|-----|---------|------|--------|------------------|----|
+|--------|-----------------------------|-----------------|:---:|:-------:|:----:|:------:|:----------------:|:--:|
 |   HIHI |  Hihi Alarm Limit           |    FLOAT        | Yes |    0    |  Yes |   Yes  |       No         |Yes |
 |   HIGH |  High Alarm Limit           |    FLOAT        | Yes |    0    |  Yes |   Yes  |       No         |Yes |
 |   LOW  |  Low Alarm Limit            |    FLOAT        | Yes |    0    |  Yes |   Yes  |       No         |Yes |
@@ -315,7 +315,7 @@ monitors are triggered.
 
 
 |  Field |          Summary            |       Type      | DCT | Default | Read |  Write | Rec Proc Monitor | PP |
-|--------|-----------------------------|-----------------|-----|---------|------|--------|------------------|----|
+|--------|-----------------------------|-----------------|:---:|:-------:|:----:|:------:|:----------------:|:--:|
 |  ADEL  |  Archive Deadband           |      DOUBLE     | Yes |    0    |  Yes |   Yes  |       No         | No |
 |  MDEL  |  Monitor, i.e. value change |      DOUBLE     | Yes |    0    |  Yes |   Yes  |       No         | No |
 
