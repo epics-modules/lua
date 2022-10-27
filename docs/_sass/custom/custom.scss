@@ -20,7 +20,7 @@ a {
 	color: #ffffff !important;
 }
 
-.nav-list-link:hover {
+.nav-list-link:hover, .site-title:hover {
 	background-image: none !important;
 	color: #18bc9c !important;
 }
@@ -28,4 +28,6 @@ a {
 .nav-list-link.active {
 	background-image: none !important;
 	background: #1a242f !important;
+	border-top-left-radius: 20px;
+	border-bottom-left-radius: 20px;
 }
