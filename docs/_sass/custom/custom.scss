@@ -13,14 +13,14 @@ a {
 }
 
 .side-bar {
-	width: calc((100% - 1500px) / 2 + 264px);
-	background: #2c3e50;
+	width: calc((100% - 1500px) / 2 + 264px) !important;
+	background: #2c3e50 !important;
 }
 
 .side-bar a {
-	color: #ffffff;
+	color: #ffffff !important;
 }
 
 .main {
-	margin-left: calc((100% - 1500px) / 2 + 264px);
+	margin-left: calc((100% - 1500px) / 2 + 264px) !important;
 }
