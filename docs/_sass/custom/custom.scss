@@ -12,6 +12,10 @@ a {
 	color: #18bc9c;
 }
 
+.site-button .icon {
+	color: #18bc9c;
+}
+
 .side-bar {
 	background: #2c3e50 !important;
 }
@@ -20,7 +24,7 @@ a {
 	color: #ffffff !important;
 }
 
-.nav-list-link:hover, .site-title:hover {
+.nav-list-link:hover, .site-title:hover, .site-button:hover {
 	background-image: none !important;
 	color: #18bc9c !important;
 }
