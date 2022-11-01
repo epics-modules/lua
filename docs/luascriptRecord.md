@@ -49,8 +49,8 @@ Scan Parameters
 
 The luascript record has the standard fields for specifying under what
 circumstances the record will be processed. These fields are listed in
-[Scan Fields, Chapter 2](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html).
-In addition, [Scanning Specification, Chapter 1](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html)
+[Scan Fields](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html).
+In addition, [Scanning Specification](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html)
 explains how these fields are used. Since the luascript record supports
 no direct interfaces to hardware, it cannot be scanned on I/O interrupt,
 so its SCAN field cannot be ``I/O Intr``.
@@ -74,7 +74,7 @@ INJV, which indicate the status of the links to numeric fields, and the
 fields IAAV, IBBV, . . . IJJV, which indicate the status of the links to
 string fields.  These fields indicate whether or not the specified PV
 was found and a link to it established. See [Section 5, Operator Display
-Parameters}(#operator-display-parameters) for an explanation of these fields.
+Parameters](#operator-display-parameters) for an explanation of these fields.
 
  See the EPICS Record Reference Manual for information on how to specify
 database links.
@@ -133,7 +133,7 @@ error encountered during processing.
 
  
 The record also has a second set of calculation-related fields
-  described in `[Section 4, Output Parameters](output-parameters)
+  described in `[Section 4, Output Parameters](#output-parameters)
   
 
 
