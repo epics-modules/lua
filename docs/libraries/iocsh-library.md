@@ -8,7 +8,7 @@ nav_order: 4
 
 # IOC Shell Functions
 
-### iocsh. <item> [(*arguments…*)]
+**iocsh. <item>** [(*arguments…*)]
 
 >Performs an environment check for the given item. First, the user's environment is
 >checked to see if there are any environment variables that match up with the item's

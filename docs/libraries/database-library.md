@@ -19,7 +19,7 @@ nav_order: 2
 Static Database Access
 ----------------------
 
-#### db.entry ()
+**db.entry** ()
 
 >Creates a DBENTRY pointer which can be used with all implemented static database 
 >access functions. dbFreeEntry will be called on the pointer automatically when the 
@@ -85,7 +85,7 @@ instances of the dbentry class will be used, created with the aforementioned db.
 
 
 
-#### db.registerDatabaseHook (dbhook)
+**db.registerDatabaseHook** (dbhook)
   
 >Registers the provided function so that it is invoked each time the dbLoadRecords 
 >function is called by the IOC. The callback hook is invoked with two parameters;
@@ -97,7 +97,7 @@ instances of the dbentry class will be used, created with the aforementioned db.
 | dbhook  |  function |  The callback function to be invoked |
 
 
-#### db.record ([recordtype,] recordname)
+**db.record** ([recordtype,] recordname)
 
 >Creates an instance of the dbrecord class, a wrapper around record creation/access.
 >
@@ -136,7 +136,7 @@ instances of the dbentry class will be used, created with the aforementioned db.
 | recordname  | string | The name of the record. If the name already exists, the returned instance will refer to the existing record. If there is no record by that name, the constructor will create one. |
 
 
-#### db.list ()
+**db.list** ()
 
 >Returns a list of all the PVs currently defined in the IOC. Each element of the
 >list is a db.record instance.
