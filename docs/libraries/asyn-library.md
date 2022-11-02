@@ -39,6 +39,7 @@ Returns the value of the asyn parameter as the type specified, if no type was sp
 | addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
 | paramName |  string  | The name of the parameter to fetch. |
 
+<br>
 
 ### asyn.set____
 ---
@@ -59,6 +60,7 @@ Sets the value of an asyn parameter. These work like the asynPortDriver function
 | paramName |  string  | The name of the parameter to set. |
 | value     |  varies  | The value to set the parameter to. Type should match the type of the parameter you are setting. |
 
+<br>
 
 ### asyn.callParamCallbacks
 ---
@@ -97,6 +99,7 @@ Returns the value of the asyn parameter as the type specified, if no type was sp
 | addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
 | paramName |  string  | The name of the parameter to fetch. |
 
+<br>
 
 ### asyn.writeParam
 ---
@@ -133,7 +136,7 @@ Sets the global variable OutTerminator, which controls asyn write commands
 |------------|----------|-|
 | terminator |  string  | The string value to append to the end of all asyn write calls. |
 
-
+<br>
 
 ### asyn.getOutTerminator
 ---
@@ -144,6 +147,7 @@ asyn.getOutTerminator ()
 
 Returns the value of the global variable OutTerminator
 
+<br>
 
 ### asyn.setInTerminator
 ---
@@ -158,6 +162,7 @@ Sets the global variable InTerminator, which controls asyn read commands
 |------------|----------|-|
 | terminator |  string  | The string value to wait for when reading from an asyn port. |
 
+<br>
 
 ### asyn.getInTerminator
 ---
@@ -168,6 +173,7 @@ asyn.getInTerminator ()
 
 Returns the value of the global variable InTerminator
 
+<br>
 
 ### asyn.setWriteTimeout
 ---
@@ -182,6 +188,7 @@ Sets the global variable WriteTimeout, which controls asyn write commands
 |-----------|----------|-|
 |  timeout  |  number  | The number of milliseconds for an asyn write command to wait before failure. |
 
+<br>
 
 ### asyn.getWriteTimeout
 ---
@@ -192,6 +199,7 @@ asyn.getWriteTimeout ()
 
 Returns the value of the global variable WriteTimeout
 
+<br>
 
 ### asyn.setReadTimeout
 ---
@@ -206,6 +214,7 @@ Sets the global variable ReadTimeout, which controls asyn read commands
 |-----------|----------|-|
 |  timeout  |  number  | The number of milliseconds for an asyn read command to wait before failure. |
 
+<br>
 
 ### asyn.getReadTimeout
 ---
@@ -238,6 +247,7 @@ Turns on or off asyn's tracing for a mask on a given port. Valid keys are  "erro
 | key       |  string  | Which mask to change |
 | val       |  boolean | Whether to turn on or off the mask |
 
+<br>
 
 ### asyn.setTraceIO
 ---
@@ -277,7 +287,7 @@ Write a string to a given asynOctet port
 | addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |     
 | parameter |  string  | An asyn parameter to write to. Optional. |
 
-
+<br>
 
 ### asyn.read
 ---
@@ -298,6 +308,7 @@ by the global variable ReadTimeout is reached.
 | addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |     
 | parameter |  string  | An asyn parameter to read from. Optional. |
 
+<br>
 
 ### asyn.writeread
 ---
@@ -318,6 +329,7 @@ by the global variable ReadTimeout is reached.
 | addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |     
 | parameter |  string  | An asyn parameter to read to and write from. Optional. |
 
+<br>
 
 ### asyn.setOption
 ---
@@ -362,6 +374,7 @@ manually to a different value.
 | addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
 | parameter |  string  | A specific asyn parameter. Optional. |
 
+<br>
 
 ### client:trace
 ---
@@ -380,6 +393,7 @@ insensitive.
 |    key    |  string  | Which mask to change |
 |    val    |  boolean | Whether to turn on or off the mask |
 
+<br>
 
 ### client:traceio
 ---
@@ -397,6 +411,7 @@ to. Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
 |    key    |  string  | Which mask to change |
 |    val    |  boolean | Whether to turn on or off the mask |
 
+<br>
 
 ### client:setOption
 ---
@@ -436,6 +451,7 @@ with address 1, rather than the default 0.
 |-----------|----------|-|
 | portName  |  string  | A registered asynPortDriver port name |
 
+<br>
 
 ### driver:____Param
 ---
