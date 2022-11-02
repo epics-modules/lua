@@ -7,9 +7,7 @@ nav_order: 3
 
 # Epics Library Documentation
 
-<br>
-
-**epics.get** (*PV*[, timeout])
+### epics.get (*PV*[, timeout])
 
 >Calls ca_get to retrieve the value of a PV accessible by the host.
 >
@@ -20,10 +18,8 @@ nav_order: 3
 | PV       |   string | The name of the PV to request.
 | timeout  |   number | Amount of seconds to search for pv before giving a timeout, default is 1.0 (can be fractional).
 
-<br>
 
-
-**epics.put** (*PV, value*)
+### epics.put (*PV, value*)
 
 >Calls ca_put to set the value of a PV accessible by the host.
 
@@ -32,9 +28,8 @@ nav_order: 3
 | PV       |   string | The name of the PV to request.
 | value    |   varies | The new value you want to set the PV to. The type of this parameter should match with the dbtype of the PV requested.
 
-<br>
 
-**epics.sleep** (*seconds*)
+### epics.sleep (*seconds*)
 
 >Tells the epics thread running the lua script to sleep for a given time.
 
@@ -42,9 +37,8 @@ nav_order: 3
 | - | - | - |
 | seconds   |  number | Amount of seconds to sleep for (can be fractional). |
 
-<br>
 
-**epics.pv** (*PV*)
+### epics.pv (*PV*)
 
 >Returns a table representing a PV object. Index accesses can be used to retrive or
 >change record fields. These changes are completed through ca_get or ca_put.
