@@ -24,10 +24,10 @@ Getting / Setting Parameters
 ---
 
 ```
-**asyn.getParam** (*portName[, addr], paramName*)  
-**asyn.getStringParam** (*portName[, addr], paramName*)  
-**asyn.getDoubleParam** (*portName[, addr], paramName*)  
-**asyn.getIntegerParam** (*portName[, addr], paramName*)  
+asyn.getParam (portName[, addr], paramName)  
+asyn.getStringParam (portName[, addr], paramName)  
+asyn.getDoubleParam (portName[, addr], paramName)  
+asyn.getIntegerParam (portName[, addr], paramName)  
 ```
 Fetches the value of an asyn parameter. These work like the asynPortDriver functions of the same name, retrieving the value from the param list.
 
@@ -44,10 +44,10 @@ Returns the value of the asyn parameter as the type specified, if no type was sp
 ---
 
 ```
-**asyn.setParam** (*portName[, addr], paramName*)  
-**asyn.setStringParam** (*portName[, addr], paramName, value*)  
-**asyn.setDoubleParam** (*portName[, addr], paramName, value*)  
-**asyn.setIntegerParam** (*portName[, addr], paramName, value*)  
+asyn.setParam (portName[, addr], paramName)  
+asyn.setStringParam (portName[, addr], paramName, value)  
+asyn.setDoubleParam (portName[, addr], paramName, value)  
+asyn.setIntegerParam (portName[, addr], paramName, value)  
 ```
 
 Sets the value of an asyn parameter. These work like the asynPortDriver functions of the same name, saving the value in the param list.
@@ -64,7 +64,7 @@ Sets the value of an asyn parameter. These work like the asynPortDriver function
 ---
 
 ```
-**asyn.callParamCallbacks** (*portName[, addr, parameter]*)
+asyn.callParamCallbacks (portName[, addr, parameter])
 ```
 
 Tells an asyn port to call parameter callbacks on changed values.
@@ -84,7 +84,7 @@ Reading / Writing Values
 ---
 
 ```
-**asyn.readParam** (*portName[, addr], paramName*)
+asyn.readParam (portName[, addr], paramName)
 ```
 
 Calls the read function of the correct asyn interface
@@ -102,7 +102,7 @@ Returns the value of the asyn parameter as the type specified, if no type was sp
 ---
 
 ```
-**asyn.writeParam** (*portName[, addr], paramName, value*)
+asyn.writeParam (portName[, addr], paramName, value)
 ```
 
 Calls the write function of the correct asyn interface
@@ -124,7 +124,7 @@ Configuration Parameters
 ---
 
 ```
-**asyn.setOutTerminator** (*terminator*)
+asyn.setOutTerminator (terminator)
 ```
 
 Sets the global variable OutTerminator, which controls asyn write commands
@@ -139,7 +139,7 @@ Sets the global variable OutTerminator, which controls asyn write commands
 ---
 
 ```
-**asyn.getOutTerminator** ()
+asyn.getOutTerminator ()
 ```
 
 Returns the value of the global variable OutTerminator
@@ -149,7 +149,7 @@ Returns the value of the global variable OutTerminator
 ---
 
 ```
-**asyn.setInTerminator** (*terminator*)
+asyn.setInTerminator (terminator)
 ```
 
 Sets the global variable InTerminator, which controls asyn read commands
@@ -163,7 +163,7 @@ Sets the global variable InTerminator, which controls asyn read commands
 ---
 
 ```
-**asyn.getInTerminator** ()
+asyn.getInTerminator ()
 ```
 
 Returns the value of the global variable InTerminator
@@ -173,7 +173,7 @@ Returns the value of the global variable InTerminator
 ---
 
 ```
-**asyn.setWriteTimeout** (*timeout*)
+asyn.setWriteTimeout (timeout)
 ```
 
 Sets the global variable WriteTimeout, which controls asyn write commands
@@ -187,7 +187,7 @@ Sets the global variable WriteTimeout, which controls asyn write commands
 ---
 
 ```
-**asyn.getWriteTimeout** ()
+asyn.getWriteTimeout ()
 ```
 
 Returns the value of the global variable WriteTimeout
@@ -197,7 +197,7 @@ Returns the value of the global variable WriteTimeout
 ---
 
 ```
-**asyn.setReadTimeout** (*timeout*)
+asyn.setReadTimeout (timeout)
 ```
 
 Sets the global variable ReadTimeout, which controls asyn read commands
@@ -211,7 +211,7 @@ Sets the global variable ReadTimeout, which controls asyn read commands
 ---
 
 ```
-**asyn.getReadTimeout** ()
+asyn.getReadTimeout ()
 ```
 
 Returns the value of the global variable ReadTimeout
@@ -225,8 +225,8 @@ Debug Information
 ---
 
 ```
-**asyn.setTrace** (*portName[, addr], key, val*)  
-**asyn.setTrace** (*portName[, addr], {key1=val1, …}*)
+asyn.setTrace (portName[, addr], key, val)  
+asyn.setTrace (portName[, addr], {key1=val1, …})
 ```
 
 Turns on or off asyn's tracing for a mask on a given port. Valid keys are  "error", "device", "filter", "driver", "flow", and "warning", case insensitive.
@@ -243,8 +243,8 @@ Turns on or off asyn's tracing for a mask on a given port. Valid keys are  "erro
 ---
 
 ```
-**asyn.setTraceIO** (*portName[, addr], key, val*)  
-**asyn.setTraceIO** (*portName[, addr], {key1=val1, …}*)
+asyn.setTraceIO (portName[, addr], key, val)  
+asyn.setTraceIO (portName[, addr], {key1=val1, …})
 ```
 
 Turns on or off asyn's tracing for a mask on a given port. Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
@@ -265,7 +265,7 @@ Octet Communications
 ---
 
 ```
-**asyn.write** (*data, portName[, addr, parameter]*)
+asyn.write (data, portName[, addr, parameter])
 ```
 
 Write a string to a given asynOctet port
@@ -283,7 +283,7 @@ Write a string to a given asynOctet port
 ---
 
 ```
-**asyn.read** (*portName[, addr, parameter]*)
+asyn.read (portName[, addr, parameter])
 ```
 
 Read a string from a given asynOctet port
@@ -303,7 +303,7 @@ by the global variable ReadTimeout is reached.
 ---
 
 ```
-**asyn.writeread** (*data, portName[, addr, parameter]*)
+asyn.writeread (data, portName[, addr, parameter])
 ```
 
 Writes data to a port and then reads data from that same port.
@@ -323,7 +323,7 @@ by the global variable ReadTimeout is reached.
 ---
 
 ```
-**asyn.setOption** (*portName[, addr], key, val*)
+asyn.setOption (portName[, addr], key, val)
 ```
 
 Sets driver-specific options
@@ -347,7 +347,7 @@ asynOctetClient Object
 ---
 
 ```
-**asyn.client** (*portName[, addr, parameter]*)
+asyn.client (portName[, addr, parameter])
 ```
 
 Returns a table representing an asynOctetClient object. This object has the functions 
@@ -367,8 +367,8 @@ manually to a different value.
 ---
 
 ```
-**client:trace** (*key, val*)  
-**client:trace** (*{key1=val1, …}*)
+client:trace (key, val)  
+client:trace ({key1=val1, …})
 ```
 
 Turns on or off asyn's tracing for a given mask on the port this client is connected 
@@ -385,8 +385,8 @@ insensitive.
 ---
 
 ```
-**client:traceio** (*key, val*)  
-**client:traceio** (*{key1=val1, …}*)
+client:traceio (key, val)  
+client:traceio ({key1=val1, …})
 ```
 
 Turns on or off asyn's tracing for a given mask on the port this client is connected 
@@ -402,7 +402,7 @@ to. Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
 ---
 
 ```
-**client:setOption** (*key, val*)
+client:setOption (key, val)
 ```
 
 Sets an asynOption for the port this client is connected to.
@@ -423,7 +423,7 @@ asynPortDriver Object
 ---
 
 ```
-**asyn.driver** (*portName*)
+asyn.driver (portName)
 ```
 
 Returns a table representing an asynPortDriver object. You can read to and write to
@@ -441,8 +441,8 @@ with address 1, rather than the default 0.
 ---
 
 ```
-**driver:readParam** (*paramName*)  
-**driver:writeParam** (*paramName, value*)
+driver:readParam (paramName)  
+driver:writeParam (paramName, value)
 ```
 
 Calls the read or write function of the correct asyn interface based upon
