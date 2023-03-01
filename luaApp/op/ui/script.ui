@@ -56,7 +56,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
      <property name="font">
       <font>
        <family>DejaVu Sans Mono</family>
-       <pointsize>15</pointsize>
+       <pointsize>14</pointsize>
       </font>
      </property>
      <property name="text">
@@ -109,7 +109,7 @@ QPushButton::menu-indicator {image: url(none.png); width: 0}
       </font>
      </property>
      <property name="channel" stdset="0">
-      <string notr="true">$(P)$(R)userScript$(S).DESC</string>
+      <string notr="true">$(P)$(R)$(S).DESC</string>
      </property>
      <property name="foreground">
       <color>
