@@ -50,12 +50,6 @@ jobs:
             configuration: default
             set: stable_7_0
             name: "Linux stable 7.0"
-
-          - os: ubuntu-20.04
-            cmp: gcc
-            configuration: default
-            set: stable_3_16
-            name: "Linux stable 3.16"
             
           - os: ubuntu-20.04
             cmp: gcc
@@ -68,12 +62,6 @@ jobs:
             configuration: default
             set: master_7_0
             name: "Linux master 7.0"
-
-          - os: ubuntu-20.04
-            cmp: gcc
-            configuration: default
-            set: master_3_16
-            name: "Linux master 3.16"
             
           - os: ubuntu-20.04
             cmp: gcc
