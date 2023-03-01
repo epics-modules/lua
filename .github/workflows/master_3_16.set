@@ -1,5 +1,0 @@
-BASE="3.16"
-
-MODULES="asyn"
-
-ASYN="master"
