@@ -40,6 +40,8 @@ epicsShareFunc int  luaLoadString(lua_State* state, const char* lua_code);
 epicsShareFunc int  luaLoadParams(lua_State* state, const char* param_list);
 epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list);
 
+epicsShareFunc int luaLoadLibrary(lua_State* state, const char* lib_name);
+
 epicsShareFunc void luaPushScope(lua_State* state);
 epicsShareFunc void luaPopScope(lua_State* state);
 

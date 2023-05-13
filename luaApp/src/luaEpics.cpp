@@ -202,6 +202,22 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 }
 
 
+/**
+ * Attempts to load a given library name using the 'require' function
+ */
+
+epicsShareFunc int luaLoadLibrary(lua_State* state, const char* lib_name)
+{
+	lua_getglobal(state, "require");
+	lua_pushstring(state, lib_name);
+	int status = docall(state, 1, 1);
+	
+	if (status == LUA_OK)    { lua_setglobal(state, lib_name); }
+	
+	return status;
+}
+
+
 /*
  * Assumes that there is a table with a defined __index field
  * at the top of the stack. Creates a scope of global variables
