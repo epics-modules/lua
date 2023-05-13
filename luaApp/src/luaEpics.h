@@ -6,10 +6,9 @@
 #include <epicsVersion.h>
 #include <assert.h>
 
-
 #ifdef __cplusplus
 
-#if __cplusplus >= 201103L
+#ifdef CXX11_SUPPORTED
 	#include "luaaa.hpp"
 	using namespace luaaa;
 #endif

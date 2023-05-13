@@ -7,8 +7,10 @@ include $(TOP)/configure/CONFIG
 
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
+# GCC Requires this
 ifeq ($(CXX11_SUPPORT), YES)
-  USR_CXXFLAGS += -std=c++11
+  USR_CXXFLAGS_Linux += -std=c++11
+  USR_CPPFLAGS += -DCXX11_SUPPORTED
 endif
 
 LIBRARY_IOC_DEFAULT += lua

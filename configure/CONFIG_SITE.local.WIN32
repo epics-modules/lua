@@ -3,4 +3,6 @@ ifeq ($(SHARED_LIBRARIES), YES)
 	USR_CXXFLAGS += -DLUA_BUILD_AS_DLL
 endif
 
-USR_CXXFLAGS += /Zc:__cplusplus
+
+# Uncomment the following if using a pre-VS2015 compiler
+# CXX11_SUPPORT = NO
