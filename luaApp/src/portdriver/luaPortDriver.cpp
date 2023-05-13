@@ -216,8 +216,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	};
 
 	this->state = luaCreateState();
-
-	luaL_dostring(this->state, "asyn = require('asyn')");
+	luaLoadLibrary(this->state, "asyn");
 
 	lua_pushstring(this->state, port_name);
 	lua_setglobal(this->state, "PORT");
@@ -230,7 +229,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	luaL_setmetatable(this->state, "param_get");
 	lua_setglobal(this->state, "param");
 
-	lua_newtable(state);
+	lua_newtable(this->state);
 	lua_setfield(this->state, LUA_REGISTRYINDEX, "LPORTDRIVER_PARAMS");
 
 	luaLoadMacros(this->state, lua_macros);
@@ -309,9 +308,18 @@ void luaPortDriver::getReadFunction(int index)
  */
 int luaPortDriver::callReadFunction()
 {
-	luaGenerateDriver(this->state, this);
-
+	lua_getglobal(this->state, "asynPortDriver.find");
+	lua_pushstring(this->state, this->portName);
+	
 	int status = lua_pcall(this->state, 1, 1, 0);
+
+	if (status)
+	{
+		const char* msg = lua_tostring(this->state, -1);
+		printf("%s\n", msg);
+	}
+
+	status = lua_pcall(this->state, 1, 1, 0);
 
 	if (status)
 	{
@@ -348,9 +356,18 @@ void luaPortDriver::getWriteFunction(int index)
  */
 int luaPortDriver::callWriteFunction()
 {
-	luaGenerateDriver(this->state, this);
+	lua_getglobal(this->state, "asynPortDriver.find");
+	lua_pushstring(this->state, this->portName);
+	
+	int status = lua_pcall(this->state, 1, 1, 0);
 
-	int status = lua_pcall(this->state, 2, 0, 0);
+	if (status)
+	{
+		const char* msg = lua_tostring(this->state, -1);
+		printf("%s\n", msg);
+	}
+
+	status = lua_pcall(this->state, 2, 0, 0);
 
 	if (status)
 	{
