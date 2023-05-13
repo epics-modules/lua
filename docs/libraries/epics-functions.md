@@ -34,3 +34,16 @@ This library provides the tools to interact with the existing epics
 framework for the ioc shell. It's major use is to allow the lua shell 
 to be able to call all the same functions as the ioc shell without 
 having to have to change the code for those functions.
+
+
+# C++11 Support
+
+As of release R3-1, the included libraries have been updated to 
+use the [luaaa](https://github.com/gengyong/luaaa) lua/c++ binding
+library. This requires a compiler with c++11 support.
+
+The libraries as they existed pre-R3-1 remain available for use
+under architectures that don't have c++11 support. Whether the lua
+module uses the new or the old versions of the library is controlled
+by the config macro CXX11_SUPPORT. You can change this in the module's
+CONFIG_SITE files. 
