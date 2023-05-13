@@ -210,7 +210,7 @@ epicsShareFunc int luaLoadLibrary(lua_State* state, const char* lib_name)
 {
 	lua_getglobal(state, "require");
 	lua_pushstring(state, lib_name);
-	int status = docall(state, 1, 1);
+	int status = lua_pcall(state, 1, 1, 0);
 	
 	if (status == LUA_OK)    { lua_setglobal(state, lib_name); }
 	
