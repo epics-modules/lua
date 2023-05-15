@@ -19,6 +19,7 @@
 #include <epicsExport.h>
 #include "luaPortDriver.h"
 #include "luaEpics.h"
+#include "lasynlib.h"
 
 /*
  * __call metatable function on the datatable once the
@@ -308,18 +309,9 @@ void luaPortDriver::getReadFunction(int index)
  */
 int luaPortDriver::callReadFunction()
 {
-	lua_getglobal(this->state, "asynPortDriver.find");
-	lua_pushstring(this->state, this->portName);
-	
+	luaGenerateDriver(this->state, this->portName);
+
 	int status = lua_pcall(this->state, 1, 1, 0);
-
-	if (status)
-	{
-		const char* msg = lua_tostring(this->state, -1);
-		printf("%s\n", msg);
-	}
-
-	status = lua_pcall(this->state, 1, 1, 0);
 
 	if (status)
 	{
@@ -356,18 +348,9 @@ void luaPortDriver::getWriteFunction(int index)
  */
 int luaPortDriver::callWriteFunction()
 {
-	lua_getglobal(this->state, "asynPortDriver.find");
-	lua_pushstring(this->state, this->portName);
-	
-	int status = lua_pcall(this->state, 1, 1, 0);
+	luaGenerateDriver(this->state, this->portName);
 
-	if (status)
-	{
-		const char* msg = lua_tostring(this->state, -1);
-		printf("%s\n", msg);
-	}
-
-	status = lua_pcall(this->state, 2, 0, 0);
+	int status = lua_pcall(this->state, 2, 0, 0);
 
 	if (status)
 	{
