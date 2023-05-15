@@ -1,12 +1,13 @@
 #ifndef INC_DEVUTIL_H
 #define INC_DEVUTIL_H
 
+#include "lepicslib.h"
+#include <link.h>
+#include <lua.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <link.h>
-#include <lua.h>
 
 typedef struct Protocol
 {
@@ -20,8 +21,6 @@ typedef struct Protocol
 Protocol* parseINPOUT(const struct link* inpout);
 
 void runFunction(Protocol* proto);
-void luaGeneratePV(lua_State* state, const char* pv_name);
-void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param);
 
 #ifdef __cplusplus
 }
