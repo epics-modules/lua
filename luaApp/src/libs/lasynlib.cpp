@@ -767,8 +767,8 @@ int lua_asynPortDriver::index_get(lua_State* state)
 	
 		std::stringstream code;
 		
-		code << "return asynPortDriver.new(" << this->driver->portName;
-		code << ", " << addr << ")";
+		code << "return asynPortDriver.new('" << this->driver->portName;
+		code << "', " << addr << ")";
 		
 		luaL_dostring(state, code.str().c_str());
 		
@@ -934,8 +934,8 @@ extern "C"
 	{
 		std::stringstream code;
 		
-		code << "return asynPortDriver.find(" << port_name;
-		code << ")";
+		code << "return asynPortDriver.find('" << port_name;
+		code << "')";
 		
 		luaL_dostring(state, code.str().c_str());
 	}
@@ -944,8 +944,8 @@ extern "C"
 	{		
 		std::stringstream code;
 		
-		code << "return asynOctetClient.find(" << port_name;
-		code << ", " << addr << ", " << param << ")";
+		code << "return asynOctetClient.find('" << port_name;
+		code << "', " << addr << ", " << param << ")";
 		
 		luaL_dostring(state, code.str().c_str());
 	}
