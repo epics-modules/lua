@@ -19,6 +19,8 @@ LIBRARY_IOC_RTEMS = -nil-
 
 DBD += luaSupport.dbd
 
+luaSupport_DBD += luaSupportBase.dbd
+
 
 INC += luaEpics.h
 lua_SRCS += luaEpics.cpp
@@ -112,6 +114,7 @@ ifeq ($(CXX11_SUPPORT), YES)
     INC += luaPortDriver.h
     
     lua_SRCS += luaPortDriver.cpp
+    luaSupport_DBD += luaPortDriver.dbd
 
 else
     SRC_DIRS += $(TOP)/luaApp/src/libs/basic
