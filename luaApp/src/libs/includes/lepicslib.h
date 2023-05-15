@@ -1,7 +1,7 @@
 #ifndef INC_LEPICSLIB_H
 #define INC_LEPICSLIB_H
 
-#import "luaEpics.h"
+#include "luaEpics.h"
 
 #ifdef CXX11_SUPPORTED
 
