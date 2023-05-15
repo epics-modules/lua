@@ -110,6 +110,8 @@ lua_SRCS += luaPortDriver.cpp
 
 # Build lua libraries
 
+SRC_DIRS += $(TOP)/luaApps/src/libs/includes
+
 ifeq ($(CXX11_SUPPORT), YES)
     SRC_DIRS += $(TOP)/luaApp/src/libs
 else
