@@ -104,18 +104,16 @@ INC += luaShell.h
 lua_SRCS += luaShell.cpp
 
 
+# Build luaPortDriver
+SRC_DIRS += $(TOP)/luaApp/src/portdriver
+INC += luaPortDriver.h
+
+lua_SRCS += luaPortDriver.cpp
+
 # Build lua libraries
 
 ifeq ($(CXX11_SUPPORT), YES)
     SRC_DIRS += $(TOP)/luaApp/src/libs
-    
-    # Build luaPortDriver
-    SRC_DIRS += $(TOP)/luaApp/src/portdriver
-    INC += luaPortDriver.h
-    
-    lua_SRCS += luaPortDriver.cpp
-    luaSupport_DBD += luaPortDriver.dbd
-
 else
     SRC_DIRS += $(TOP)/luaApp/src/libs/basic
 endif
