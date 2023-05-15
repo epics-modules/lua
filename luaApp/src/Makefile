@@ -121,6 +121,9 @@ lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
 lua_SRCS += ldatabaselib.cpp
 
+INC += lasynlib.h
+INC += lepicslib.h
+
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
 
