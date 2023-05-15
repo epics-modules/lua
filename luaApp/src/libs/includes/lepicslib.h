@@ -7,11 +7,15 @@
 
 #endif
 
-
+#ifdef __cplusplus
 extern "C"
 {
+#endif
+	
 	void luaGeneratePV(lua_State* state, const char* pv_name);
+	
+#ifdef __cplusplus
 }
-
+#endif
 
 #endif
