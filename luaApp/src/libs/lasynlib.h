@@ -1,7 +1,7 @@
 #ifndef INC_LASYNLIB_H
 #define INC_LASYNLIB_H
 
-#include "lasynlib.h"
+#include "luaEpics.h"
 
 #ifdef __cplusplus
 

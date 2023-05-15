@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 #include <epicsExport.h>
-#include "luaEpics.h"
+#include "lasynlib.h"
 
 #if defined(WIN32) || defined(_WIN32)
 #include <string.h>
