@@ -3,7 +3,7 @@
 
 #import "luaEpics.h"
 
-#ifdef CXX11_SUPPORT
+#ifdef CXX11_SUPPORTED
 
 #endif
 

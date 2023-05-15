@@ -9,7 +9,7 @@
 #include <asynPortDriver.h>
 #include <asynPortClient.h>
 
-#ifdef CXX11_SUPPORT
+#ifdef CXX11_SUPPORTED
 
 class lua_asynPortDriver
 {
