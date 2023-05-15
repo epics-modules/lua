@@ -924,6 +924,36 @@ int lua_asynOctetClient::index_set(lua_State* state)
 }
 
 
+// #############################
+// # Generators for C/C++ Code #
+// #############################
+
+extern "C"
+{	
+	void luaGenerateDriver(lua_State* state, const char* port_name)
+	{
+		std::stringstream code;
+		
+		code << "return asynPortDriver.find(" << port_name;
+		code << ")";
+		
+		luaL_dostring(state, code.str().c_str());
+	}
+	
+	void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param)
+	{		
+		std::stringstream code;
+		
+		code << "return asynOctetClient.find(" << port_name;
+		code << ", " << addr << ", " << param << ")";
+		
+		luaL_dostring(state, code.str().c_str());
+	}
+}
+
+
+
+
 int luaopen_asyn (lua_State *L)
 {
 	LuaClass<lua_asynPortDriver> lua_apd(L, "asynPortDriver");

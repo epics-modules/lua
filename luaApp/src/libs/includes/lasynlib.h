@@ -79,6 +79,12 @@ class lua_asynOctetClient
 
 #endif
 
+extern "C" {
+	void luaGenerateDriver(lua_State* state, const char* port_name);
+	void luaGeneratePort(lua_State* state, const char* port_name, int addr, const char* param);
+}
+
+
 #endif
 
 #endif
