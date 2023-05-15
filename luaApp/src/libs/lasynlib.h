@@ -9,6 +9,8 @@
 #include <asynPortDriver.h>
 #include <asynPortClient.h>
 
+#ifdef CXX11_SUPPORT
+
 class lua_asynPortDriver
 {
 	private:
@@ -75,8 +77,7 @@ class lua_asynOctetClient
 		int index_set(lua_State* state);
 };
 
-
-
+#endif
 
 #endif
 

@@ -3,6 +3,11 @@
 
 #import "luaEpics.h"
 
+#ifdef CXX11_SUPPORT
+
+#endif
+
+
 extern "C"
 {
 	void luaGeneratePV(lua_State* state, const char* pv_name);
