@@ -715,267 +715,235 @@ static int l_setTraceIO(lua_State* state)
 }
 
 
-class _apdWrapper
-{
-	private:
-		_apdWrapper(std::string driver_name, int addr)
-		{
-			this->driver = (asynPortDriver*) findAsynPortDriver(driver_name.c_str());
-			this->addr = addr;
-		}
-	
-	protected:
-		asynPortDriver* driver = NULL;
-		int addr;
-	
-	public:
-		static _apdWrapper* find(const std::string port)
-		{
-			asynPortDriver* try_find = (asynPortDriver*) findAsynPortDriver(port.c_str());
-			
-			if (try_find == NULL || std::string(try_find->portName) != port )
-			{
-				return NULL;
-			}
-			
-			return new _apdWrapper(port, 0);
-		}
-		
-		static void destroy(_apdWrapper* instance)    { delete instance; }
-	
-		int readParam(lua_State* state)
-		{
-			lua_settop(state, 2);
-			
-			int addr = LuaStack<int>::get(state, 1);
-			std::string fieldname = LuaStack<std::string>::get(state, 2);
-						
-			return asyn_readparam(state, this->driver, addr, fieldname.c_str());
-		}
-		
-		int writeParam(lua_State* state)
-		{
-			lua_settop(state, 3);
-			
-			int addr = LuaStack<int>::get(state, 1);
-			std::string fieldname = LuaStack<std::string>::get(state, 2);
-				
-			return asyn_writeparam(state, this->driver, addr, fieldname.c_str(), 3);
-		}
-		
-		void callParamCallbacks(int addr)    { driver->callParamCallbacks(addr); }
-		
-		int index_get(lua_State* state)
-		{
-			if (lua_isstring(state, 2))
-			{
-				std::string fieldname = LuaStack<std::string>::get(state, 2);
-				
-				if      (fieldname == "portName")    { lua_pushstring(state, this->driver->portName); }
-				else if (fieldname == "maxAddr")     { lua_pushinteger(state, this->driver->maxAddr); }
-				else
-				{					
-					return asyn_getparam(state, this->driver, this->addr, fieldname.c_str());
-				}
-			}
-			else if (lua_isinteger(state, 2))
-			{
-				int addr = LuaStack<int>::get(state, 2);
-			
-				std::stringstream code;
-				
-				code << "return asynPortDriver.new(" << this->driver->portName;
-				code << ", " << addr << ")";
-				
-				luaL_dostring(state, code.str().c_str());
-				
-				return 1;
-			}
-			
-			return 0;
-		}
-		
-		int index_set(lua_State* state)
-		{
-			std::string fieldname = std::string(lua_tostring(state, 2));
-			
-			if      (fieldname == "portName")  { return 0; }
-			else if (fieldname == "maxAddr")   { return 0; }
-			else
-			{
-				return asyn_setparam(state, this->driver, this->addr, fieldname.c_str(), 3);
-			}
-		}
-};
+// ################################
+// # lua asynPortDriver Functions #
+// ################################
 
 
-class _aocWrapper
+lua_asynPortDriver::lua_asynPortDriver(std::string driver_name, int addr)
 {
-	private:
-		_aocWrapper(std::string port_name, int addr, std::string param)
-		{
-			this->port = new asynOctetClient(port_name.c_str(), addr, param.c_str());
-			this->port->flush();
-			
-			this->name = port_name;
-			this->addr = addr;
-			this->param = param;
-		}
-		
-		~_aocWrapper()    { delete this->port; }
+	this->driver = (asynPortDriver*) findAsynPortDriver(driver_name.c_str());
+	this->addr = addr;
+}
+
+int lua_asynPortDriver::readParam(lua_State* state)
+{
+	lua_settop(state, 2);
 	
-		
-	protected:
-		asynOctetClient* port = NULL;
-		std::string name;
-		int addr;
-		std::string param;
-		
-		
-	public:
-		static _aocWrapper* find(std::string port_name, int addr, std::string param)
-		{
-			return new _aocWrapper(port_name, addr, param);
-		}
-		
-		static void destroy(_aocWrapper* instance)    { delete instance; }
-		
-		int read(lua_State* state)    { return asyn_read(state, this->port); }
-		int write(lua_State* state)   { return asyn_write(state, this->port, LuaStack<std::string>::get(state, 1)); }
-		int writeread(lua_State* state) { return asyn_writeread(state, this->port, LuaStack<std::string>::get(state, 1)); }
-		
-		int trace(lua_State* state)
-		{
-			lua_settop(state, 3);
-			
-			if (lua_type(state, 2) != LUA_TTABLE)
-			{
-				std::string key = LuaStack<std::string>::get(state, 2);
-			
-				bool setval = true;
-				if (! lua_isnil(state, 3))    { setval = lua_toboolean(state, 3); }
+	int addr = LuaStack<int>::get(state, 1);
+	std::string fieldname = LuaStack<std::string>::get(state, 2);
 				
-				asyn_settrace(state, this->name, this->addr, key, setval);
-			}
-			else
-			{
-				auto dict = LuaStack<std::map<std::string, bool> >::get(state, 2);
-				
-				for (auto it = dict.begin(); it != dict.end(); it++)
-				{
-					asyn_settrace(state, this->name, this->addr, it->first, it->second);
-				}
-			}
-			
-			return 0;
-		}
+	return asyn_readparam(state, this->driver, addr, fieldname.c_str());
+}
+
+int lua_asynPortDriver::writeParam(lua_State* state)
+{
+	lua_settop(state, 3);
+	
+	int addr = LuaStack<int>::get(state, 1);
+	std::string fieldname = LuaStack<std::string>::get(state, 2);
 		
-		int traceio(lua_State* state)
-		{
-			lua_settop(state, 3);
-			
-			if (lua_type(state, 2) != LUA_TTABLE)
-			{
-				std::string key = LuaStack<std::string>::get(state, 2);
-			
-				bool setval = true;
-				if (! lua_isnil(state, 3))    { setval = lua_toboolean(state, 3); }
-				
-				asyn_settraceio(state, this->name, this->addr, key, setval);
-			}
-			else
-			{
-				auto dict = LuaStack<std::map<std::string, bool> >::get(state, 2);
-				
-				for (auto it = dict.begin(); it != dict.end(); it++)
-				{
-					asyn_settraceio(state, this->name, this->addr, it->first, it->second);
-				}
-			}
-			
-			return 0;
-		}
+	return asyn_writeparam(state, this->driver, addr, fieldname.c_str(), 3);
+}
+
+void lua_asynPortDriver::callParamCallbacks(int addr)    { driver->callParamCallbacks(addr); }
+
+int lua_asynPortDriver::index_get(lua_State* state)
+{
+	if (lua_isstring(state, 2))
+	{
+		std::string fieldname = LuaStack<std::string>::get(state, 2);
 		
-		int option(lua_State* state)
-		{
-			lua_settop(state, 2);
-			
-			std::string key = LuaStack<std::string>::get(state, 1);
-			std::string val = LuaStack<std::string>::get(state, 2);
-			
-			int status = asynSetOption(this->name.c_str(), this->addr, key.c_str(), val.c_str());
-			lua_pushinteger(state, status);
-			return 1;
+		if      (fieldname == "portName")    { lua_pushstring(state, this->driver->portName); }
+		else if (fieldname == "maxAddr")     { lua_pushinteger(state, this->driver->maxAddr); }
+		else
+		{					
+			return asyn_getparam(state, this->driver, this->addr, fieldname.c_str());
 		}
+	}
+	else if (lua_isinteger(state, 2))
+	{
+		int addr = LuaStack<int>::get(state, 2);
+	
+		std::stringstream code;
 		
-		int index_get(lua_State* state)
-		{
-			std::string fieldname = std::string(lua_tostring(state, 2));
-			
-			if (fieldname == "OutTerminator")
-			{
-				char out_term[20] = {'\0'};
-				int actual;
-				
-				port->getOutputEos(out_term, 20, &actual);
-			
-				lua_pushstring(state, out_term);
-				return 1;
-			}
-			else if (fieldname == "InTerminator")
-			{
-				char in_term[20] = {'\0'};
-				int actual;
-				
-				port->getInputEos(in_term, 20, &actual);
-			
-				lua_pushstring(state, in_term);
-				return 1;
-			}
-			
-			return 0;
-		}
+		code << "return asynPortDriver.new(" << this->driver->portName;
+		code << ", " << addr << ")";
 		
-		int index_set(lua_State* state)
+		luaL_dostring(state, code.str().c_str());
+		
+		return 1;
+	}
+	
+	return 0;
+}
+
+int lua_asynPortDriver::index_set(lua_State* state)
+{
+	std::string fieldname = std::string(lua_tostring(state, 2));
+	
+	if      (fieldname == "portName")  { return 0; }
+	else if (fieldname == "maxAddr")   { return 0; }
+	else
+	{
+		return asyn_setparam(state, this->driver, this->addr, fieldname.c_str(), 3);
+	}
+}
+
+
+// #################################
+// # lua_asynOctetClient Functions #
+// #################################
+
+
+lua_asynOctetClient::lua_asynOctetClient(std::string port_name, int addr, std::string param)
+{
+	this->port = new asynOctetClient(port_name.c_str(), addr, param.c_str());
+	this->port->flush();
+	
+	this->name = port_name;
+	this->addr = addr;
+	this->param = param;
+}
+
+lua_asynOctetClient::~lua_asynOctetClient()    { delete this->port; }
+
+		
+int lua_asynOctetClient::read(lua_State* state)    { return asyn_read(state, this->port); }
+int lua_asynOctetClient::write(lua_State* state)   { return asyn_write(state, this->port, LuaStack<std::string>::get(state, 1)); }
+int lua_asynOctetClient::writeread(lua_State* state) { return asyn_writeread(state, this->port, LuaStack<std::string>::get(state, 1)); }
+
+int lua_asynOctetClient::trace(lua_State* state)
+{
+	lua_settop(state, 3);
+	
+	if (lua_type(state, 2) != LUA_TTABLE)
+	{
+		std::string key = LuaStack<std::string>::get(state, 2);
+	
+		bool setval = true;
+		if (! lua_isnil(state, 3))    { setval = lua_toboolean(state, 3); }
+		
+		asyn_settrace(state, this->name, this->addr, key, setval);
+	}
+	else
+	{
+		auto dict = LuaStack<std::map<std::string, bool> >::get(state, 2);
+		
+		for (auto it = dict.begin(); it != dict.end(); it++)
 		{
-			std::string fieldname = std::string(lua_tostring(state, 2));
-			
-			if (fieldname == "OutTerminator" && ! lua_isnil(state, 3))
-			{
-				std::string out_term = LuaStack<std::string>::get(state, 3);
-				port->setOutputEos(out_term.c_str(), out_term.size());
-			}
-			else if (fieldname == "InTerminator" && ! lua_isnil(state, 3))
-			{
-				std::string in_term = LuaStack<std::string>::get(state, 3);
-				port->setInputEos(in_term.c_str(), in_term.size());
-			}
-			
-			return 0;
+			asyn_settrace(state, this->name, this->addr, it->first, it->second);
 		}
-};
+	}
+	
+	return 0;
+}
+
+int lua_asynOctetClient::traceio(lua_State* state)
+{
+	lua_settop(state, 3);
+	
+	if (lua_type(state, 2) != LUA_TTABLE)
+	{
+		std::string key = LuaStack<std::string>::get(state, 2);
+	
+		bool setval = true;
+		if (! lua_isnil(state, 3))    { setval = lua_toboolean(state, 3); }
+		
+		asyn_settraceio(state, this->name, this->addr, key, setval);
+	}
+	else
+	{
+		auto dict = LuaStack<std::map<std::string, bool> >::get(state, 2);
+		
+		for (auto it = dict.begin(); it != dict.end(); it++)
+		{
+			asyn_settraceio(state, this->name, this->addr, it->first, it->second);
+		}
+	}
+	
+	return 0;
+}
+
+int lua_asynOctetClient::option(lua_State* state)
+{
+	lua_settop(state, 2);
+	
+	std::string key = LuaStack<std::string>::get(state, 1);
+	std::string val = LuaStack<std::string>::get(state, 2);
+	
+	int status = asynSetOption(this->name.c_str(), this->addr, key.c_str(), val.c_str());
+	lua_pushinteger(state, status);
+	return 1;
+}
+
+int lua_asynOctetClient::index_get(lua_State* state)
+{
+	std::string fieldname = std::string(lua_tostring(state, 2));
+	
+	if (fieldname == "OutTerminator")
+	{
+		char out_term[20] = {'\0'};
+		int actual;
+		
+		port->getOutputEos(out_term, 20, &actual);
+	
+		lua_pushstring(state, out_term);
+		return 1;
+	}
+	else if (fieldname == "InTerminator")
+	{
+		char in_term[20] = {'\0'};
+		int actual;
+		
+		port->getInputEos(in_term, 20, &actual);
+	
+		lua_pushstring(state, in_term);
+		return 1;
+	}
+	
+	return 0;
+}
+
+int lua_asynOctetClient::index_set(lua_State* state)
+{
+	std::string fieldname = std::string(lua_tostring(state, 2));
+	
+	if (fieldname == "OutTerminator" && ! lua_isnil(state, 3))
+	{
+		std::string out_term = LuaStack<std::string>::get(state, 3);
+		port->setOutputEos(out_term.c_str(), out_term.size());
+	}
+	else if (fieldname == "InTerminator" && ! lua_isnil(state, 3))
+	{
+		std::string in_term = LuaStack<std::string>::get(state, 3);
+		port->setInputEos(in_term.c_str(), in_term.size());
+	}
+	
+	return 0;
+}
 
 
 int luaopen_asyn (lua_State *L)
 {
-	LuaClass<_apdWrapper> lua_apd(L, "asynPortDriver");
-	lua_apd.ctor<void, std::string>("find", &_apdWrapper::find, &_apdWrapper::destroy);
-	lua_apd.fun("readParam", &_apdWrapper::readParam);
-	lua_apd.fun("writeParam", &_apdWrapper::writeParam);
-	lua_apd.fun("callParamCallbacks", &_apdWrapper::callParamCallbacks);
-	lua_apd.fun("__index", &_apdWrapper::index_get);
-	lua_apd.fun("__newindex", &_apdWrapper::index_set);
+	LuaClass<lua_asynPortDriver> lua_apd(L, "asynPortDriver");
+	lua_apd.ctor<void, std::string>("find", &lua_asynPortDriver::find, &lua_asynPortDriver::destroy);
+	lua_apd.fun("readParam", &lua_asynPortDriver::readParam);
+	lua_apd.fun("writeParam", &lua_asynPortDriver::writeParam);
+	lua_apd.fun("callParamCallbacks", &lua_asynPortDriver::callParamCallbacks);
+	lua_apd.fun("__index", &lua_asynPortDriver::index_get);
+	lua_apd.fun("__newindex", &lua_asynPortDriver::index_set);
 	
-	LuaClass<_aocWrapper> lua_aoc(L, "asynOctetClient");
-	lua_aoc.ctor<void, std::string, int, std::string>("find", &_aocWrapper::find, &_aocWrapper::destroy);
-	lua_aoc.fun("read", &_aocWrapper::read);
-	lua_aoc.fun("write", &_aocWrapper::write);
-	lua_aoc.fun("writeread", &_aocWrapper::writeread);
-	lua_aoc.fun("trace", &_aocWrapper::trace);
-	lua_aoc.fun("traceio", &_aocWrapper::traceio);
-	lua_aoc.fun("setOption", &_aocWrapper::option);
-	lua_aoc.fun("__index", &_aocWrapper::index_get);
-	lua_aoc.fun("__newindex", &_aocWrapper::index_set);
+	LuaClass<lua_asynOctetClient> lua_aoc(L, "asynOctetClient");
+	lua_aoc.ctor<void, std::string, int, std::string>("find", &lua_asynOctetClient::find, &lua_asynOctetClient::destroy);
+	lua_aoc.fun("read", &lua_asynOctetClient::read);
+	lua_aoc.fun("write", &lua_asynOctetClient::write);
+	lua_aoc.fun("writeread", &lua_asynOctetClient::writeread);
+	lua_aoc.fun("trace", &lua_asynOctetClient::trace);
+	lua_aoc.fun("traceio", &lua_asynOctetClient::traceio);
+	lua_aoc.fun("setOption", &lua_asynOctetClient::option);
+	lua_aoc.fun("__index", &lua_asynOctetClient::index_get);
+	lua_aoc.fun("__newindex", &lua_asynOctetClient::index_set);
 	
 	LuaModule lua_asyn(L, "asyn");
 	lua_asyn.fun("setTrace", l_setTrace);

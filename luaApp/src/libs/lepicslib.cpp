@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <epicsThread.h>
 #include <epicsExport.h>
-#include "luaEpics.h"
+#include "lepicslib.h"
 
 static int epics_get(lua_State* state, const char* pv_name, double timeout)
 {
