@@ -55,11 +55,7 @@ class lua_asynOctetClient
 		}
 		
 		static void destroy(lua_asynOctetClient* instance)    { delete instance; }
-		
-		std::string read(lua_State* state);
-		void write(lua_State* state);
-		std::string writeread(lua_State* state);
-		
+				
 		void trace(lua_State* state);
 		void traceio(lua_State* state);
 		int option(lua_State* state);

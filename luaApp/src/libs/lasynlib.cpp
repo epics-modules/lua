@@ -823,7 +823,6 @@ static int l_drivernewindex(lua_State* state)
 // # lua_asynOctetClient Functions #
 // #################################
 
-
 lua_asynOctetClient::lua_asynOctetClient(std::string port_name, int addr, std::string param)
 {
 	this->port = new asynOctetClient(port_name.c_str(), addr, param.c_str());
@@ -836,22 +835,23 @@ lua_asynOctetClient::lua_asynOctetClient(std::string port_name, int addr, std::s
 
 lua_asynOctetClient::~lua_asynOctetClient()    { delete this->port; }
 
-void lua_asynOctetClient::write(lua_State* state)   { asyn_write(state, this->port, LuaStack<std::string>::get(state, 1)); }
-
-std::string lua_asynOctetClient::read(lua_State* state)    
-{ 
-	int ret = asyn_read(state, this->port);
-	
-	if (ret)    { return LuaStack<std::string>::get(state, -1); }
-	else        { return ""; }
+static int laoc_write(lua_State* state)   
+{
+	lua_asynOctetClient* self = LuaStack<lua_asynOctetClient*>::get(state, 1);
+	return asyn_write(state, self->port, LuaStack<std::string>::get(state, 2)); 
 }
 
-std::string lua_asynOctetClient::writeread(lua_State* state) 
+static int laoc_read(lua_State* state)    
 { 
-	int ret = asyn_writeread(state, this->port, LuaStack<std::string>::get(state, 1));
-	
-	if (ret)   { return LuaStack<std::string>::get(state, -1); }
-	else       { return ""; }
+	lua_asynOctetClient* self = LuaStack<lua_asynOctetClient*>::get(state, 1);
+
+	return asyn_read(state, self->port);
+}
+
+static int laoc_writeread(lua_State* state) 
+{ 
+	lua_asynOctetClient* self = LuaStack<lua_asynOctetClient*>::get(state, 1);
+	return asyn_writeread(state, self->port, LuaStack<std::string>::get(state, 2));
 }
 
 void lua_asynOctetClient::trace(lua_State* state)
@@ -904,20 +904,32 @@ void lua_asynOctetClient::traceio(lua_State* state)
 
 int lua_asynOctetClient::option(lua_State* state)
 {
-	lua_settop(state, 2);
+	lua_settop(state, 3);
 	
-	std::string key = LuaStack<std::string>::get(state, 1);
-	std::string val = LuaStack<std::string>::get(state, 2);
+	std::string key = LuaStack<std::string>::get(state, 2);
+	std::string val = LuaStack<std::string>::get(state, 3);
 	
-	int status = asynSetOption(this->name.c_str(), this->addr, key.c_str(), val.c_str());
-	
-	return status;
+	return asynSetOption(this->name.c_str(), this->addr, key.c_str(), val.c_str());
 }
 
 int l_clientindex(lua_State* state)
 {	
 	lua_asynOctetClient* self = LuaStack<lua_asynOctetClient*>::get(state, 1);
 	std::string fieldname = std::string(lua_tostring(state, 2));
+		
+	// Get class table to check for existing functions
+	lua_getmetatable(state, -2);
+	lua_getfield(state, -1, fieldname.c_str()); 
+	
+	if (! lua_isnil(state, -1))
+	{		
+		// Remove metatable
+		lua_remove(state, -2);
+		
+		return 1;
+	}
+	
+	lua_pop(state, 2);
 	
 	if (fieldname == "OutTerminator")
 	{
@@ -1020,9 +1032,9 @@ int luaopen_asyn (lua_State *L)
 	
 	LuaClass<lua_asynOctetClient> lua_aoc(L, "asynOctetClient");
 	lua_aoc.ctor<void, std::string, int, std::string>("find", &lua_asynOctetClient::find, &lua_asynOctetClient::destroy);
-	lua_aoc.fun("read", &lua_asynOctetClient::read);
-	lua_aoc.fun("write", &lua_asynOctetClient::write);
-	lua_aoc.fun("writeread", &lua_asynOctetClient::writeread);
+	lua_aoc.fun("read", laoc_read);
+	lua_aoc.fun("write", laoc_write);
+	lua_aoc.fun("writeread", laoc_writeread);
 	lua_aoc.fun("trace", &lua_asynOctetClient::trace);
 	lua_aoc.fun("traceio", &lua_asynOctetClient::traceio);
 	lua_aoc.fun("setOption", &lua_asynOctetClient::option);
