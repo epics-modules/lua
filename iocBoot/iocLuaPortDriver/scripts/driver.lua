@@ -43,6 +43,7 @@ db.record("ai", P .. R .. "Value") {
 param.int32.write "INCREMENTOR" [[
 	out_val = out_val + value
 	self:writeParam("CURR_VAL", out_val)
+	self:callParamCallbacks()
 ]]
 
 db.record("ao", P .. R .. "Increment") {
@@ -62,6 +63,7 @@ db.record("ao", P .. R .. "Increment") {
 param.int32.write "SET_VALUE" [[
 	out_val = value
 	self:writeParam("CURR_VAL", out_val)
+	self:callParamCallbacks()
 ]]
 
 db.record("ao", P .. R .. "Set") {

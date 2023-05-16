@@ -11,14 +11,13 @@ iocInit()
 
 epics = require("epics")
 
-epics.get("x:y:Value")
+dbpr("x:y:Value")
 
 epics.put("x:y:Increment", 1)
-epics.get("x:y:Value")
+dbpr("x:y:Value")
 
 epics.put("x:y:Increment", 5)
-epics.get("x:y:Value")
-
+dbpr("x:y:Value")
 
 epics.put("x:y:Set", 5)
-epics.get("x:y:Value")
+dbpr("x:y:Value")
