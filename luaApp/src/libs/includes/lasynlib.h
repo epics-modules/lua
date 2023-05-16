@@ -15,12 +15,12 @@ class lua_asynPortDriver
 {
 	private:
 		lua_asynPortDriver(std::string driver_name, int addr);
+
 		
-	protected:
+	public:
 		asynPortDriver* driver = NULL;
 		int addr;
 		
-	public:
 		static lua_asynPortDriver* find(const std::string port)
 		{
 			asynPortDriver* try_find = (asynPortDriver*) findAsynPortDriver(port.c_str());
@@ -34,14 +34,6 @@ class lua_asynPortDriver
 		}
 		
 		static void destroy(lua_asynPortDriver* instance)    { delete instance; }
-		
-		int index_get(lua_State* state);
-		int index_set(lua_State* state);
-		
-		int readParam(lua_State* state);
-		int writeParam(lua_State* state);
-		
-		void callParamCallbacks(int addr);
 };
 
 
@@ -51,13 +43,12 @@ class lua_asynOctetClient
 		lua_asynOctetClient(std::string port_name, int addr, std::string param);
 		~lua_asynOctetClient();
 		
-	protected:
+	public:
 		asynOctetClient* port = NULL;
 		std::string name;
 		int addr;
 		std::string param;
 		
-	public:
 		static lua_asynOctetClient* find(std::string port_name, int addr, std::string param)
 		{
 			return new lua_asynOctetClient(port_name, addr, param);
@@ -65,16 +56,13 @@ class lua_asynOctetClient
 		
 		static void destroy(lua_asynOctetClient* instance)    { delete instance; }
 		
-		int read(lua_State* state);
-		int write(lua_State* state);
-		int writeread(lua_State* state);
+		std::string read(lua_State* state);
+		void write(lua_State* state);
+		std::string writeread(lua_State* state);
 		
-		int trace(lua_State* state);
-		int traceio(lua_State* state);
+		void trace(lua_State* state);
+		void traceio(lua_State* state);
 		int option(lua_State* state);
-		
-		int index_get(lua_State* state);
-		int index_set(lua_State* state);
 };
 
 #endif

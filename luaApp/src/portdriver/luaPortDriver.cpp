@@ -308,7 +308,7 @@ void luaPortDriver::getReadFunction(int index)
  * stack.
  */
 int luaPortDriver::callReadFunction()
-{
+{	
 	luaGenerateDriver(this->state, this->portName);
 
 	int status = lua_pcall(this->state, 1, 1, 0);
@@ -349,7 +349,7 @@ void luaPortDriver::getWriteFunction(int index)
 int luaPortDriver::callWriteFunction()
 {
 	luaGenerateDriver(this->state, this->portName);
-
+		
 	int status = lua_pcall(this->state, 2, 0, 0);
 
 	if (status)
@@ -364,7 +364,7 @@ int luaPortDriver::callWriteFunction()
 asynStatus luaPortDriver::writeOctet(asynUser* pasynuser, const char* value, size_t maxChars, size_t* actual)
 {
 	this->getWriteFunction(pasynuser->reason);
-
+	
 	if (lua_isnil(this->state, -1))
 	{
 		lua_pop(this->state, 1);
@@ -401,9 +401,9 @@ asynStatus luaPortDriver::writeFloat64(asynUser* pasynuser, epicsFloat64 value)
 }
 
 asynStatus luaPortDriver::writeInt32(asynUser* pasynuser, epicsInt32 value)
-{
+{	
 	this->getWriteFunction(pasynuser->reason);
-
+	
 	if (lua_isnil(this->state, -1))
 	{
 		lua_pop(this->state, 1);
@@ -412,7 +412,7 @@ asynStatus luaPortDriver::writeInt32(asynUser* pasynuser, epicsInt32 value)
 
 	lua_pushinteger(this->state, value);
 	if (this->callWriteFunction())    { return asynError; }
-
+	
 	return asynSuccess;
 }
 
@@ -469,7 +469,7 @@ asynStatus luaPortDriver::readFloat64(asynUser* pasynuser, epicsFloat64* value)
 
 
 asynStatus luaPortDriver::readInt32(asynUser* pasynuser, epicsInt32* value)
-{
+{	
 	this->getReadFunction(pasynuser->reason);
 
 	if (lua_isnil(this->state, 1))
