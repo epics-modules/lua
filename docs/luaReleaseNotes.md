@@ -7,6 +7,50 @@ nav_order: 2
 
 # lua Release Notes
 
+Release 3-1
+-----------
+
+### Version Changes
+- Lua language version updated to 5.4.6
+- luaaa library version updated to 1.0
+
+### Library Changes:
+
+Included libraries now have extended capabilities when built with a compiler that 
+supports C++11. To enable these capabilites, define CXX11_SUPPORT=YES in a 
+CONFIG_SITE.local file. Changes are noted below.
+
+#### asyn
+
+- Added setOption function
+- New include file, 'lasynlib.h' to allow external creation of lua asynPortDriver
+and asynOctetClient classes
+
+- **C++11 Only:** asynOctetClient and asynPortDriver changed to be proper c++ classes.
+Use asynOctetClient.find and asynPortDriver.find to construct instead of client and driver
+functions. 
+
+#### epics
+
+- New include file, 'lepicslib.h' to allow external creation of lua PV class
+- sleep function deprecated
+
+#### db
+
+- All static database access functions implemented
+- Can specify callback function that is triggered whenever a database is loaded
+
+#### osi
+
+- New library for os independent functions
+- sleep function moved here
+
+
+### Other Changes:
+
+- print function now uses epicsStdoutPrintf behind the scenes to allow output redirection
+- Added luaLoadLibrary function to trigger library load in a given lua_state
+
 
 Release 3-0-2
 -------------
