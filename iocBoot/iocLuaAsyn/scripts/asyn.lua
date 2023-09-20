@@ -4,18 +4,15 @@
 
 asyn = require("asyn")
 
--- These values get used when the port object is created
-WriteTimeout = 4.0
-OutTerminator = "\n\n"
-InTerminator = "\n"
-
 function get_html(port)
 
 	-- Creates a client object linking to the
 	-- asyn port with the given name. In and
 	-- Out terminators, as well as timeouts,
 	-- are copied from the global scope.
-	p = asyn.client(port)
+	p = asynOctetClient.find(port, 0, "")
+	p.InTerminator = "\n"
+	p.OutTerminator = "\n\n"
 		
 	-- Write a string across the port
 	p:write("GET / HTTP/1.0")
