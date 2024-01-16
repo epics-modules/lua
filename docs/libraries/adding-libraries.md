@@ -27,7 +27,7 @@ wildcard character with the library name you are looking for and check
 to see if that file exists. So, a package.cpath that is set as
 
 ```
-   "./?.so;/usr/local/?/init.so"
+"./?.so;/usr/local/?/init.so"
 ```
 
 would try to search for the files ./foo.so and /usr/local/foo/init.so
@@ -43,31 +43,31 @@ You just provide it with a list of pairs of function names and function
 pointers like so:
 
 ```c++
-   static int l_bar( lua_State *L )
-   {
-       lua_pushstring(L, "Hello, World");
-       return 1;
-   }
+static int l_bar( lua_State *L )
+{
+    lua_pushstring(L, "Hello, World");
+    return 1;
+}
 
-   int luaopen_foo( lua_State *L )
-   {
-       static const luaL_Reg foo[] = {
-           { "bar", l_bar },
-           { NULL, NULL } /* Sentinel item */
-       };
+int luaopen_foo( lua_State *L )
+{
+    static const luaL_Reg foo[] = {
+        { "bar", l_bar },
+        { NULL, NULL } /* Sentinel item */
+    };
 
-       luaL_newlib( L, foo );
-       return 1;
-   }
+    luaL_newlib( L, foo );
+    return 1;
+}
 ```
     
 Then you can use the above library like so:
 
 
 ```lua
-   foo = require("foo")
+foo = require("foo")
 
-   print(foo.bar())
+print(foo.bar())
 ```
 
 Note that luaopen_foo just returns a table with all the functions
@@ -93,21 +93,21 @@ the shell is to use the dbd’s registrar function.
 **foo.cpp**
 
 ```c++
-   static void fooRegister(void)
-   {
-       luaRegisterLibrary("foo", luaopen_foo);
-   }
+static void fooRegister(void)
+{
+    luaRegisterLibrary("foo", luaopen_foo);
+}
 
-   extern "C"
-   {
-       epicsExportRegistrar(fooRegister);
-   }
+extern "C"
+{
+    epicsExportRegistrar(fooRegister);
+}
 ```
 
 **foo.dbd**
 
 ```
-   registrar(fooRegister)
+registrar(fooRegister)
 ```
     
 Then when you load the dbd file into your IOC, lua is given the link
@@ -137,16 +137,16 @@ directly.
 **Example:**
 
 ```c++
-   static int l_bar( lua_State *L )
-   {
-       lua_pushstring(L, "Hello, World");
-       return 1;
-   }
+static int l_bar( lua_State *L )
+{
+    lua_pushstring(L, "Hello, World");
+    return 1;
+}
 
-   static void testRegister(void)
-   {
-       luaRegisterFunction("bar", l_bar);
-   }
+static void testRegister(void)
+{
+    luaRegisterFunction("bar", l_bar);
+}
 ```
     
 Then, you can call the function bar in the lua shell. Since these

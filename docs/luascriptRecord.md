@@ -227,7 +227,7 @@ specification
 
 
 ```
-    field(DTYP,"Soft Channel") 
+field(DTYP,"Soft Channel") 
 ```
 
 Operator Display Parameters

@@ -21,14 +21,14 @@ be treated as if they were defined lua functions.
 
 
 ```
-   luash> EPICS_VERSION_MAJOR
-   7
-   luash>
-   luash> epicsEnvShow
-   func_meta: 0x673150
-   luash>
-   luash> epicsEnvShow("EPICS_VERSION_MAJOR")
-   EPICS_VERSION_MAJOR=7
+luash> EPICS_VERSION_MAJOR
+7
+luash>
+luash> epicsEnvShow
+func_meta: 0x673150
+luash>
+luash> epicsEnvShow("EPICS_VERSION_MAJOR")
+EPICS_VERSION_MAJOR=7
 ```
     
 As well, the special directive '#ENABLE_HASH_COMMENTS' is provided. While lua normally
@@ -40,12 +40,12 @@ operations.
 
 
 ```
-   luash> #ENABLE_HASH_COMMENTS
-   Accepting iocsh-style comments
-   luash>
-   luash> #print("This won't print")
-   luash> print(#"Check len")
-   9
+luash> #ENABLE_HASH_COMMENTS
+Accepting iocsh-style comments
+luash>
+luash> #print("This won't print")
+luash> print(#"Check len")
+9
 ```
     
 Calling the Lua Shell From Inside The IOC Shell
@@ -75,7 +75,7 @@ include other scripts by using the ‘<’ character. Putting
 
 
 ```
-   < script.lua
+< script.lua
 ```
     
 Will attempt to find script.lua by the same process as detailed above
@@ -90,9 +90,9 @@ above, and the file had the following code within it
 
 
 ```lua
-   if (true) then
-       exit
-   end
+if (true) then
+    exit
+end
 ```
 
 That exit will end the reading of just the script.lua file and flow would
@@ -111,18 +111,18 @@ same parameters apply as when calling the command inside the IOC shell.
 So your main.cpp file might look like:
 
 ```c++
-   #include "luaShell.h"
-   
-   int main(int argc,char *argv[])
-   {
-       if(argc>=2) {
-           luash(argv[1]);
-           epicsThreadSleep(.2);
-       }
-       luash(NULL);
-       epicsExit(0);
-       return(0);
-   }
+#include "luaShell.h"
+
+int main(int argc,char *argv[])
+{
+    if(argc>=2) {
+        luash(argv[1]);
+        epicsThreadSleep(.2);
+    }
+    luash(NULL);
+    epicsExit(0);
+    return(0);
+}
 ```
 
 Common Lua Environments
@@ -146,18 +146,18 @@ above code changed to allow the interactive shell to reference code from
 the interpreted script would look like:
 
 ```c++
-   #include "luaShell.h"
-   
-   int main(int argc,char *argv[])
-   {
-       luashSetCommonState("default");
+#include "luaShell.h"
 
-       if(argc>=2) {
-           luash(argv[1]);
-           epicsThreadSleep(.2);
-       }
-       luash(NULL);
-       epicsExit(0);
-       return(0);
-   }
+int main(int argc,char *argv[])
+{
+    luashSetCommonState("default");
+
+    if(argc>=2) {
+        luash(argv[1]);
+        epicsThreadSleep(.2);
+    }
+    luash(NULL);
+    epicsExit(0);
+    return(0);
+}
 ```
