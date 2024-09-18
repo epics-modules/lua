@@ -82,7 +82,7 @@ jobs:
             name: "Windows master 7.0"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Automatic core dumper analysis
@@ -106,7 +106,7 @@ jobs:
     - name: Run main module tests
       run: python .ci/cue.py -T 15M test
     - name: Upload tapfiles Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: tapfiles ${{ matrix.name }}
         path: '**/O.*/*.tap'
