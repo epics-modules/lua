@@ -3,3 +3,4 @@ BASE="3.15"
 MODULES="asyn"
 
 ASYN="master"
+ASYN_HOOK=.github/workflows/TIRPC.sh
