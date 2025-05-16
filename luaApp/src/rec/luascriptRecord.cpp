@@ -331,7 +331,7 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
 		lua_rawseti(state, -2, elem + 1);
 	}
 
-	delete data;
+	delete[] data;
 	return 0;
 }
 
