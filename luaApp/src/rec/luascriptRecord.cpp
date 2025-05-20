@@ -61,6 +61,13 @@
 # define dbLinkIsVolatile(lnk) ((lnk)->type == CA_LINK)
 #endif
 
+enum TableOutput
+{
+	Integers,
+	Characters,
+	Numbers
+};
+
 /* Lua variable names for numeric and string fields */
 static const char NUM_NAMES[NUM_ARGS][2] = {"A","B","C","D","E","F","G","H","I","J"};
 static const char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","HH","II","JJ"};
@@ -132,7 +139,7 @@ static void logError(luascriptRecord* record)
 
 	errlogPrintf("Calling %s resulted in error: %s\n", record->call, err.c_str());
 
-	memcpy(record->err, err.c_str(), len(record->err));
+	strcpy(record->err, err.c_str());
 	db_post_events(record, &record->err, DBE_VALUE);
 }
 
@@ -314,7 +321,7 @@ static long loadNumbers(luascriptRecord* record)
  * the stack.
  */
 template <typename T>
-static int createTable(lua_State* state, DBLINK* field, short field_type, long* elements, bool integers)
+static int createTable(lua_State* state, DBLINK* field, short field_type, long* elements, TableOutput output_type)
 {
 	T *data = new T[*elements];
 	int status = dbGetLink(field, field_type, data, 0, elements);
@@ -322,11 +329,17 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
 	if (status) { return status; }
 
 	lua_createtable(state, *elements, 0);
-
+	
 	for (int elem = 0; elem < *elements; elem += 1)
 	{
-		if (integers)    { lua_pushinteger(state, data[elem]); }
-		else             { lua_pushnumber(state, data[elem]); }
+		if (output_type == Integers)         { lua_pushinteger(state, data[elem]); }
+		else if (output_type == Characters)  
+		{ 
+			char char_out[2] = { '\0' };
+			char_out[0] = data[elem];
+			lua_pushstring(state, char_out); 
+		}
+		else                                 { lua_pushnumber(state, data[elem]); }
 
 		lua_rawseti(state, -2, elem + 1);
 	}
@@ -472,35 +485,35 @@ static long loadStrings(luascriptRecord* record)
 			}
 			
 			case DBF_CHAR:
-				status = createTable<epicsInt8>(state, field, field_type, &elements, true);
+				status = createTable<epicsInt8>(state, field, field_type, &elements, Characters);
 				break;
 
 			case DBF_UCHAR:
-				status = createTable<epicsUInt8>(state, field, field_type, &elements, true);
+				status = createTable<epicsUInt8>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_SHORT:
-				status = createTable<epicsInt16>(state, field, field_type, &elements, true);
+				status = createTable<epicsInt16>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_USHORT:
-				status = createTable<epicsUInt16>(state, field, field_type, &elements, true);
+				status = createTable<epicsUInt16>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_LONG:
-				status = createTable<epicsInt32>(state, field, field_type, &elements, true);
+				status = createTable<epicsInt32>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_ULONG:
-				status = createTable<epicsUInt32>(state, field, field_type, &elements, true);
+				status = createTable<epicsUInt32>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_FLOAT:
-				status = createTable<epicsFloat32>(state, field, field_type, &elements, false);
+				status = createTable<epicsFloat32>(state, field, field_type, &elements, Numbers);
 				break;
 
 			case DBF_DOUBLE:
-				status = createTable<epicsFloat64>(state, field, field_type, &elements, false);
+				status = createTable<epicsFloat64>(state, field, field_type, &elements, Numbers);
 				break;
 
 			default:
