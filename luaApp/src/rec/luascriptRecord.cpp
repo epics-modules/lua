@@ -132,7 +132,7 @@ static void logError(luascriptRecord* record)
 
 	errlogPrintf("Calling %s resulted in error: %s\n", record->call, err.c_str());
 
-	strcpy(record->err, err.c_str());
+	memcpy(record->err, err.c_str(), len(record->err));
 	db_post_events(record, &record->err, DBE_VALUE);
 }
 
@@ -429,7 +429,7 @@ static long loadStrings(luascriptRecord* record)
 
 	for (unsigned index = 0; index < STR_ARGS; index += 1)
 	{
-		strncpy(*prev_str, strvalue, STRING_SIZE);
+		memcpy(*prev_str, strvalue, STRING_SIZE);
 
 		short field_type = 0;
 		long elements = 1;
@@ -440,10 +440,6 @@ static long loadStrings(luascriptRecord* record)
 
 		switch(field_type)
 		{
-			case DBF_CHAR:
-				elements = std::min(elements, (long) STRING_SIZE - 1);
-				//Intentional fall-through
-
 			case DBF_ENUM:
 			case DBF_STRING:
 			{
@@ -467,13 +463,17 @@ static long loadStrings(luascriptRecord* record)
 				}
 
 				if (status)    { break; }
-
-				strncpy(strvalue, tempstr, STRING_SIZE);
-
+				
+				memcpy(strvalue, tempstr, STRING_SIZE);
+				
 				lua_pushstring(state, tempstr);
 
 				break;
 			}
+			
+			case DBF_CHAR:
+				status = createTable<epicsInt8>(state, field, field_type, &elements, true);
+				break;
 
 			case DBF_UCHAR:
 				status = createTable<epicsUInt8>(state, field, field_type, &elements, true);
