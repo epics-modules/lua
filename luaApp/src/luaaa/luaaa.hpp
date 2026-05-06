@@ -1139,13 +1139,17 @@ namespace LUAAA_NS
             : m_state(state)
         {
             assert(state != nullptr);
-            assert(klassName == nullptr);
-
+            if (klassName != nullptr) {
+                assert(strcmp(klassName, name) == 0);
+            }
+            else
+            {
 #if LUAAA_WITHOUT_CPP_STDLIB
-            luaL_argcheck(state, (klassName == nullptr), 1, "LuaCalss<CLASS> name conflict, use LuaClass<CLASS, TAG> to identify them");
+                luaL_argcheck(state, (klassName == nullptr), 1, "LuaCalss<CLASS> name conflict, use LuaClass<CLASS, TAG> to identify them");
 #else
-            luaL_argcheck(state, (klassName == nullptr), 1, (std::string("C++ class `") + RTTI_CLASS_NAME(TCLASS) + "` bind to conflict lua name `" + name + "`, origin name: `" + klassName + "`. use use LuaClass<CLASS, TAG> to identify them.").c_str());
+                luaL_argcheck(state, (klassName == nullptr), 1, (std::string("C++ class `") + RTTI_CLASS_NAME(TCLASS) + "` bind to conflict lua name `" + name + "`, origin name: `" + klassName + "`. use use LuaClass<CLASS, TAG> to identify them.").c_str());
 #endif
+            }
 
             struct HelperClass {
                 static int f__clsgc(lua_State*) {
