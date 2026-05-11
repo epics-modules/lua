@@ -34,7 +34,8 @@ static long readData(struct stringinRecord* record)
 			const char* temp = lua_tostring(proto->state, -1);
 			lua_pop(proto->state, 1);
 			
-			strcpy(record->val, temp);
+			strncpy(record->val, temp, sizeof(record->val) - 1);
+			record->val[sizeof(record->val) - 1] = '\0';
 			return 2;
 		}
 		

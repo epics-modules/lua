@@ -14,7 +14,7 @@ extern "C"
 {
 	Protocol* parseINPOUT(const struct link* inpout)
 	{
-		Protocol* output = new Protocol;
+		Protocol* output = new Protocol();
 		
 		output->state = luaCreateState();
 		
@@ -29,11 +29,13 @@ extern "C"
 			return NULL;
 		}
 		
-		strcpy(output->filename, code.substr(0, first_split).c_str());
+		strncpy(output->filename, code.substr(0, first_split).c_str(), sizeof(output->filename) - 1);
+		output->filename[sizeof(output->filename) - 1] = '\0';
 		
 		if (last_split != first_split)
 		{
-			strcpy(output->portname, code.substr(last_split + 1, code.length() - last_split - 1).c_str());
+			strncpy(output->portname, code.substr(last_split + 1, code.length() - last_split - 1).c_str(), sizeof(output->portname) - 1);
+			output->portname[sizeof(output->portname) - 1] = '\0';
 		}
 		
 		std::string function = code.substr(first_split + 1, last_split - first_split - 1);
@@ -50,11 +52,13 @@ extern "C"
 			return NULL;
 		}
 		
-		strcpy(output->function_name, function.substr(0, start_params).c_str());
+		strncpy(output->function_name, function.substr(0, start_params).c_str(), sizeof(output->function_name) - 1);
+		output->function_name[sizeof(output->function_name) - 1] = '\0';
 		
 		if (has_start && has_end)
 		{
-			strcpy(output->param_list,    function.substr(start_params + 1, end_params - start_params - 1).c_str());
+			strncpy(output->param_list, function.substr(start_params + 1, end_params - start_params - 1).c_str(), sizeof(output->param_list) - 1);
+			output->param_list[sizeof(output->param_list) - 1] = '\0';
 		}
 		
 		if (luaLoadScript(output->state, output->filename))

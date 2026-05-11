@@ -139,7 +139,8 @@ static void logError(luascriptRecord* record)
 
 	errlogPrintf("Calling %s resulted in error: %s\n", record->call, err.c_str());
 
-	strcpy(record->err, err.c_str());
+	strncpy(record->err, err.c_str(), sizeof(record->err) - 1);
+	record->err[sizeof(record->err) - 1] = '\0';
 	db_post_events(record, &record->err, DBE_VALUE);
 }
 
