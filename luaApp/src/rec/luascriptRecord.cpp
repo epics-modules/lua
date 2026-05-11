@@ -6,6 +6,8 @@
 #include <recGbl.h>
 #include <errlog.h>
 #include <callback.h>
+#include <epicsMutex.h>
+#include <epicsGuard.h>
 
 #include <epicsExport.h>
 
@@ -95,6 +97,7 @@ typedef struct rpvtStruct {
 	short		caLinkStat; /* NO_CA_LINKS,CA_LINKS_ALL_OK,CA_LINKS_NOT_OK */
 	short		outlink_field_type;
 	bool        my_state;
+	epicsMutex* luaStateMutex;
 } rpvtStruct;
 
 extern "C"
@@ -724,6 +727,7 @@ static long init_record(dbCommon* common, int pass)
 		record->pcode = (char *) calloc(121, sizeof(char));
 		record->call = (char *) calloc(121, sizeof(char));
 		record->rpvt = (void *) calloc(1, sizeof(struct rpvtStruct));
+		((rpvtStruct*) record->rpvt)->luaStateMutex = new epicsMutex;
 
 		int index;
 		char** init_str = (char**) &record->paa;
@@ -882,6 +886,8 @@ static int incomplete(lua_State* L, int status)
 static void processCallback(void* data)
 {
 	luascriptRecord* record = (luascriptRecord*) data;
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+	epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
 
 	lua_State* state = (lua_State*) record->state;
 
@@ -1030,6 +1036,9 @@ static long process(dbCommon* common)
 	/* No need to process if there's no code */
 	if (record->code[0] == '\0')    { return 0; }
 
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+	epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
+
 	long status;
 
 	/* Clear any existing error message */
@@ -1072,15 +1081,18 @@ static long special(dbAddr* paddr, int after)
 	if (!after)    { return 0; }
 
 	luascriptRecord* record = (luascriptRecord*) paddr->precord;
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
 
 	int field_index = dbGetFieldIndex(paddr);
 
 	if (field_index == luascriptRecordCODE)
 	{
+		epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
 		initState(record);
 	}
 	else if (field_index == luascriptRecordFRLD && record->frld)
 	{
+		epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
 		memset(record->pcode, 0, 121);
 		initState(record);
 		record->frld = 0;
