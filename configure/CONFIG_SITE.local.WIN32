@@ -2,7 +2,3 @@ ifeq ($(SHARED_LIBRARIES), YES)
 	USR_CFLAGS += -DLUA_BUILD_AS_DLL
 	USR_CXXFLAGS += -DLUA_BUILD_AS_DLL
 endif
-
-
-# Uncomment the following if using a pre-VS2015 compiler
-# CXX11_SUPPORT = NO

@@ -7,7 +7,35 @@ include $(TOP)/configure/CONFIG
 
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
-# GCC Requires this
+# Auto-detect C++11 support from compiler version when not explicitly set.
+#
+# The TOOLCHAIN variables (MSVC_VER, GCC_MAJOR, GCC_MINOR, CLANG_MAJOR)
+# are extracted from compiler pre-defined macros by EPICS base and are
+# available here after include $(TOP)/configure/CONFIG.
+#
+# MSVC >= VS2015 (_MSC_VER >= 1900) has full C++11 support.
+# GCC  >= 4.8 has sufficient C++11 support.
+# Clang >= 3.3 has sufficient C++11 support.
+# vxWorks toolchains typically lack C++11 support (set CXX11_SUPPORT=NO
+# in configure/CONFIG_SITE.local.vxWorks to override).
+#
+# To override auto-detection, set CXX11_SUPPORT=YES or CXX11_SUPPORT=NO
+# in any configure/CONFIG_SITE.local* file.
+
+ifndef CXX11_SUPPORT
+  ifeq ($(CMPLR_CLASS),msvc)
+    ifdef MSVC_VER
+      CXX11_SUPPORT := $(shell $(PERL) -e 'print($(MSVC_VER) >= 1900 ? "YES" : "NO")')
+    else
+      CXX11_SUPPORT := YES
+    endif
+  else ifdef GCC_MAJOR
+    CXX11_SUPPORT := $(shell $(PERL) -e 'print(($(GCC_MAJOR) > 4 || ($(GCC_MAJOR) == 4 && $(GCC_MINOR) >= 8)) ? "YES" : "NO")')
+  else
+    CXX11_SUPPORT := YES
+  endif
+endif
+
 ifeq ($(CXX11_SUPPORT), YES)
   USR_CXXFLAGS_Darwin += -std=c++11
   USR_CXXFLAGS_Linux += -std=c++11
