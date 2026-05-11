@@ -456,7 +456,7 @@ static int l_execcode(lua_State* state)
 
 		if (new_out == NULL)
 		{
-			return luaL_error(state, "Error in opening file(%s)\n", new_out);
+			return luaL_error(state, "Error in opening file(%s)\n", out);
 		}
 
 		epicsSetThreadStdout(new_out);
