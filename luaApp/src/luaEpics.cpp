@@ -15,6 +15,8 @@
 #include <iocsh.h>
 #include <epicsStdio.h>
 #include <epicsFindSymbol.h>
+#include <epicsMutex.h>
+#include <epicsGuard.h>
 #include <epicsExport.h>
 
 #define epicsExportSharedSymbols
@@ -27,6 +29,9 @@ static std::vector<std::pair<const char*, lua_CFunction> > registered_libs;
 static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
 
 static std::map<std::string, lua_State*> named_states;
+
+static epicsMutex registryMutex;
+static epicsMutex namedStatesMutex;
 
 static FILE* temp_help = tmpfile();
 
@@ -261,6 +266,8 @@ epicsShareFunc void luaPopScope(lua_State* state)
  */
 epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction library_func)
 {
+	epicsGuard<epicsMutex> guard(registryMutex);
+
 	std::pair<const char*, lua_CFunction> temp(library_name, library_func);
 
 	registered_libs.push_back(temp);
@@ -275,6 +282,8 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
  */
 epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction function)
 {
+	epicsGuard<epicsMutex> guard(registryMutex);
+
 	std::pair<const char*, lua_CFunction> temp(function_name, function);
 
 	registered_funcs.push_back(temp);
@@ -289,6 +298,8 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
  */
 static int luaCheckLibrary(lua_State* state)
 {
+	epicsGuard<epicsMutex> guard(registryMutex);
+
 	std::string libname(lua_tostring(state, 1));
 
 	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
@@ -316,6 +327,8 @@ static int luaCheckLibrary(lua_State* state)
  */
 epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
+	epicsGuard<epicsMutex> guard(registryMutex);
+
 	/**
 	 * Add luaCheckLibrary as an additional function for
 	 * lua to use to find libraries when using 'require'
@@ -646,6 +659,8 @@ epicsShareFunc lua_State* luaCreateState()
 epicsShareFunc lua_State* luaNamedState(const char* name)
 {
 	if (! name) { return NULL; }
+
+	epicsGuard<epicsMutex> guard(namedStatesMutex);
 
 	std::string state_name(name);
 
