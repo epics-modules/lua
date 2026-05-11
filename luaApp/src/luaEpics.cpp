@@ -145,6 +145,8 @@ static void strtolua(lua_State* state, std::string text)
 	else if (type == LUA_TSTRING)  { lua_pushstring(state, lua_tostring(sandbox, -1)); }
 	else if (type == LUA_TBOOLEAN) { lua_pushboolean(state, lua_toboolean(sandbox, -1)); }
 	else                           { lua_pushstring(state, text.c_str()); }
+
+	lua_close(sandbox);
 }
 
 

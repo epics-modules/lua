@@ -188,7 +188,7 @@ static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct 
 		default:
 			dbCaGetNelements(out, &n_elements);
 
-			if (n_elements>sizeof(sval))    { n_elements = sizeof(sval); }
+			if (n_elements>(long)strlen(sval))    { n_elements = strlen(sval); }
 
 			if (((field_type==DBF_CHAR) || (field_type==DBF_UCHAR)) && (n_elements>1))
 			{

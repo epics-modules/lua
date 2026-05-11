@@ -420,7 +420,7 @@ asynStatus luaPortDriver::readOctet(asynUser* pasynuser, char* value, size_t max
 {
 	this->getReadFunction(pasynuser->reason);
 
-	if (lua_isnil(this->state, 1))
+	if (lua_isnil(this->state, -1))
 	{
 		lua_pop(this->state, 1);
 		return asynPortDriver::readOctet(pasynuser, value, maxChars, actual, eomReason);
@@ -448,7 +448,7 @@ asynStatus luaPortDriver::readFloat64(asynUser* pasynuser, epicsFloat64* value)
 {
 	this->getReadFunction(pasynuser->reason);
 
-	if (lua_isnil(this->state, 1))
+	if (lua_isnil(this->state, -1))
 	{
 		lua_pop(this->state, 1);
 		return asynPortDriver::readFloat64(pasynuser, value);
@@ -472,7 +472,7 @@ asynStatus luaPortDriver::readInt32(asynUser* pasynuser, epicsInt32* value)
 {	
 	this->getReadFunction(pasynuser->reason);
 
-	if (lua_isnil(this->state, 1))
+	if (lua_isnil(this->state, -1))
 	{
 		lua_pop(this->state, 1);
 		return asynPortDriver::readInt32(pasynuser, value);
@@ -483,7 +483,7 @@ asynStatus luaPortDriver::readInt32(asynUser* pasynuser, epicsInt32* value)
 	if (! lua_isnil(this->state, -1))
 	{
 		epicsInt32 retval = lua_tointeger(this->state, -1);
-		lua_pop(this->state, -1);
+		lua_pop(this->state, 1);
 
 		*value = retval;
 	}

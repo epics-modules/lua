@@ -79,7 +79,7 @@ static int epics_get(lua_State* state, const char* pv_name, double timeout)
 		{
 			struct dbr_time_char val;
 
-			status = ca_get(DBR_TIME_ENUM, id, &val);
+			status = ca_get(DBR_TIME_CHAR, id, &val);
 
 			SEVCHK(status, NULL);
 
