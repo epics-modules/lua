@@ -17,6 +17,7 @@
 #endif
 
 #include <epicsExport.h>
+#include <epicsGuard.h>
 #include "luaPortDriver.h"
 #include "luaEpics.h"
 #include "lasynlib.h"
@@ -363,6 +364,7 @@ int luaPortDriver::callWriteFunction()
 
 asynStatus luaPortDriver::writeOctet(asynUser* pasynuser, const char* value, size_t maxChars, size_t* actual)
 {
+	epicsGuard<epicsMutex> guard(this->stateMutex);
 	this->getWriteFunction(pasynuser->reason);
 	
 	if (lua_isnil(this->state, -1))
@@ -386,6 +388,7 @@ asynStatus luaPortDriver::writeOctet(asynUser* pasynuser, const char* value, siz
 
 asynStatus luaPortDriver::writeFloat64(asynUser* pasynuser, epicsFloat64 value)
 {
+	epicsGuard<epicsMutex> guard(this->stateMutex);
 	this->getWriteFunction(pasynuser->reason);
 
 	if (lua_isnil(this->state, -1))
@@ -402,6 +405,7 @@ asynStatus luaPortDriver::writeFloat64(asynUser* pasynuser, epicsFloat64 value)
 
 asynStatus luaPortDriver::writeInt32(asynUser* pasynuser, epicsInt32 value)
 {	
+	epicsGuard<epicsMutex> guard(this->stateMutex);
 	this->getWriteFunction(pasynuser->reason);
 	
 	if (lua_isnil(this->state, -1))
@@ -418,6 +422,7 @@ asynStatus luaPortDriver::writeInt32(asynUser* pasynuser, epicsInt32 value)
 
 asynStatus luaPortDriver::readOctet(asynUser* pasynuser, char* value, size_t maxChars, size_t* actual, int* eomReason)
 {
+	epicsGuard<epicsMutex> guard(this->stateMutex);
 	this->getReadFunction(pasynuser->reason);
 
 	if (lua_isnil(this->state, -1))
@@ -446,6 +451,7 @@ asynStatus luaPortDriver::readOctet(asynUser* pasynuser, char* value, size_t max
 
 asynStatus luaPortDriver::readFloat64(asynUser* pasynuser, epicsFloat64* value)
 {
+	epicsGuard<epicsMutex> guard(this->stateMutex);
 	this->getReadFunction(pasynuser->reason);
 
 	if (lua_isnil(this->state, -1))
@@ -470,6 +476,7 @@ asynStatus luaPortDriver::readFloat64(asynUser* pasynuser, epicsFloat64* value)
 
 asynStatus luaPortDriver::readInt32(asynUser* pasynuser, epicsInt32* value)
 {	
+	epicsGuard<epicsMutex> guard(this->stateMutex);
 	this->getReadFunction(pasynuser->reason);
 
 	if (lua_isnil(this->state, -1))

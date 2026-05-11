@@ -3,6 +3,7 @@
 
 #include "asynPortDriver.h"
 #include "luaEpics.h"
+#include <epicsMutex.h>
 #include <map>
 #include <string>
 #include "epicsTypes.h"
@@ -30,6 +31,7 @@ class luaPortDriver : public asynPortDriver
 		int callWriteFunction();
 		
 		lua_State* state;
+		epicsMutex stateMutex;
 };
 
 int lnewdriver(lua_State* state);
