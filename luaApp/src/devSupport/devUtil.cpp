@@ -26,6 +26,8 @@ extern "C"
 		if (code.empty())
 		{
 			printf("Error parsing INP string, format is '@filename function [portname]'\n");
+			lua_close(output->state);
+			delete output;
 			return NULL;
 		}
 		
@@ -49,6 +51,8 @@ extern "C"
 		if ((has_start && !has_end) || (has_end && !has_start))
 		{
 			printf("Error parsing function parameters, format is 'function_name(param1,param2,...)'\n");
+			lua_close(output->state);
+			delete output;
 			return NULL;
 		}
 		
