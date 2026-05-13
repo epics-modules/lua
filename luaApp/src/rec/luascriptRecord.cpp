@@ -644,8 +644,10 @@ static void checkLinksCallback(CALLBACK* callback)
 
 	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
 
-	if (false)
+	if (!interruptAccept)
 	{
+		pvt->wd_id_1_LOCK = 1;
+		callbackRequestDelayed(&pvt->checkLinkCb, .5);
 	}
 	else
 	{
