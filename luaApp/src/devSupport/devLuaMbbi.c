@@ -44,6 +44,7 @@ static long readData(struct mbbiRecord* record)
 			if (! lua_isinteger(proto->state, -1))
 			{ 
 				lua_pop(proto->state, 1);
+				recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 				return -1;
 			}
 			
@@ -84,6 +85,7 @@ static long readData(struct mbbiRecord* record)
 				}
 			}
 			
+			recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 			return -1;
 		}
 		
@@ -93,6 +95,7 @@ static long readData(struct mbbiRecord* record)
 		
 		default:
 			lua_pop(proto->state, 1);
+			recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 			return -1;
 	}
 	

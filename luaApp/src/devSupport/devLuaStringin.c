@@ -54,6 +54,7 @@ static long readData(struct stringinRecord* record)
 		
 		default:
 			lua_pop(proto->state, 1);
+			recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 			return -1;
 	}
 	

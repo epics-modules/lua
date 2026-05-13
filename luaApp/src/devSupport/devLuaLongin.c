@@ -41,6 +41,7 @@ static long readData(struct longinRecord* record)
 			if (! lua_isinteger(proto->state, -1))
 			{ 
 				lua_pop(proto->state, 1);
+				recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 				return -1;
 			}
 			else
@@ -60,6 +61,7 @@ static long readData(struct longinRecord* record)
 		
 		default:
 			lua_pop(proto->state, 1);
+			recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 			return -1;
 	}
 	

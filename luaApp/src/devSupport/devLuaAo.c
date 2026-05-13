@@ -46,6 +46,7 @@ static long writeData(struct aoRecord* record)
 			
 		default:
 			lua_pop(proto->state, 1);
+			recGblSetSevr((dbCommon*) record, WRITE_ALARM, INVALID_ALARM);
 			return -1;
 	}
 	
