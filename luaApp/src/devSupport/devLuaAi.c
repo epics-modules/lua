@@ -40,13 +40,7 @@ static long readData(struct aiRecord* record)
 	{		
 		case LUA_TNUMBER:
 		{
-			double val = lua_tonumber(proto->state, -1);
-			
-			if (record->aslo != 0.0)    { val *= record->aslo; }
-			
-			val += record->aoff;
-			
-			record->val = val;
+			record->val = lua_tonumber(proto->state, -1);
 			record->udf = FALSE;
 			lua_pop(proto->state, 1);
 			return 2;
