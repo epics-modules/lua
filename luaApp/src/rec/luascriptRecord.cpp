@@ -990,6 +990,7 @@ static void processCallback(void* data)
 		lua_pop(state, 1);
 	}
 
+	recGblGetTimeStamp(record);
 	checkAlarms(record);
 	monitor(record);
 	recGblFwdLink(record);
