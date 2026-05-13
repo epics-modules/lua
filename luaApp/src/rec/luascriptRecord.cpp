@@ -902,8 +902,9 @@ static void processCallback(void* data)
 
 		if (incomplete(state, status))
 		{
-			record->pact = FALSE;
 			logError(record);
+			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
+			record->pact = FALSE;
 			return;
 		}
 	}
@@ -914,6 +915,7 @@ static void processCallback(void* data)
 	if (status)
 	{
 		logError(record);
+		recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
 		record->pact = FALSE;
 		return;
 	}
