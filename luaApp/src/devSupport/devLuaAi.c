@@ -47,6 +47,7 @@ static long readData(struct aiRecord* record)
 			val += record->aoff;
 			
 			record->val = val;
+			record->udf = FALSE;
 			lua_pop(proto->state, 1);
 			return 2;
 		}

@@ -44,6 +44,7 @@ static long readData(struct stringinRecord* record)
 			
 			strncpy(record->val, temp, sizeof(record->val) - 1);
 			record->val[sizeof(record->val) - 1] = '\0';
+			record->udf = FALSE;
 			return 2;
 		}
 		

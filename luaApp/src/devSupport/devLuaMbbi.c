@@ -57,6 +57,7 @@ static long readData(struct mbbiRecord* record)
 					{
 					if (record->mask)    { val &= record->mask; }
 					record->rval = val;
+					record->udf = FALSE;
 					lua_pop(proto->state, 1);
 					return 0;
 					}
@@ -64,6 +65,7 @@ static long readData(struct mbbiRecord* record)
 			}
 			
 			record->val = (short) val;
+			record->udf = FALSE;
 			lua_pop(proto->state, 1);
 			return 2;
 		}
@@ -77,6 +79,7 @@ static long readData(struct mbbiRecord* record)
 				if (strcmp((&record->zrst)[index], buffer) == 0)
 				{
 					record->val = (short) index;
+					record->udf = FALSE;
 					return 2;
 				}
 			}

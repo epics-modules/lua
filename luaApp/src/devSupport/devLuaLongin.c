@@ -47,6 +47,7 @@ static long readData(struct longinRecord* record)
 			{
 				long val = lua_tointeger(proto->state, -1);
 				record->val = val;
+				record->udf = FALSE;
 			
 				lua_pop(proto->state, 1);
 				return 2;

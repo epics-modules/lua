@@ -51,6 +51,7 @@ static long readData(struct biRecord* record)
 			    if (record->mask) val &= record->mask;
 			
 		    record->rval = val;
+		    record->udf = FALSE;
 		
 		    lua_pop(proto->state, 1);
 		    return 0;
@@ -65,12 +66,14 @@ static long readData(struct biRecord* record)
 			if (strcmp(record->znam, buffer) == 0)
 			{
 				record->val = 0;
+				record->udf = FALSE;
 				return 2;
 			}
 			
 			if (strcmp(record->onam, buffer) == 0)
 			{
 				record->val = 1;
+				record->udf = FALSE;
 				return 2;
 			}
 			
