@@ -20,7 +20,7 @@ typedef struct Protocol
 
 Protocol* parseINPOUT(const struct link* inpout);
 
-void runFunction(Protocol* proto);
+int runFunction(Protocol* proto);
 
 #ifdef __cplusplus
 }

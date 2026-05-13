@@ -27,7 +27,13 @@ static long writeData(struct boRecord* record)
 	
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
-	runFunction(proto);
+	
+	if (runFunction(proto))
+	{
+		recGblSetSevr((dbCommon*) record, WRITE_ALARM, INVALID_ALARM);
+		return -1;
+	}
+	
 	lua_pop(proto->state, 1);
 	return 0;
 }

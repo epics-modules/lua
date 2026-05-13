@@ -76,17 +76,20 @@ extern "C"
 		return output;
 	}
 	
-	void runFunction(Protocol* proto)
+	int runFunction(Protocol* proto)
 	{
 		int params = luaLoadParams(proto->state, proto->param_list);
 		
-		long status = lua_pcall(proto->state, params + 1, 1, 0);
+		int status = lua_pcall(proto->state, params + 1, 1, 0);
 		
 		if (status)
 		{
 			std::string err(lua_tostring(proto->state, -1));
+			lua_pop(proto->state, 1);
 			
 			printf("Calling %s in %s resulted in error: %s\n", proto->function_name, proto->filename, err.c_str());
 		}
+		
+		return status;
 	}
 }
