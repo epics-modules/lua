@@ -42,7 +42,7 @@ static long writeData(struct aoRecord* record)
 	{
 		case LUA_TNIL:
 			lua_pop(proto->state, 1);
-			return 2;
+			return 0;
 			
 		default:
 			lua_pop(proto->state, 1);
