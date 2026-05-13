@@ -55,16 +55,14 @@ struct {
     DEVSUPFUN init;
     DEVSUPFUN init_record;
     DEVSUPFUN get_ioint_info;
-    DEVSUPFUN read;
-    DEVSUPFUN special_linconv;
+    DEVSUPFUN write;
 } devLuaStringout = {
-    6,
+    5,
     NULL,
     NULL,
     initRecord,
     NULL,
-    writeData,
-    NULL
+    writeData
 };
 
 epicsExportAddress(dset, devLuaStringout);

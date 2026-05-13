@@ -118,15 +118,13 @@ struct {
     DEVSUPFUN init_record;
     DEVSUPFUN get_ioint_info;
     DEVSUPFUN read;
-    DEVSUPFUN special_linconv;
 } devLuaBi = {
-    6,
+    5,
     NULL,
     NULL,
     initRecord,
     NULL,
-    readData,
-    NULL
+    readData
 };
 
 epicsExportAddress(dset, devLuaBi);
