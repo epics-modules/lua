@@ -931,6 +931,7 @@ static void processCallback(void* data)
 		{
 			record->pval = record->val;
 			record->val = lua_tonumber(state, -1);
+			record->udf = std::isnan(record->val);
 
 			if (checkValUpdate(record))
 			{
@@ -944,6 +945,7 @@ static void processCallback(void* data)
 		{
 			strncpy(record->psvl, record->sval, STRING_SIZE);
 			strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
+			record->udf = FALSE;
 
 			if (checkSvalUpdate(record))
 			{
@@ -967,6 +969,7 @@ static void processCallback(void* data)
 			record->patp = record->atyp;
 
 			record->aval = convertTable(state, &record->asiz, &record->atyp);
+			record->udf = FALSE;
 
 			if (checkAvalUpdate(record))
 			{
