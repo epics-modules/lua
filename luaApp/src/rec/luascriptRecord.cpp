@@ -301,14 +301,11 @@ static long loadNumbers(luascriptRecord* record)
 
 	DBLINK* field = &record->inpa;
 	double* value = &record->a;
-	double* prev  = &record->pa;
 
 	long status = 0;
 
 	for (unsigned index = 0; index < NUM_ARGS; index += 1)
 	{
-		*prev = *value;
-
 		long newStatus = dbGetLink(field, DBR_DOUBLE, value, 0, 0);
 
 		if (!status)    { status = newStatus; }
@@ -317,7 +314,6 @@ static long loadNumbers(luascriptRecord* record)
 		lua_setglobal(state, NUM_NAMES[index]);
 
 		field++;
-		prev++;
 		value++;
 	}
 
@@ -452,8 +448,6 @@ static long loadStrings(luascriptRecord* record)
 
 	for (unsigned index = 0; index < STR_ARGS; index += 1)
 	{
-		memcpy(*prev_str, strvalue, STRING_SIZE);
-
 		short field_type = 0;
 		long elements = 1;
 
@@ -1344,7 +1338,10 @@ static void monitor(luascriptRecord* record)
 	for (unsigned index = 0; index < NUM_ARGS; index += 1)
 	{
 		if (*new_val != *old_val)
+		{
 			db_post_events(record, new_val, DBE_VALUE | DBE_LOG);
+			*old_val = *new_val;
+		}
 
 		new_val++;
 		old_val++;
@@ -1357,7 +1354,10 @@ static void monitor(luascriptRecord* record)
 	for (unsigned index = 0; index < STR_ARGS; index += 1)
 	{
 		if (strcmp(new_str, *old_str))
+		{
 			db_post_events(record, new_str, DBE_VALUE | DBE_LOG);
+			memcpy(*old_str, new_str, STRING_SIZE);
+		}
 
 		old_str++;
 		new_str += STRING_SIZE;
