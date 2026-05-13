@@ -79,6 +79,12 @@ static long init_record(dbCommon* common, int pass);
 static long process(dbCommon* common);
 static long special(dbAddr *paddr, int after);
 static long get_precision(const dbAddr* paddr, long* precision);
+static long get_units(dbAddr* paddr, char* units);
+static long get_graphic_double(dbAddr* paddr, struct dbr_grDouble* pgd);
+static long get_control_double(dbAddr* paddr, struct dbr_ctrlDouble* pcd);
+static long get_alarm_double(dbAddr* paddr, struct dbr_alDouble* pad);
+static void checkAlarms(luascriptRecord* record);
+static void monitor(luascriptRecord* record);
 
 typedef struct ScriptDSET
 {
@@ -115,14 +121,14 @@ rset luascriptRSET =
 	NULL,
 	NULL,
 	NULL,
-	NULL,
+	RECSUPFUN_CAST (get_units),
 	RECSUPFUN_CAST (get_precision),
 	NULL,
 	NULL,
 	NULL,
-	NULL,
-	NULL,
-	NULL,
+	RECSUPFUN_CAST (get_graphic_double),
+	RECSUPFUN_CAST (get_control_double),
+	RECSUPFUN_CAST (get_alarm_double),
 };
 
 epicsExportAddress(rset, luascriptRSET);
@@ -745,6 +751,10 @@ static long init_record(dbCommon* common, int pass)
 
 	setLinks(record);
 
+	record->lalm = record->val;
+	record->alst = record->val;
+	record->mlst = record->val;
+
 	return 0;
 }
 
@@ -938,7 +948,6 @@ static void processCallback(void* data)
 				record->pact = FALSE;
 				writeValue(record);
 				record->pact = TRUE;
-				db_post_events(record, &record->val, DBE_VALUE);
 			}
 		}
 		else if (rettype == LUA_TSTRING)
@@ -952,7 +961,6 @@ static void processCallback(void* data)
 				record->pact = FALSE;
 				writeValue(record);
 				record->pact = TRUE;
-				db_post_events(record, &record->sval, DBE_VALUE);
 			}
 		}
 		else if (rettype == LUA_TTABLE)
@@ -976,35 +984,14 @@ static void processCallback(void* data)
 				record->pact = FALSE;
 				writeValue(record);
 				record->pact = TRUE;
-				db_post_events(record, &record->aval, DBE_VALUE);
 			}
 		}
 
 		lua_pop(state, 1);
 	}
 
-	double* new_val = &record->a;
-	double* old_val = &record->pa;
-
-	for (unsigned index = 0; index < NUM_ARGS; index += 1)
-	{
-		if (*new_val != *old_val)    { db_post_events(record, new_val, DBE_VALUE); }
-
-		new_val++;
-		old_val++;
-	}
-
-	char*  new_str = (char*)  &record->aa;
-	char** old_str = (char**) &record->paa;
-
-	for (unsigned index = 0; index < STR_ARGS; index += 1)
-	{
-		if (strcmp(new_str, *old_str))    { db_post_events(record, new_str, DBE_VALUE); }
-
-		old_str++;
-		new_str += STRING_SIZE;
-	}
-
+	checkAlarms(record);
+	monitor(record);
 	recGblFwdLink(record);
 	record->pact = FALSE;
 }
@@ -1196,4 +1183,182 @@ static long get_precision(const dbAddr* paddr, long* precision)
 
 	recGblGetPrec(paddr, precision);
 	return 0;
+}
+
+static long get_units(dbAddr* paddr, char* units)
+{
+	luascriptRecord *record = (luascriptRecord *) paddr->precord;
+
+	strncpy(units, record->egu, DB_UNITS_SIZE);
+	return 0;
+}
+
+static long get_graphic_double(dbAddr* paddr, struct dbr_grDouble* pgd)
+{
+	luascriptRecord *record = (luascriptRecord *) paddr->precord;
+	int index = dbGetFieldIndex(paddr);
+
+	if (index == luascriptRecordVAL)
+	{
+		pgd->upper_disp_limit = record->hopr;
+		pgd->lower_disp_limit = record->lopr;
+	}
+	else
+	{
+		recGblGetGraphicDouble(paddr, pgd);
+	}
+
+	return 0;
+}
+
+static long get_control_double(dbAddr* paddr, struct dbr_ctrlDouble* pcd)
+{
+	luascriptRecord *record = (luascriptRecord *) paddr->precord;
+	int index = dbGetFieldIndex(paddr);
+
+	if (index == luascriptRecordVAL)
+	{
+		pcd->upper_ctrl_limit = record->hopr;
+		pcd->lower_ctrl_limit = record->lopr;
+	}
+	else
+	{
+		recGblGetControlDouble(paddr, pcd);
+	}
+
+	return 0;
+}
+
+static long get_alarm_double(dbAddr* paddr, struct dbr_alDouble* pad)
+{
+	luascriptRecord *record = (luascriptRecord *) paddr->precord;
+	int index = dbGetFieldIndex(paddr);
+
+	if (index == luascriptRecordVAL)
+	{
+		pad->upper_alarm_limit = record->hihi;
+		pad->upper_warning_limit = record->high;
+		pad->lower_warning_limit = record->low;
+		pad->lower_alarm_limit = record->lolo;
+	}
+	else
+	{
+		recGblGetAlarmDouble(paddr, pad);
+	}
+
+	return 0;
+}
+
+static void checkAlarms(luascriptRecord* record)
+{
+	double val, hyst, lalm;
+	double hihi, high, low, lolo;
+	unsigned short hhsv, hsv, lsv, llsv;
+
+	if (record->udf)
+	{
+		recGblSetSevr(record, UDF_ALARM, record->udfs);
+		return;
+	}
+
+	hihi = record->hihi;
+	high = record->high;
+	low  = record->low;
+	lolo = record->lolo;
+	hhsv = record->hhsv;
+	hsv  = record->hsv;
+	lsv  = record->lsv;
+	llsv = record->llsv;
+	val  = record->val;
+	hyst = record->hyst;
+	lalm = record->lalm;
+
+	if (hhsv && (val >= hihi || ((lalm == hihi) && (val >= hihi - hyst))))
+	{
+		if (recGblSetSevr(record, HIHI_ALARM, hhsv))
+			record->lalm = hihi;
+		return;
+	}
+
+	if (llsv && (val <= lolo || ((lalm == lolo) && (val <= lolo + hyst))))
+	{
+		if (recGblSetSevr(record, LOLO_ALARM, llsv))
+			record->lalm = lolo;
+		return;
+	}
+
+	if (hsv && (val >= high || ((lalm == high) && (val >= high - hyst))))
+	{
+		if (recGblSetSevr(record, HIGH_ALARM, hsv))
+			record->lalm = high;
+		return;
+	}
+
+	if (lsv && (val <= low || ((lalm == low) && (val <= low + hyst))))
+	{
+		if (recGblSetSevr(record, LOW_ALARM, lsv))
+			record->lalm = low;
+		return;
+	}
+
+	record->lalm = val;
+}
+
+static void monitor(luascriptRecord* record)
+{
+	unsigned monitor_mask = recGblResetAlarms(record);
+
+	/* VAL deadband checks */
+	double delta = record->mlst - record->val;
+	if (delta < 0.0) delta = -delta;
+	if (!(delta <= record->mdel))  /* handles NaN */
+		monitor_mask |= DBE_VALUE;
+
+	delta = record->alst - record->val;
+	if (delta < 0.0) delta = -delta;
+	if (!(delta <= record->adel))
+		monitor_mask |= DBE_LOG;
+
+	if (monitor_mask)
+		db_post_events(record, &record->val, monitor_mask);
+
+	if (monitor_mask & DBE_VALUE) record->mlst = record->val;
+	if (monitor_mask & DBE_LOG)   record->alst = record->val;
+
+	/* SVAL changes */
+	if (strcmp(record->sval, record->psvl))
+		db_post_events(record, &record->sval, DBE_VALUE | DBE_LOG);
+
+	/* AVAL changes */
+	if (record->aval && record->pavl &&
+	    (record->asiz != record->pasz || memcmp(record->aval, record->pavl, record->asiz)))
+		db_post_events(record, &record->aval, DBE_VALUE | DBE_LOG);
+	else if (record->aval && !record->pavl)
+		db_post_events(record, &record->aval, DBE_VALUE | DBE_LOG);
+
+	/* Input monitors (A-J) */
+	double* new_val = &record->a;
+	double* old_val = &record->pa;
+
+	for (unsigned index = 0; index < NUM_ARGS; index += 1)
+	{
+		if (*new_val != *old_val)
+			db_post_events(record, new_val, DBE_VALUE | DBE_LOG);
+
+		new_val++;
+		old_val++;
+	}
+
+	/* Input monitors (AA-JJ) */
+	char*  new_str = (char*)  &record->aa;
+	char** old_str = (char**) &record->paa;
+
+	for (unsigned index = 0; index < STR_ARGS; index += 1)
+	{
+		if (strcmp(new_str, *old_str))
+			db_post_events(record, new_str, DBE_VALUE | DBE_LOG);
+
+		old_str++;
+		new_str += STRING_SIZE;
+	}
 }
