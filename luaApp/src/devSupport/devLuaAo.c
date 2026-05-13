@@ -3,9 +3,11 @@
 #include "lua.h"
 
 #include <aoRecord.h>
-#include <epicsExport.h>
 #include <dbCommon.h>
 #include <devSup.h>
+#include <recGbl.h>
+#include <alarm.h>
+#include <epicsExport.h>
 
 
 static void pushRecord(struct aoRecord* record)
@@ -21,6 +23,12 @@ static long writeData(struct aoRecord* record)
 	int type;
 	double val = record->oval - record->aoff;
 	Protocol* proto = (Protocol*) record->dpvt;
+
+	if (!proto)
+	{
+		recGblSetSevr((dbCommon*) record, WRITE_ALARM, INVALID_ALARM);
+		return -1;
+	}
 
 	if (record->aslo != 0)    { val /= record->aslo; }
 	
@@ -50,6 +58,12 @@ static long initRecord (dbCommon* record)
 	aoRecord* ao = (aoRecord*) record;
 	
 	ao->dpvt = parseINPOUT(&ao->out);
+	
+	if (!ao->dpvt)
+	{
+		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
+		return -1;
+	}
 	
 	return 0;
 }

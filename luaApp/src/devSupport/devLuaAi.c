@@ -5,9 +5,11 @@
 #include "lua.h"
 
 #include <aiRecord.h>
-#include <epicsExport.h>
 #include <dbCommon.h>
 #include <devSup.h>
+#include <recGbl.h>
+#include <alarm.h>
+#include <epicsExport.h>
 
 static void pushRecord(struct aiRecord* record)
 {
@@ -21,6 +23,12 @@ static long readData(struct aiRecord* record)
 {
 	int type;
 	Protocol* proto = (Protocol*) record->dpvt;
+	
+	if (!proto)
+	{
+		recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
+		return -1;
+	}
 	
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
@@ -61,6 +69,12 @@ static long initRecord (dbCommon* record)
 	aiRecord* ai = (aiRecord*) record;
 	
 	ai->dpvt = parseINPOUT(&ai->inp);
+	
+	if (!ai->dpvt)
+	{
+		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
+		return -1;
+	}
 	
 	return 0;
 }

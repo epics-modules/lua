@@ -1,9 +1,11 @@
 #include "devUtil.h"
 
 #include <longoutRecord.h>
-#include <epicsExport.h>
 #include <dbCommon.h>
 #include <devSup.h>
+#include <recGbl.h>
+#include <alarm.h>
+#include <epicsExport.h>
 
 static void pushRecord(struct longoutRecord* record)
 {
@@ -16,6 +18,12 @@ static void pushRecord(struct longoutRecord* record)
 static long writeData(struct longoutRecord* record)
 {
 	Protocol* proto = (Protocol*) record->dpvt;
+	
+	if (!proto)
+	{
+		recGblSetSevr((dbCommon*) record, WRITE_ALARM, INVALID_ALARM);
+		return -1;
+	}
 	
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
@@ -31,6 +39,12 @@ static long initRecord (dbCommon* record)
 	longoutRecord* longout = (longoutRecord*) record;
 	
 	longout->dpvt = parseINPOUT(&longout->out);
+	
+	if (!longout->dpvt)
+	{
+		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
+		return -1;
+	}
 	
 	return 0;
 }
