@@ -1,0 +1,81 @@
+# Test databases for DTYP "lua" device support
+
+record(ai, "$(P)ai") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_double(42.5)")
+    field(SCAN, "Passive")
+}
+
+record(ao, "$(P)ao") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua write_noop")
+    field(SCAN, "Passive")
+}
+
+record(bi, "$(P)bi") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_one")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(SCAN, "Passive")
+}
+
+record(bo, "$(P)bo") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua write_noop")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(SCAN, "Passive")
+}
+
+record(longin, "$(P)longin") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_int(100)")
+    field(SCAN, "Passive")
+}
+
+record(longout, "$(P)longout") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua write_noop")
+    field(SCAN, "Passive")
+}
+
+record(mbbi, "$(P)mbbi") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_int(2)")
+    field(ZRST, "Zero")
+    field(ONST, "One")
+    field(TWST, "Two")
+    field(THST, "Three")
+    field(SCAN, "Passive")
+}
+
+record(mbbo, "$(P)mbbo") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua write_noop")
+    field(ZRST, "Zero")
+    field(ONST, "One")
+    field(TWST, "Two")
+    field(SCAN, "Passive")
+}
+
+record(stringin, "$(P)stringin") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_string")
+    field(SCAN, "Passive")
+}
+
+record(stringout, "$(P)stringout") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua write_noop")
+    field(SCAN, "Passive")
+}
+
+# Test bi with string return matching ONAM
+record(bi, "$(P)bi_str") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_on_string")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(SCAN, "Passive")
+}

@@ -1,0 +1,63 @@
+# Test databases for luascriptRecord
+
+# Numeric inputs for the luascript records
+record(ao, "$(P)setA") {
+    field(VAL,  "0")
+}
+
+record(ao, "$(P)setB") {
+    field(VAL,  "0")
+}
+
+# Test: inline CODE returning numeric sum
+record(luascript, "$(P)add") {
+    field(CODE, "return A + B")
+    field(INPA, "$(P)setA")
+    field(INPB, "$(P)setB")
+}
+
+# Test: inline CODE returning a string
+record(luascript, "$(P)str") {
+    field(CODE, "return 'hello'")
+}
+
+# Test: inline CODE returning a table (array)
+record(luascript, "$(P)tbl") {
+    field(CODE, "return {10, 20, 30}")
+}
+
+# Test: invalid Lua code to verify error handling
+record(luascript, "$(P)err") {
+    field(CODE, "this is not valid lua!!!")
+}
+
+# Test: file-based script with function call
+record(luascript, "$(P)file") {
+    field(CODE, "@luaScriptTest.lua test_add()")
+    field(INPA, "$(P)setA")
+    field(INPB, "$(P)setB")
+}
+
+# Test: string inputs accessible as AA, BB
+record(stringout, "$(P)setAA") {
+    field(VAL,  "world")
+}
+
+record(luascript, "$(P)strinp") {
+    field(CODE, "return 'hello ' .. AA")
+    field(INAA, "$(P)setAA")
+}
+
+# Test: output option On_Change
+record(luascript, "$(P)onchange") {
+    field(CODE, "return A")
+    field(INPA, "$(P)setA")
+    field(OOPT, "On Change")
+}
+
+# Test: asynchronous processing
+record(luascript, "$(P)async") {
+    field(CODE, "return A * 2")
+    field(INPA, "$(P)setA")
+    field(SYNC, "Async")
+}
