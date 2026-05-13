@@ -50,6 +50,19 @@ record(mbbi, "$(P)mbbi") {
     field(SCAN, "Passive")
 }
 
+# mbbi with defined state values to test RVAL->VAL conversion
+record(mbbi, "$(P)mbbi_rval") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_int(2)")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(ZRST, "Zero")
+    field(ONST, "One")
+    field(TWST, "Two")
+    field(SCAN, "Passive")
+}
+
 record(mbbo, "$(P)mbbo") {
     field(DTYP, "lua")
     field(OUT,  "@luaDtypTest.lua write_noop")

@@ -54,8 +54,9 @@ static void testBi(void)
     testDiag("===== DTYP lua: bi (integer return) =====");
 
     processRecord("test:bi");
-    /* Integer return sets RVAL; return 2 skips RVAL->VAL conversion */
+    /* Integer return sets RVAL; return 0 enables RVAL->VAL conversion */
     testdbGetFieldEqual("test:bi.RVAL", DBF_LONG, 1);
+    testdbGetFieldEqual("test:bi.VAL", DBF_LONG, 1);
 }
 
 static void testBiStringReturn(void)
@@ -90,11 +91,21 @@ static void testLongout(void)
 
 static void testMbbi(void)
 {
-    testDiag("===== DTYP lua: mbbi =====");
+    testDiag("===== DTYP lua: mbbi (no state values) =====");
 
     processRecord("test:mbbi");
-    /* mbbi device support returns 2 (skip conversion), sets VAL directly */
+    /* No ZRVL..FFVL defined: sets VAL directly, returns 2 */
     testdbGetFieldEqual("test:mbbi.VAL", DBF_LONG, 2);
+}
+
+static void testMbbiRval(void)
+{
+    testDiag("===== DTYP lua: mbbi (with state values, RVAL conversion) =====");
+
+    processRecord("test:mbbi_rval");
+    /* ZRVL..TWVL defined: sets RVAL, returns 0 for RVAL->VAL conversion */
+    testdbGetFieldEqual("test:mbbi_rval.RVAL", DBF_LONG, 2);
+    testdbGetFieldEqual("test:mbbi_rval.VAL", DBF_LONG, 2);
 }
 
 static void testMbbo(void)
@@ -143,6 +154,7 @@ MAIN(luaDtypTest)
     testLongin();
     testLongout();
     testMbbi();
+    testMbbiRval();
     testMbbo();
     testStringin();
     testStringout();

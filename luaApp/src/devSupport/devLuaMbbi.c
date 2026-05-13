@@ -55,10 +55,10 @@ static long readData(struct mbbiRecord* record)
 				{
 					if ((&record->zrvl)[index])
 					{
-						if (record->mask)    { val &= record->mask; }
-						record->rval = val;
-						lua_pop(proto->state, 1);
-						return 2;
+					if (record->mask)    { val &= record->mask; }
+					record->rval = val;
+					lua_pop(proto->state, 1);
+					return 0;
 					}
 				}
 			}

@@ -50,10 +50,10 @@ static long readData(struct biRecord* record)
 			
 			    if (record->mask) val &= record->mask;
 			
-			    record->rval = val;
-			
-			    lua_pop(proto->state, 1);
-			    return 2;
+		    record->rval = val;
+		
+		    lua_pop(proto->state, 1);
+		    return 0;
 			}
 		}
 		
