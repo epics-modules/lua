@@ -56,6 +56,80 @@ int l_setfield(lua_State* state)
 	return 0;
 }
 
+int l_getfield(lua_State* state)
+{
+	const char* field_name = luaL_checkstring(state, 2);
+
+	/* Check if it's the "name" key stored in the table itself */
+	lua_getfield(state, 1, "name");
+	if (lua_isnil(state, -1))    { lua_pop(state, 1); return 0; }
+
+	const char* record_name = lua_tostring(state, -1);
+	lua_pop(state, 1);
+
+	/* If the key is "name", return it directly from the table */
+	if (strcmp(field_name, "name") == 0)
+	{
+		lua_pushstring(state, record_name);
+		return 1;
+	}
+
+	DBENTRY* entry = dbAllocEntry(*iocshPpdbbase);
+
+	if (dbFindRecord(entry, record_name))
+	{
+		dbFreeEntry(entry);
+		return 0;
+	}
+
+	if (dbFindField(entry, field_name))
+	{
+		dbFreeEntry(entry);
+		return 0;
+	}
+
+	char* val = dbGetString(entry);
+	dbFreeEntry(entry);
+
+	if (val)    { lua_pushstring(state, val); }
+	else        { lua_pushnil(state); }
+
+	return 1;
+}
+
+int l_putfield(lua_State* state)
+{
+	const char* field_name = luaL_checkstring(state, 2);
+	const char* value = luaL_checkstring(state, 3);
+
+	lua_getfield(state, 1, "name");
+	const char* record_name = lua_tostring(state, -1);
+	lua_pop(state, 1);
+
+	DBENTRY* entry = dbAllocEntry(*iocshPpdbbase);
+
+	if (dbFindRecord(entry, record_name))
+	{
+		dbFreeEntry(entry);
+		return luaL_error(state, "Unable to find record: %s\n", record_name);
+	}
+
+	if (dbFindField(entry, field_name))
+	{
+		dbFreeEntry(entry);
+		return luaL_error(state, "Unable to find %s field for record: %s\n", field_name, record_name);
+	}
+
+	if (dbPutString(entry, value))
+	{
+		dbFreeEntry(entry);
+		return luaL_error(state, "Error setting %s field on record %s to %s\n", field_name, record_name, value);
+	}
+
+	dbFreeEntry(entry);
+	return 0;
+}
+
 int l_record(lua_State* state)
 {
 	lua_settop(state, 2);
@@ -211,6 +285,8 @@ int luaopen_database (lua_State *L)
 	
 	static const luaL_Reg rec_meta[] = {
 		{"__call", l_setfield},
+		{"__index", l_getfield},
+		{"__newindex", l_putfield},
 		{NULL, NULL}
 	};
 
