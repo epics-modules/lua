@@ -92,3 +92,10 @@ record(bi, "$(P)bi_str") {
     field(ONAM, "On")
     field(SCAN, "Passive")
 }
+
+# Test: Lua function that errors -- should raise READ_ALARM
+record(ai, "$(P)ai_err") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_error")
+    field(SCAN, "Passive")
+}

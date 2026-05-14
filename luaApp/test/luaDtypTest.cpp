@@ -15,6 +15,7 @@
 #include <dbAccess.h>
 #include <errlog.h>
 #include <envDefs.h>
+#include <alarm.h>
 
 extern "C" {
     void luaTest_registerRecordDeviceDriver(struct dbBase *);
@@ -130,6 +131,33 @@ static void testStringout(void)
     testdbPutFieldOk("test:stringout.VAL", DBF_STRING, "output_test");
 }
 
+static void testUdfClearedOnRead(void)
+{
+    testDiag("===== DTYP lua: UDF cleared after successful read =====");
+
+    /* ai: UDF should be cleared after successful read */
+    processRecord("test:ai");
+    testdbGetFieldEqual("test:ai.UDF", DBF_SHORT, 0);
+
+    /* longin */
+    processRecord("test:longin");
+    testdbGetFieldEqual("test:longin.UDF", DBF_SHORT, 0);
+
+    /* stringin */
+    processRecord("test:stringin");
+    testdbGetFieldEqual("test:stringin.UDF", DBF_SHORT, 0);
+}
+
+static void testReadErrorSetsAlarm(void)
+{
+    testDiag("===== DTYP lua: read error sets alarm =====");
+
+    processRecord("test:ai_err");
+
+    testdbGetFieldEqual("test:ai_err.SEVR", DBF_SHORT, (int) INVALID_ALARM);
+    testdbGetFieldEqual("test:ai_err.STAT", DBF_SHORT, (int) READ_ALARM);
+}
+
 MAIN(luaDtypTest)
 {
     testPlan(0);
@@ -158,6 +186,8 @@ MAIN(luaDtypTest)
     testMbbo();
     testStringin();
     testStringout();
+    testUdfClearedOnRead();
+    testReadErrorSetsAlarm();
 
     testIocShutdownOk();
     testdbCleanup();

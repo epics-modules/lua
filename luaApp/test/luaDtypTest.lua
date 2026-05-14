@@ -23,3 +23,7 @@ end
 function write_noop(record)
     -- do nothing, just verify the call works
 end
+
+function read_error(record)
+    error("intentional test error")
+end

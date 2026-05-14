@@ -61,3 +61,22 @@ record(luascript, "$(P)async") {
     field(INPA, "$(P)setA")
     field(SYNC, "Async")
 }
+
+# Test: HIHI alarm
+record(luascript, "$(P)alarm_hihi") {
+    field(CODE, "return A")
+    field(INPA, "$(P)setA")
+    field(HIHI, "90")
+    field(HHSV, "MAJOR")
+    field(HIGH, "50")
+    field(HSV,  "MINOR")
+    field(LOW,  "-50")
+    field(LSV,  "MINOR")
+    field(LOLO, "-90")
+    field(LLSV, "MAJOR")
+}
+
+# Test: UDF clearing (starts as UDF=1 before first process)
+record(luascript, "$(P)udf") {
+    field(CODE, "return 42")
+}

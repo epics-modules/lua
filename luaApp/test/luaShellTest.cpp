@@ -117,6 +117,69 @@ static void testNullNamedState(void)
     testOk(state == NULL, "luaNamedState(NULL) returns NULL");
 }
 
+static void testRegisterState(void)
+{
+    testDiag("===== Lua shell: luaRegisterState =====");
+
+    /* Use luaNamedState to create a persistent state (it won't be
+     * closed during test shutdown since named states persist) */
+    lua_State* state = luaNamedState("test_reg");
+    testOk(state != NULL, "Named state created");
+
+    /* luaNamedState registers it, so it should be findable */
+    testOk(luaFindNamedState("test_reg") == state, "luaFindNamedState returns the state");
+
+    /* luaRegisterState with a different name */
+    luaRegisterState(state, "test_reg_alias");
+    testOk(luaFindNamedState("test_reg_alias") == state, "State accessible under alias name");
+
+    /* luaStateIsRegistered should find it */
+    testOk(luaStateIsRegistered(state) != 0, "State is registered");
+
+    /* A fresh unregistered state should not be registered */
+    lua_State* fresh = luaL_newstate();
+    testOk(luaStateIsRegistered(fresh) == 0, "Fresh state is not registered");
+    lua_close(fresh);
+}
+
+static void testFindNamedStateNotFound(void)
+{
+    testDiag("===== Lua shell: luaFindNamedState not found =====");
+
+    testOk(luaFindNamedState("nonexistent_state") == NULL,
+           "luaFindNamedState returns NULL for unknown name");
+}
+
+static void testLuaCmdTableMacros(void)
+{
+    testDiag("===== Lua shell: luaMacrosFromTable =====");
+
+    /* Use a bare Lua state (not luaCreateState) to avoid
+     * any EPICS library interactions during shutdown */
+    lua_State* state = luaL_newstate();
+    testOk(state != NULL, "State created for macro test");
+
+    if (state)
+    {
+        lua_newtable(state);
+        lua_pushstring(state, "dev1:");
+        lua_setfield(state, -2, "P");
+        lua_pushstring(state, "sensor");
+        lua_setfield(state, -2, "R");
+
+        std::string macros = luaMacrosFromTable(state, lua_gettop(state));
+        lua_pop(state, 1);
+
+        /* Order of keys in Lua tables is not guaranteed, check both */
+        testOk(macros.find("P=dev1:") != std::string::npos,
+               "macros contains P=dev1: : '%s'", macros.c_str());
+        testOk(macros.find("R=sensor") != std::string::npos,
+               "macros contains R=sensor : '%s'", macros.c_str());
+
+        lua_close(state);
+    }
+}
+
 MAIN(luaShellTest)
 {
     testPlan(0);
@@ -135,6 +198,9 @@ MAIN(luaShellTest)
     testLuaCmd();
     testLoadParams();
     testNullNamedState();
+    testRegisterState();
+    testFindNamedStateNotFound();
+    testLuaCmdTableMacros();
 
     testIocShutdownOk();
     testdbCleanup();
