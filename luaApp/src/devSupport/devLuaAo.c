@@ -21,7 +21,6 @@ static void pushRecord(struct aoRecord* record)
 static long writeData(struct aoRecord* record)
 {
 	int type;
-	double val = record->oval - record->aoff;
 	Protocol* proto = (Protocol*) record->dpvt;
 
 	if (!proto)
@@ -30,8 +29,6 @@ static long writeData(struct aoRecord* record)
 		return -1;
 	}
 
-	if (record->aslo != 0)    { val /= record->aslo; }
-	
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	
