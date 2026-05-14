@@ -112,7 +112,7 @@ recordtype(luascript)
 
 	field(CALL, DBF_NOACCESS)
 	{
-		prompt("Function call subtring")
+		prompt("Function call substring")
 		interest(4)
 		size(4)
 		extra("char* call")

@@ -14,7 +14,7 @@ allow for scriptable record support; the lua shell, an addition to
 or replacement of the ioc shell; and functions to allow easy use of
 lua in other modules.
 
-Currently, the lua module uses lua version 5.4.0. A reference manual
+Currently, the lua module uses lua version 5.4.6. A reference manual
 describing the details of the language can be [found here](https://www.lua.org/manual/5.4/)
 
 
