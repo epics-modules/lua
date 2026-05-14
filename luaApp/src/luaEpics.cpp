@@ -650,6 +650,26 @@ epicsShareFunc lua_State* luaNamedState(const char* name)
 
 
 /*
+ * Looks up a named lua_State without creating one.
+ * Returns NULL if no state is registered under the given name.
+ */
+epicsShareFunc lua_State* luaFindNamedState(const char* name)
+{
+	if (! name) { return NULL; }
+
+	epicsGuard<epicsMutex> guard(namedStatesMutex);
+
+	std::string state_name(name);
+
+	auto it = named_states.find(state_name);
+
+	if (it != named_states.end()) { return it->second; }
+
+	return NULL;
+}
+
+
+/*
  * Registers an existing lua_State under a name so that
  * it can be retrieved later with luaNamedState. This allows
  * luascript records to reference the calling state via

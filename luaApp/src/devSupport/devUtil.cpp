@@ -16,8 +16,6 @@ extern "C"
 	{
 		Protocol* output = new Protocol();
 		
-		output->state = luaCreateState();
-		
 		std::string code(inpout->value.instio.string);
 		
 		size_t first_split = code.find_first_of(" ");
@@ -26,7 +24,6 @@ extern "C"
 		if (code.empty())
 		{
 			printf("Error parsing INP string, format is '@filename function [portname]'\n");
-			lua_close(output->state);
 			delete output;
 			return NULL;
 		}
@@ -51,7 +48,6 @@ extern "C"
 		if ((has_start && !has_end) || (has_end && !has_start))
 		{
 			printf("Error parsing function parameters, format is 'function_name(param1,param2,...)'\n");
-			lua_close(output->state);
 			delete output;
 			return NULL;
 		}
@@ -64,6 +60,33 @@ extern "C"
 			strncpy(output->param_list, function.substr(start_params + 1, end_params - start_params - 1).c_str(), sizeof(output->param_list) - 1);
 			output->param_list[sizeof(output->param_list) - 1] = '\0';
 		}
+		
+		/*
+		 * If the filename doesn't resolve to a file on disk, treat it
+		 * as a named state (same convention as luascriptRecord's CODE
+		 * field). This allows DTYP "lua" records to share a Lua state
+		 * registered with luaRegisterState().
+		 *
+		 * INP/OUT format:
+		 *   "@script.lua function(params) [portname]"  -- file-based
+		 *   "@statename function(params)"              -- named state
+		 */
+		std::string located = luaLocateFile(std::string(output->filename));
+		
+		if (located.empty())
+		{
+			/* Not a file -- try as a named state */
+			lua_State* named = luaFindNamedState(output->filename);
+			
+			if (named)
+			{
+				output->state = named;
+				return output;
+			}
+		}
+		
+		/* File found (or no named state match) -- create a new state and load */
+		output->state = luaCreateState();
 		
 		if (luaLoadScript(output->state, output->filename))
 		{
