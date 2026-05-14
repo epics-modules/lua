@@ -293,58 +293,27 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 
 
 /*
- * Search function that gets added to lua. Gets called when "require" is used.
- * Searches for the named library in the list of registered libraries.
- */
-static int luaCheckLibrary(lua_State* state)
-{
-	epicsGuard<epicsMutex> guard(registryMutex);
-
-	std::string libname(lua_tostring(state, 1));
-
-	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
-	{
-		if (libname == std::string(index->first))
-		{
-			lua_pushcfunction(state, index->second);
-			lua_pushnil(state);
-			return 2;
-		}
-	}
-
-	std::stringstream funcname;
-	funcname << "\n\tno library registered '" << libname << "'";
-
-	lua_pushstring(state, funcname.str().c_str());
-	return 1;
-}
-
-
-/*
- * Called on every state created with luaCreateState. Adds the above
- * function into the list of lua package searchers and then registers
- * all the functions within the registered_funcs list.
+ * Called on every state created with luaCreateState. Adds registered
+ * libraries to package.preload so they are found by require(), and
+ * registers all standalone functions as globals.
  */
 epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
 	epicsGuard<epicsMutex> guard(registryMutex);
 
-	/**
-	 * Add luaCheckLibrary as an additional function for
-	 * lua to use to find libraries when using 'require'
-	 */
-	lua_getglobal(state, "package");
-	lua_getfield(state, -1, "searchers");
-	lua_len(state, -1);
-	int num_searchers = lua_tonumber(state, -1);
+	luaL_getsubtable(state, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+
+	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
+	{
+		lua_pushcfunction(state, index->second);
+		lua_setfield(state, -2, index->first);
+	}
+
 	lua_pop(state, 1);
-	lua_pushcfunction(state, luaCheckLibrary);
-	lua_seti(state, -2, num_searchers + 1);
-	lua_pop(state, 2);
 
 	for (reg_iter index = registered_funcs.begin(); index != registered_funcs.end(); index++)
 	{
-		lua_register( state, index->first, index->second);
+		lua_register(state, index->first, index->second);
 	}
 }
 
