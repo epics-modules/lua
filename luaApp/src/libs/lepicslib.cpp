@@ -9,197 +9,155 @@ static int epics_get(lua_State* state, const char* pv_name, double timeout)
 {
 	if (pv_name == NULL)    { return 0; }
 
-	int status = ca_context_create(ca_enable_preemptive_callback);
-	SEVCHK(status, NULL);
+	int created_context = 0;
+
+	if (!ca_current_context())
+	{
+		int status = ca_context_create(ca_enable_preemptive_callback);
+		SEVCHK(status, NULL);
+		created_context = 1;
+	}
 
 	chid id;
 
-	status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
+	int status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
 	SEVCHK(status, NULL);
 
-	switch (status)
+	if (status != ECA_NORMAL)
 	{
-		case ECA_STRTOBIG:
-			printf("PV name too long\n");
-			return 0;
-
-		case ECA_ALLOCMEM:
-			printf("Cannot allocate memory\n");
-			return 0;
-
-		case ECA_BADTYPE:
-			printf("Invalid DBR_XXXX type\n");
-			return 0;
-
-		default:
-			break;
+		if (created_context) ca_context_destroy();
+		return 0;
 	}
 
 	status = ca_pend_io(timeout);
-	SEVCHK (status, NULL);
+	SEVCHK(status, NULL);
+
+	if (status != ECA_NORMAL)
+	{
+		ca_clear_channel(id);
+		if (created_context) ca_context_destroy();
+		return 0;
+	}
+
+	int result = 0;
 
 	switch (ca_field_type(id))
 	{
 		case -1:
-			return 0;
+		case DBF_NO_ACCESS:
+			break;
 
 		case DBF_STRING:
 		{
 			struct dbr_time_string val;
-
 			status = ca_get(DBR_TIME_STRING, id, &val);
-
 			SEVCHK(status, NULL);
-
 			status = ca_pend_io(timeout);
-
-			if (status == ECA_TIMEOUT) { return 0; }
-
-			lua_pushstring(state, val.value);
+			if (status == ECA_NORMAL) { lua_pushstring(state, val.value); result = 1; }
 			break;
 		}
 
 		case DBF_ENUM:
 		{
 			struct dbr_time_enum val;
-
 			status = ca_get(DBR_TIME_ENUM, id, &val);
-
 			SEVCHK(status, NULL);
-
 			status = ca_pend_io(timeout);
-
-			if (status == ECA_TIMEOUT) { return 0; }
-
-			lua_pushnumber(state, val.value);
+			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
 			break;
 		}
 
 		case DBF_CHAR:
 		{
 			struct dbr_time_char val;
-
 			status = ca_get(DBR_TIME_CHAR, id, &val);
-
 			SEVCHK(status, NULL);
-
 			status = ca_pend_io(timeout);
-
-			if (status == ECA_TIMEOUT) { return 0; }
-
-			lua_pushnumber(state, val.value);
+			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
 			break;
 		}
 
 		case DBF_SHORT:
 		{
 			struct dbr_time_short val;
-
 			status = ca_get(DBR_TIME_SHORT, id, &val);
-
 			SEVCHK(status, NULL);
-
 			status = ca_pend_io(timeout);
-
-			if (status == ECA_TIMEOUT) { return 0; }
-
-			lua_pushnumber(state, val.value);
+			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
 			break;
 		}
 
 		case DBF_LONG:
 		{
 			struct dbr_time_long val;
-
 			status = ca_get(DBR_TIME_LONG, id, &val);
-
 			SEVCHK(status, NULL);
-
 			status = ca_pend_io(timeout);
-
-			if (status == ECA_TIMEOUT) { return 0; }
-
-			lua_pushnumber(state, val.value);
+			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
 			break;
 		}
 
 		case DBF_FLOAT:
 		{
 			struct dbr_time_float val;
-
 			status = ca_get(DBR_TIME_FLOAT, id, &val);
-
 			SEVCHK(status, NULL);
-
 			status = ca_pend_io(timeout);
-
-			if (status == ECA_TIMEOUT) { return 0; }
-
-			lua_pushnumber(state, val.value);
+			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
 			break;
 		}
 
 		case DBF_DOUBLE:
 		{
 			struct dbr_time_double val;
-
 			status = ca_get(DBR_TIME_DOUBLE, id, &val);
-
 			SEVCHK(status, NULL);
-
 			status = ca_pend_io(timeout);
-
-			if (status == ECA_TIMEOUT) { return 0; }
-
-			lua_pushnumber(state, val.value);
+			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
 			break;
 		}
-
-		case DBF_NO_ACCESS:
-			return 0;
 	}
-
-	SEVCHK(status, NULL);
 
 	ca_clear_channel(id);
 
-	ca_context_destroy();
+	if (created_context) ca_context_destroy();
 
-	return 1;
+	return result;
 }
 
 static int epics_put(lua_State* state, const char* pv_name, int offset)
 {
 	if (pv_name == NULL)    { return 0; }
 
-	int status = ca_context_create(ca_enable_preemptive_callback);
-	SEVCHK(status, NULL);
+	int created_context = 0;
+
+	if (!ca_current_context())
+	{
+		int status = ca_context_create(ca_enable_preemptive_callback);
+		SEVCHK(status, NULL);
+		created_context = 1;
+	}
 
 	chid id;
 
-	status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
+	int status = ca_create_channel(pv_name, NULL, NULL, 0, &id);
 	SEVCHK(status, NULL);
 
-	switch (status)
+	if (status != ECA_NORMAL)
 	{
-		case ECA_STRTOBIG:
-			printf("PV name too long\n");
-			return 0;
-
-		case ECA_ALLOCMEM:
-			printf("Cannot allocate memory\n");
-			return 0;
-
-		case ECA_BADTYPE:
-			printf("Invalid DBR_XXXX type\n");
-			return 0;
-
-		default:
-			break;
+		if (created_context) ca_context_destroy();
+		return 0;
 	}
 
 	status = ca_pend_io(0.1);
-	SEVCHK (status, NULL);
+	SEVCHK(status, NULL);
+
+	if (status != ECA_NORMAL)
+	{
+		ca_clear_channel(id);
+		if (created_context) ca_context_destroy();
+		return 0;
+	}
 
 	switch (lua_type(state, offset))
 	{
@@ -242,7 +200,7 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 
 	ca_clear_channel(id);
 
-	ca_context_destroy();
+	if (created_context) ca_context_destroy();
 
 	return 0;
 }
