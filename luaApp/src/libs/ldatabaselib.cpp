@@ -536,6 +536,169 @@ static int l_record_newindex(lua_State* state)
 	return 0;
 }
 
+/*
+ * Helper: converts a Lua table at the given stack index to a
+ * comma-separated "key=value,key=value" macro string suitable
+ * for dbLoadRecords. If global_macros is non-empty, it is
+ * prepended.
+ */
+static std::string macrosFromTable(lua_State* state, int index, const std::string& global_macros = "")
+{
+	std::string result = global_macros;
+	
+	lua_pushnil(state);
+	while (lua_next(state, index))
+	{
+		/* Skip non-string keys (e.g., integer keys from pattern arrays) */
+		if (lua_type(state, -2) == LUA_TSTRING)
+		{
+			const char* key = lua_tostring(state, -2);
+			const char* val = lua_tostring(state, -1);
+			
+			if (val)
+			{
+				if (!result.empty())    { result += ","; }
+				result += std::string(key) + "=" + std::string(val);
+			}
+		}
+		lua_pop(state, 1);
+	}
+	
+	return result;
+}
+
+/*
+ * db.loadRecords(filename, macros)
+ *
+ * Loads a database file with macros specified as a Lua table.
+ *   db.loadRecords("motor.db", {P="ioc:", M="m1", PORT="serial1"})
+ */
+static int l_loadRecords(lua_State* state)
+{
+	const char* filename = luaL_checkstring(state, 1);
+	
+	std::string macros;
+	
+	if (lua_istable(state, 2))
+	{
+		macros = macrosFromTable(state, 2);
+	}
+	else if (lua_isstring(state, 2))
+	{
+		/* Also accept a plain string for compatibility */
+		macros = std::string(lua_tostring(state, 2));
+	}
+	
+	int status = dbLoadRecords(filename, macros.empty() ? NULL : macros.c_str());
+	
+	lua_pushinteger(state, status);
+	return 1;
+}
+
+/*
+ * db.loadTemplate(filename, substitutions)
+ *
+ * Loads a database file multiple times with different macro sets.
+ *
+ * Variable style (each entry is a table of key=value macros):
+ *   db.loadTemplate("motor.db", {
+ *       {P="ioc:", M="m1", ADDR="0"},
+ *       {P="ioc:", M="m2", ADDR="1"},
+ *   })
+ *
+ * Pattern style (first entry names the variables, subsequent entries
+ * provide positional values):
+ *   db.loadTemplate("motor.db", {
+ *       pattern = {"P", "M", "ADDR"},
+ *       {"ioc:", "m1", "0"},
+ *       {"ioc:", "m2", "1"},
+ *   })
+ *
+ * Global macros (merged into every instance):
+ *   db.loadTemplate("motor.db", {
+ *       global = {P="ioc:", PORT="serial1"},
+ *       {M="m1", ADDR="0"},
+ *       {M="m2", ADDR="1"},
+ *   })
+ */
+static int l_loadTemplate(lua_State* state)
+{
+	const char* filename = luaL_checkstring(state, 1);
+	luaL_checktype(state, 2, LUA_TTABLE);
+	
+	/* Check for global macros */
+	std::string global_macros;
+	lua_getfield(state, 2, "global");
+	if (lua_istable(state, -1))
+	{
+		global_macros = macrosFromTable(state, lua_gettop(state));
+	}
+	lua_pop(state, 1);
+	
+	/* Check for pattern variable names */
+	int has_pattern = 0;
+	lua_getfield(state, 2, "pattern");
+	if (lua_istable(state, -1))
+	{
+		has_pattern = 1;
+	}
+	int pattern_idx = lua_gettop(state);
+	
+	/* Iterate array entries (integer-keyed) in the substitutions table */
+	int len = luaL_len(state, 2);
+	
+	for (int i = 1; i <= len; i++)
+	{
+		lua_geti(state, 2, i);
+		
+		if (!lua_istable(state, -1))
+		{
+			lua_pop(state, 1);
+			continue;
+		}
+		
+		int entry_idx = lua_gettop(state);
+		std::string macros = global_macros;
+		
+		if (has_pattern)
+		{
+			/* Pattern style: map positional values to variable names */
+			int npattern = luaL_len(state, pattern_idx);
+			
+			for (int j = 1; j <= npattern; j++)
+			{
+				lua_geti(state, pattern_idx, j);
+				const char* varname = lua_tostring(state, -1);
+				lua_pop(state, 1);
+				
+				lua_geti(state, entry_idx, j);
+				const char* val = lua_tostring(state, -1);
+				lua_pop(state, 1);
+				
+				if (varname && val)
+				{
+					if (!macros.empty())    { macros += ","; }
+					macros += std::string(varname) + "=" + std::string(val);
+				}
+			}
+		}
+		else
+		{
+			/* Variable style: entry is a table of key=value pairs */
+			macros = macrosFromTable(state, entry_idx, global_macros);
+		}
+		
+		dbLoadRecords(filename, macros.empty() ? NULL : macros.c_str());
+		
+		lua_pop(state, 1);  /* pop entry table */
+	}
+	
+	if (has_pattern)    { lua_pop(state, 1); }  /* pop pattern table */
+	else                { lua_pop(state, 1); }  /* pop nil from getfield("pattern") */
+	
+	return 0;
+}
+
 int luaopen_database (lua_State *L)
 {
 	/*
@@ -587,6 +750,8 @@ int luaopen_database (lua_State *L)
 	LuaModule dbmod (L, "db");
 	dbmod.fun("entry", genEntry);
 	dbmod.fun("record", genRecord);
+	dbmod.fun("loadRecords", l_loadRecords);
+	dbmod.fun("loadTemplate", l_loadTemplate);
 	
 	dbmod.fun("list", all_records);
 	

@@ -130,14 +130,26 @@ first being a name and the second a value. 'field' attempts to find the record
 field with the given name and then calls dbPutString to set the value. While 'info' 
 calls dbPutInfo to add a new info field with the given name and value to the record.
 
+Record fields can also be read and written using dot notation:
+
 ```lua
 rec = db.record("stringin", "x:y:z")
+
+-- Set fields
+rec.VAL = "test"
+rec.DESC = "My record"
+
+-- Read fields
+print(rec.VAL)     --> "test"
+print(rec.DESC)    --> "My record"
+
+-- Methods still work
 rec:field("VAL", "test")
 rec:info("autosave", "VAL")
 ```
 
 The class instance itself can also be called as a function, taking in a dictionary
-of name-vale pairs. In doing so, the 'field' function is called for each pair, 
+of name-value pairs. In doing so, the 'field' function is called for each pair, 
 passing through the names and values to the function.
 
 With lua syntactical sugar, you can chain together the record creation and the
@@ -154,6 +166,121 @@ db.record("ai", "x:y:z") {
 | - | - | - |
 | recordtype  | string | The typename of the record (ai, mbbo, calc, etc) Optional. If the typename is left out, constructor will operate only to find a record, not create one. |
 | recordname  | string | The name of the record. If the name already exists, the returned instance will refer to the existing record. If there is no record by that name, the constructor will create one. |
+
+<br>
+
+### db.loadRecords
+---
+
+```
+db.loadRecords (filename [, macros])
+```
+
+Loads an EPICS database file with optional macro substitutions. Macros can be
+provided as a Lua table of key-value pairs, which is more convenient than the
+traditional comma-separated string format.
+
+```lua
+-- Using a Lua table for macros
+db.loadRecords("motor.db", {P="ioc:", M="m1", PORT="serial1", ADDR="0"})
+
+-- Using a plain string (also supported)
+db.loadRecords("motor.db", "P=ioc:,M=m1,PORT=serial1,ADDR=0")
+
+-- No macros
+db.loadRecords("simple.db")
+```
+
+Returns 0 on success, non-zero on error.
+
+| Parameter | Type | Description |
+| - | - | - |
+| filename | string | Path to the database (.db) file to load |
+| macros | table or string | Optional. Macro substitutions as a table of key=value pairs or a comma-separated string |
+
+<br>
+
+### db.loadTemplate
+---
+
+```
+db.loadTemplate (filename, substitutions)
+```
+
+Loads a database file multiple times with different sets of macro substitutions,
+equivalent to the EPICS `dbLoadTemplate` function and `.substitutions` file format.
+This is useful for creating many similar record instances from a single template.
+
+Three styles of substitution are supported:
+
+**Variable style** -- each entry is a table of named macro values:
+
+```lua
+db.loadTemplate("motor.db", {
+    {P="ioc:", M="m1", PORT="serial1", ADDR="0"},
+    {P="ioc:", M="m2", PORT="serial1", ADDR="1"},
+    {P="ioc:", M="m3", PORT="serial2", ADDR="0"},
+})
+```
+
+**Pattern style** -- a `pattern` key names the macro variables, and each subsequent
+entry provides positional values. This mirrors the `pattern` directive in EPICS
+substitution files:
+
+```lua
+db.loadTemplate("motor.db", {
+    pattern = {"P", "M", "PORT", "ADDR"},
+    {"ioc:", "m1", "serial1", "0"},
+    {"ioc:", "m2", "serial1", "1"},
+    {"ioc:", "m3", "serial2", "0"},
+})
+```
+
+**Global macros** -- a `global` key provides macros that are merged into every
+instance. This mirrors the `global` directive in EPICS substitution files:
+
+```lua
+db.loadTemplate("motor.db", {
+    global = {P="ioc:", PORT="serial1"},
+    {M="m1", ADDR="0"},
+    {M="m2", ADDR="1"},
+    {M="m3", ADDR="2"},
+})
+```
+
+Global and pattern styles can be combined:
+
+```lua
+db.loadTemplate("motor.db", {
+    global  = {P="ioc:"},
+    pattern = {"M", "PORT", "ADDR", "DESC"},
+    {"m1", "serial1", "0", "Sample X"},
+    {"m2", "serial1", "1", "Sample Y"},
+    {"m3", "serial2", "0", "Detector Z"},
+})
+```
+
+Because this is Lua, you can use loops and computed values to generate
+substitution tables programmatically:
+
+```lua
+local motors = {}
+for i = 1, 10 do
+    table.insert(motors, {
+        P="ioc:", M="m"..i, PORT="serial1",
+        ADDR=tostring(i-1), DESC="Motor "..i
+    })
+end
+db.loadTemplate("motor.db", motors)
+```
+
+Internally, `db.loadTemplate` calls `dbLoadRecords` for each substitution entry,
+so the standard `dbLoadRecordsHook` mechanism fires for each instance.
+
+| Parameter | Type | Description |
+| - | - | - |
+| filename | string | Path to the database (.db or .template) file to load |
+| substitutions | table | A list of macro tables. May optionally contain `pattern` and/or `global` keys. |
 
 <br>
 
