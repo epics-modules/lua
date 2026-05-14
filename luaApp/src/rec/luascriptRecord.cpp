@@ -897,6 +897,8 @@ static void processCallback(void* data)
 
 	lua_State* state = (lua_State*) record->state;
 
+	int lua_error = 0;
+
 	lua_pushstring(state, (const char*) record->call);
 	int status = addreturn(state);
 
@@ -910,80 +912,84 @@ static void processCallback(void* data)
 		{
 			logError(record);
 			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
-			record->pact = FALSE;
-			return;
+			lua_error = 1;
 		}
 	}
 
-	lua_remove(state, 1);
-	status = lua_pcall(state, 0, 1, 0);
-
-	if (status)
+	if (!lua_error)
 	{
-		logError(record);
-		recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
-		record->pact = FALSE;
-		return;
+		lua_remove(state, 1);
+		status = lua_pcall(state, 0, 1, 0);
+
+		if (status)
+		{
+			logError(record);
+			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
+			lua_error = 1;
+		}
 	}
 
 	// Process the returned values
-	int top = lua_gettop(state);
-
-	if (top > 0)
+	if (!lua_error)
 	{
-		int rettype = lua_type(state, -1);
+		int top = lua_gettop(state);
 
-		if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
+		if (top > 0)
 		{
-			record->pval = record->val;
-			record->val = lua_tonumber(state, -1);
-			record->udf = std::isnan(record->val);
+			int rettype = lua_type(state, -1);
 
-			if (checkValUpdate(record))
+			if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
 			{
-				record->pact = FALSE;
-				writeValue(record);
-				record->pact = TRUE;
+				record->pval = record->val;
+				record->val = lua_tonumber(state, -1);
+				record->udf = std::isnan(record->val);
+
+				if (checkValUpdate(record))
+				{
+					record->pact = FALSE;
+					writeValue(record);
+					record->pact = TRUE;
+				}
 			}
+			else if (rettype == LUA_TSTRING)
+			{
+				strncpy(record->psvl, record->sval, STRING_SIZE);
+				strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
+				record->udf = FALSE;
+
+				if (checkSvalUpdate(record))
+				{
+					record->pact = FALSE;
+					writeValue(record);
+					record->pact = TRUE;
+				}
+			}
+			else if (rettype == LUA_TTABLE)
+			{
+				if (record->pavl != NULL)
+				{
+					if (record->patp == luascriptAVALType_Integer)       { delete [] ((int*) record->pavl); }
+					else if (record->patp == luascriptAVALType_Double)   { delete [] ((double*) record->pavl); }
+					else if (record->patp == luascriptAVALType_Char)     { delete [] ((char*) record->pavl); }
+				}
+
+				record->pavl = record->aval;
+				record->pasz = record->asiz;
+				record->patp = record->atyp;
+
+				record->aval = convertTable(state, &record->asiz, &record->atyp);
+				record->udf = FALSE;
+
+				if (checkAvalUpdate(record))
+				{
+					record->pact = FALSE;
+					writeValue(record);
+					record->pact = TRUE;
+				}
+			}
+
+			lua_pop(state, 1);
 		}
-		else if (rettype == LUA_TSTRING)
-		{
-			strncpy(record->psvl, record->sval, STRING_SIZE);
-			strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
-			record->udf = FALSE;
-
-			if (checkSvalUpdate(record))
-			{
-				record->pact = FALSE;
-				writeValue(record);
-				record->pact = TRUE;
-			}
-		}
-		else if (rettype == LUA_TTABLE)
-		{
-			if (record->pavl != NULL)
-			{
-				if (record->patp == luascriptAVALType_Integer)       { delete [] ((int*) record->pavl); }
-				else if (record->patp == luascriptAVALType_Double)   { delete [] ((double*) record->pavl); }
-				else if (record->patp == luascriptAVALType_Char)     { delete [] ((char*) record->pavl); }
-			}
-
-			record->pavl = record->aval;
-			record->pasz = record->asiz;
-			record->patp = record->atyp;
-
-			record->aval = convertTable(state, &record->asiz, &record->atyp);
-			record->udf = FALSE;
-
-			if (checkAvalUpdate(record))
-			{
-				record->pact = FALSE;
-				writeValue(record);
-				record->pact = TRUE;
-			}
-		}
-
-		lua_pop(state, 1);
 	}
 
 	recGblGetTimeStamp(record);
