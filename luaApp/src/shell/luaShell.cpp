@@ -716,3 +716,88 @@ static void luashRegister(void)
 epicsExportRegistrar(luashRegister);
 }
 
+
+/*
+ * Lua-callable wrapper for luaSpawn that accepts either
+ * a string or a table for macros.
+ *
+ *   luaSpawn("script.lua", "P=dev1:,PORT=SENSOR1")
+ *   luaSpawn("script.lua", {P="dev1:", PORT="SENSOR1"})
+ */
+int l_luaSpawn(lua_State* state)
+{
+	const char* filename = luaL_checkstring(state, 1);
+
+	std::string macros;
+
+	if (lua_istable(state, 2))
+	{
+		macros = luaMacrosFromTable(state, 2);
+	}
+	else if (lua_isstring(state, 2))
+	{
+		macros = std::string(lua_tostring(state, 2));
+	}
+
+	int status = luaSpawn(filename, macros.empty() ? NULL : macros.c_str());
+
+	lua_pushinteger(state, status);
+	return 1;
+}
+
+/*
+ * Lua-callable wrapper for luash that accepts either
+ * a string or a table for macros.
+ *
+ *   luash("script.lua", "P=dev1:,PORT=SENSOR1")
+ *   luash("script.lua", {P="dev1:", PORT="SENSOR1"})
+ */
+int l_luash(lua_State* state)
+{
+	const char* filename = luaL_checkstring(state, 1);
+
+	std::string macros;
+
+	if (lua_istable(state, 2))
+	{
+		macros = luaMacrosFromTable(state, 2);
+	}
+	else if (lua_isstring(state, 2))
+	{
+		macros = std::string(lua_tostring(state, 2));
+	}
+
+	int status = luashLoad(filename, macros.empty() ? NULL : macros.c_str());
+
+	lua_pushinteger(state, status);
+	return 1;
+}
+
+/*
+ * Lua-callable wrapper for luaCmd that accepts either
+ * a string or a table for macros.
+ *
+ *   luaCmd("epicsEnvSet('K','V')", "P=dev1:")
+ *   luaCmd("epicsEnvSet('K','V')", {P="dev1:"})
+ */
+int l_luaCmd(lua_State* state)
+{
+	const char* command = luaL_checkstring(state, 1);
+
+	std::string macros;
+
+	if (lua_istable(state, 2))
+	{
+		macros = luaMacrosFromTable(state, 2);
+	}
+	else if (lua_isstring(state, 2))
+	{
+		macros = std::string(lua_tostring(state, 2));
+	}
+
+	int status = luaCmd(command, macros.empty() ? NULL : macros.c_str());
+
+	lua_pushinteger(state, status);
+	return 1;
+}
+

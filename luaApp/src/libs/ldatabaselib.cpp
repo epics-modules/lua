@@ -537,37 +537,6 @@ static int l_record_newindex(lua_State* state)
 }
 
 /*
- * Helper: converts a Lua table at the given stack index to a
- * comma-separated "key=value,key=value" macro string suitable
- * for dbLoadRecords. If global_macros is non-empty, it is
- * prepended.
- */
-static std::string macrosFromTable(lua_State* state, int index, const std::string& global_macros = "")
-{
-	std::string result = global_macros;
-	
-	lua_pushnil(state);
-	while (lua_next(state, index))
-	{
-		/* Skip non-string keys (e.g., integer keys from pattern arrays) */
-		if (lua_type(state, -2) == LUA_TSTRING)
-		{
-			const char* key = lua_tostring(state, -2);
-			const char* val = lua_tostring(state, -1);
-			
-			if (val)
-			{
-				if (!result.empty())    { result += ","; }
-				result += std::string(key) + "=" + std::string(val);
-			}
-		}
-		lua_pop(state, 1);
-	}
-	
-	return result;
-}
-
-/*
  * db.loadRecords(filename, macros)
  *
  * Loads a database file with macros specified as a Lua table.
@@ -581,7 +550,7 @@ static int l_loadRecords(lua_State* state)
 	
 	if (lua_istable(state, 2))
 	{
-		macros = macrosFromTable(state, 2);
+		macros = luaMacrosFromTable(state, 2);
 	}
 	else if (lua_isstring(state, 2))
 	{
@@ -631,7 +600,7 @@ static int l_loadTemplate(lua_State* state)
 	lua_getfield(state, 2, "global");
 	if (lua_istable(state, -1))
 	{
-		global_macros = macrosFromTable(state, lua_gettop(state));
+		global_macros = luaMacrosFromTable(state, lua_gettop(state));
 	}
 	lua_pop(state, 1);
 	
@@ -685,7 +654,14 @@ static int l_loadTemplate(lua_State* state)
 		else
 		{
 			/* Variable style: entry is a table of key=value pairs */
-			macros = macrosFromTable(state, entry_idx, global_macros);
+			std::string entry_macros = luaMacrosFromTable(state, entry_idx);
+			
+			if (!global_macros.empty() && !entry_macros.empty())
+				macros = global_macros + "," + entry_macros;
+			else if (!entry_macros.empty())
+				macros = entry_macros;
+			else
+				macros = global_macros;
 		}
 		
 		dbLoadRecords(filename, macros.empty() ? NULL : macros.c_str());

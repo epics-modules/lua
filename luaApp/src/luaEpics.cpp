@@ -21,6 +21,7 @@
 
 #define epicsExportSharedSymbols
 #include "luaEpics.h"
+#include "luaShell.h"
 
 
 typedef std::vector<std::pair<const char*, lua_CFunction> >::iterator reg_iter;
@@ -255,6 +256,36 @@ epicsShareFunc void luaPopScope(lua_State* state)
 	lua_getmetatable(state, -1);
 	lua_setmetatable(state, -2);
 	lua_pop(state, 1);
+}
+
+
+/*
+ * Converts a Lua table at the given stack index to a comma-separated
+ * "key=value,key=value" macro string suitable for dbLoadRecords,
+ * luaSpawn, luash, etc. Only string keys are included.
+ */
+epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index)
+{
+	std::string result;
+
+	lua_pushnil(state);
+	while (lua_next(state, index))
+	{
+		if (lua_type(state, -2) == LUA_TSTRING)
+		{
+			const char* key = lua_tostring(state, -2);
+			const char* val = lua_tostring(state, -1);
+
+			if (val)
+			{
+				if (!result.empty())    { result += ","; }
+				result += std::string(key) + "=" + std::string(val);
+			}
+		}
+		lua_pop(state, 1);
+	}
+
+	return result;
 }
 
 
@@ -613,6 +644,9 @@ epicsShareFunc lua_State* luaCreateState()
 
 	lua_register(output, "print", l_replaceprint);
 	lua_register(output, "luaRegisterState", l_registerState);
+	lua_register(output, "luaSpawn", l_luaSpawn);
+	lua_register(output, "luash", l_luash);
+	lua_register(output, "luaCmd", l_luaCmd);
 
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
 	lua_pop(output, 1);

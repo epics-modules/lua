@@ -27,6 +27,10 @@ epicsShareFunc int epicsShareAPI luash(lua_State* state, const char* pathname);
 epicsShareFunc int epicsShareAPI luash(lua_State* state, const char* pathname, const char* macros);
 
 epicsShareFunc int epicsShareAPI luaCmd(lua_State* state, const char* command, const char* macros);
+
+int l_luaSpawn(lua_State* state);
+int l_luash(lua_State* state);
+int l_luaCmd(lua_State* state);
 #endif
 
 

@@ -57,6 +57,9 @@ epicsShareFunc int  luaStateIsRegistered(lua_State* state);
 
 #ifdef __cplusplus
 }
+
+epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index);
+
 #endif
 
 #endif
