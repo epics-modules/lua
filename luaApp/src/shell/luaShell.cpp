@@ -402,7 +402,7 @@ void spawn_thread_callback(void* arg)
 
 	if (status != LUA_OK)    { report(state, status); }
 
-	lua_close(state);
+	if (!luaStateIsRegistered(state))    { lua_close(state); }
 }
 
 static int l_execcode(lua_State* state)
@@ -576,7 +576,10 @@ static int luashBegin(const char* pathname, const char* macros, lua_State* state
 
 	luashBody(shell_state, pathname, macros);
 
-	if (check_state == NULL)    { lua_close(shell_state); }
+	if (check_state == NULL && !luaStateIsRegistered(shell_state))
+	{
+		lua_close(shell_state);
+	}
 
 	shell_state = NULL;
 
@@ -624,7 +627,7 @@ epicsShareFunc int epicsShareAPI luaCmd(lua_State* state, const char* command, c
 	//Pop iocsh_meta scope
 	luaPopScope(used_environ);
 
-	if (!state)    { lua_close(used_environ); }
+	if (!state && !luaStateIsRegistered(used_environ))    { lua_close(used_environ); }
 
 	return 0;
 }

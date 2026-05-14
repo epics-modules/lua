@@ -665,6 +665,25 @@ epicsShareFunc void luaRegisterState(lua_State* state, const char* name)
 }
 
 /*
+ * Returns non-zero if the given lua_State is registered
+ * in the named_states map (i.e., it should not be closed
+ * by the caller).
+ */
+epicsShareFunc int luaStateIsRegistered(lua_State* state)
+{
+	if (! state) { return 0; }
+
+	epicsGuard<epicsMutex> guard(namedStatesMutex);
+
+	for (auto it = named_states.begin(); it != named_states.end(); it++)
+	{
+		if (it->second == state) { return 1; }
+	}
+
+	return 0;
+}
+
+/*
  * Lua-callable wrapper for luaRegisterState.
  * Registers the calling Lua state under the given name.
  *
