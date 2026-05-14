@@ -51,6 +51,7 @@ epicsShareFunc void luaLoadRegistered(lua_State* state);
 
 epicsShareFunc lua_State* luaCreateState();
 epicsShareFunc lua_State* luaNamedState(const char* name);
+epicsShareFunc void luaRegisterState(lua_State* state, const char* name);
 
 #ifdef __cplusplus
 }

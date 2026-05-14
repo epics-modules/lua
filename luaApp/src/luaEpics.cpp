@@ -598,6 +598,8 @@ int luaopen_iocsh (lua_State* state)
 }
 
 
+static int l_registerState(lua_State* state);
+
 /*
  * Generates a new lua state for the caller,
  * binds in the defined epics libraries and
@@ -610,6 +612,7 @@ epicsShareFunc lua_State* luaCreateState()
 	luaLoadRegistered(output);
 
 	lua_register(output, "print", l_replaceprint);
+	lua_register(output, "luaRegisterState", l_registerState);
 
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
 	lua_pop(output, 1);
@@ -643,4 +646,35 @@ epicsShareFunc lua_State* luaNamedState(const char* name)
 	named_states[state_name] = output;
 
 	return output;
+}
+
+
+/*
+ * Registers an existing lua_State under a name so that
+ * it can be retrieved later with luaNamedState. This allows
+ * luascript records to reference the calling state via
+ * CODE = "@statename function()"
+ */
+epicsShareFunc void luaRegisterState(lua_State* state, const char* name)
+{
+	if (! state || ! name) { return; }
+
+	epicsGuard<epicsMutex> guard(namedStatesMutex);
+
+	named_states[std::string(name)] = state;
+}
+
+/*
+ * Lua-callable wrapper for luaRegisterState.
+ * Registers the calling Lua state under the given name.
+ *
+ *   luaRegisterState("mydriver")
+ */
+static int l_registerState(lua_State* state)
+{
+	const char* name = luaL_checkstring(state, 1);
+
+	luaRegisterState(state, name);
+
+	return 0;
 }
