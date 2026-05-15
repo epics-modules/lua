@@ -333,6 +333,54 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 
 
 
+/*
+ * File-mode execution: reads and echoes each line (matching iocsh
+ * behavior), accumulates the entire file into a single buffer, then
+ * compiles and executes it as one chunk. This gives proper local
+ * variable scoping across the entire file while preserving
+ * line-by-line echoing.
+ */
+static void execfile(lua_State* state, void* readlineContext)
+{
+	std::string buffer;
+
+	while (true)
+	{
+		const char* raw = epicsReadline(NULL, readlineContext);
+
+		if (raw == NULL)    { break; }
+
+		std::string line(raw);
+
+		/* Echo the line (matches iocsh file-mode behavior) */
+		printf("%s\n", raw);
+
+		/* Handle hash comments */
+		std::string trimmed(line);
+		while (trimmed.length() > 0 && isspace(trimmed[0]))    { trimmed.erase(0,1); }
+
+		if (trimmed.length() > 0 && trimmed[0] == '#')
+		{
+			lua_getglobal(state, "LEPICS_HASH_COMMENTS");
+			const char* yn = lua_tostring(state, -1);
+			lua_pop(state, 1);
+			if (yn && std::string(yn) == "YES")    { continue; }
+		}
+
+		buffer += line + "\n";
+	}
+
+	if (buffer.empty())    { return; }
+
+	int status = luaL_loadbuffer(state, buffer.c_str(), buffer.size(), "=stdin");
+
+	if (status == LUA_OK)    { status = docall(state, 0, LUA_MULTRET); }
+
+	if (status == LUA_BREAKSHELL)    { return; }
+	if (status != LUA_OK)            { report(state, status); }
+}
+
+
 static void luashBody(lua_State* state, const char* pathname, const char* macros)
 {
 	if (macros)    { luaLoadMacros(state, macros); }
@@ -382,8 +430,15 @@ static void luashBody(lua_State* state, const char* pathname, const char* macros
 	wasOkToBlock = epicsThreadIsOkToBlock();
     epicsThreadSetOkToBlock(1);
 
-	if (readlineContext)    { repl(state, readlineContext, prompt);	}
-	else                    { printf("Couldn't allocate command-line object.\n"); }
+	if (readlineContext)
+	{
+		if (pathname)    { execfile(state, readlineContext); }
+		else             { repl(state, readlineContext, prompt); }
+	}
+	else
+	{
+		printf("Couldn't allocate command-line object.\n");
+	}
 
 	if (fp)    { fclose(fp); }
 
