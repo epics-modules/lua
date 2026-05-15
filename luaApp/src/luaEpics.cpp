@@ -324,14 +324,52 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 
 
 /*
+ * Fallback searcher for libraries registered after the Lua state was
+ * created. This handles the case where a state is created early
+ * (e.g., the "shell" state in luashMain) before the IOC registrars
+ * have fired. When require() is called later, the preload table may
+ * be missing libraries that were registered in the meantime.
+ */
+static int luaCheckRegistered(lua_State* state)
+{
+	epicsGuard<epicsMutex> guard(registryMutex);
+
+	std::string libname(lua_tostring(state, 1));
+
+	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
+	{
+		if (libname == std::string(index->first))
+		{
+			/* Cache in package.preload for future calls */
+			luaL_getsubtable(state, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+			lua_pushcfunction(state, index->second);
+			lua_setfield(state, -2, index->first);
+			lua_pop(state, 1);
+
+			lua_pushcfunction(state, index->second);
+			lua_pushnil(state);
+			return 2;
+		}
+	}
+
+	std::stringstream funcname;
+	funcname << "\n\tno library registered '" << libname << "'";
+	lua_pushstring(state, funcname.str().c_str());
+	return 1;
+}
+
+
+/*
  * Called on every state created with luaCreateState. Adds registered
  * libraries to package.preload so they are found by require(), and
- * registers all standalone functions as globals.
+ * adds a fallback searcher for libraries registered after state
+ * creation. Also registers all standalone functions as globals.
  */
 epicsShareFunc void luaLoadRegistered(lua_State* state)
 {
 	epicsGuard<epicsMutex> guard(registryMutex);
 
+	/* Populate package.preload with currently registered libs */
 	luaL_getsubtable(state, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
 
 	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
@@ -341,6 +379,16 @@ epicsShareFunc void luaLoadRegistered(lua_State* state)
 	}
 
 	lua_pop(state, 1);
+
+	/* Add a fallback searcher for libs registered after state creation */
+	lua_getglobal(state, "package");
+	lua_getfield(state, -1, "searchers");
+	lua_len(state, -1);
+	int num_searchers = lua_tonumber(state, -1);
+	lua_pop(state, 1);
+	lua_pushcfunction(state, luaCheckRegistered);
+	lua_seti(state, -2, num_searchers + 1);
+	lua_pop(state, 2);
 
 	for (reg_iter index = registered_funcs.begin(); index != registered_funcs.end(); index++)
 	{
