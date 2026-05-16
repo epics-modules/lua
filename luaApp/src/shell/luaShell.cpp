@@ -38,9 +38,14 @@
 static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
-static epicsThreadPrivateId shellStateId;
+static epicsThreadPrivateId shellStateId = NULL;
 static lua_State* default_state = NULL;
 static epicsMutex defaultStateMutex;
+
+static void ensureShellStateId(void)
+{
+	if (!shellStateId)    { shellStateId = epicsThreadPrivateCreate(); }
+}
 
 static void luashBody(lua_State* state, const char* pathname, const char* macros);
 static int luashBegin(const char* pathname, const char* macros, lua_State* state);
@@ -548,6 +553,7 @@ static void newFunctionLoadedHook(const char* function_name, lua_CFunction funct
 {
 	if (previousFunctionHook)    { previousFunctionHook(function_name, function); }
 
+	ensureShellStateId();
 	lua_State* shell_state = (lua_State*) epicsThreadPrivateGet(shellStateId);
 	if (shell_state)    { lua_register(shell_state, function_name, function); }
 }
@@ -608,6 +614,7 @@ static void initState(lua_State* state)
  */
 static int luashBegin(const char* pathname, const char* macros, lua_State* state)
 {
+	ensureShellStateId();
 	lua_State* shell_state = (lua_State*) epicsThreadPrivateGet(shellStateId);
 
 	if (state)
@@ -783,7 +790,7 @@ epicsShareFunc void epicsShareAPI luashSetCommonState(const char* name)
 
 static void luashRegister(void)
 {
-	shellStateId = epicsThreadPrivateCreate();
+	ensureShellStateId();
 	iocshRegister(&luashFuncDef, luashCallFunc);
 	iocshRegister(&spawnFuncDef, spawnCallFunc);
 	iocshRegister(&luaCmdFuncDef, luaCmdCallFunc);
