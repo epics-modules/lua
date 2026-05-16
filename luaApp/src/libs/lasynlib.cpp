@@ -30,72 +30,106 @@ static asynPortDriver* find_driver(const char* port_name)
 
 static int asyn_read(lua_State* state, asynOctetClient* port)
 {
-	try
+	char errbuf[256] = { '\0' };
+
 	{
-		std::string output;
-		char buffer[128];
-
-		size_t numread;
-		int eomReason;
-
-		do
+		try
 		{
-			port->read(buffer, sizeof(buffer), &numread, &eomReason);
-			output += std::string(buffer, numread);
-		} while (eomReason & ASYN_EOM_CNT);
+			std::string output;
+			char buffer[128];
 
-		if (! output.empty())
-		{ 
-			lua_pushstring(state, output.c_str());
-			return 1;
+			size_t numread;
+			int eomReason;
+
+			do
+			{
+				port->read(buffer, sizeof(buffer), &numread, &eomReason);
+				output += std::string(buffer, numread);
+			} while (eomReason & ASYN_EOM_CNT);
+
+			if (! output.empty())
+			{ 
+				lua_pushstring(state, output.c_str());
+				return 1;
+			}
+		}
+		catch (std::runtime_error& e)
+		{
+			strncpy(errbuf, e.what(), sizeof(errbuf) - 1);
+		}
+		catch (...)
+		{
+			strncpy(errbuf, "Unexpected exception while reading", sizeof(errbuf) - 1);
 		}
 	}
-	catch (std::runtime_error& e)    { luaL_error(state, "%s\n", e.what()); }
-	catch (...)                      { luaL_error(state, "Unexpected exception while reading\n"); }
+
+	if (errbuf[0])    { return luaL_error(state, "%s", errbuf); }
 
 	lua_pushnil(state);
 	return 1;
 }
 
-static int asyn_write(lua_State* state, asynOctetClient* port, std::string data)
+static int asyn_write(lua_State* state, asynOctetClient* port, const char* data, size_t len)
 {
+	char errbuf[256] = { '\0' };
+
 	try
 	{
 		size_t numwrite;
-		port->write(data.c_str(), data.size(), &numwrite);
+		port->write(data, len, &numwrite);
 	}
-	catch (std::runtime_error& e)    { luaL_error(state, "%s\n", e.what()); }
-	catch (...)                      { luaL_error(state, "Unexpected exception while writing\n"); }
-	
+	catch (std::runtime_error& e)
+	{
+		strncpy(errbuf, e.what(), sizeof(errbuf) - 1);
+	}
+	catch (...)
+	{
+		strncpy(errbuf, "Unexpected exception while writing", sizeof(errbuf) - 1);
+	}
+
+	if (errbuf[0])    { return luaL_error(state, "%s", errbuf); }
+
 	return 0;
 }
 
-static int asyn_writeread(lua_State* state, asynOctetClient* client, std::string data)
+static int asyn_writeread(lua_State* state, asynOctetClient* client, const char* data, size_t len)
 {
-	try
-	{
-		std::string output;
-		size_t numwrite, numread;
-		char buffer[256];
-		int eomReason;
+	char errbuf[256] = { '\0' };
 
-		client->writeRead(data.c_str(), data.size(), buffer, sizeof(buffer), &numwrite, &numread, &eomReason);
-		output += std::string(buffer, numread);
-		
-		while (eomReason & ASYN_EOM_CNT)
+	{
+		try
 		{
-			client->read(buffer, sizeof(buffer), &numread, &eomReason);
+			std::string output;
+			size_t numwrite, numread;
+			char buffer[256];
+			int eomReason;
+
+			client->writeRead(data, len, buffer, sizeof(buffer), &numwrite, &numread, &eomReason);
 			output += std::string(buffer, numread);
+			
+			while (eomReason & ASYN_EOM_CNT)
+			{
+				client->read(buffer, sizeof(buffer), &numread, &eomReason);
+				output += std::string(buffer, numread);
+			}
+			
+			if (! output.empty())
+			{ 
+				lua_pushstring(state, output.c_str());
+				return 1;
+			}
 		}
-		
-		if (! output.empty())
-		{ 
-			lua_pushstring(state, output.c_str());
-			return 1;
+		catch (std::runtime_error& e)
+		{
+			strncpy(errbuf, e.what(), sizeof(errbuf) - 1);
+		}
+		catch (...)
+		{
+			strncpy(errbuf, "Unexpected exception during writeread", sizeof(errbuf) - 1);
 		}
 	}
-	catch (std::runtime_error& e)    { luaL_error(state, "%s\n", e.what()); }
-	catch (...)                      { luaL_error(state, "Unexpected exception during writeread\n"); }
+
+	if (errbuf[0])    { return luaL_error(state, "%s", errbuf); }
 
 	lua_pushnil(state);
 	return 1;
@@ -151,7 +185,7 @@ static int l_write(lua_State* state)
 	if (isnum)       { output.setTimeout(timeout); }
 	if (out_term)    { output.setOutputEos(out_term, strlen(out_term)); }
 	
-	return asyn_write(state, &output, data);
+	return asyn_write(state, &output, data, strlen(data));
 }
 
 static int l_writeread(lua_State* state)
@@ -183,7 +217,7 @@ static int l_writeread(lua_State* state)
 	if (out_term)    { client.setOutputEos(out_term, strlen(out_term)); }
 	if (in_term)     { client.setInputEos(in_term, strlen(in_term)); }
 
-	return asyn_writeread(state, &client, data);
+	return asyn_writeread(state, &client, data, strlen(data));
 }
 
 static int l_setOption(lua_State* state)
@@ -258,6 +292,17 @@ static int asyn_writeparam(lua_State* state, asynPortDriver* port, int addr, con
 	
 	port->getParamType(addr, index, &partype);
 	
+	/* Validate the Lua value before allocating asyn resources.
+	 * luaL_check* may longjmp on type error -- must happen before
+	 * createAsynUser so we don't leak the asynUser on failure. */
+	switch (partype)
+	{
+		case asynParamInt32:   luaL_checkinteger(state, val_index); break;
+		case asynParamFloat64: luaL_checknumber(state, val_index);  break;
+		case asynParamOctet:   luaL_checkstring(state, val_index);  break;
+		default: return 0;
+	}
+	
 	asynUser* pasynuser = pasynManager->createAsynUser(NULL, NULL);
 	pasynManager->connectDevice(pasynuser, port->portName, addr);
 	
@@ -269,7 +314,7 @@ static int asyn_writeparam(lua_State* state, asynPortDriver* port, int addr, con
 	{
 		case asynParamInt32:
 		{
-			epicsInt32 data = luaL_checkinteger(state, val_index);
+			epicsInt32 data = lua_tointeger(state, val_index);
 			
 			asynInt32* inter = (asynInt32*) interfaces->int32.pinterface;
 			inter->write(port, pasynuser, data);
@@ -279,7 +324,7 @@ static int asyn_writeparam(lua_State* state, asynPortDriver* port, int addr, con
 		
 		case asynParamFloat64:
 		{
-			epicsFloat64 data = luaL_checknumber(state, val_index);
+			epicsFloat64 data = lua_tonumber(state, val_index);
 			
 			asynFloat64* inter = (asynFloat64*) interfaces->float64.pinterface;
 			inter->write(port, pasynuser, data);
@@ -288,7 +333,7 @@ static int asyn_writeparam(lua_State* state, asynPortDriver* port, int addr, con
 		
 		case asynParamOctet:
 		{
-			const char* data = luaL_checkstring(state, val_index);
+			const char* data = lua_tostring(state, val_index);
 			
 			asynOctet* inter = (asynOctet*) interfaces->octet.pinterface;
 			
@@ -753,14 +798,14 @@ static int l_client_write(lua_State* state)
 {
 	ClientUD* ud = check_clientud(state, 1);
 	const char* data = luaL_checkstring(state, 2);
-	return asyn_write(state, ud->client, std::string(data));
+	return asyn_write(state, ud->client, data, strlen(data));
 }
 
 static int l_client_writeread(lua_State* state)
 {
 	ClientUD* ud = check_clientud(state, 1);
 	const char* data = luaL_checkstring(state, 2);
-	return asyn_writeread(state, ud->client, std::string(data));
+	return asyn_writeread(state, ud->client, data, strlen(data));
 }
 
 static int l_client_flush(lua_State* state)
@@ -915,14 +960,24 @@ static void push_clientproxy(lua_State* state, const char* portName, int addr, c
 	ud->portName[sizeof(ud->portName) - 1] = '\0';
 	ud->addr = addr;
 
-	try
 	{
-		ud->client = new asynOctetClient(portName, addr, param ? param : "");
-		ud->client->flush();
-	}
-	catch (std::exception& e)
-	{
-		luaL_error(state, "Failed to create asyn client for port '%s': %s", portName, e.what());
+		char errbuf[256] = { '\0' };
+
+		try
+		{
+			ud->client = new asynOctetClient(portName, addr, param ? param : "");
+			ud->client->flush();
+		}
+		catch (std::exception& e)
+		{
+			ud->client = NULL;
+			strncpy(errbuf, e.what(), sizeof(errbuf) - 1);
+		}
+
+		if (errbuf[0])
+		{
+			luaL_error(state, "Failed to create asyn client for port '%s': %s", portName, errbuf);
+		}
 	}
 
 	if (luaL_newmetatable(state, "lua_asynclient"))
