@@ -210,7 +210,7 @@ static int l_caget(lua_State* state)
 {
 	int num_ops = lua_gettop(state);
 
-	const char* pv_name = lua_tostring(state, 1);
+	const char* pv_name = luaL_checkstring(state, 1);
 	double timeout = 1.0;
 
 	if (num_ops == 2)    { timeout = luaL_checknumber(state, 2); }
@@ -220,7 +220,7 @@ static int l_caget(lua_State* state)
 
 static int l_caput(lua_State* state)
 {
-	const char* pv_name = lua_tostring(state, 1);
+	const char* pv_name = luaL_checkstring(state, 1);
 
 	return epics_put(state, pv_name, 2);
 }
@@ -244,6 +244,8 @@ static int l_pvgetval(lua_State* state)
 
 	const char* field_name = lua_tostring(state, 2);
 
+	if (!pv_name || !field_name)    { return 0; }
+
 	std::string full_name(pv_name);
 	full_name.append(".");
 	full_name.append(field_name);
@@ -258,6 +260,8 @@ static int l_pvsetval(lua_State* state)
 	lua_pop(state, 1);
 
 	const char* field_name = lua_tostring(state, 2);
+
+	if (!pv_name || !field_name)    { return 0; }
 
 	std::string full_name(pv_name);
 	full_name.append(".");

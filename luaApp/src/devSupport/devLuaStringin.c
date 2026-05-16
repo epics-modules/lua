@@ -45,12 +45,12 @@ static long readData(struct stringinRecord* record)
 		case LUA_TSTRING:
 		{
 			const char* temp = lua_tostring(proto->state, -1);
-			lua_pop(proto->state, 1);
 			
 			strncpy(record->val, temp, sizeof(record->val) - 1);
 			record->val[sizeof(record->val) - 1] = '\0';
 			record->udf = FALSE;
-			return 2;
+			lua_pop(proto->state, 1);
+			return 0;
 		}
 		
 		case LUA_TNIL:

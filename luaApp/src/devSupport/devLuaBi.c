@@ -67,12 +67,12 @@ static long readData(struct biRecord* record)
 		case LUA_TSTRING:
 		{
 			const char* buffer = lua_tostring(proto->state, -1);
-			lua_pop(proto->state, 1);
 			
 			if (strcmp(record->znam, buffer) == 0)
 			{
 				record->val = 0;
 				record->udf = FALSE;
+				lua_pop(proto->state, 1);
 				return 2;
 			}
 			
@@ -80,9 +80,11 @@ static long readData(struct biRecord* record)
 			{
 				record->val = 1;
 				record->udf = FALSE;
+				lua_pop(proto->state, 1);
 				return 2;
 			}
 			
+			lua_pop(proto->state, 1);
 			recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 			return -1;
 		}

@@ -79,17 +79,18 @@ static long readData(struct mbbiRecord* record)
 		case LUA_TSTRING:
 		{
 			const char* buffer = lua_tostring(proto->state, -1);
-			lua_pop(proto->state, 1);
 			for (index = 0; index < 16; index += 1)
 			{
 				if (strcmp((&record->zrst)[index], buffer) == 0)
 				{
 					record->val = (short) index;
 					record->udf = FALSE;
+					lua_pop(proto->state, 1);
 					return 2;
 				}
 			}
 			
+			lua_pop(proto->state, 1);
 			recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 			return -1;
 		}

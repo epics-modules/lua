@@ -56,7 +56,7 @@ static long readData(struct longinRecord* record)
 				record->udf = FALSE;
 			
 				lua_pop(proto->state, 1);
-				return 2;
+				return 0;
 			}
 		}
 		

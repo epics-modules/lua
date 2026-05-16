@@ -138,7 +138,8 @@ epicsExportAddress(rset, luascriptRSET);
 
 static void logError(luascriptRecord* record)
 {
-	std::string err(lua_tostring((lua_State*) record->state, -1));
+	const char* msg = lua_tostring((lua_State*) record->state, -1);
+	std::string err(msg ? msg : "unknown error");
 	lua_pop((lua_State*) record->state, 1);
 
 
@@ -253,8 +254,10 @@ static int initState(luascriptRecord* record)
 	std::pair<std::string, std::string> curr = parseCode(code);
 	std::pair<std::string, std::string> prev = parseCode(pcode);
 
-	strcpy(record->call, curr.second.c_str());
-	strcpy(record->pcode, record->code);
+	strncpy(record->call, curr.second.c_str(), 120);
+	record->call[120] = '\0';
+	strncpy(record->pcode, record->code, 120);
+	record->pcode[120] = '\0';
 
 	if (record->relo == luascriptRELO_NewFile)
 	{

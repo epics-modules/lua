@@ -47,6 +47,8 @@ epicsShareDef LUA_FUNCTION_LOAD_HOOK_ROUTINE luaLoadFunctionHook = NULL;
  */
 epicsShareFunc std::string luaLocateFile(std::string filename)
 {
+	if (filename.empty())    { return std::string(""); }
+
 	/* Check if the filename is an absolute path */
 	if (filename.at(0) == '/' && std::ifstream(filename.c_str()).good())    { return filename; }
 
@@ -118,7 +120,7 @@ epicsShareFunc int luaLoadScript(lua_State* state, const char* script_file)
  */
 epicsShareFunc int luaLoadString(lua_State* state, const char* lua_code)
 {
-	if (std::string(lua_code).empty())    { return -1; }
+	if (!lua_code || lua_code[0] == '\0')    { return -1; }
 
 	return luaL_loadstring(state, lua_code);
 }
@@ -293,7 +295,12 @@ epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index)
 		if (lua_type(state, -2) == LUA_TSTRING)
 		{
 			const char* key = lua_tostring(state, -2);
+
+			/* Duplicate the value before converting -- lua_tostring on a
+			 * non-string value modifies it in-place, which corrupts lua_next */
+			lua_pushvalue(state, -1);
 			const char* val = lua_tostring(state, -1);
+			lua_pop(state, 1);
 
 			if (val)
 			{
