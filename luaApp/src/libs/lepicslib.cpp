@@ -125,7 +125,7 @@ static int epics_get(lua_State* state, const char* pv_name, double timeout)
 	return result;
 }
 
-static int epics_put(lua_State* state, const char* pv_name, int offset)
+static int epics_put(lua_State* state, const char* pv_name, int offset, double timeout)
 {
 	if (pv_name == NULL)    { return 0; }
 
@@ -149,7 +149,7 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 		return 0;
 	}
 
-	status = ca_pend_io(0.1);
+	status = ca_pend_io(timeout);
 	SEVCHK(status, NULL);
 
 	if (status != ECA_NORMAL)
@@ -196,7 +196,7 @@ static int epics_put(lua_State* state, const char* pv_name, int offset)
 
 	SEVCHK(status, NULL);
 
-	ca_pend_io(0.1);
+	ca_pend_io(timeout);
 
 	ca_clear_channel(id);
 
@@ -221,8 +221,11 @@ static int l_caget(lua_State* state)
 static int l_caput(lua_State* state)
 {
 	const char* pv_name = luaL_checkstring(state, 1);
+	double timeout = 1.0;
 
-	return epics_put(state, pv_name, 2);
+	if (lua_gettop(state) >= 3)    { timeout = luaL_checknumber(state, 3); }
+
+	return epics_put(state, pv_name, 2, timeout);
 }
 
 static int l_epicssleep(lua_State* state)
@@ -267,7 +270,7 @@ static int l_pvsetval(lua_State* state)
 	full_name.append(".");
 	full_name.append(field_name);
 
-	return epics_put(state, full_name.c_str(), 3);
+	return epics_put(state, full_name.c_str(), 3, 1.0);
 }
 
 static int l_pvgetname(lua_State* state)

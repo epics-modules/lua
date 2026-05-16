@@ -642,9 +642,15 @@ int all_records(lua_State* state)
 			
 			lua_pushcfunction(state, genRecord);
 			lua_pushstring(state, rec_name);
-			lua_call(state, 1, 1);
 			
-			lua_seti(state, -2, index++);
+			if (lua_pcall(state, 1, 1, 0) == LUA_OK)
+			{
+				lua_seti(state, -2, index++);
+			}
+			else
+			{
+				lua_pop(state, 1);  /* pop error message */
+			}
 			
 			rec_status = dbNextRecord(secondary);
 		}

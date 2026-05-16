@@ -382,6 +382,7 @@ asynStatus luaPortDriver::writeOctet(asynUser* pasynuser, const char* value, siz
 		if (this->callWriteFunction())   { return asynError; }
 	}
 
+	this->callParamCallbacks();
 	return asynSuccess;
 }
 
@@ -400,6 +401,7 @@ asynStatus luaPortDriver::writeFloat64(asynUser* pasynuser, epicsFloat64 value)
 	lua_pushnumber(this->state, value);
 	if (this->callWriteFunction())    { return asynError; }
 
+	this->callParamCallbacks();
 	return asynSuccess;
 }
 
@@ -417,6 +419,7 @@ asynStatus luaPortDriver::writeInt32(asynUser* pasynuser, epicsInt32 value)
 	lua_pushinteger(this->state, value);
 	if (this->callWriteFunction())    { return asynError; }
 	
+	this->callParamCallbacks();
 	return asynSuccess;
 }
 
@@ -435,12 +438,15 @@ asynStatus luaPortDriver::readOctet(asynUser* pasynuser, char* value, size_t max
 
 	if (! lua_isnil(this->state, -1))
 	{
-		const char* retval = luaL_checklstring(this->state, -1, actual);
+		size_t len;
+		const char* retval = luaL_checklstring(this->state, -1, &len);
 
 		if (retval != NULL)
 		{
-			std::string output(retval);
-			output.copy(value, maxChars);
+			size_t copy_len = (len < maxChars) ? len : maxChars - 1;
+			memcpy(value, retval, copy_len);
+			value[copy_len] = '\0';
+			*actual = copy_len;
 		}
 
 		lua_pop(this->state, 1);

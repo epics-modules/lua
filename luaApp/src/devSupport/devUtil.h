@@ -12,10 +12,10 @@ extern "C" {
 typedef struct Protocol
 {
 	lua_State*  state;
-	char filename[62];
-	char function_name[62];
-	char portname[62];
-	char param_list[62];
+	char filename[256];
+	char function_name[256];
+	char portname[256];
+	char param_list[256];
 } Protocol;
 
 Protocol* parseINPOUT(const struct link* inpout);

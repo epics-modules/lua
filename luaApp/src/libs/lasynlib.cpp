@@ -360,13 +360,13 @@ static int asyn_readparam(lua_State* state, asynPortDriver* port, int addr, cons
 		
 		case asynParamOctet:
 		{
-			char buffer[256] = { '\0' };
+			char buffer[1024] = { '\0' };
 			
 			size_t num_trans;
 			int eomreason;
 			
 			asynOctet* inter = (asynOctet*) interfaces->octet.pinterface;
-			if (asynSuccess == inter->read(port, pasynuser, buffer, 256, &num_trans, &eomreason))
+			if (asynSuccess == inter->read(port, pasynuser, buffer, sizeof(buffer), &num_trans, &eomreason))
 			{
 				lua_pushstring(state, buffer);
 				result = 1;
@@ -519,7 +519,7 @@ static int l_setIntegerParam(lua_State* state)
 static int l_getIntegerParam(lua_State* state)
 {
 	int ret = l_getParam(state);
-	luaL_checkinteger(state, -1);
+	if (ret > 0)    { luaL_checkinteger(state, -1); }
 	return ret;
 }
 
@@ -532,7 +532,7 @@ static int l_setDoubleParam(lua_State* state)
 static int l_getDoubleParam(lua_State* state)
 {
 	int ret = l_getParam(state);
-	luaL_checknumber(state, -1);
+	if (ret > 0)    { luaL_checknumber(state, -1); }
 	return ret;
 }
 
@@ -545,7 +545,7 @@ static int l_setStringParam(lua_State* state)
 static int l_getStringParam(lua_State* state)
 {	
 	int ret = l_getParam(state);
-	luaL_checktype(state, -1, LUA_TSTRING);
+	if (ret > 0)    { luaL_checktype(state, -1, LUA_TSTRING); }
 	return ret;
 }
 
