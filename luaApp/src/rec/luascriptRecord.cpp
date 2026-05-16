@@ -1028,6 +1028,9 @@ static long process(dbCommon* common)
 {
 	luascriptRecord* record = (luascriptRecord*) common;
 
+	/* If pact is set, an async operation is already in progress */
+	if (record->pact)    { return 0; }
+
 	/* No need to process if there's no code */
 	if (record->code[0] == '\0')    { return 0; }
 
