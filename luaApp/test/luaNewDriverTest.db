@@ -1,0 +1,19 @@
+# Test database for the new asyn.driver.new API
+
+record(ai, "$(P)readback") {
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn($(PORT),0) READBACK")
+    field(SCAN, "Passive")
+}
+
+record(ao, "$(P)setpoint") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),0) SETPOINT")
+    field(SCAN, "Passive")
+}
+
+record(ai, "$(P)computed") {
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn($(PORT),0) COMPUTED")
+    field(SCAN, "Passive")
+}

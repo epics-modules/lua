@@ -43,6 +43,8 @@ luaPortDriverTest_SRCS += luaTest_registerRecordDeviceDriver.cpp
 testHarness_SRCS += luaPortDriverTest.cpp
 TESTFILES += ../luaPortDriverTest.db
 TESTFILES += ../luaPortDriverTest.lua
+TESTFILES += ../luaNewDriverTest.db
+TESTFILES += ../luaNewDriverTest.lua
 TESTS += luaPortDriverTest
 
 # --- Lua shell tests ---
