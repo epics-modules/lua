@@ -3,7 +3,7 @@ epicsEnvSet("LUA_SCRIPT_PATH", ".:./scripts")
 dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
 
-luaPortDriver("TEST", "driver.lua", "P=x:, R=y:, START=10")
+luash("scripts/test.lua", {P="test:", PORT="TEST"})
 
 ---------------
 iocInit()
@@ -11,13 +11,7 @@ iocInit()
 
 epics = require("epics")
 
-dbpr("x:y:Value")
+dbpr("test:readback")
 
-epics.put("x:y:Increment", 1)
-dbpr("x:y:Value")
-
-epics.put("x:y:Increment", 5)
-dbpr("x:y:Value")
-
-epics.put("x:y:Set", 5)
-dbpr("x:y:Value")
+epics.put("test:setpoint", 20.1)
+dbpr("test:readback")
