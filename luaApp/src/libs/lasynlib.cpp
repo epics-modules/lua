@@ -986,16 +986,20 @@ class luaAsynPortDriver : public asynPortDriver
 public:
 	lua_State* state;
 	epicsMutex stateMutex;
+	int funcTableRef;
+	int selfRef;
 
 	luaAsynPortDriver(const char* portName, lua_State* luaState)
 		: asynPortDriver(portName, 1,
 			asynInt32Mask | asynFloat64Mask | asynOctetMask | asynDrvUserMask,
 			asynInt32Mask | asynFloat64Mask | asynOctetMask,
 			0, 1, 0, 0),
-		  state(luaState)
+		  state(luaState),
+		  funcTableRef(LUA_NOREF),
+		  selfRef(LUA_NOREF)
 	{
 		lua_newtable(state);
-		lua_setfield(state, LUA_REGISTRYINDEX, "LASYNDRIVER_FUNCTIONS");
+		funcTableRef = luaL_ref(state, LUA_REGISTRYINDEX);
 	}
 
 	~luaAsynPortDriver() {}
@@ -1003,7 +1007,7 @@ public:
 private:
 	void getFunction(int index, const char* direction)
 	{
-		lua_getfield(this->state, LUA_REGISTRYINDEX, "LASYNDRIVER_FUNCTIONS");
+		lua_rawgeti(this->state, LUA_REGISTRYINDEX, this->funcTableRef);
 		lua_geti(this->state, -1, index);
 		lua_remove(this->state, -2);
 		if (!lua_isnil(this->state, -1))
@@ -1016,7 +1020,7 @@ private:
 	int callRead()
 	{
 		/* Push self (driver proxy) */
-		lua_getfield(this->state, LUA_REGISTRYINDEX, "LASYNDRIVER_SELF");
+		lua_rawgeti(this->state, LUA_REGISTRYINDEX, this->selfRef);
 		int status = lua_pcall(this->state, 1, 1, 0);
 		if (status)
 		{
@@ -1029,7 +1033,7 @@ private:
 	int callWrite()
 	{
 		/* value is already on stack, push self */
-		lua_getfield(this->state, LUA_REGISTRYINDEX, "LASYNDRIVER_SELF");
+		lua_rawgeti(this->state, LUA_REGISTRYINDEX, this->selfRef);
 		int status = lua_pcall(this->state, 2, 0, 0);
 		if (status)
 		{
@@ -1237,7 +1241,11 @@ static int l_paramproxy_index(lua_State* state)
 		lua_State* drvState = (lua_State*) lua_touserdata(state, -1);
 		lua_pop(state, 1);
 
-		lua_getfield(drvState, LUA_REGISTRYINDEX, "LASYNDRIVER_FUNCTIONS");
+		if (!drvState)    { lua_pushnil(state); return 1; }
+
+		luaAsynPortDriver* luaDrv = (luaAsynPortDriver*) driver;
+
+		lua_rawgeti(drvState, LUA_REGISTRYINDEX, luaDrv->funcTableRef);
 		lua_geti(drvState, -1, paramIndex);
 		if (!lua_isnil(drvState, -1))
 		{
@@ -1292,11 +1300,13 @@ static int l_paramproxy_newindex(lua_State* state)
 			return luaL_error(state, "Cannot bind callbacks on a client driver (use asyn.driver.new to create a server driver)");
 		}
 
-		/* Store the callback in LASYNDRIVER_FUNCTIONS[paramIndex][key] */
+		/* Store the callback in the driver's function table */
 		luaL_checktype(state, 3, LUA_TFUNCTION);
 
+		luaAsynPortDriver* luaDrv = (luaAsynPortDriver*) driver;
+
 		/* Move the function to the driver's Lua state if they differ */
-		lua_getfield(drvState, LUA_REGISTRYINDEX, "LASYNDRIVER_FUNCTIONS");
+		lua_rawgeti(drvState, LUA_REGISTRYINDEX, luaDrv->funcTableRef);
 		lua_geti(drvState, -1, paramIndex);
 
 		if (lua_isnil(drvState, -1))
@@ -1589,7 +1599,7 @@ static int l_driver_new(lua_State* state)
 
 	/* Store the driver proxy in the registry for callback self access */
 	lua_pushvalue(state, proxyIndex);
-	lua_setfield(state, LUA_REGISTRYINDEX, "LASYNDRIVER_SELF");
+	cppDriver->selfRef = luaL_ref(state, LUA_REGISTRYINDEX);
 
 	/* Process the parameter table */
 	int paramCount = luaL_len(state, 2);
