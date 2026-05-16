@@ -333,7 +333,7 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
 	T *data = new T[*elements];
 	int status = dbGetLink(field, field_type, data, 0, elements);
 
-	if (status) { return status; }
+	if (status) { delete[] data; return status; }
 
 	lua_createtable(state, *elements, 0);
 	

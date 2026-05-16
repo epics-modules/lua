@@ -666,6 +666,7 @@ static void myDatabaseHook(const char* fname, const char* macro)
 	char** pairs;
 	
 	macParseDefns(NULL, macro, &pairs);
+	char** original_pairs = pairs;
 	
 	state_lock.lock();
 	for (state_it it = hook_states.begin(); it != hook_states.end(); it++)
@@ -683,10 +684,11 @@ static void myDatabaseHook(const char* fname, const char* macro)
 			lua_pushstring(*it, full_name);
 			lua_newtable(*it);
 			
-			for ( ; pairs && pairs[0]; pairs += 2)
+			char** p = original_pairs;
+			for ( ; p && p[0]; p += 2)
 			{
-				lua_pushstring(*it, pairs[0]);
-				lua_pushstring(*it, pairs[1]);
+				lua_pushstring(*it, p[0]);
+				lua_pushstring(*it, p[1]);
 				lua_settable(*it, -3);
 			}
 			
@@ -694,16 +696,17 @@ static void myDatabaseHook(const char* fname, const char* macro)
 			
 			if (status)    
 			{
-				std::string err(lua_tostring(*it, -1));
-				
-				state_lock.unlock();
-				luaL_error(*it, err.c_str());
+				printf("Database hook error: %s\n", lua_tostring(*it, -1));
+				lua_pop(*it, 1);
 			}
 		}
 		
 		lua_pop(*it, 1);
 	}
 	state_lock.unlock();
+	
+	free(original_pairs);
+	free(full_name);
 	
 	if (previousHook)    { previousHook(fname, macro); }
 }

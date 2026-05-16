@@ -1053,8 +1053,8 @@ public:
 		if (!lua_isnil(this->state, -1))
 		{
 			*value = lua_tointeger(this->state, -1);
-			lua_pop(this->state, 1);
 		}
+		lua_pop(this->state, 1);
 		return asynSuccess;
 	}
 
@@ -1085,8 +1085,8 @@ public:
 		if (!lua_isnil(this->state, -1))
 		{
 			*value = lua_tonumber(this->state, -1);
-			lua_pop(this->state, 1);
 		}
+		lua_pop(this->state, 1);
 		return asynSuccess;
 	}
 
@@ -1121,8 +1121,8 @@ public:
 			{
 				strncpy(value, retval, maxChars);
 			}
-			lua_pop(this->state, 1);
 		}
+		lua_pop(this->state, 1);
 		return asynSuccess;
 	}
 

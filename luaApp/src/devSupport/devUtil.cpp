@@ -91,6 +91,9 @@ extern "C"
 		if (luaLoadScript(output->state, output->filename))
 		{
 			printf("Error loading file: %s\n", output->filename);
+			lua_close(output->state);
+			delete output;
+			return NULL;
 		}
 		
 		lua_pushstring(output->state, output->portname);

@@ -194,6 +194,8 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 
 		macParseDefns(NULL, macro_list, &pairs);
 
+		char** original_pairs = pairs;
+
 		for ( ; pairs && pairs[0]; pairs += 2)
 		{
 			std::string param(pairs[1]);
@@ -202,6 +204,8 @@ epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 
 			lua_setfield(state, -2, pairs[0]);
 		}
+
+		free(original_pairs);
 
 		lua_pushvalue(state, -1);
 		lua_setfield(state, -2, "__index");
@@ -221,6 +225,7 @@ epicsShareFunc int luaLoadLibrary(lua_State* state, const char* lib_name)
 	int status = lua_pcall(state, 1, 1, 0);
 	
 	if (status == LUA_OK)    { lua_setglobal(state, lib_name); }
+	else                     { lua_pop(state, 1); }
 	
 	return status;
 }
@@ -251,11 +256,25 @@ epicsShareFunc void luaPushScope(lua_State* state)
 
 epicsShareFunc void luaPopScope(lua_State* state)
 {
-	lua_getglobal(state, "_G");
-	lua_getmetatable(state, -1);
-	lua_getmetatable(state, -1);
-	lua_setmetatable(state, -2);
-	lua_pop(state, 1);
+	lua_getglobal(state, "_G");                 /* stack: [_G] */
+
+	if (!lua_getmetatable(state, -1))           /* stack: [_G, mt] or [_G] */
+	{
+		lua_pop(state, 1);                      /* no scope to pop */
+		return;
+	}
+
+	if (lua_getmetatable(state, -1))            /* stack: [_G, mt, parent_mt] */
+	{
+		lua_setmetatable(state, -3);            /* _G.metatable = parent_mt */
+	}
+	else                                        /* stack: [_G, mt] */
+	{
+		lua_pushnil(state);                     /* stack: [_G, mt, nil] */
+		lua_setmetatable(state, -3);            /* _G.metatable = nil (clear scope) */
+	}
+
+	lua_pop(state, 2);                          /* pop mt + _G */
 }
 
 
@@ -496,10 +515,14 @@ static bool parseHelp(const char* func_name)
 	epicsSetThreadStdout(prev);
 
 	long size = ftell(temp_help);
+
+	if (size <= 0)    { rewind(temp_help); return false; }
+
 	rewind(temp_help);
-	char* buffer = (char*) malloc(sizeof(char) * size);
+	char* buffer = (char*) malloc(sizeof(char) * (size + 1));
 
 	fread(buffer, 1, size, temp_help);
+	buffer[size] = '\0';
 	std::stringstream help_str;
 
 	help_str.str(buffer);

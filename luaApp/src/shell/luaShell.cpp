@@ -724,7 +724,7 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 	std::string temp(filename);
 	std::string found = luaLocateFile(temp);
 
-	if (found.empty())    { return -1; }
+	if (found.empty())    { lua_close(state); return -1; }
 
 	int status = luaL_loadfile(state, found.c_str());
 
@@ -734,6 +734,7 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 		lua_pop(state, 1);
 
 		printf("%s\n", err.c_str());
+		lua_close(state);
 		return status;
 	}
 
