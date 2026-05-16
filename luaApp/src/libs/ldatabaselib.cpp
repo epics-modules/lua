@@ -18,6 +18,7 @@
 
 
 static std::vector<lua_State*> hook_states;
+typedef std::vector<lua_State*>::iterator state_it;
 static epicsMutex state_lock;
 static DB_LOAD_RECORDS_HOOK_ROUTINE previousHook=NULL;
 
@@ -666,7 +667,7 @@ static void myDatabaseHook(const char* fname, const char* macro)
 	macParseDefns(NULL, macro, &pairs);
 	
 	state_lock.lock();
-	for (auto it = hook_states.begin(); it != hook_states.end(); it++)
+	for (state_it it = hook_states.begin(); it != hook_states.end(); it++)
 	{
 		lua_getfield(*it, LUA_REGISTRYINDEX, "LDB_HOOKS");
 		lua_len(*it, -1);
@@ -732,7 +733,7 @@ int registerDbHook(lua_State* state)
 int l_deregister(lua_State* state)
 {
 	state_lock.lock();
-	for (auto it = hook_states.begin(); it != hook_states.end(); it++)
+	for (state_it it = hook_states.begin(); it != hook_states.end(); it++)
 	{
 		if (*it == state)
 		{
