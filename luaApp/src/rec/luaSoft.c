@@ -85,18 +85,18 @@ static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct 
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
-					#if defined(_MSC_VER)
-						char buffer[1024];
-					#else
-						char buffer[array_len];
-					#endif
+					int status;
+					char* buffer = (char*) malloc(array_len * sizeof(char));
+					if (!buffer) { return 0; }
 
 					for (index = 0; index < n_elements && index < array_len; index += 1)
 					{
 						buffer[index] = (char) ((int*) record->aval)[index];
 					}
 
-					return dbCaPutLinkCallback(out, DBF_CHAR, buffer, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+					status = dbCaPutLinkCallback(out, DBF_CHAR, buffer, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+					free(buffer);
+					return status;
 				}
 
 				return 0;
@@ -110,18 +110,18 @@ static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct 
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
-					#if defined(_MSC_VER)
-						double buffer[1024];
-					#else
-						double buffer[array_len];
-					#endif
+					int status;
+					double* buffer = (double*) malloc(array_len * sizeof(double));
+					if (!buffer) { return 0; }
 
 					for (index = 0; index < n_elements && index < array_len; index += 1)
 					{
 						buffer[index] = ((int*) record->aval)[index];
 					}
 
-					return dbCaPutLinkCallback(out, DBF_DOUBLE, buffer, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+					status = dbCaPutLinkCallback(out, DBF_DOUBLE, buffer, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+					free(buffer);
+					return status;
 				}
 
 				return 0;
@@ -129,11 +129,8 @@ static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct 
 
 			case DBF_FLOAT:
 			{
-				#if defined(_MSC_VER)
-					float buffer[1024];
-				#else
-					float buffer[array_len];
-				#endif
+				float* buffer = (float*) malloc(array_len * sizeof(float));
+				if (!buffer) { return 0; }
 
 				if (record->atyp == luascriptAVALType_Double)
 				{
@@ -142,7 +139,9 @@ static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct 
 						buffer[index] = (float) ((double*) record->aval)[index];
 					}
 
-					return dbCaPutLinkCallback(out, DBF_FLOAT, buffer, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+					int status = dbCaPutLinkCallback(out, DBF_FLOAT, buffer, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+					free(buffer);
+					return status;
 				}
 				else if(record->atyp == luascriptAVALType_Integer)
 				{
@@ -151,9 +150,12 @@ static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct 
 						buffer[index] = (float) ((int*) record->aval)[index];
 					}
 
-					return dbCaPutLinkCallback(out, DBF_FLOAT, buffer, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+					int status = dbCaPutLinkCallback(out, DBF_FLOAT, buffer, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+					free(buffer);
+					return status;
 				}
 
+				free(buffer);
 				return 0;
 			}
 
@@ -273,18 +275,18 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
-					#if defined(_MSC_VER)
-						char buffer[1024];
-					#else
-						char buffer[array_len];
-					#endif
+					int status;
+					char* buffer = (char*) malloc(array_len * sizeof(char));
+					if (!buffer) { return 0; }
 
 					for (index = 0; index < n_elements && index < array_len; index += 1)
 					{
 						buffer[index] = (char) ((int*) record->aval)[index];
 					}
 
-					return dbPutLink(out, DBF_CHAR, buffer, array_len);
+					status = dbPutLink(out, DBF_CHAR, buffer, array_len);
+					free(buffer);
+					return status;
 				}
 
 				return 0;
@@ -298,18 +300,18 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 				}
 				else if (record->atyp == luascriptAVALType_Integer)
 				{
-					#if defined(_MSC_VER)
-						double buffer[1024];
-					#else
-						double buffer[array_len];
-					#endif
+					int status;
+					double* buffer = (double*) malloc(array_len * sizeof(double));
+					if (!buffer) { return 0; }
 
 					for (index = 0; index < n_elements && index < array_len; index += 1)
 					{
 						buffer[index] = ((int*) record->aval)[index];
 					}
 
-					return dbPutLink(out, DBF_DOUBLE, buffer, array_len);
+					status = dbPutLink(out, DBF_DOUBLE, buffer, array_len);
+					free(buffer);
+					return status;
 				}
 
 				return 0;
@@ -317,11 +319,8 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 
 			case DBF_FLOAT:
 			{
-				#if defined(_MSC_VER)
-					float buffer[1024];
-				#else
-					float buffer[array_len];
-				#endif
+				float* buffer = (float*) malloc(array_len * sizeof(float));
+				if (!buffer) { return 0; }
 
 				if (record->atyp == luascriptAVALType_Double)
 				{
@@ -330,7 +329,9 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 						buffer[index] = (float) ((double*) record->aval)[index];
 					}
 
-					return dbPutLink(out, DBF_FLOAT, buffer, array_len);
+					int status = dbPutLink(out, DBF_FLOAT, buffer, array_len);
+					free(buffer);
+					return status;
 				}
 				else if(record->atyp == luascriptAVALType_Integer)
 				{
@@ -339,9 +340,12 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 						buffer[index] = (float) ((int*) record->aval)[index];
 					}
 
-					return dbPutLink(out, DBF_FLOAT, buffer, array_len);
+					int status = dbPutLink(out, DBF_FLOAT, buffer, array_len);
+					free(buffer);
+					return status;
 				}
 
+				free(buffer);
 				return 0;
 			}
 
