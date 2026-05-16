@@ -1,3 +1,0 @@
-# C++11 support is auto-detected from compiler version in luaApp/src/Makefile.
-# Uncomment the following to override auto-detection:
-# CXX11_SUPPORT = YES

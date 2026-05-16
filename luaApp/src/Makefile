@@ -7,41 +7,6 @@ include $(TOP)/configure/CONFIG
 
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
-# Auto-detect C++11 support from compiler version when not explicitly set.
-#
-# The TOOLCHAIN variables (MSVC_VER, GCC_MAJOR, GCC_MINOR, CLANG_MAJOR)
-# are extracted from compiler pre-defined macros by EPICS base and are
-# available here after include $(TOP)/configure/CONFIG.
-#
-# MSVC >= VS2015 (_MSC_VER >= 1900) has full C++11 support.
-# GCC  >= 4.8 has sufficient C++11 support.
-# Clang >= 3.3 has sufficient C++11 support.
-# vxWorks toolchains typically lack C++11 support (set CXX11_SUPPORT=NO
-# in configure/CONFIG_SITE.local.vxWorks to override).
-#
-# To override auto-detection, set CXX11_SUPPORT=YES or CXX11_SUPPORT=NO
-# in any configure/CONFIG_SITE.local* file.
-
-ifndef CXX11_SUPPORT
-  ifeq ($(CMPLR_CLASS),msvc)
-    ifdef MSVC_VER
-      CXX11_SUPPORT := $(shell $(PERL) -e 'print($(MSVC_VER) >= 1900 ? "YES" : "NO")')
-    else
-      CXX11_SUPPORT := YES
-    endif
-  else ifdef GCC_MAJOR
-    CXX11_SUPPORT := $(shell $(PERL) -e 'print(($(GCC_MAJOR) > 4 || ($(GCC_MAJOR) == 4 && $(GCC_MINOR) >= 8)) ? "YES" : "NO")')
-  else
-    CXX11_SUPPORT := YES
-  endif
-endif
-
-ifeq ($(CXX11_SUPPORT), YES)
-  USR_CXXFLAGS_Darwin += -std=c++11
-  USR_CXXFLAGS_Linux += -std=c++11
-  USR_CPPFLAGS += -DCXX11_SUPPORTED
-endif
-
 LIBRARY_IOC_DEFAULT += lua
 LIBRARY_IOC_RTEMS = -nil-
 
@@ -94,10 +59,6 @@ lua_SRCS += lvm.c
 lua_SRCS += lzio.c
 
 
-# Include luaaa library
-SRC_DIRS += $(TOP)/luaApp/src/luaaa
-INC += luaaa.hpp
-
 # Include device support
 SRC_DIRS += $(TOP)/luaApp/src/devSupport
 INC += devUtil.h
@@ -137,14 +98,8 @@ INC += luaPortDriver.h
 lua_SRCS += luaPortDriver.cpp
 
 # Build lua libraries
-
+SRC_DIRS += $(TOP)/luaApp/src/libs
 SRC_DIRS += $(TOP)/luaApp/src/libs/includes
-
-ifeq ($(CXX11_SUPPORT), YES)
-    SRC_DIRS += $(TOP)/luaApp/src/libs
-else
-    SRC_DIRS += $(TOP)/luaApp/src/libs/basic
-endif
 
 lua_SRCS += losilib.cpp
 lua_SRCS += lasynlib.cpp
