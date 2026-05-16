@@ -704,20 +704,20 @@ long setLinks(luascriptRecord* record)
 
 		db_post_events(record, valid, DBE_VALUE);
 
-		callbackSetCallback(checkLinksCallback, &pvt->checkLinkCb);
-		callbackSetPriority(0, &pvt->checkLinkCb);
-		callbackSetUser(record, &pvt->checkLinkCb);
-		pvt->wd_id_1_LOCK = 0;
-
-		if (pvt->caLinkStat == CA_LINKS_NOT_OK)
-		{
-			callbackRequestDelayed(&pvt->checkLinkCb, 1.0);
-			pvt->wd_id_1_LOCK = 1;
-		}
-
 		field++;
 		valid++;
 		value++;
+	}
+
+	callbackSetCallback(checkLinksCallback, &pvt->checkLinkCb);
+	callbackSetPriority(0, &pvt->checkLinkCb);
+	callbackSetUser(record, &pvt->checkLinkCb);
+	pvt->wd_id_1_LOCK = 0;
+
+	if (pvt->caLinkStat == CA_LINKS_NOT_OK)
+	{
+		callbackRequestDelayed(&pvt->checkLinkCb, 1.0);
+		pvt->wd_id_1_LOCK = 1;
 	}
 
 	return 0;
@@ -818,7 +818,7 @@ static bool checkSvalUpdate(luascriptRecord* record)
 			return (!prev.empty() && curr.empty());
 
 		case luascriptOOPT_Transition_To_Non_zero:
-			return (!prev.empty() && !curr.empty());
+			return (prev.empty() && !curr.empty());
 
 		case luascriptOOPT_Never:
 			return false;
@@ -1013,11 +1013,7 @@ static long runCode(luascriptRecord* record)
 	}
 	else
 	{
-		std::stringstream temp_stream;
-		std::string threadname;
-
-		temp_stream << "Script Record Process (" << record->name << ")";
-		temp_stream >> threadname;
+		std::string threadname = std::string("luascript:") + record->name;
 
 		epicsThreadCreate(threadname.c_str(),
 		                  epicsThreadPriorityLow,
