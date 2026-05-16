@@ -1,3 +1,4 @@
+#include <math.h>
 #include <alarm.h>
 #include <dbEvent.h>
 #include <dbAccess.h>
@@ -942,7 +943,7 @@ static void processCallback(void* data)
 			{
 				record->pval = record->val;
 				record->val = lua_tonumber(state, -1);
-				record->udf = std::isnan(record->val);
+				record->udf = isnan(record->val);
 
 				if (checkValUpdate(record))
 				{

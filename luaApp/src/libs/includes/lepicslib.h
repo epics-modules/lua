@@ -3,10 +3,6 @@
 
 #include "luaEpics.h"
 
-#ifdef CXX11_SUPPORTED
-
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {

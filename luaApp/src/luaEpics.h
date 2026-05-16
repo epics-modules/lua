@@ -8,11 +8,6 @@
 
 #ifdef __cplusplus
 
-#ifdef CXX11_SUPPORTED
-	#include "luaaa.hpp"
-	using namespace luaaa;
-#endif
-
 #include <string>
 
 epicsShareFunc std::string luaLocateFile(std::string filename);

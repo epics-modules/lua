@@ -743,7 +743,7 @@ epicsShareFunc lua_State* luaFindNamedState(const char* name)
 
 	std::string state_name(name);
 
-	auto it = named_states.find(state_name);
+	std::map<std::string, lua_State*>::iterator it = named_states.find(state_name);
 
 	if (it != named_states.end()) { return it->second; }
 
@@ -777,7 +777,7 @@ epicsShareFunc int luaStateIsRegistered(lua_State* state)
 
 	epicsGuard<epicsMutex> guard(namedStatesMutex);
 
-	for (auto it = named_states.begin(); it != named_states.end(); it++)
+	for (std::map<std::string, lua_State*>::iterator it = named_states.begin(); it != named_states.end(); it++)
 	{
 		if (it->second == state) { return 1; }
 	}

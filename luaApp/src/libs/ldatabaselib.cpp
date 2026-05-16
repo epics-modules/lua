@@ -1,5 +1,6 @@
 #include <new>
 #include <string>
+#include <string.h>
 #include <vector>
 
 #include <dbStaticLib.h>
