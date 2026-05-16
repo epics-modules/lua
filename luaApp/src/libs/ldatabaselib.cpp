@@ -1,4 +1,5 @@
-#include <functional>
+#include <new>
+#include <string>
 #include <vector>
 
 #include <dbStaticLib.h>
@@ -21,344 +22,601 @@ static epicsMutex state_lock;
 static DB_LOAD_RECORDS_HOOK_ROUTINE previousHook=NULL;
 
 
-class _entry
-{
-	private:
-		_entry()    { this->entry = dbAllocEntry(*iocshPpdbbase); }
-		~_entry()   { if(this->entry) { dbFreeEntry(this->entry); } }
-		
-	public:
-		DBENTRY* entry = NULL;
-		
-		static _entry* create(lua_State* state)
-		{			
-			if (! iocshPpdbbase)    { luaL_error(state, "No database definition found.\n"); }
-			
-			return new _entry();
-		}
-		
-		static void destroy(_entry* instance)    { delete instance; }
-};
-
-
-class _record
-{
-	public:
-		// Create an instance associated with existing record
-		_record(std::string name)
-		{
-			this->_name = name;
-			this->record_entry = dbAllocEntry(*iocshPpdbbase);
-			
-			dbFindRecord(this->record_entry, name.c_str());
-			dbGetRecordAttribute(this->record_entry, "RTYP");
-			
-			char* type_str = dbGetString(this->record_entry);
-			this->_type = std::string(type_str);
-			
-			dbFindRecord(this->record_entry, name.c_str());
-		}
-	
-		// Try to find an existing record, create a new record if not found
-		_record(std::string type, std::string name)    
-		{ 
-			this->_type = type;
-			this->_name = name;
-			
-			this->record_entry = dbAllocEntry(*iocshPpdbbase);
-			
-			if (dbFindRecord(this->record_entry, name.c_str()))
-			{
-				// Record doesn't exist, so we'll make it
-				dbFindRecordType(this->record_entry, type.c_str());
-				dbCreateRecord(this->record_entry, name.c_str());
-			}
-		}
-		
-		~_record()   { dbFreeEntry(this->record_entry); }
-		
-		std::string _type;
-		std::string _name;
-		DBENTRY* record_entry;
-		
-	public:
-		void processField(lua_State* state, std::string fieldname, std::string value)
-		{
-			if (dbFindField(this->record_entry, fieldname.c_str()))
-			{
-				dbFindRecord(this->record_entry, this->_name.c_str());
-				luaL_error(state, "Unable to find %s field for record: %s\n", fieldname.c_str(), this->_name.c_str());
-			}
-			
-			if (dbPutString(this->record_entry, value.c_str()) )
-			{
-				dbFindRecord(this->record_entry, this->_name.c_str());
-				luaL_error(state, "Error setting %s field on record %s to %s\n", fieldname.c_str(), this->_name.c_str(), value.c_str());
-			}
-		
-			dbFindRecord(this->record_entry, this->_name.c_str());
-		}
-		static _record* create(lua_State* state)
-		{
-			if (! iocshPpdbbase)    { luaL_error(state, "No database definition found.\n"); }
-			
-			lua_settop(state, 2);
-			std::string type = LuaStack<std::string>::get(state, 1);
-			std::string name = LuaStack<std::string>::get(state, 2);
-			
-			DBENTRY* test_ent = dbAllocEntry(*iocshPpdbbase);
-			
-			int status = dbFindRecordType(test_ent, type.c_str());
-			
-			dbFreeEntry(test_ent);
-			
-			if (status)    { luaL_error(state, "Error (%d) finding record type: %s\n", status, type.c_str()); }
-			
-			return new _record(type, name);
-		}
-		
-		static _record* find(lua_State* state)
-		{
-			if (! iocshPpdbbase)    { luaL_error(state, "No database definition found.\n"); }
-			
-			lua_settop(state, 1);
-			std::string name = LuaStack<std::string>::get(state, 1);
-			
-			DBENTRY* test_ent = dbAllocEntry(*iocshPpdbbase);
-			
-			int status = dbFindRecord(test_ent, name.c_str());
-			
-			dbFreeEntry(test_ent);
-			
-			if (status)    { luaL_error(state, "Error (%d) finding record name: %s\n", status, name.c_str()); }
-			
-			return new _record(name);
-		}
-		
-		static void destroy(_record* instance)    { delete instance; }
-		std::string name()    { return this->_name; }
-		std::string type()    { return this->_type; }
-		
-		void setField(lua_State* state)
-		{
-			lua_settop(state, 3);
-			
-			std::string fieldname = LuaStack<std::string>::get(state, 2);
-			std::string value = LuaStack<std::string>::get(state, 3);
-			
-			this->processField(state, fieldname, value);
-		}
-		
-		std::string getField(std::string fieldname)
-		{
-			if (dbFindField(this->record_entry, fieldname.c_str()))
-			{
-				dbFindRecord(this->record_entry, this->_name.c_str());
-				return std::string("");
-			}
-			
-			char* val = dbGetString(this->record_entry);
-			dbFindRecord(this->record_entry, this->_name.c_str());
-			
-			if (val)    { return std::string(val); }
-			else        { return std::string(""); }
-		}
-		
-		void setInfo(lua_State* state)
-		{
-			lua_settop(state, 3);
-			
-			std::string info = LuaStack<std::string>::get(state, 2);
-			std::string value = LuaStack<std::string>::get(state, 3);
-			
-			
-			if (dbPutInfo(this->record_entry, info.c_str(), value.c_str()) )
-			{
-				dbFindRecord(this->record_entry, this->_name.c_str());
-				luaL_error(state, "Error adding info to record %s: %s: %s\n", this->_name.c_str(), info.c_str(), value.c_str());
-			}
-		
-			dbFindRecord(this->record_entry, this->_name.c_str());
-		}
-		
-		void init(lua_State* state)
-		{
-			auto fields = LuaStack<std::map<std::string, std::string> >::get(state, 2);
-			
-			for (auto it = fields.begin(); it != fields.end(); it++)
-			{
-				this->processField(state, it->first, it->second);
-			}
-		}
-};
-
-
-_entry* genEntry(lua_State* state)      { return _entry::create(state); }
+/*
+ * lua_dbentry -- userdata wrapping a DBENTRY* cursor for static database access.
+ * Stored directly in Lua's GC heap; __gc frees the DBENTRY.
+ */
+typedef struct {
+	DBENTRY* entry;
+} lua_dbentry;
 
 
 /*
- * Creates or finds a dbrecord instance. Creates the _record directly
- * and wraps it in a userdata with our custom metatable, bypassing
- * luaaa's class system to avoid cross-context type-checking issues.
+ * lua_dbrecord -- userdata stored directly in Lua's GC heap.
+ * Holds a DBENTRY cursor and cached name/type strings.
+ * Replaces the former _record class; all logic is in static C functions.
  */
-int genRecord(lua_State* state)    
-{ 
-	typedef struct { _record* obj; } RecordUD;
+typedef struct {
+	DBENTRY*    entry;
+	std::string name;
+	std::string type;
+} lua_dbrecord;
+
+
+/*
+ * Helper to extract the lua_dbentry userdata from the stack.
+ */
+static lua_dbentry* check_dbentry(lua_State* L, int idx)
+{
+	return (lua_dbentry*) luaL_checkudata(L, idx, "lua_dbentry");
+}
+
+/*
+ * db.entry() -- create a new DBENTRY cursor.
+ */
+static int l_genEntry(lua_State* L)
+{
+	if (! iocshPpdbbase)    { return luaL_error(L, "No database definition found."); }
 	
-	if (! iocshPpdbbase)    { return luaL_error(state, "No database definition found.\n"); }
-	
-	int num_params = lua_gettop(state);
-	_record* rec;
-	
-	if (num_params == 1)
-	{
-		std::string name(luaL_checkstring(state, 1));
-		rec = new _record(name);
-	}
-	else
-	{
-		std::string type(luaL_checkstring(state, 1));
-		std::string name(luaL_checkstring(state, 2));
-		rec = new _record(type, name);
-	}
-	
-	/* Wrap in userdata with our custom metatable (registered in luaopen_database) */
-	RecordUD* ud = (RecordUD*) lua_newuserdata(state, sizeof(RecordUD));
-	ud->obj = rec;
-	luaL_setmetatable(state, "lua_dbrecord");
+	lua_dbentry* ud = (lua_dbentry*) lua_newuserdata(L, sizeof(lua_dbentry));
+	ud->entry = dbAllocEntry(*iocshPpdbbase);
+	luaL_setmetatable(L, "lua_dbentry");
 	
 	return 1;
 }
 
-
-
-
-std::string fieldName(_entry* in)
+/*
+ * __gc metamethod for lua_dbentry -- frees the DBENTRY cursor.
+ */
+static int l_entry_gc(lua_State* L)
 {
-	char* output = dbGetFieldName(in->entry);
+	lua_dbentry* ud = (lua_dbentry*) lua_touserdata(L, 1);
 	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	if (ud && ud->entry)
+	{
+		dbFreeEntry(ud->entry);
+		ud->entry = NULL;
+	}
+	
+	return 0;
 }
 
-std::string defaultVal(_entry* in)
+
+/* ------------------------------------------------------------------ */
+/*  String-returning entry methods                                     */
+/* ------------------------------------------------------------------ */
+
+static int l_getFieldName(lua_State* L)
 {
-	char* output = dbGetDefault(in->entry);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	char* output = dbGetFieldName(ud->entry);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-std::string recordTypeName(_entry* in)
+static int l_getDefault(lua_State* L)
 {
-	char* output = dbGetRecordTypeName(in->entry);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	char* output = dbGetDefault(ud->entry);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-std::string recordName(_entry* in)
+static int l_getRecordTypeName(lua_State* L)
 {
-	char* output = dbGetRecordName(in->entry);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	char* output = dbGetRecordTypeName(ud->entry);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-std::string getString(_entry* in)
+static int l_getRecordName(lua_State* L)
 {
-	char* output = dbGetString(in->entry);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	char* output = dbGetRecordName(ud->entry);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-std::string getPrompt(_entry* in)
+static int l_getString(lua_State* L)
 {
-	char* output = dbGetPrompt(in->entry);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	char* output = dbGetString(ud->entry);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-std::string getMenuFromIndex(_entry* in, int index)
+static int l_getPrompt(lua_State* L)
 {
-	char* output = dbGetMenuStringFromIndex(in->entry, index);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	char* output = dbGetPrompt(ud->entry);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-std::string getInfoName(_entry* in)
+static int l_getMenuStringFromIndex(lua_State* L)
 {
-	const char* output = dbGetInfoName(in->entry);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	int index = luaL_checkinteger(L, 2);
+	char* output = dbGetMenuStringFromIndex(ud->entry, index);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-std::string getInfoString(_entry* in)
+static int l_getInfoName(lua_State* L)
 {
-	const char* output = dbGetInfoString(in->entry);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* output = dbGetInfoName(ud->entry);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-std::string getInfo(_entry* in, const char* name)
+static int l_getInfoString(lua_State* L)
 {
-	const char* output = dbGetInfo(in->entry, name);
-	
-	if (output)    { return std::string(output); }
-	else           { return std::string(""); }
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* output = dbGetInfoString(ud->entry);
+	lua_pushstring(L, output ? output : "");
+	return 1;
 }
 
-bool putAttr(_entry* in, const char* key, const char* val)    { return (dbPutRecordAttribute(in->entry, key, val) == 0); }
-bool putInfo(_entry* in, const char* key, const char* val)    { return (dbPutInfo(in->entry, key, val) == 0); }
+static int l_getInfo(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	const char* output = dbGetInfo(ud->entry, name);
+	lua_pushstring(L, output ? output : "");
+	return 1;
+}
 
-bool getAttr(_entry* in, const char* key)              { return (dbGetRecordAttribute(in->entry, key) == 0); }
-bool findRecord(_entry* in, const char* name)          { return (dbFindRecord(in->entry, name) == 0); }
-bool createRecord(_entry* in, const char* name)        { return (dbCreateRecord(in->entry, name) == 0); }
-bool createAlias(_entry* in, const char* name)         { return (dbCreateAlias(in->entry, name) == 0); }
-bool deleteAliases(_entry* in)                         { return (dbDeleteAliases(in->entry) == 0); }
-bool copyRecord(_entry* in, const char* name, int ow)  { return (dbCopyRecord(in->entry, name, ow) == 0); }
-bool deleteRecord(_entry* in)                          { return (dbDeleteRecord(in->entry) == 0); }
-bool findRecordType(_entry* in, const char* name)      { return (dbFindRecordType(in->entry, name) == 0); }
-bool findField(_entry* in, const char* name)           { return dbFindField(in->entry, name); }
-bool putString(_entry* in, const char* value)          { return (dbPutString(in->entry, value) == 0); }
-bool putIndex(_entry* in, int index)                   { return (dbPutMenuIndex(in->entry, index) == 0); }
-bool linkField(_entry* in, int index)                  { return (dbGetLinkField(in->entry, index) == 0); }
-bool findInfo(_entry* in, const char* name)            { return (dbFindInfo(in->entry, name) == 0); }
-bool putInfoString(_entry* in, const char* val)        { return (dbPutInfoString(in->entry, val) == 0); }
 
-bool firstRecord(_entry* in)      { return (dbFirstRecord(in->entry) == 0); }
-bool nextRecord(_entry* in)       { return (dbNextRecord(in->entry) == 0); }
-bool isAlias(_entry* in)          { return dbIsAlias(in->entry); }
-bool firstField(_entry* in)       { return (dbFirstField(in->entry, 0) == 0); }
-bool nextField(_entry* in)        { return (dbNextField(in->entry, 0) == 0); }
-bool firstRecordType(_entry* in)  { return (dbFirstRecordType(in->entry) == 0); }
-bool nextRecordType(_entry* in)   { return (dbNextRecordType(in->entry) == 0); }
-bool foundField(_entry* in)       { return dbFoundField(in->entry); }
-bool isDefault(_entry* in)        { return dbIsDefaultValue(in->entry); }
-bool firstInfo(_entry* in)        { return (dbFirstInfo(in->entry) == 0); }
-bool nextInfo(_entry* in)         { return (dbNextInfo(in->entry) == 0); }
-bool deleteInfo(_entry* in)       { return (dbDeleteInfo(in->entry) == 0); }
+/* ------------------------------------------------------------------ */
+/*  Bool-returning entry methods (status / mutation)                    */
+/* ------------------------------------------------------------------ */
 
-int numFields(_entry* in)       { return dbGetNFields(in->entry, 0); }
-int numRecords(_entry* in)      { return dbGetNRecords(in->entry); }
-int numAliases(_entry* in)      { return dbGetNAliases(in->entry); }
-int numRecordTypes(_entry* in)  { return dbGetNRecordTypes(in->entry); }
-int promptGroup(_entry* in)     { return dbGetPromptGroup(in->entry); }
-int numChoices(_entry* in)      { return dbGetNMenuChoices(in->entry); }
-int getIndex(_entry* in)        { return dbGetMenuIndex(in->entry); }
-int numLinks(_entry* in)        { return dbGetNLinks(in->entry); }
+static int l_putRecordAttribute(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* key = luaL_checkstring(L, 2);
+	const char* val = luaL_checkstring(L, 3);
+	lua_pushboolean(L, dbPutRecordAttribute(ud->entry, key, val) == 0);
+	return 1;
+}
+
+static int l_putInfo(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* key = luaL_checkstring(L, 2);
+	const char* val = luaL_checkstring(L, 3);
+	lua_pushboolean(L, dbPutInfo(ud->entry, key, val) == 0);
+	return 1;
+}
+
+static int l_getRecordAttribute(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* key = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbGetRecordAttribute(ud->entry, key) == 0);
+	return 1;
+}
+
+static int l_findRecord(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbFindRecord(ud->entry, name) == 0);
+	return 1;
+}
+
+static int l_createRecord(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbCreateRecord(ud->entry, name) == 0);
+	return 1;
+}
+
+static int l_createAlias(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbCreateAlias(ud->entry, name) == 0);
+	return 1;
+}
+
+static int l_deleteAliases(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbDeleteAliases(ud->entry) == 0);
+	return 1;
+}
+
+static int l_copyRecord(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	int overwrite = luaL_checkinteger(L, 3);
+	lua_pushboolean(L, dbCopyRecord(ud->entry, name, overwrite) == 0);
+	return 1;
+}
+
+static int l_deleteRecord(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbDeleteRecord(ud->entry) == 0);
+	return 1;
+}
+
+static int l_findRecordType(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbFindRecordType(ud->entry, name) == 0);
+	return 1;
+}
+
+static int l_findField(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbFindField(ud->entry, name) == 0);
+	return 1;
+}
+
+static int l_putString(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* value = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbPutString(ud->entry, value) == 0);
+	return 1;
+}
+
+static int l_putMenuIndex(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	int index = luaL_checkinteger(L, 2);
+	lua_pushboolean(L, dbPutMenuIndex(ud->entry, index) == 0);
+	return 1;
+}
+
+static int l_getLinkField(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	int index = luaL_checkinteger(L, 2);
+	lua_pushboolean(L, dbGetLinkField(ud->entry, index) == 0);
+	return 1;
+}
+
+static int l_findInfo(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbFindInfo(ud->entry, name) == 0);
+	return 1;
+}
+
+static int l_putInfoString(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* val = luaL_checkstring(L, 2);
+	lua_pushboolean(L, dbPutInfoString(ud->entry, val) == 0);
+	return 1;
+}
+
+static int l_firstRecord(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbFirstRecord(ud->entry) == 0);
+	return 1;
+}
+
+static int l_nextRecord(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbNextRecord(ud->entry) == 0);
+	return 1;
+}
+
+static int l_isAlias(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbIsAlias(ud->entry));
+	return 1;
+}
+
+static int l_firstField(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbFirstField(ud->entry, 0) == 0);
+	return 1;
+}
+
+static int l_nextField(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbNextField(ud->entry, 0) == 0);
+	return 1;
+}
+
+static int l_firstRecordType(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbFirstRecordType(ud->entry) == 0);
+	return 1;
+}
+
+static int l_nextRecordType(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbNextRecordType(ud->entry) == 0);
+	return 1;
+}
+
+static int l_foundField(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbFoundField(ud->entry));
+	return 1;
+}
+
+static int l_isDefaultValue(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbIsDefaultValue(ud->entry));
+	return 1;
+}
+
+static int l_firstInfo(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbFirstInfo(ud->entry) == 0);
+	return 1;
+}
+
+static int l_nextInfo(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbNextInfo(ud->entry) == 0);
+	return 1;
+}
+
+static int l_deleteInfo(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushboolean(L, dbDeleteInfo(ud->entry) == 0);
+	return 1;
+}
+
+
+/* ------------------------------------------------------------------ */
+/*  Int-returning entry methods                                        */
+/* ------------------------------------------------------------------ */
+
+static int l_getNFields(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetNFields(ud->entry, 0));
+	return 1;
+}
+
+static int l_getNRecords(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetNRecords(ud->entry));
+	return 1;
+}
+
+static int l_getNAliases(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetNAliases(ud->entry));
+	return 1;
+}
+
+static int l_getNRecordTypes(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetNRecordTypes(ud->entry));
+	return 1;
+}
+
+static int l_getPromptGroup(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetPromptGroup(ud->entry));
+	return 1;
+}
+
+static int l_getNMenuChoices(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetNMenuChoices(ud->entry));
+	return 1;
+}
+
+static int l_getMenuIndex(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetMenuIndex(ud->entry));
+	return 1;
+}
+
+static int l_getNLinks(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetNLinks(ud->entry));
+	return 1;
+}
 
 #ifdef WITH_DBFTYPE
-int fieldType(_entry* in)       { return dbGetFieldDbfType(in->entry); }
+static int l_getFieldDbfType(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	lua_pushinteger(L, dbGetFieldDbfType(ud->entry));
+	return 1;
+}
 #endif
 
-int getIndexFromMenu(_entry* in, const char* name)    { return dbGetMenuIndexFromString(in->entry, name); }
+static int l_getMenuIndexFromString(lua_State* L)
+{
+	lua_dbentry* ud = check_dbentry(L, 1);
+	const char* name = luaL_checkstring(L, 2);
+	lua_pushinteger(L, dbGetMenuIndexFromString(ud->entry, name));
+	return 1;
+}
 
+
+/* ------------------------------------------------------------------ */
+/*  Method dispatch table for lua_dbentry __index                      */
+/* ------------------------------------------------------------------ */
+
+static const luaL_Reg entry_methods[] = {
+	/* String-returning */
+	{"getFieldName",          l_getFieldName},
+	{"getDefault",            l_getDefault},
+	{"getRecordTypeName",     l_getRecordTypeName},
+	{"getRecordName",         l_getRecordName},
+	{"getString",             l_getString},
+	{"getPrompt",             l_getPrompt},
+	{"getMenuStringFromIndex",l_getMenuStringFromIndex},
+	{"getInfoName",           l_getInfoName},
+	{"getInfoString",         l_getInfoString},
+	{"getInfo",               l_getInfo},
+	
+	/* Bool-returning (status / mutation) */
+	{"putRecordAttribute",    l_putRecordAttribute},
+	{"putInfo",               l_putInfo},
+	{"getRecordAttribute",    l_getRecordAttribute},
+	{"findRecord",            l_findRecord},
+	{"createRecord",          l_createRecord},
+	{"createAlias",           l_createAlias},
+	{"deleteAliases",         l_deleteAliases},
+	{"copyRecord",            l_copyRecord},
+	{"deleteRecord",          l_deleteRecord},
+	{"findRecordType",        l_findRecordType},
+	{"findField",             l_findField},
+	{"putString",             l_putString},
+	{"putMenuIndex",          l_putMenuIndex},
+	{"getLinkField",          l_getLinkField},
+	{"findInfo",              l_findInfo},
+	{"putInfoString",         l_putInfoString},
+	{"firstRecord",           l_firstRecord},
+	{"nextRecord",            l_nextRecord},
+	{"isAlias",               l_isAlias},
+	{"firstField",            l_firstField},
+	{"nextField",             l_nextField},
+	{"firstRecordType",       l_firstRecordType},
+	{"nextRecordType",        l_nextRecordType},
+	{"foundField",            l_foundField},
+	{"isDefaultValue",        l_isDefaultValue},
+	{"firstInfo",             l_firstInfo},
+	{"nextInfo",              l_nextInfo},
+	{"deleteInfo",            l_deleteInfo},
+	
+	/* Int-returning */
+	{"getNFields",            l_getNFields},
+	{"getNRecords",           l_getNRecords},
+	{"getNAliases",           l_getNAliases},
+	{"getNRecordTypes",       l_getNRecordTypes},
+	{"getPromptGroup",        l_getPromptGroup},
+	{"getNMenuChoices",       l_getNMenuChoices},
+	{"getMenuIndex",          l_getMenuIndex},
+	{"getNLinks",             l_getNLinks},
+#ifdef WITH_DBFTYPE
+	{"getFieldDbfType",       l_getFieldDbfType},
+#endif
+	{"getMenuIndexFromString",l_getMenuIndexFromString},
+	
+	{NULL, NULL}
+};
+
+/*
+ * __index metamethod for lua_dbentry. Looks up method name in the
+ * entry_methods table and returns the corresponding C function.
+ */
+static int l_entry_index(lua_State* L)
+{
+	luaL_checkudata(L, 1, "lua_dbentry");
+	const char* key = luaL_checkstring(L, 2);
+	
+	for (const luaL_Reg* m = entry_methods; m->name != NULL; m++)
+	{
+		if (strcmp(key, m->name) == 0)
+		{
+			lua_pushcfunction(L, m->func);
+			return 1;
+		}
+	}
+	
+	return luaL_error(L, "dbentry has no method '%s'", key);
+}
+
+
+/*
+ * Creates or finds a dbrecord instance. Allocates a lua_dbrecord
+ * userdata directly in Lua's GC heap with placement-new, and sets
+ * the "lua_dbrecord" metatable (which includes __gc for cleanup).
+ */
+int genRecord(lua_State* state)    
+{ 
+	if (! iocshPpdbbase)    { return luaL_error(state, "No database definition found.\n"); }
+	
+	int num_params = lua_gettop(state);
+	const char* rec_name;
+	const char* rec_type = NULL;
+	
+	if (num_params == 1)
+	{
+		rec_name = luaL_checkstring(state, 1);
+		
+		/* Verify the record exists */
+		DBENTRY* test = dbAllocEntry(*iocshPpdbbase);
+		if (dbFindRecord(test, rec_name))
+		{
+			dbFreeEntry(test);
+			return luaL_error(state, "Error finding record: %s", rec_name);
+		}
+		dbFreeEntry(test);
+	}
+	else
+	{
+		rec_type = luaL_checkstring(state, 1);
+		rec_name = luaL_checkstring(state, 2);
+	}
+	
+	/* Allocate userdata and construct with placement-new */
+	lua_dbrecord* ud = (lua_dbrecord*) lua_newuserdata(state, sizeof(lua_dbrecord));
+	new (ud) lua_dbrecord();
+	
+	ud->entry = dbAllocEntry(*iocshPpdbbase);
+	ud->name  = std::string(rec_name);
+	
+	if (num_params == 1)
+	{
+		/* Find existing record, look up its RTYP */
+		dbFindRecord(ud->entry, rec_name);
+		dbGetRecordAttribute(ud->entry, "RTYP");
+		
+		char* type_str = dbGetString(ud->entry);
+		ud->type = std::string(type_str ? type_str : "");
+		
+		dbFindRecord(ud->entry, rec_name);
+	}
+	else
+	{
+		ud->type = std::string(rec_type);
+		
+		if (dbFindRecord(ud->entry, rec_name))
+		{
+			/* Record doesn't exist, so create it */
+			dbFindRecordType(ud->entry, rec_type);
+			dbCreateRecord(ud->entry, rec_name);
+		}
+	}
+	
+	luaL_setmetatable(state, "lua_dbrecord");
+	
+	return 1;
+}
 int all_records(lua_State* state)
 {
 	if (! iocshPpdbbase)    { luaL_error(state, "No database definition found.\n"); }
@@ -488,64 +746,145 @@ int l_deregister(lua_State* state)
 }
 
 /*
- * Custom __index for dbrecord objects. First checks for class methods
- * in the metatable (stored by luaaa with '<' prefix), then falls back
- * to reading a record field.
+ * rec:field(fieldname, value) -- set a record field by name.
+ */
+static int l_record_field(lua_State* state)
+{
+	lua_dbrecord* ud = (lua_dbrecord*) luaL_checkudata(state, 1, "lua_dbrecord");
+	const char* fieldname = luaL_checkstring(state, 2);
+	const char* value     = luaL_checkstring(state, 3);
+	
+	if (dbFindField(ud->entry, fieldname))
+	{
+		dbFindRecord(ud->entry, ud->name.c_str());
+		return luaL_error(state, "Unable to find %s field for record: %s", fieldname, ud->name.c_str());
+	}
+	
+	if (dbPutString(ud->entry, value))
+	{
+		dbFindRecord(ud->entry, ud->name.c_str());
+		return luaL_error(state, "Error setting %s field on record %s to %s", fieldname, ud->name.c_str(), value);
+	}
+	
+	dbFindRecord(ud->entry, ud->name.c_str());
+	return 0;
+}
+
+/*
+ * rec:info(name, value) -- add an info field to the record.
+ */
+static int l_record_info(lua_State* state)
+{
+	lua_dbrecord* ud = (lua_dbrecord*) luaL_checkudata(state, 1, "lua_dbrecord");
+	const char* info_name  = luaL_checkstring(state, 2);
+	const char* info_value = luaL_checkstring(state, 3);
+	
+	if (dbPutInfo(ud->entry, info_name, info_value))
+	{
+		dbFindRecord(ud->entry, ud->name.c_str());
+		return luaL_error(state, "Error adding info to record %s: %s: %s", ud->name.c_str(), info_name, info_value);
+	}
+	
+	dbFindRecord(ud->entry, ud->name.c_str());
+	return 0;
+}
+
+/*
+ * __gc metamethod -- destructs the lua_dbrecord (frees DBENTRY, std::strings).
+ */
+static int l_record_gc(lua_State* state)
+{
+	lua_dbrecord* ud = (lua_dbrecord*) lua_touserdata(state, 1);
+	
+	if (ud)
+	{
+		if (ud->entry)    { dbFreeEntry(ud->entry); }
+		ud->~lua_dbrecord();
+	}
+	
+	return 0;
+}
+
+/*
+ * __index metamethod for lua_dbrecord. Dispatches known method and
+ * property names, then falls back to reading a record field value.
  */
 static int l_record_index(lua_State* state)
 {
+	lua_dbrecord* ud = (lua_dbrecord*) luaL_checkudata(state, 1, "lua_dbrecord");
 	const char* key = luaL_checkstring(state, 2);
 	
-	typedef struct { _record* obj; } RecordUD;
-	RecordUD* ud = (RecordUD*) lua_touserdata(state, 1);
-	
-	if (!ud || !ud->obj)    { return 0; }
-	
-	/* Check for known method names */
+	/* Properties */
 	if (strcmp(key, "name") == 0)
 	{
-		lua_pushstring(state, ud->obj->name().c_str());
+		lua_pushstring(state, ud->name.c_str());
 		return 1;
 	}
 	else if (strcmp(key, "type") == 0)
 	{
-		lua_pushstring(state, ud->obj->type().c_str());
+		lua_pushstring(state, ud->type.c_str());
 		return 1;
 	}
 	
-	/* Treat as a record field name */
-	std::string val = ud->obj->getField(std::string(key));
-	lua_pushstring(state, val.c_str());
+	/* Methods */
+	else if (strcmp(key, "field") == 0)
+	{
+		lua_pushcfunction(state, l_record_field);
+		return 1;
+	}
+	else if (strcmp(key, "info") == 0)
+	{
+		lua_pushcfunction(state, l_record_info);
+		return 1;
+	}
+	
+	/* Fallback: treat key as a record field name and read its value */
+	if (dbFindField(ud->entry, key))
+	{
+		dbFindRecord(ud->entry, ud->name.c_str());
+		lua_pushstring(state, "");
+		return 1;
+	}
+	
+	char* val = dbGetString(ud->entry);
+	dbFindRecord(ud->entry, ud->name.c_str());
+	lua_pushstring(state, val ? val : "");
 	return 1;
 }
 
 /*
- * Custom __call for dbrecord objects. Accepts a table of field name-value
- * pairs and sets them on the record. Replaces luaaa's __call wrapper to
- * avoid cross-context type checking issues.
+ * __call metamethod for lua_dbrecord. Accepts a table of field
+ * name-value pairs and sets them on the record.
  */
 static int l_record_call(lua_State* state)
 {
-	typedef struct { _record* obj; } RecordUD;
-	RecordUD* ud = (RecordUD*) lua_touserdata(state, 1);
-	
-	if (!ud || !ud->obj)    { return luaL_error(state, "Invalid record object"); }
+	lua_dbrecord* ud = (lua_dbrecord*) luaL_checkudata(state, 1, "lua_dbrecord");
 	
 	if (lua_istable(state, 2))
 	{
-		_record* rec = ud->obj;
-		
 		lua_pushnil(state);
 		while (lua_next(state, 2))
 		{
 			if (lua_type(state, -2) == LUA_TSTRING)
 			{
 				const char* fieldname = lua_tostring(state, -2);
-				const char* value = lua_tostring(state, -1);
+				const char* value     = lua_tostring(state, -1);
 				
 				if (fieldname && value)
 				{
-					rec->processField(state, std::string(fieldname), std::string(value));
+					if (dbFindField(ud->entry, fieldname))
+					{
+						dbFindRecord(ud->entry, ud->name.c_str());
+						return luaL_error(state, "Unable to find %s field for record: %s", fieldname, ud->name.c_str());
+					}
+					
+					if (dbPutString(ud->entry, value))
+					{
+						dbFindRecord(ud->entry, ud->name.c_str());
+						return luaL_error(state, "Error setting %s field on record %s to %s", fieldname, ud->name.c_str(), value);
+					}
+					
+					dbFindRecord(ud->entry, ud->name.c_str());
 				}
 			}
 			lua_pop(state, 1);
@@ -558,19 +897,27 @@ static int l_record_call(lua_State* state)
 }
 
 /*
- * Custom __newindex for dbrecord objects. Sets a record field value.
+ * __newindex metamethod for lua_dbrecord. Sets a record field value.
  */
 static int l_record_newindex(lua_State* state)
 {
+	lua_dbrecord* ud = (lua_dbrecord*) luaL_checkudata(state, 1, "lua_dbrecord");
 	const char* key = luaL_checkstring(state, 2);
 	const char* val = luaL_checkstring(state, 3);
 	
-	typedef struct { _record* obj; } RecordUD;
-	RecordUD* ud = (RecordUD*) lua_touserdata(state, 1);
+	if (dbFindField(ud->entry, key))
+	{
+		dbFindRecord(ud->entry, ud->name.c_str());
+		return luaL_error(state, "Unable to find %s field for record: %s", key, ud->name.c_str());
+	}
 	
-	if (!ud || !ud->obj)    { return luaL_error(state, "Invalid record object"); }
+	if (dbPutString(ud->entry, val))
+	{
+		dbFindRecord(ud->entry, ud->name.c_str());
+		return luaL_error(state, "Error setting %s field on record %s to %s", key, ud->name.c_str(), val);
+	}
 	
-	ud->obj->processField(state, std::string(key), std::string(val));
+	dbFindRecord(ud->entry, ud->name.c_str());
 	return 0;
 }
 
@@ -746,92 +1093,91 @@ int luaopen_database (lua_State *L)
 		lua_setfield(L, -2, "__newindex");
 		lua_pushcfunction(L, l_record_call);
 		lua_setfield(L, -2, "__call");
+		lua_pushcfunction(L, l_record_gc);
+		lua_setfield(L, -2, "__gc");
 		lua_pushstring(L, "dbrecord");
 		lua_setfield(L, -2, "__name");
 	}
 	lua_pop(L, 1);
 	
-	// DBENTRY* wrapper and all associated functions
+	/* Register our custom metatable for db.entry() return values. */
+	if (luaL_newmetatable(L, "lua_dbentry"))
+	{
+		lua_pushcfunction(L, l_entry_index);
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, l_entry_gc);
+		lua_setfield(L, -2, "__gc");
+		lua_pushstring(L, "dbentry");
+		lua_setfield(L, -2, "__name");
+	}
+	lua_pop(L, 1);
 	
-	LuaClass<_entry> lua_ew(L, "dbentry");
-	lua_ew.ctor<void, lua_State*>("new",&_entry::create, &_entry::destroy);
-	
-	LuaModule dbmod (L, "db");
-	dbmod.fun("entry", genEntry);
-	dbmod.fun("record", genRecord);
-	dbmod.fun("loadRecords", l_loadRecords);
-	dbmod.fun("loadTemplate", l_loadTemplate);
-	
-	dbmod.fun("list", all_records);
-	
-	dbmod.fun("getNRecordTypes", numRecordTypes);
-	dbmod.fun("findRecordType", findRecordType);
-	dbmod.fun("firstRecordType", firstRecordType);
-	dbmod.fun("nextRecordType", nextRecordType);
-	dbmod.fun("getRecordTypeName", recordTypeName);
-	
-	dbmod.fun("getNFields", numFields);
-	dbmod.fun("firstField", firstField);
-	dbmod.fun("nextField", nextField);
-	dbmod.fun("getFieldName", fieldName);
-	
-	#ifdef WITH_DBFTYPE
-	dbmod.fun("getFieldDbfType", fieldType);
-	#endif
-
-	dbmod.fun("getDefault", defaultVal);
-	
-	dbmod.fun("getPrompt", getPrompt);
-	dbmod.fun("getPromptGroup", promptGroup);
-	
-	dbmod.fun("putRecordAttribute", putAttr);
-	dbmod.fun("getRecordAttribute", getAttr);
-	
-	dbmod.fun("getNAliases", numAliases);
-	
-	dbmod.fun("getNRecords", numRecords);
-	dbmod.fun("findRecord", findRecord);
-	dbmod.fun("firstRecord", firstRecord);
-	dbmod.fun("nextRecord", nextRecord);
-	dbmod.fun("getRecordName", recordName);
-	
-	dbmod.fun("isAlias", isAlias);
-	
-	dbmod.fun("createRecord", createRecord);
-	dbmod.fun("createAlias", createAlias);
-	dbmod.fun("deleteRecord", deleteRecord);
-	dbmod.fun("deleteAliases", deleteAliases);
-	
-	dbmod.fun("copyRecord", copyRecord);
-	
-	dbmod.fun("findField", findField);
-	dbmod.fun("foundField", foundField);
-	
-	dbmod.fun("getString", getString);
-	dbmod.fun("putString", putString);
-	dbmod.fun("isDefaultValue", isDefault);
-	
-	dbmod.fun("getNMenuChoices", numChoices);
-	dbmod.fun("getMenuIndex", getIndex);
-	dbmod.fun("putMenuIndex", putIndex);
-	dbmod.fun("getMenuStringFromIndex", getMenuFromIndex);
-	dbmod.fun("getMenuIndexFromString", getIndexFromMenu);
-	
-	dbmod.fun("getNLinks", numLinks);
-	dbmod.fun("getLinkField", linkField);
-	
-	dbmod.fun("firstInfo", firstInfo);
-	dbmod.fun("nextInfo", nextInfo);
-	dbmod.fun("findInfo", findInfo);
-	dbmod.fun("getInfoName", getInfoName);
-	dbmod.fun("getInfoString", getInfoString);
-	dbmod.fun("putInfoString", putInfoString);
-	dbmod.fun("putInfo", putInfo);
-	dbmod.fun("deleteInfo", deleteInfo);
-	dbmod.fun("getInfo", getInfo);
+	/* Register the db module -- high-level functions plus all entry methods */
+	static const luaL_Reg db_funcs[] = {
+		{"entry",                 l_genEntry},
+		{"record",                genRecord},
+		{"loadRecords",           l_loadRecords},
+		{"loadTemplate",          l_loadTemplate},
+		{"list",                  all_records},
+		{"registerDatabaseHook",  registerDbHook},
 		
-	dbmod.fun("registerDatabaseHook", registerDbHook);
-
+		/* Entry methods also available as db.xxx(entry, ...) */
+		{"getNRecordTypes",       l_getNRecordTypes},
+		{"findRecordType",        l_findRecordType},
+		{"firstRecordType",       l_firstRecordType},
+		{"nextRecordType",        l_nextRecordType},
+		{"getRecordTypeName",     l_getRecordTypeName},
+		{"getNFields",            l_getNFields},
+		{"firstField",            l_firstField},
+		{"nextField",             l_nextField},
+		{"getFieldName",          l_getFieldName},
+#ifdef WITH_DBFTYPE
+		{"getFieldDbfType",       l_getFieldDbfType},
+#endif
+		{"getDefault",            l_getDefault},
+		{"getPrompt",             l_getPrompt},
+		{"getPromptGroup",        l_getPromptGroup},
+		{"putRecordAttribute",    l_putRecordAttribute},
+		{"getRecordAttribute",    l_getRecordAttribute},
+		{"getNAliases",           l_getNAliases},
+		{"getNRecords",           l_getNRecords},
+		{"findRecord",            l_findRecord},
+		{"firstRecord",           l_firstRecord},
+		{"nextRecord",            l_nextRecord},
+		{"getRecordName",         l_getRecordName},
+		{"isAlias",               l_isAlias},
+		{"createRecord",          l_createRecord},
+		{"createAlias",           l_createAlias},
+		{"deleteRecord",          l_deleteRecord},
+		{"deleteAliases",         l_deleteAliases},
+		{"copyRecord",            l_copyRecord},
+		{"findField",             l_findField},
+		{"foundField",            l_foundField},
+		{"getString",             l_getString},
+		{"putString",             l_putString},
+		{"isDefaultValue",        l_isDefaultValue},
+		{"getNMenuChoices",       l_getNMenuChoices},
+		{"getMenuIndex",          l_getMenuIndex},
+		{"putMenuIndex",          l_putMenuIndex},
+		{"getMenuStringFromIndex",l_getMenuStringFromIndex},
+		{"getMenuIndexFromString",l_getMenuIndexFromString},
+		{"getNLinks",             l_getNLinks},
+		{"getLinkField",          l_getLinkField},
+		{"firstInfo",             l_firstInfo},
+		{"nextInfo",              l_nextInfo},
+		{"findInfo",              l_findInfo},
+		{"getInfoName",           l_getInfoName},
+		{"getInfoString",         l_getInfoString},
+		{"putInfoString",         l_putInfoString},
+		{"putInfo",               l_putInfo},
+		{"deleteInfo",            l_deleteInfo},
+		{"getInfo",               l_getInfo},
+		{NULL, NULL}
+	};
+	
+	luaL_newlib(L, db_funcs);
+	lua_setglobal(L, "db");
+	
 	lua_getglobal(L, "db");
 	return 1;
 }
