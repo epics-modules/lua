@@ -2,15 +2,13 @@
 -- function writes an HTTP request to a given ip port
 -- and then prints the result to the console.
 
-asyn = require("asyn")
+local asyn = require("asyn")
 
 function get_html(port)
 
 	-- Creates a client object linking to the
-	-- asyn port with the given name. In and
-	-- Out terminators, as well as timeouts,
-	-- are copied from the global scope.
-	p = asynOctetClient.find(port, 0, "")
+	-- asyn port with the given name.
+	p = asyn.client(port, 0, "")
 	p.InTerminator = "\n"
 	p.OutTerminator = "\n\n"
 		
