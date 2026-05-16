@@ -43,7 +43,7 @@ class _entry
 
 class _record
 {
-	private:
+	public:
 		// Create an instance associated with existing record
 		_record(std::string name)
 		{
@@ -77,6 +77,11 @@ class _record
 		
 		~_record()   { dbFreeEntry(this->record_entry); }
 		
+		std::string _type;
+		std::string _name;
+		DBENTRY* record_entry;
+		
+	public:
 		void processField(lua_State* state, std::string fieldname, std::string value)
 		{
 			if (dbFindField(this->record_entry, fieldname.c_str()))
@@ -93,12 +98,6 @@ class _record
 		
 			dbFindRecord(this->record_entry, this->_name.c_str());
 		}
-		
-		std::string _type;
-		std::string _name;
-		DBENTRY* record_entry;
-		
-	public:
 		static _record* create(lua_State* state)
 		{
 			if (! iocshPpdbbase)    { luaL_error(state, "No database definition found.\n"); }
@@ -198,30 +197,35 @@ _entry* genEntry(lua_State* state)      { return _entry::create(state); }
 
 
 /*
- * Creates or finds a dbrecord instance by calling the luaaa-registered
- * dbrecord.new or dbrecord.find constructor via the Lua C API.
+ * Creates or finds a dbrecord instance. Creates the _record directly
+ * and wraps it in a userdata with our custom metatable, bypassing
+ * luaaa's class system to avoid cross-context type-checking issues.
  */
 int genRecord(lua_State* state)    
 { 
-	int num_params = lua_gettop(state);
+	typedef struct { _record* obj; } RecordUD;
 	
-	lua_getglobal(state, "dbrecord");
+	if (! iocshPpdbbase)    { return luaL_error(state, "No database definition found.\n"); }
+	
+	int num_params = lua_gettop(state);
+	_record* rec;
 	
 	if (num_params == 1)
 	{
-		lua_getfield(state, -1, "find");
-		lua_remove(state, -2);
-		lua_pushvalue(state, 1);
-		lua_call(state, 1, 1);
+		std::string name(luaL_checkstring(state, 1));
+		rec = new _record(name);
 	}
 	else
 	{
-		lua_getfield(state, -1, "new");
-		lua_remove(state, -2);
-		lua_pushvalue(state, 1);
-		lua_pushvalue(state, 2);
-		lua_call(state, 2, 1);
+		std::string type(luaL_checkstring(state, 1));
+		std::string name(luaL_checkstring(state, 2));
+		rec = new _record(type, name);
 	}
+	
+	/* Wrap in userdata with our custom metatable (registered in luaopen_database) */
+	RecordUD* ud = (RecordUD*) lua_newuserdata(state, sizeof(RecordUD));
+	ud->obj = rec;
+	luaL_setmetatable(state, "lua_dbrecord");
 	
 	return 1;
 }
@@ -492,29 +496,64 @@ static int l_record_index(lua_State* state)
 {
 	const char* key = luaL_checkstring(state, 2);
 	
-	/* Check the metatable for luaaa-registered methods (stored as "<methodname") */
-	char method_key[256];
-	snprintf(method_key, sizeof(method_key), "<%s", key);
+	typedef struct { _record* obj; } RecordUD;
+	RecordUD* ud = (RecordUD*) lua_touserdata(state, 1);
 	
-	if (lua_getmetatable(state, 1))
+	if (!ud || !ud->obj)    { return 0; }
+	
+	/* Check for known method names */
+	if (strcmp(key, "name") == 0)
 	{
-		lua_getfield(state, -1, method_key);
-		if (lua_isfunction(state, -1))
-		{
-			lua_remove(state, -2);  /* remove metatable */
-			return 1;
-		}
-		lua_pop(state, 2);  /* pop nil + metatable */
+		lua_pushstring(state, ud->obj->name().c_str());
+		return 1;
+	}
+	else if (strcmp(key, "type") == 0)
+	{
+		lua_pushstring(state, ud->obj->type().c_str());
+		return 1;
 	}
 	
-	/* Not a method -- treat as a record field name */
-	typedef struct { _record* obj; int (*dtor)(void*); void* free_func; } UDD;
-	UDD* udd = (UDD*) lua_touserdata(state, 1);
-	
-	if (!udd || !udd->obj)    { return 0; }
-	
-	std::string val = udd->obj->getField(std::string(key));
+	/* Treat as a record field name */
+	std::string val = ud->obj->getField(std::string(key));
 	lua_pushstring(state, val.c_str());
+	return 1;
+}
+
+/*
+ * Custom __call for dbrecord objects. Accepts a table of field name-value
+ * pairs and sets them on the record. Replaces luaaa's __call wrapper to
+ * avoid cross-context type checking issues.
+ */
+static int l_record_call(lua_State* state)
+{
+	typedef struct { _record* obj; } RecordUD;
+	RecordUD* ud = (RecordUD*) lua_touserdata(state, 1);
+	
+	if (!ud || !ud->obj)    { return luaL_error(state, "Invalid record object"); }
+	
+	if (lua_istable(state, 2))
+	{
+		_record* rec = ud->obj;
+		
+		lua_pushnil(state);
+		while (lua_next(state, 2))
+		{
+			if (lua_type(state, -2) == LUA_TSTRING)
+			{
+				const char* fieldname = lua_tostring(state, -2);
+				const char* value = lua_tostring(state, -1);
+				
+				if (fieldname && value)
+				{
+					rec->processField(state, std::string(fieldname), std::string(value));
+				}
+			}
+			lua_pop(state, 1);
+		}
+	}
+	
+	/* Return the record object itself for chaining */
+	lua_pushvalue(state, 1);
 	return 1;
 }
 
@@ -526,13 +565,12 @@ static int l_record_newindex(lua_State* state)
 	const char* key = luaL_checkstring(state, 2);
 	const char* val = luaL_checkstring(state, 3);
 	
-	typedef struct { _record* obj; int (*dtor)(void*); void* free_func; } UDD;
-	UDD* udd = (UDD*) lua_touserdata(state, 1);
+	typedef struct { _record* obj; } RecordUD;
+	RecordUD* ud = (RecordUD*) lua_touserdata(state, 1);
 	
-	if (!udd || !udd->obj)    { return luaL_error(state, "Invalid record object"); }
+	if (!ud || !ud->obj)    { return luaL_error(state, "Invalid record object"); }
 	
-	/* Reuse the setField path -- need to set up the stack like setField expects */
-	udd->obj->setField(state);
+	ud->obj->processField(state, std::string(key), std::string(val));
 	return 0;
 }
 
@@ -699,23 +737,18 @@ int luaopen_database (lua_State *L)
 	luaL_setmetatable(L, "deregister_meta");
 	lua_setfield(L, LUA_REGISTRYINDEX, "LDB_HOOKS");
 	
-	// Database Record Class
-	LuaClass<_record> lua_rw(L, "dbrecord");
-	lua_rw.ctor<void, lua_State*>("new", &_record::create, &_record::destroy);
-	lua_rw.ctor("find", &_record::find);
-	lua_rw.fun("field", &_record::setField);
-	lua_rw.fun("info", &_record::setInfo);
-	lua_rw.fun("name", &_record::name);
-	lua_rw.fun("type", &_record::type);
-	lua_rw.fun("__call", &_record::init);
-	
-	/* Override luaaa's __index/__newindex with custom versions
-	 * that fall back to record field access */
-	luaL_getmetatable(L, "dbrecord");
-	lua_pushcfunction(L, l_record_index);
-	lua_setfield(L, -2, "__index");
-	lua_pushcfunction(L, l_record_newindex);
-	lua_setfield(L, -2, "__newindex");
+	/* Register our custom metatable for db.record() return values. */
+	if (luaL_newmetatable(L, "lua_dbrecord"))
+	{
+		lua_pushcfunction(L, l_record_index);
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, l_record_newindex);
+		lua_setfield(L, -2, "__newindex");
+		lua_pushcfunction(L, l_record_call);
+		lua_setfield(L, -2, "__call");
+		lua_pushstring(L, "dbrecord");
+		lua_setfield(L, -2, "__name");
+	}
 	lua_pop(L, 1);
 	
 	// DBENTRY* wrapper and all associated functions
