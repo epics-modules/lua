@@ -3,7 +3,7 @@ epicsEnvSet("LUA_SCRIPT_PATH", ".:./scripts")
 dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
 
-luash("scripts/test.lua", {P="test:", PORT="TEST"})
+luaLoadFile("scripts/driver.lua", {P="test:", PORT="TEST"})
 
 ---------------
 iocInit()
