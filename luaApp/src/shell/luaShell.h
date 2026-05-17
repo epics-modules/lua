@@ -12,6 +12,7 @@ epicsShareFunc int epicsShareAPI luash(const char* pathname);
 epicsShareFunc int epicsShareAPI luashLoad(const char* pathname, const char* macros);
 epicsShareFunc int epicsShareAPI luaCmd(const char* command, const char* macros);
 epicsShareFunc int epicsShareAPI luaSpawn(const char* pathname, const char* macros);
+epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* macros);
 
 epicsShareFunc void epicsShareAPI luashSetCommonState(const char* name);
 
@@ -31,6 +32,7 @@ epicsShareFunc int epicsShareAPI luaCmd(lua_State* state, const char* command, c
 int l_luaSpawn(lua_State* state);
 int l_luash(lua_State* state);
 int l_luaCmd(lua_State* state);
+int l_luaLoadFile(lua_State* state);
 #endif
 
 

@@ -725,6 +725,7 @@ epicsShareFunc lua_State* luaCreateState()
 	lua_register(output, "luaSpawn", l_luaSpawn);
 	lua_register(output, "luash", l_luash);
 	lua_register(output, "luaCmd", l_luaCmd);
+	lua_register(output, "luaLoadFile", l_luaLoadFile);
 
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
 	lua_pop(output, 1);

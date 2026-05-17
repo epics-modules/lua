@@ -342,32 +342,37 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 
 
 /*
- * File-mode execution: reads and echoes each line (matching iocsh
- * behavior), accumulates the entire file into a single buffer, then
- * compiles and executes it as one chunk. This gives proper local
- * variable scoping across the entire file while preserving
- * line-by-line echoing.
+ * File-mode execution: reads and executes each statement with
+ * line-by-line echoing (matching iocsh behavior). Multi-line
+ * constructs (function/if/for/do blocks) are accumulated until
+ * the statement is complete. Output from each statement appears
+ * immediately after the echoed lines that produced it.
  */
 static void execfile(lua_State* state, void* readlineContext)
 {
-	std::string buffer;
+	int status;
 
 	while (true)
 	{
+		lua_settop(state, 0);
+
 		const char* raw = epicsReadline(NULL, readlineContext);
 
-		if (raw == NULL)    { break; }
+		if (raw == NULL)    { return; }
 
 		std::string line(raw);
 
-		/* Echo the line (matches iocsh file-mode behavior) */
+		/* Echo the line */
 		printf("%s\n", raw);
 
-		/* Handle hash comments */
+		/* Skip empty lines */
 		std::string trimmed(line);
 		while (trimmed.length() > 0 && isspace(trimmed[0]))    { trimmed.erase(0,1); }
 
-		if (trimmed.length() > 0 && trimmed[0] == '#')
+		if (trimmed.empty())    { continue; }
+
+		/* Handle hash comments */
+		if (trimmed[0] == '#')
 		{
 			lua_getglobal(state, "LEPICS_HASH_COMMENTS");
 			const char* yn = lua_tostring(state, -1);
@@ -375,17 +380,24 @@ static void execfile(lua_State* state, void* readlineContext)
 			if (yn && std::string(yn) == "YES")    { continue; }
 		}
 
-		buffer += line + "\n";
+		if (trimmed == "exit")    { trimmed = "exit()"; line = "exit()"; }
+
+		lua_pushstring(state, trimmed.c_str());
+
+		/* Try as expression first, then as statement with continuations */
+		if ((status = addreturn(state)) != LUA_OK)
+		{
+			status = multiline(state, NULL, readlineContext);
+		}
+
+		lua_remove(state, 1);  /* remove line from the stack */
+
+		if (status == LUA_OK)     { status = docall(state, 0, LUA_MULTRET); }
+
+		if (status == LUA_BREAKSHELL)    { return; }
+		if (status == LUA_OK)            { l_print(state); }
+		else                             { report(state, status); }
 	}
-
-	if (buffer.empty())    { return; }
-
-	int status = luaL_loadbuffer(state, buffer.c_str(), buffer.size(), "=stdin");
-
-	if (status == LUA_OK)    { status = docall(state, 0, LUA_MULTRET); }
-
-	if (status == LUA_BREAKSHELL)    { return; }
-	if (status != LUA_OK)            { report(state, status); }
 }
 
 
@@ -585,10 +597,19 @@ static const iocshArg spawnCmdArg1 = { "macros", iocshArgString};
 static const iocshArg *spawnCmdArgs[2] = {&spawnCmdArg0, &spawnCmdArg1};
 static const iocshFuncDef spawnFuncDef = {"luaSpawn", 2, spawnCmdArgs};
 
-
 static void spawnCallFunc(const iocshArgBuf* args)
 {
 	luaSpawn(args[0].sval, args[1].sval);
+}
+
+static const iocshArg loadFileCmdArg0 = { "lua script", iocshArgString};
+static const iocshArg loadFileCmdArg1 = { "macros", iocshArgString};
+static const iocshArg *loadFileCmdArgs[2] = {&loadFileCmdArg0, &loadFileCmdArg1};
+static const iocshFuncDef loadFileFuncDef = {"luaLoadFile", 2, loadFileCmdArgs};
+
+static void loadFileCallFunc(const iocshArgBuf* args)
+{
+	luaLoadFile(args[0].sval, args[1].sval);
 }
 
 static void initState(lua_State* state)
@@ -777,6 +798,58 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 }
 
 
+/*
+ * Epics function to load and execute a lua script file in a new
+ * state, running synchronously in the calling thread. Unlike luash,
+ * this compiles the entire file as a single chunk (preserving local
+ * variable scope). Unlike luaSpawn, it does not create a new thread.
+ */
+epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* macros)
+{
+	if (!filename || filename[0] == '\0')
+	{
+		printf("luaLoadFile: no filename specified\n");
+		return -1;
+	}
+
+	lua_State* state = luaCreateState();
+
+	if (macros)    { luaLoadMacros(state, macros); }
+
+	std::string temp(filename);
+	std::string found = luaLocateFile(temp);
+
+	if (found.empty())
+	{
+		printf("luaLoadFile: file not found: %s\n", filename);
+		lua_close(state);
+		return -1;
+	}
+
+	int status = luaL_loadfile(state, found.c_str());
+
+	if (status)
+	{
+		printf("%s\n", lua_tostring(state, -1));
+		lua_pop(state, 1);
+		lua_close(state);
+		return status;
+	}
+
+	status = lua_pcall(state, 0, 0, 0);
+
+	if (status)
+	{
+		printf("%s\n", lua_tostring(state, -1));
+		lua_pop(state, 1);
+	}
+
+	if (!luaStateIsRegistered(state))    { lua_close(state); }
+
+	return status;
+}
+
+
 epicsShareFunc void epicsShareAPI luashSetCommonState(const char* name)
 {
 	epicsGuard<epicsMutex> guard(defaultStateMutex);
@@ -794,6 +867,7 @@ static void luashRegister(void)
 	iocshRegister(&luashFuncDef, luashCallFunc);
 	iocshRegister(&spawnFuncDef, spawnCallFunc);
 	iocshRegister(&luaCmdFuncDef, luaCmdCallFunc);
+	iocshRegister(&loadFileFuncDef, loadFileCallFunc);
 }
 
 epicsExportRegistrar(luashRegister);
@@ -851,6 +925,34 @@ int l_luash(lua_State* state)
 	}
 
 	int status = luashLoad(filename, macros.empty() ? NULL : macros.c_str());
+
+	lua_pushinteger(state, status);
+	return 1;
+}
+
+/*
+ * Lua-callable wrapper for luaLoadFile that accepts either
+ * a string or a table for macros.
+ *
+ *   luaLoadFile("config.lua", "P=dev1:,PORT=SENSOR1")
+ *   luaLoadFile("config.lua", {P="dev1:", PORT="SENSOR1"})
+ */
+int l_luaLoadFile(lua_State* state)
+{
+	const char* filename = luaL_checkstring(state, 1);
+
+	std::string macros;
+
+	if (lua_istable(state, 2))
+	{
+		macros = luaMacrosFromTable(state, 2);
+	}
+	else if (lua_isstring(state, 2))
+	{
+		macros = std::string(lua_tostring(state, 2));
+	}
+
+	int status = luaLoadFile(filename, macros.empty() ? NULL : macros.c_str());
 
 	lua_pushinteger(state, status);
 	return 1;
