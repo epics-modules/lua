@@ -372,6 +372,18 @@ static void execfile(lua_State* state, void* readlineContext)
 
 		if (trimmed.empty())    { continue; }
 
+		/* Handle < include directive */
+		if (trimmed[0] == '<')
+		{
+			printf("%s\n", raw);
+
+			trimmed.erase(0, 1);
+			while (trimmed.length() > 0 && isspace(trimmed[0]))    { trimmed.erase(0, 1); }
+
+			if (!trimmed.empty())    { luashBody(state, trimmed.c_str(), NULL); }
+			continue;
+		}
+
 		/* Handle hash comments */
 		if (trimmed[0] == '#')
 		{
