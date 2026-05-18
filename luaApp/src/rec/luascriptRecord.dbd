@@ -51,7 +51,7 @@ recordtype(luascript)
 	{
 		prompt("Lua State")
 		interest(4)
-		size(4)
+		size(8)
 		extra("void* state")
 	}
 
@@ -60,7 +60,7 @@ recordtype(luascript)
 		prompt("Record Private")
 		special(SPC_NOMOD)
 		interest(4)
-		size(4)
+		size(8)
 		extra("void *rpvt")
 	}
 
@@ -106,7 +106,7 @@ recordtype(luascript)
 	{
 		prompt("Previous CODE")
 		interest(4)
-		size(4)
+		size(8)
 		extra("char* pcode")
 	}
 
@@ -114,7 +114,7 @@ recordtype(luascript)
 	{
 		prompt("Function call substring")
 		interest(4)
-		size(4)
+		size(8)
 		extra("char* call")
 	}
 
@@ -725,70 +725,70 @@ recordtype(luascript)
 		prompt("Prev Value of AA")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *paa")
 	}
 	field(PBB,DBF_NOACCESS) {
 		prompt("Prev Value of BB")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *pbb")
 	}
 	field(PCC,DBF_NOACCESS) {
 		prompt("Prev Value of CC")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *pcc")
 	}
 	field(PDD,DBF_NOACCESS) {
 		prompt("Prev Value of DD")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *pdd")
 	}
 	field(PEE,DBF_NOACCESS) {
 		prompt("Prev Value of EE")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *pee")
 	}
 	field(PFF,DBF_NOACCESS) {
 		prompt("Prev Value of FF")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *pff")
 	}
 	field(PGG,DBF_NOACCESS) {
 		prompt("Prev Value of GG")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *pgg")
 	}
 	field(PHH,DBF_NOACCESS) {
 		prompt("Prev Value of HH")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *phh")
 	}
 	field(PII,DBF_NOACCESS) {
 		prompt("Prev Value of II")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *pii")
 	}
 	field(PJJ,DBF_NOACCESS) {
 		prompt("Prev Value of JJ")
 		special(SPC_DBADDR)
 		interest(4)
-		size(4)
+		size(8)
 		extra("char *pjj")
 	}
 
@@ -808,7 +808,7 @@ recordtype(luascript)
 	field(AVAL, DBF_NOACCESS)
 	{
 		prompt("Array output pointer")
-		size(4)
+		size(8)
 		extra("void* aval")
 	}
 
@@ -843,7 +843,7 @@ recordtype(luascript)
 	field(PAVL, DBF_NOACCESS)
 	{
 		prompt("Previous aval pointer")
-		size(4)
+		size(8)
 		extra("void* pavl")
 	}
 
