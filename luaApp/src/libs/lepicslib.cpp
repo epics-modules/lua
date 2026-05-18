@@ -51,12 +51,67 @@ static void ensure_ca_context(lua_State* L)
 /* ------------------------------------------------------------------ */
 
 /*
+ * Lua type categories for database field mapping.
+ *
+ * The native field_type values from dbFldTypes.h conflict with the
+ * DBF_* macros from db_access.h (included by cadef.h) -- they use
+ * different numeric values for the same names. To avoid this, we
+ * map the native field_type to our own category enum and switch on
+ * that instead of using any DBF_* constants.
+ */
+enum db_lua_type {
+	DB_LUA_STRING,
+	DB_LUA_CHAR,
+	DB_LUA_INTEGER,
+	DB_LUA_DOUBLE,
+	DB_LUA_ENUM,
+	DB_LUA_UNKNOWN
+};
+
+/*
+ * Database-side DBR request type values from dbFldTypes.h.
+ * These must be used instead of the DBR_* macros from db_access.h
+ * when calling dbGetField/dbPutField, because db_access.h uses a
+ * different numbering scheme than the database functions expect.
+ */
+#define DB_DBR_STRING   0   /* dbFldTypes: DBF_STRING */
+#define DB_DBR_CHAR     1   /* dbFldTypes: DBF_CHAR */
+#define DB_DBR_LONG     5   /* dbFldTypes: DBF_LONG */
+#define DB_DBR_DOUBLE  10   /* dbFldTypes: DBF_DOUBLE */
+
+/*
+ * Map the native database field_type (dbFldTypes.h enum values)
+ * to a Lua type category. Uses numeric values directly to avoid
+ * the db_access.h #define conflict.
+ *
+ * dbFldTypes.h enum:
+ *   0=STRING, 1=CHAR, 2=UCHAR, 3=SHORT, 4=USHORT,
+ *   5=LONG, 6=ULONG, 7=INT64, 8=UINT64, 9=FLOAT,
+ *   10=DOUBLE, 11=ENUM, 12=MENU, 13=DEVICE
+ */
+static enum db_lua_type dbf_to_lua_type(short field_type)
+{
+	switch (field_type)
+	{
+		case 0:              return DB_LUA_STRING;   /* DBF_STRING */
+		case 1:  case 2:     return DB_LUA_CHAR;     /* DBF_CHAR, DBF_UCHAR */
+		case 3:  case 4:     return DB_LUA_INTEGER;  /* DBF_SHORT, DBF_USHORT */
+		case 5:  case 6:     return DB_LUA_INTEGER;  /* DBF_LONG, DBF_ULONG */
+		case 7:  case 8:     return DB_LUA_DOUBLE;   /* DBF_INT64, DBF_UINT64 */
+		case 9:  case 10:    return DB_LUA_DOUBLE;   /* DBF_FLOAT, DBF_DOUBLE */
+		case 11: case 12:
+		case 13:             return DB_LUA_ENUM;     /* DBF_ENUM, DBF_MENU, DBF_DEVICE */
+		default:             return DB_LUA_UNKNOWN;
+	}
+}
+
+/*
  * db_get -- read a local PV via dbGetField.
  * Returns: number of Lua values pushed (1 on success, 2 on error).
  */
 static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 {
-	short field_type = paddr->field_type;
+	enum db_lua_type lua_type = dbf_to_lua_type(paddr->field_type);
 	long count = paddr->no_elements;
 
 	if (max_count > 0 && max_count < count)
@@ -69,16 +124,16 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 		long options = 0;
 		long nRequest = count;
 
-		switch (field_type)
+		switch (lua_type)
 		{
-			case DBF_CHAR:
+			case DB_LUA_CHAR:
 			{
 				if (as_string == 0)
 				{
 					epicsInt8* buf = (epicsInt8*) malloc(count * sizeof(epicsInt8));
 					if (!buf) { break; }
 					nRequest = count;
-					if (dbGetField(paddr, DBR_CHAR, buf, &options, &nRequest, NULL) == 0)
+					if (dbGetField(paddr, DB_DBR_CHAR, buf, &options, &nRequest, NULL) == 0)
 					{
 						lua_createtable(L, nRequest, 0);
 						for (i = 0; i < nRequest; i++)
@@ -96,7 +151,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 					char* buf = (char*) malloc(count + 1);
 					if (!buf) { break; }
 					nRequest = count;
-					if (dbGetField(paddr, DBR_CHAR, buf, &options, &nRequest, NULL) == 0)
+					if (dbGetField(paddr, DB_DBR_CHAR, buf, &options, &nRequest, NULL) == 0)
 					{
 						buf[nRequest] = '\0';
 						lua_pushstring(L, buf);
@@ -108,12 +163,12 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				break;
 			}
 
-			case DBF_STRING:
+			case DB_LUA_STRING:
 			{
 				dbr_string_t* buf = (dbr_string_t*) malloc(count * sizeof(dbr_string_t));
 				if (!buf) { break; }
 				nRequest = count;
-				if (dbGetField(paddr, DBR_STRING, buf, &options, &nRequest, NULL) == 0)
+				if (dbGetField(paddr, DB_DBR_STRING, buf, &options, &nRequest, NULL) == 0)
 				{
 					lua_createtable(L, nRequest, 0);
 					for (i = 0; i < nRequest; i++)
@@ -128,14 +183,14 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				break;
 			}
 
-			case DBF_ENUM:
+			case DB_LUA_ENUM:
 			{
 				if (as_string == 1)
 				{
 					dbr_string_t* buf = (dbr_string_t*) malloc(count * sizeof(dbr_string_t));
 					if (!buf) { break; }
 					nRequest = count;
-					if (dbGetField(paddr, DBR_STRING, buf, &options, &nRequest, NULL) == 0)
+					if (dbGetField(paddr, DB_DBR_STRING, buf, &options, &nRequest, NULL) == 0)
 					{
 						lua_createtable(L, nRequest, 0);
 						for (i = 0; i < nRequest; i++)
@@ -153,7 +208,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 					epicsInt32* buf = (epicsInt32*) malloc(count * sizeof(epicsInt32));
 					if (!buf) { break; }
 					nRequest = count;
-					if (dbGetField(paddr, DBR_LONG, buf, &options, &nRequest, NULL) == 0)
+					if (dbGetField(paddr, DB_DBR_LONG, buf, &options, &nRequest, NULL) == 0)
 					{
 						lua_createtable(L, nRequest, 0);
 						for (i = 0; i < nRequest; i++)
@@ -169,13 +224,12 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				break;
 			}
 
-			case DBF_SHORT:
-			case DBF_LONG:
+			case DB_LUA_INTEGER:
 			{
 				epicsInt32* buf = (epicsInt32*) malloc(count * sizeof(epicsInt32));
 				if (!buf) { break; }
 				nRequest = count;
-				if (dbGetField(paddr, DBR_LONG, buf, &options, &nRequest, NULL) == 0)
+				if (dbGetField(paddr, DB_DBR_LONG, buf, &options, &nRequest, NULL) == 0)
 				{
 					lua_createtable(L, nRequest, 0);
 					for (i = 0; i < nRequest; i++)
@@ -190,13 +244,12 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				break;
 			}
 
-			case DBF_FLOAT:
-			case DBF_DOUBLE:
+			case DB_LUA_DOUBLE:
 			{
 				double* buf = (double*) malloc(count * sizeof(double));
 				if (!buf) { break; }
 				nRequest = count;
-				if (dbGetField(paddr, DBR_DOUBLE, buf, &options, &nRequest, NULL) == 0)
+				if (dbGetField(paddr, DB_DBR_DOUBLE, buf, &options, &nRequest, NULL) == 0)
 				{
 					lua_createtable(L, nRequest, 0);
 					for (i = 0; i < nRequest; i++)
@@ -221,12 +274,12 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 		long options = 0;
 		long nRequest = 1;
 
-		switch (field_type)
+		switch (lua_type)
 		{
-			case DBF_STRING:
+			case DB_LUA_STRING:
 			{
 				char buf[MAX_STRING_SIZE];
-				if (dbGetField(paddr, DBR_STRING, buf, &options, &nRequest, NULL) == 0)
+				if (dbGetField(paddr, DB_DBR_STRING, buf, &options, &nRequest, NULL) == 0)
 				{
 					lua_pushstring(L, buf);
 					return 1;
@@ -234,12 +287,12 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				break;
 			}
 
-			case DBF_ENUM:
+			case DB_LUA_ENUM:
 			{
 				if (as_string == 1)
 				{
 					char buf[MAX_STRING_SIZE];
-					if (dbGetField(paddr, DBR_STRING, buf, &options, &nRequest, NULL) == 0)
+					if (dbGetField(paddr, DB_DBR_STRING, buf, &options, &nRequest, NULL) == 0)
 					{
 						lua_pushstring(L, buf);
 						return 1;
@@ -248,7 +301,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				else
 				{
 					epicsInt32 val;
-					if (dbGetField(paddr, DBR_LONG, &val, &options, &nRequest, NULL) == 0)
+					if (dbGetField(paddr, DB_DBR_LONG, &val, &options, &nRequest, NULL) == 0)
 					{
 						lua_pushinteger(L, val);
 						return 1;
@@ -257,12 +310,11 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				break;
 			}
 
-			case DBF_CHAR:
-			case DBF_SHORT:
-			case DBF_LONG:
+			case DB_LUA_CHAR:
+			case DB_LUA_INTEGER:
 			{
 				epicsInt32 val;
-				if (dbGetField(paddr, DBR_LONG, &val, &options, &nRequest, NULL) == 0)
+				if (dbGetField(paddr, DB_DBR_LONG, &val, &options, &nRequest, NULL) == 0)
 				{
 					lua_pushinteger(L, val);
 					return 1;
@@ -270,11 +322,10 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				break;
 			}
 
-			case DBF_FLOAT:
-			case DBF_DOUBLE:
+			case DB_LUA_DOUBLE:
 			{
 				double val;
-				if (dbGetField(paddr, DBR_DOUBLE, &val, &options, &nRequest, NULL) == 0)
+				if (dbGetField(paddr, DB_DBR_DOUBLE, &val, &options, &nRequest, NULL) == 0)
 				{
 					lua_pushnumber(L, val);
 					return 1;
@@ -289,7 +340,8 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 
 	/* If we get here, the read failed */
 	lua_pushnil(L);
-	lua_pushstring(L, "Failed to read local PV");
+	lua_pushfstring(L, "Failed to read local PV (field_type=%d, lua_type=%d)",
+	                (int) paddr->field_type, (int) lua_type);
 	return 2;
 }
 
@@ -308,12 +360,12 @@ static int db_put(lua_State* L, DBADDR* paddr, int val_index)
 			if (lua_isinteger(L, val_index))
 			{
 				epicsInt32 val = (epicsInt32) lua_tointeger(L, val_index);
-				status = dbPutField(paddr, DBR_LONG, &val, 1);
+				status = dbPutField(paddr, DB_DBR_LONG, &val, 1);
 			}
 			else
 			{
 				double val = lua_tonumber(L, val_index);
-				status = dbPutField(paddr, DBR_DOUBLE, &val, 1);
+				status = dbPutField(paddr, DB_DBR_DOUBLE, &val, 1);
 			}
 			break;
 		}
@@ -321,14 +373,14 @@ static int db_put(lua_State* L, DBADDR* paddr, int val_index)
 		case LUA_TBOOLEAN:
 		{
 			epicsInt32 val = lua_toboolean(L, val_index);
-			status = dbPutField(paddr, DBR_LONG, &val, 1);
+			status = dbPutField(paddr, DB_DBR_LONG, &val, 1);
 			break;
 		}
 
 		case LUA_TSTRING:
 		{
 			const char* val = lua_tostring(L, val_index);
-			status = dbPutField(paddr, DBR_STRING, val, 1);
+			status = dbPutField(paddr, DB_DBR_STRING, val, 1);
 			break;
 		}
 
@@ -354,7 +406,7 @@ static int db_put(lua_State* L, DBADDR* paddr, int val_index)
 					if (s) { strncpy(buf[i], s, MAX_STRING_SIZE - 1); }
 					lua_pop(L, 1);
 				}
-				status = dbPutField(paddr, DBR_STRING, buf, tbl_len);
+				status = dbPutField(paddr, DB_DBR_STRING, buf, tbl_len);
 				free(buf);
 			}
 			else if (elem_type == LUA_TNUMBER && elem_is_int)
@@ -368,7 +420,7 @@ static int db_put(lua_State* L, DBADDR* paddr, int val_index)
 					buf[i] = (epicsInt32) lua_tointeger(L, -1);
 					lua_pop(L, 1);
 				}
-				status = dbPutField(paddr, DBR_LONG, buf, tbl_len);
+				status = dbPutField(paddr, DB_DBR_LONG, buf, tbl_len);
 				free(buf);
 			}
 			else if (elem_type == LUA_TNUMBER)
@@ -382,7 +434,7 @@ static int db_put(lua_State* L, DBADDR* paddr, int val_index)
 					buf[i] = lua_tonumber(L, -1);
 					lua_pop(L, 1);
 				}
-				status = dbPutField(paddr, DBR_DOUBLE, buf, tbl_len);
+				status = dbPutField(paddr, DB_DBR_DOUBLE, buf, tbl_len);
 				free(buf);
 			}
 			break;
