@@ -1,5 +1,7 @@
 #include <cadef.h>
 #include <string>
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <epicsExport.h>
 #include "lepicslib.h"
@@ -41,7 +43,17 @@ static void ensure_ca_context(lua_State* L)
 }
 
 
-static int epics_get(lua_State* state, const char* pv_name, double timeout)
+/*
+ * epics_get -- core CA get function.
+ *
+ * max_count: 0 = fetch all elements, >0 = limit to this many
+ * as_string: -1 = type-dependent default, 0 = force numeric, 1 = force string
+ *   - DBF_ENUM scalar: default=numeric, string=1 returns label
+ *   - DBF_CHAR array:  default=string, string=0 returns table of ints
+ *   - DBF_CHAR scalar: string parameter ignored
+ */
+static int epics_get(lua_State* state, const char* pv_name,
+                     double timeout, int max_count, int as_string)
 {
 	if (pv_name == NULL)
 	{
@@ -74,74 +86,253 @@ static int epics_get(lua_State* state, const char* pv_name, double timeout)
 	}
 
 	int result = 0;
+	short field_type = ca_field_type(id);
+	unsigned long count = ca_element_count(id);
 
-	switch (ca_field_type(id))
+	/* Apply count limit */
+	if (max_count > 0 && (unsigned long) max_count < count)
+		count = (unsigned long) max_count;
+
+	if (count > 1)
 	{
-		case -1:
-		case DBF_NO_ACCESS:
-			break;
+		/* ---- Array path ---- */
+		unsigned long i;
 
-		case DBF_STRING:
+		switch (field_type)
 		{
-			struct dbr_time_string val;
-			status = ca_get(DBR_TIME_STRING, id, &val);
-			status = ca_pend_io(timeout);
-			if (status == ECA_NORMAL) { lua_pushstring(state, val.value); result = 1; }
-			break;
+			case DBF_CHAR:
+			{
+				if (as_string == 0)
+				{
+					/* string=false: return table of integers */
+					epicsInt8* buf = (epicsInt8*) malloc(count * sizeof(epicsInt8));
+					if (!buf) { break; }
+					status = ca_array_get(DBR_CHAR, count, id, buf);
+					status = ca_pend_io(timeout);
+					if (status == ECA_NORMAL)
+					{
+						lua_createtable(state, count, 0);
+						for (i = 0; i < count; i++)
+						{
+							lua_pushinteger(state, (unsigned char) buf[i]);
+							lua_rawseti(state, -2, i + 1);
+						}
+						result = 1;
+					}
+					free(buf);
+				}
+				else
+				{
+					/* default or string=true: return as Lua string */
+					char* buf = (char*) malloc(count + 1);
+					if (!buf) { break; }
+					status = ca_array_get(DBR_CHAR, count, id, buf);
+					status = ca_pend_io(timeout);
+					if (status == ECA_NORMAL)
+					{
+						buf[count] = '\0';
+						lua_pushstring(state, buf);
+						result = 1;
+					}
+					free(buf);
+				}
+				break;
+			}
+
+			case DBF_STRING:
+			{
+				dbr_string_t* buf = (dbr_string_t*) malloc(count * sizeof(dbr_string_t));
+				if (!buf) { break; }
+				status = ca_array_get(DBR_STRING, count, id, buf);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL)
+				{
+					lua_createtable(state, count, 0);
+					for (i = 0; i < count; i++)
+					{
+						lua_pushstring(state, buf[i]);
+						lua_rawseti(state, -2, i + 1);
+					}
+					result = 1;
+				}
+				free(buf);
+				break;
+			}
+
+			case DBF_ENUM:
+			{
+				if (as_string == 1)
+				{
+					/* string=true: return table of string labels */
+					dbr_string_t* buf = (dbr_string_t*) malloc(count * sizeof(dbr_string_t));
+					if (!buf) { break; }
+					status = ca_array_get(DBR_STRING, count, id, buf);
+					status = ca_pend_io(timeout);
+					if (status == ECA_NORMAL)
+					{
+						lua_createtable(state, count, 0);
+						for (i = 0; i < count; i++)
+						{
+							lua_pushstring(state, buf[i]);
+							lua_rawseti(state, -2, i + 1);
+						}
+						result = 1;
+					}
+					free(buf);
+				}
+				else
+				{
+					/* default or string=false: return table of integers */
+					epicsInt32* buf = (epicsInt32*) malloc(count * sizeof(epicsInt32));
+					if (!buf) { break; }
+					status = ca_array_get(DBR_LONG, count, id, buf);
+					status = ca_pend_io(timeout);
+					if (status == ECA_NORMAL)
+					{
+						lua_createtable(state, count, 0);
+						for (i = 0; i < count; i++)
+						{
+							lua_pushinteger(state, buf[i]);
+							lua_rawseti(state, -2, i + 1);
+						}
+						result = 1;
+					}
+					free(buf);
+				}
+				break;
+			}
+
+			case DBF_SHORT:
+			case DBF_LONG:
+			{
+				/* Integer arrays */
+				epicsInt32* buf = (epicsInt32*) malloc(count * sizeof(epicsInt32));
+				if (!buf) { break; }
+				status = ca_array_get(DBR_LONG, count, id, buf);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL)
+				{
+					lua_createtable(state, count, 0);
+					for (i = 0; i < count; i++)
+					{
+						lua_pushinteger(state, buf[i]);
+						lua_rawseti(state, -2, i + 1);
+					}
+					result = 1;
+				}
+				free(buf);
+				break;
+			}
+
+			case DBF_FLOAT:
+			case DBF_DOUBLE:
+			{
+				/* Floating-point arrays */
+				double* buf = (double*) malloc(count * sizeof(double));
+				if (!buf) { break; }
+				status = ca_array_get(DBR_DOUBLE, count, id, buf);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL)
+				{
+					lua_createtable(state, count, 0);
+					for (i = 0; i < count; i++)
+					{
+						lua_pushnumber(state, buf[i]);
+						lua_rawseti(state, -2, i + 1);
+					}
+					result = 1;
+				}
+				free(buf);
+				break;
+			}
+
+			default:
+				break;
 		}
-
-		case DBF_ENUM:
+	}
+	else
+	{
+		/* ---- Scalar path ---- */
+		switch (field_type)
 		{
-			struct dbr_time_enum val;
-			status = ca_get(DBR_TIME_ENUM, id, &val);
-			status = ca_pend_io(timeout);
-			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
-			break;
-		}
+			case -1:
+			case DBF_NO_ACCESS:
+				break;
 
-		case DBF_CHAR:
-		{
-			struct dbr_time_char val;
-			status = ca_get(DBR_TIME_CHAR, id, &val);
-			status = ca_pend_io(timeout);
-			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
-			break;
-		}
+			case DBF_STRING:
+			{
+				struct dbr_time_string val;
+				status = ca_get(DBR_TIME_STRING, id, &val);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL) { lua_pushstring(state, val.value); result = 1; }
+				break;
+			}
 
-		case DBF_SHORT:
-		{
-			struct dbr_time_short val;
-			status = ca_get(DBR_TIME_SHORT, id, &val);
-			status = ca_pend_io(timeout);
-			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
-			break;
-		}
+			case DBF_ENUM:
+			{
+				if (as_string == 1)
+				{
+					/* string=true: return enum label */
+					struct dbr_time_string val;
+					status = ca_get(DBR_TIME_STRING, id, &val);
+					status = ca_pend_io(timeout);
+					if (status == ECA_NORMAL) { lua_pushstring(state, val.value); result = 1; }
+				}
+				else
+				{
+					/* default or string=false: return numeric index */
+					struct dbr_time_enum val;
+					status = ca_get(DBR_TIME_ENUM, id, &val);
+					status = ca_pend_io(timeout);
+					if (status == ECA_NORMAL) { lua_pushinteger(state, val.value); result = 1; }
+				}
+				break;
+			}
 
-		case DBF_LONG:
-		{
-			struct dbr_time_long val;
-			status = ca_get(DBR_TIME_LONG, id, &val);
-			status = ca_pend_io(timeout);
-			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
-			break;
-		}
+			case DBF_CHAR:
+			{
+				struct dbr_time_char val;
+				status = ca_get(DBR_TIME_CHAR, id, &val);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL) { lua_pushinteger(state, val.value); result = 1; }
+				break;
+			}
 
-		case DBF_FLOAT:
-		{
-			struct dbr_time_float val;
-			status = ca_get(DBR_TIME_FLOAT, id, &val);
-			status = ca_pend_io(timeout);
-			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
-			break;
-		}
+			case DBF_SHORT:
+			{
+				struct dbr_time_short val;
+				status = ca_get(DBR_TIME_SHORT, id, &val);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL) { lua_pushinteger(state, val.value); result = 1; }
+				break;
+			}
 
-		case DBF_DOUBLE:
-		{
-			struct dbr_time_double val;
-			status = ca_get(DBR_TIME_DOUBLE, id, &val);
-			status = ca_pend_io(timeout);
-			if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
-			break;
+			case DBF_LONG:
+			{
+				struct dbr_time_long val;
+				status = ca_get(DBR_TIME_LONG, id, &val);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL) { lua_pushinteger(state, val.value); result = 1; }
+				break;
+			}
+
+			case DBF_FLOAT:
+			{
+				struct dbr_time_float val;
+				status = ca_get(DBR_TIME_FLOAT, id, &val);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
+				break;
+			}
+
+			case DBF_DOUBLE:
+			{
+				struct dbr_time_double val;
+				status = ca_get(DBR_TIME_DOUBLE, id, &val);
+				status = ca_pend_io(timeout);
+				if (status == ECA_NORMAL) { lua_pushnumber(state, val.value); result = 1; }
+				break;
+			}
 		}
 	}
 
@@ -193,8 +384,16 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 	{
 		case LUA_TNUMBER:
 		{
-			double data = lua_tonumber(state, offset);
-			status = ca_put(DBR_DOUBLE, id, &data);
+			if (lua_isinteger(state, offset))
+			{
+				epicsInt32 data = (epicsInt32) lua_tointeger(state, offset);
+				status = ca_put(DBR_LONG, id, &data);
+			}
+			else
+			{
+				double data = lua_tonumber(state, offset);
+				status = ca_put(DBR_DOUBLE, id, &data);
+			}
 			break;
 		}
 
@@ -209,6 +408,81 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 		{
 			const char* data = lua_tostring(state, offset);
 			status = ca_put(DBR_STRING, id, data);
+			break;
+		}
+
+		case LUA_TTABLE:
+		{
+			int tbl_len = (int) lua_rawlen(state, offset);
+
+			if (tbl_len == 0)
+			{
+				status = ECA_NORMAL;
+				break;
+			}
+
+			/* Determine element type from the first entry */
+			lua_rawgeti(state, offset, 1);
+			int elem_type = lua_type(state, -1);
+			int elem_is_int = lua_isinteger(state, -1);
+			lua_pop(state, 1);
+
+			if (elem_type == LUA_TSTRING)
+			{
+				dbr_string_t* buf = (dbr_string_t*) calloc(tbl_len, sizeof(dbr_string_t));
+				if (!buf) { status = ECA_ALLOCMEM; break; }
+
+				int i;
+				for (i = 0; i < tbl_len; i++)
+				{
+					lua_rawgeti(state, offset, i + 1);
+					const char* s = lua_tostring(state, -1);
+					if (s) { strncpy(buf[i], s, MAX_STRING_SIZE - 1); }
+					lua_pop(state, 1);
+				}
+
+				status = ca_array_put(DBR_STRING, tbl_len, id, buf);
+				free(buf);
+			}
+			else if (elem_type == LUA_TNUMBER && elem_is_int)
+			{
+				epicsInt32* buf = (epicsInt32*) malloc(tbl_len * sizeof(epicsInt32));
+				if (!buf) { status = ECA_ALLOCMEM; break; }
+
+				int i;
+				for (i = 0; i < tbl_len; i++)
+				{
+					lua_rawgeti(state, offset, i + 1);
+					buf[i] = (epicsInt32) lua_tointeger(state, -1);
+					lua_pop(state, 1);
+				}
+
+				status = ca_array_put(DBR_LONG, tbl_len, id, buf);
+				free(buf);
+			}
+			else if (elem_type == LUA_TNUMBER)
+			{
+				double* buf = (double*) malloc(tbl_len * sizeof(double));
+				if (!buf) { status = ECA_ALLOCMEM; break; }
+
+				int i;
+				for (i = 0; i < tbl_len; i++)
+				{
+					lua_rawgeti(state, offset, i + 1);
+					buf[i] = lua_tonumber(state, -1);
+					lua_pop(state, 1);
+				}
+
+				status = ca_array_put(DBR_DOUBLE, tbl_len, id, buf);
+				free(buf);
+			}
+			else
+			{
+				ca_clear_channel(id);
+				lua_pushnil(state);
+				lua_pushfstring(state, "Unsupported table element type for put to '%s'", pv_name);
+				return 2;
+			}
 			break;
 		}
 
@@ -239,14 +513,33 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 
 static int l_caget(lua_State* state)
 {
-	int num_ops = lua_gettop(state);
-
 	const char* pv_name = luaL_checkstring(state, 1);
 	double timeout = 1.0;
+	int max_count = 0;
+	int as_string = -1;
 
-	if (num_ops == 2)    { timeout = luaL_checknumber(state, 2); }
+	if (lua_isnumber(state, 2))
+	{
+		/* Old-style: epics.get("pv", timeout) */
+		timeout = lua_tonumber(state, 2);
+	}
+	else if (lua_istable(state, 2))
+	{
+		/* New-style: epics.get("pv", {timeout=5, count=100, string=true}) */
+		lua_getfield(state, 2, "timeout");
+		if (!lua_isnil(state, -1))    { timeout = lua_tonumber(state, -1); }
+		lua_pop(state, 1);
 
-	return epics_get(state, pv_name, timeout);
+		lua_getfield(state, 2, "count");
+		if (!lua_isnil(state, -1))    { max_count = (int) lua_tointeger(state, -1); }
+		lua_pop(state, 1);
+
+		lua_getfield(state, 2, "string");
+		if (!lua_isnil(state, -1))    { as_string = lua_toboolean(state, -1); }
+		lua_pop(state, 1);
+	}
+
+	return epics_get(state, pv_name, timeout, max_count, as_string);
 }
 
 static int l_caput(lua_State* state)
@@ -254,7 +547,18 @@ static int l_caput(lua_State* state)
 	const char* pv_name = luaL_checkstring(state, 1);
 	double timeout = 1.0;
 
-	if (lua_gettop(state) >= 3)    { timeout = luaL_checknumber(state, 3); }
+	if (lua_isnumber(state, 3))
+	{
+		/* Old-style: epics.put("pv", value, timeout) */
+		timeout = lua_tonumber(state, 3);
+	}
+	else if (lua_istable(state, 3))
+	{
+		/* New-style: epics.put("pv", value, {timeout=5}) */
+		lua_getfield(state, 3, "timeout");
+		if (!lua_isnil(state, -1))    { timeout = lua_tonumber(state, -1); }
+		lua_pop(state, 1);
+	}
 
 	return epics_put(state, pv_name, 2, timeout);
 }
@@ -273,7 +577,7 @@ static int l_pvgetval(lua_State* state)
 	full_name.append(".");
 	full_name.append(field_name);
 
-	return epics_get(state, full_name.c_str(), 1.0);
+	return epics_get(state, full_name.c_str(), 1.0, 0, -1);
 }
 
 static int l_pvsetval(lua_State* state)
