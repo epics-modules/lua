@@ -26,9 +26,25 @@ Static Database Access
 db.entry ()
 ```
 
-Creates a DBENTRY pointer which can be used with all implemented static database 
-access functions. dbFreeEntry will be called on the pointer automatically when the 
-entry is garbage collected.
+Creates a DBENTRY cursor which can be used with all implemented static database 
+access functions. dbFreeEntry will be called on the cursor automatically when it
+is garbage collected.
+
+The entry object supports two calling styles. Functions can be called as methods
+on the entry object using the `:` syntax, or as module functions on the `db`
+table with the entry passed as the first argument:
+
+```lua
+local ent = db.entry()
+
+-- Method syntax
+ent:findRecord("myrecord")
+print(ent:getFieldName())
+
+-- Module function syntax (equivalent)
+db.findRecord(ent, "myrecord")
+print(db.getFieldName(ent))
+```
 
 <br>
 
@@ -40,7 +56,7 @@ to be lowercase; so, for example, dbGetFieldName would become the module functio
 
 Functions which would return a status code, like dbFindRecord, will instead return a boolean representing
 success or failure (true or false respectively). Where a DBENTRY pointer is required as a parameter, instead
-instances of the dbentry class will be used, created with the aforementioned db.entry function.
+instances of the dbentry object will be used, created with the aforementioned db.entry function.
 
 * getNRecordTypes
 * findRecordType
