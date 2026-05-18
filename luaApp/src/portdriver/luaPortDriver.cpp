@@ -1,5 +1,6 @@
 #include <asynPortDriver.h>
 #include <asynPortClient.h>
+#include <errlog.h>
 #include "stdio.h"
 #include <cstring>
 #include <string>
@@ -241,7 +242,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 	if (status)
 	{
 		const char* msg = lua_tostring(state, -1);
-		printf("%s\n", msg);
+		errlogPrintf("%s\n", msg);
 		return;
 	}
 
@@ -317,7 +318,7 @@ int luaPortDriver::callReadFunction()
 	if (status)
 	{
 		const char* msg = lua_tostring(this->state, -1);
-		printf("%s\n", msg);
+		errlogPrintf("%s\n", msg);
 	}
 
 	return status;
@@ -356,7 +357,7 @@ int luaPortDriver::callWriteFunction()
 	if (status)
 	{
 		const char* msg = lua_tostring(state, -1);
-		printf("%s\n", msg);
+		errlogPrintf("%s\n", msg);
 	}
 
 	return status;

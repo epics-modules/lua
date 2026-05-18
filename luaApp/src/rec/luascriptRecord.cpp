@@ -229,7 +229,7 @@ static int getState(luascriptRecord* record, std::string name)
 
 	if (status)
 	{
-		printf("Error loading filename: %s, see ERR field\n", name.c_str());
+		errlogPrintf("Error loading filename: %s, see ERR field\n", name.c_str());
 		logError(record);
 		return -1;
 	}
@@ -1175,13 +1175,13 @@ static long special(dbAddr* paddr, int after)
 				{
 					if (! (pvlMask & pvlOptCA))
 					{
-						printf("luascriptRecord(%s):non-CA link to link field\n", name);
+						errlogPrintf("luascriptRecord(%s):non-CA link to link field\n", name);
 					}
 				}
 
 				if (record->wait && !(pvlMask & pvlOptCA))
 				{
-					printf("luascriptRecord(%s):Can't wait with non-CA link attribute\n", name);
+					errlogPrintf("luascriptRecord(%s):Can't wait with non-CA link attribute\n", name);
 				}
 			}
 		}

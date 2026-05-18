@@ -6,6 +6,7 @@
 
 #include "link.h"
 
+#include <errlog.h>
 #include <epicsExport.h>
 
 #include "luaEpics.h"
@@ -23,7 +24,7 @@ extern "C"
 		
 		if (code.empty())
 		{
-			printf("Error parsing INP string, format is '@filename function [portname]'\n");
+			errlogPrintf("Error parsing INP string, format is '@filename function [portname]'\n");
 			delete output;
 			return NULL;
 		}
@@ -47,7 +48,7 @@ extern "C"
 		
 		if ((has_start && !has_end) || (has_end && !has_start))
 		{
-			printf("Error parsing function parameters, format is 'function_name(param1,param2,...)'\n");
+			errlogPrintf("Error parsing function parameters, format is 'function_name(param1,param2,...)'\n");
 			delete output;
 			return NULL;
 		}
@@ -90,7 +91,7 @@ extern "C"
 		
 		if (luaLoadScript(output->state, output->filename))
 		{
-			printf("Error loading file: %s\n", output->filename);
+			errlogPrintf("Error loading file: %s\n", output->filename);
 			lua_close(output->state);
 			delete output;
 			return NULL;
@@ -113,7 +114,7 @@ extern "C"
 			std::string err(lua_tostring(proto->state, -1));
 			lua_pop(proto->state, 1);
 			
-			printf("Calling %s in %s resulted in error: %s\n", proto->function_name, proto->filename, err.c_str());
+			errlogPrintf("Calling %s in %s resulted in error: %s\n", proto->function_name, proto->filename, err.c_str());
 		}
 		
 		return status;

@@ -1,6 +1,7 @@
 #include <asynPortDriver.h>
 #include <asynPortClient.h>
 #include <asynShellCommands.h>
+#include <errlog.h>
 #include "stdio.h"
 #include <cstring>
 #include <string>
@@ -628,7 +629,7 @@ static void asyn_settrace(lua_State* state, std::string portname, int addr, std:
 		
 		if(status!=asynSuccess) 
 		{
-			printf("%s\n",pasynUser->errorMessage);
+			errlogPrintf("%s\n",pasynUser->errorMessage);
 			pasynManager->freeAsynUser(pasynUser);
 			return;
 		}
@@ -639,7 +640,7 @@ static void asyn_settrace(lua_State* state, std::string portname, int addr, std:
 	if (val)    { status = pasynTrace->setTraceMask(pasynUser, prevmask | mask); }
 	else        { status = pasynTrace->setTraceMask(pasynUser, prevmask & ~mask); }
 	
-	if (status!=asynSuccess)    { printf("%s\n",pasynUser->errorMessage); }
+	if (status!=asynSuccess)    { errlogPrintf("%s\n",pasynUser->errorMessage); }
 	if (pasynUser)              { pasynManager->freeAsynUser(pasynUser); }
 }
 
@@ -662,7 +663,7 @@ static void asyn_settraceio(lua_State* state, std::string portname, int addr, st
 		
 		if(status!=asynSuccess) 
 		{
-			printf("%s\n",pasynUser->errorMessage);
+			errlogPrintf("%s\n",pasynUser->errorMessage);
 			pasynManager->freeAsynUser(pasynUser);
 			return;
 		}
@@ -673,7 +674,7 @@ static void asyn_settraceio(lua_State* state, std::string portname, int addr, st
 	if (val)    { status = pasynTrace->setTraceIOMask(pasynUser, prevmask | mask); }
 	else        { status = pasynTrace->setTraceIOMask(pasynUser, prevmask & ~mask); }
 	
-	if (status!=asynSuccess)    { printf("%s\n",pasynUser->errorMessage); }
+	if (status!=asynSuccess)    { errlogPrintf("%s\n",pasynUser->errorMessage); }
 	if (pasynUser)              { pasynManager->freeAsynUser(pasynUser); }
 }
 
@@ -1094,7 +1095,7 @@ private:
 		int status = lua_pcall(this->state, 1, 1, 0);
 		if (status)
 		{
-			printf("%s\n", lua_tostring(this->state, -1));
+			errlogPrintf("%s\n", lua_tostring(this->state, -1));
 			lua_pop(this->state, 1);
 		}
 		return status;
@@ -1107,7 +1108,7 @@ private:
 		int status = lua_pcall(this->state, 2, 0, 0);
 		if (status)
 		{
-			printf("%s\n", lua_tostring(this->state, -1));
+			errlogPrintf("%s\n", lua_tostring(this->state, -1));
 			lua_pop(this->state, 1);
 		}
 		return status;
@@ -1741,7 +1742,7 @@ static int l_driver_new(lua_State* state)
 		if (lua_pcall(state, 1, 0, 0) != LUA_OK)
 		{
 			const char* err = lua_tostring(state, -1);
-			printf("Error in driver init: %s\n", err);
+			errlogPrintf("Error in driver init: %s\n", err);
 			lua_pop(state, 1);
 		}
 	}

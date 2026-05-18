@@ -5,6 +5,7 @@
 
 #include <dbStaticLib.h>
 #include <iocsh.h>
+#include <errlog.h>
 #include <epicsExport.h>
 #include <epicsThread.h>
 #include "luaEpics.h"
@@ -702,7 +703,7 @@ static void myDatabaseHook(const char* fname, const char* macro)
 			
 			if (status)    
 			{
-				printf("Database hook error: %s\n", lua_tostring(*it, -1));
+				errlogPrintf("Database hook error: %s\n", lua_tostring(*it, -1));
 				lua_pop(*it, 1);
 			}
 		}
