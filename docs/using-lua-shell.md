@@ -54,15 +54,25 @@ Calling the Lua Shell From Inside The IOC Shell
 Once the dbd has been loaded and the registerRecordDeviceDriver command
 has been called on an IOC, you can call the *luash* command. Luash takes
 in two parameters, the first, the name of a lua script to run, and the
-second a set of macros to be set as global variables in the lua shell’s
-state. The macros are defined in the same “aaa=bbb,ccc=ddd” form that
+second a set of macros to be set as global variables in the lua shell's
+state. The macros are defined in the same "aaa=bbb,ccc=ddd" form that
 the ioc shell uses for iocshLoad/iocshRun and that is used for
 dbLoadRecords/dbLoadTemplate. One difference, however, is that strings
 need to be quoted in order to be recognized as string variables, any
 non-quoted value will be interpreted as a number. So to create a global
 numeric variable X with the value 5 and a string variable TEXT with the
-value “Hello, World!” you would have your second parameter as
-“X=5,TEXT=‘Hello,World’”.
+value "Hello, World!" you would have your second parameter as
+"X=5,TEXT='Hello,World'".
+
+When called from within Lua (e.g., from a running luash session), all
+shell and script commands also accept a Lua table for macros:
+
+```lua
+luash("script.lua", {X=5, TEXT="Hello,World"})
+luaSpawn("driver.lua", {PORT="serial1"})
+luaLoadFile("config.lua", {P="dev1:", R="sensor"})
+luaCmd("epicsEnvSet('K','V')", {P="dev1:"})
+```
 
 The luash command will then attempt to find the script you have given
 it. It does this by searching for a file with the given name in a set of
@@ -71,7 +81,7 @@ variable is undefined, the command will search within the current
 directory. As well, if no script name is given, the shell will take
 commands from the standard input, with a prompt set by the environment
 variable LUASH_PS1. Additionally, within the shell, you can find and
-include other scripts by using the ‘<’ character. Putting
+include other scripts by using the '<' character. Putting
 
 
 ```
@@ -81,10 +91,24 @@ include other scripts by using the ‘<’ character. Putting
 Will attempt to find script.lua by the same process as detailed above
 and include all the text of that file at the insertion point. When
 running any script the lua shell will exit at the end of the file being
-read. 
+read.
+
+When luash runs a file, it executes each statement as it reads it,
+echoing lines and displaying output interleaved (matching iocsh behavior).
+Multi-line constructs such as function definitions, if blocks, and loops
+are accumulated until the statement is complete before execution. This
+means that output from print() calls and errors appear immediately after
+the line that produced them, making it easy to trace execution in IOC
+startup scripts.
+
+Note that because each top-level statement is compiled separately in
+file mode, `local` variables do not persist between statements. If you
+need local variable scope across multiple lines, use `luaLoadFile` (see
+below), which compiles the entire file as a single chunk, or wrap your
+code in a `do ... end` block.
 
 For both files and commands from the standard input, a single line
-with only the word ‘exit’ will break from the current level of shell
+with only the word 'exit' will break from the current level of shell
 execution. In example, if you were to load the file script.lua as seen
 above, and the file had the following code within it
 
@@ -101,6 +125,39 @@ resume to the shell that called script.lua.
 As a note, the use of 'exit' is replaced automatically with an actual call
 to a function 'exit()' by the shell. This is done to make the code proper
 in regards to lua syntax, while still being able to provide syntactic sugar.
+
+
+luaLoadFile
+-----------
+
+The `luaLoadFile` command loads and executes a Lua script file as a single
+chunk in a new Lua state. Unlike `luash`, the entire file is compiled at
+once, so `local` variables work across lines. Unlike `luaSpawn`, execution
+is synchronous -- the command blocks until the script completes.
+
+```
+luaLoadFile "script.lua" "P=dev1:,R=sensor"
+```
+
+From within Lua, table macros are also supported:
+
+```lua
+luaLoadFile("config.lua", {P="dev1:", R="sensor"})
+```
+
+If the script registers its Lua state (via `luaRegisterState`), the state
+is kept alive after execution. Otherwise, the state is closed when the
+script finishes.
+
+
+### Command Comparison
+
+| Command | Execution | Scope | Line echoing | Use case |
+| ------- | --------- | ----- | ------------ | -------- |
+| `luash "file.lua"` | Synchronous, line-by-line | Per-statement | Yes, interleaved with output | IOC startup scripts |
+| `luaLoadFile "file.lua"` | Synchronous, whole-file | Single chunk (locals work) | No | Library/config scripts |
+| `luaSpawn "file.lua"` | Background thread, whole-file | Single chunk (locals work) | No | Long-running driver scripts |
+| `luaCmd "code"` | Synchronous, single statement | One-shot | No | One-liner commands |
 
 Lua Shell As A Replacement For The IOC Shell
 --------------------------------------------
