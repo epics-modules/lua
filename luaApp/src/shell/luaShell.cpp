@@ -316,7 +316,11 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 			lua_pop(state, 1);
 			if (yn && std::string(yn) == "YES")
 			{
-				if (prompt == NULL)    { printf("%s\n", raw); }
+				/* #- comments are silent, other # comments are echoed */
+				if (prompt == NULL && (line.length() < 2 || line[1] != '-'))
+				{
+					printf("%s\n", raw);
+				}
 				continue;
 			}
 		}
@@ -362,10 +366,7 @@ static void execfile(lua_State* state, void* readlineContext)
 
 		std::string line(raw);
 
-		/* Echo the line */
-		printf("%s\n", raw);
-
-		/* Skip empty lines */
+		/* Skip empty lines (don't echo) */
 		std::string trimmed(line);
 		while (trimmed.length() > 0 && isspace(trimmed[0]))    { trimmed.erase(0,1); }
 
@@ -377,8 +378,19 @@ static void execfile(lua_State* state, void* readlineContext)
 			lua_getglobal(state, "LEPICS_HASH_COMMENTS");
 			const char* yn = lua_tostring(state, -1);
 			lua_pop(state, 1);
-			if (yn && std::string(yn) == "YES")    { continue; }
+			if (yn && std::string(yn) == "YES")
+			{
+				/* #- comments are silent, other # comments are echoed */
+				if (trimmed.length() < 2 || trimmed[1] != '-')
+				{
+					printf("%s\n", raw);
+				}
+				continue;
+			}
 		}
+
+		/* Echo the line */
+		printf("%s\n", raw);
 
 		if (trimmed == "exit")    { trimmed = "exit()"; line = "exit()"; }
 
