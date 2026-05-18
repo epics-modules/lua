@@ -769,7 +769,7 @@ static bool checkValUpdate(luascriptRecord* record)
 			return true;
 
 		case luascriptOOPT_On_Change:
-			return (fabs(pval - val) > record->mdel);
+			return (fabs(pval - val) > 0.0);
 
 		case luascriptOOPT_When_Zero:
 			return !val;
