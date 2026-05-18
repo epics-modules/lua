@@ -914,7 +914,16 @@ static void processCallback(void* data)
 
 		if (incomplete(state, status))
 		{
+			/* Incomplete statement -- incomplete() already popped the error message */
 			logError(record);
+			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
+			lua_error = 1;
+		}
+		else if (status != LUA_OK)
+		{
+			/* Non-incomplete syntax error */
+			logError(record);      /* pops error message */
+			lua_pop(state, 1);     /* pop original call_string */
 			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
 			lua_error = 1;
 		}
@@ -995,6 +1004,9 @@ static void processCallback(void* data)
 			lua_pop(state, 1);
 		}
 	}
+
+	/* Ensure the Lua stack is clean before finishing */
+	lua_settop(state, 0);
 
 	recGblGetTimeStamp(record);
 	checkAlarms(record);
