@@ -14,10 +14,12 @@ nav_order: 3
 - TOC
 {:toc}
 
-The epics library provides Channel Access functions for reading and writing 
-EPICS PVs from Lua scripts. A CA context is created automatically on first 
-use and cached for the lifetime of the Lua state, so repeated calls do not 
-incur context creation overhead.
+The epics library provides functions for reading and writing EPICS PVs from 
+Lua scripts. When a PV exists in the local IOC database, reads and writes use 
+direct database access (`dbGetField`/`dbPutField`) for maximum performance. 
+When the PV is not found locally, Channel Access is used automatically. A CA 
+context is created on first remote access and cached for the lifetime of the 
+Lua state.
 
 All functions that can fail return `nil, "error message"` on error, allowing
 idiomatic Lua error handling:

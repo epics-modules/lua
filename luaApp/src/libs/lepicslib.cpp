@@ -1,3 +1,6 @@
+#include <dbAccess.h>
+#include <dbAddr.h>
+#include <iocsh.h>
 #include <cadef.h>
 #include <string>
 #include <stdlib.h>
@@ -43,8 +46,373 @@ static void ensure_ca_context(lua_State* L)
 }
 
 
+/* ------------------------------------------------------------------ */
+/*  Direct database access helpers for local PVs                       */
+/* ------------------------------------------------------------------ */
+
 /*
- * epics_get -- core CA get function.
+ * db_get -- read a local PV via dbGetField.
+ * Returns: number of Lua values pushed (1 on success, 2 on error).
+ */
+static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
+{
+	short field_type = paddr->field_type;
+	long count = paddr->no_elements;
+
+	if (max_count > 0 && max_count < count)
+		count = max_count;
+
+	if (count > 1)
+	{
+		/* ---- Array path ---- */
+		long i;
+		long options = 0;
+		long nRequest = count;
+
+		switch (field_type)
+		{
+			case DBF_CHAR:
+			{
+				if (as_string == 0)
+				{
+					epicsInt8* buf = (epicsInt8*) malloc(count * sizeof(epicsInt8));
+					if (!buf) { break; }
+					nRequest = count;
+					if (dbGetField(paddr, DBR_CHAR, buf, &options, &nRequest, NULL) == 0)
+					{
+						lua_createtable(L, nRequest, 0);
+						for (i = 0; i < nRequest; i++)
+						{
+							lua_pushinteger(L, (unsigned char) buf[i]);
+							lua_rawseti(L, -2, i + 1);
+						}
+						free(buf);
+						return 1;
+					}
+					free(buf);
+				}
+				else
+				{
+					char* buf = (char*) malloc(count + 1);
+					if (!buf) { break; }
+					nRequest = count;
+					if (dbGetField(paddr, DBR_CHAR, buf, &options, &nRequest, NULL) == 0)
+					{
+						buf[nRequest] = '\0';
+						lua_pushstring(L, buf);
+						free(buf);
+						return 1;
+					}
+					free(buf);
+				}
+				break;
+			}
+
+			case DBF_STRING:
+			{
+				dbr_string_t* buf = (dbr_string_t*) malloc(count * sizeof(dbr_string_t));
+				if (!buf) { break; }
+				nRequest = count;
+				if (dbGetField(paddr, DBR_STRING, buf, &options, &nRequest, NULL) == 0)
+				{
+					lua_createtable(L, nRequest, 0);
+					for (i = 0; i < nRequest; i++)
+					{
+						lua_pushstring(L, buf[i]);
+						lua_rawseti(L, -2, i + 1);
+					}
+					free(buf);
+					return 1;
+				}
+				free(buf);
+				break;
+			}
+
+			case DBF_ENUM:
+			{
+				if (as_string == 1)
+				{
+					dbr_string_t* buf = (dbr_string_t*) malloc(count * sizeof(dbr_string_t));
+					if (!buf) { break; }
+					nRequest = count;
+					if (dbGetField(paddr, DBR_STRING, buf, &options, &nRequest, NULL) == 0)
+					{
+						lua_createtable(L, nRequest, 0);
+						for (i = 0; i < nRequest; i++)
+						{
+							lua_pushstring(L, buf[i]);
+							lua_rawseti(L, -2, i + 1);
+						}
+						free(buf);
+						return 1;
+					}
+					free(buf);
+				}
+				else
+				{
+					epicsInt32* buf = (epicsInt32*) malloc(count * sizeof(epicsInt32));
+					if (!buf) { break; }
+					nRequest = count;
+					if (dbGetField(paddr, DBR_LONG, buf, &options, &nRequest, NULL) == 0)
+					{
+						lua_createtable(L, nRequest, 0);
+						for (i = 0; i < nRequest; i++)
+						{
+							lua_pushinteger(L, buf[i]);
+							lua_rawseti(L, -2, i + 1);
+						}
+						free(buf);
+						return 1;
+					}
+					free(buf);
+				}
+				break;
+			}
+
+			case DBF_SHORT:
+			case DBF_LONG:
+			{
+				epicsInt32* buf = (epicsInt32*) malloc(count * sizeof(epicsInt32));
+				if (!buf) { break; }
+				nRequest = count;
+				if (dbGetField(paddr, DBR_LONG, buf, &options, &nRequest, NULL) == 0)
+				{
+					lua_createtable(L, nRequest, 0);
+					for (i = 0; i < nRequest; i++)
+					{
+						lua_pushinteger(L, buf[i]);
+						lua_rawseti(L, -2, i + 1);
+					}
+					free(buf);
+					return 1;
+				}
+				free(buf);
+				break;
+			}
+
+			case DBF_FLOAT:
+			case DBF_DOUBLE:
+			{
+				double* buf = (double*) malloc(count * sizeof(double));
+				if (!buf) { break; }
+				nRequest = count;
+				if (dbGetField(paddr, DBR_DOUBLE, buf, &options, &nRequest, NULL) == 0)
+				{
+					lua_createtable(L, nRequest, 0);
+					for (i = 0; i < nRequest; i++)
+					{
+						lua_pushnumber(L, buf[i]);
+						lua_rawseti(L, -2, i + 1);
+					}
+					free(buf);
+					return 1;
+				}
+				free(buf);
+				break;
+			}
+
+			default:
+				break;
+		}
+	}
+	else
+	{
+		/* ---- Scalar path ---- */
+		long options = 0;
+		long nRequest = 1;
+
+		switch (field_type)
+		{
+			case DBF_STRING:
+			{
+				char buf[MAX_STRING_SIZE];
+				if (dbGetField(paddr, DBR_STRING, buf, &options, &nRequest, NULL) == 0)
+				{
+					lua_pushstring(L, buf);
+					return 1;
+				}
+				break;
+			}
+
+			case DBF_ENUM:
+			{
+				if (as_string == 1)
+				{
+					char buf[MAX_STRING_SIZE];
+					if (dbGetField(paddr, DBR_STRING, buf, &options, &nRequest, NULL) == 0)
+					{
+						lua_pushstring(L, buf);
+						return 1;
+					}
+				}
+				else
+				{
+					epicsInt32 val;
+					if (dbGetField(paddr, DBR_LONG, &val, &options, &nRequest, NULL) == 0)
+					{
+						lua_pushinteger(L, val);
+						return 1;
+					}
+				}
+				break;
+			}
+
+			case DBF_CHAR:
+			case DBF_SHORT:
+			case DBF_LONG:
+			{
+				epicsInt32 val;
+				if (dbGetField(paddr, DBR_LONG, &val, &options, &nRequest, NULL) == 0)
+				{
+					lua_pushinteger(L, val);
+					return 1;
+				}
+				break;
+			}
+
+			case DBF_FLOAT:
+			case DBF_DOUBLE:
+			{
+				double val;
+				if (dbGetField(paddr, DBR_DOUBLE, &val, &options, &nRequest, NULL) == 0)
+				{
+					lua_pushnumber(L, val);
+					return 1;
+				}
+				break;
+			}
+
+			default:
+				break;
+		}
+	}
+
+	/* If we get here, the read failed */
+	lua_pushnil(L);
+	lua_pushstring(L, "Failed to read local PV");
+	return 2;
+}
+
+/*
+ * db_put -- write a local PV via dbPutField.
+ * Returns: number of Lua values pushed (1 on success, 2 on error).
+ */
+static int db_put(lua_State* L, DBADDR* paddr, int val_index)
+{
+	long status = -1;
+
+	switch (lua_type(L, val_index))
+	{
+		case LUA_TNUMBER:
+		{
+			if (lua_isinteger(L, val_index))
+			{
+				epicsInt32 val = (epicsInt32) lua_tointeger(L, val_index);
+				status = dbPutField(paddr, DBR_LONG, &val, 1);
+			}
+			else
+			{
+				double val = lua_tonumber(L, val_index);
+				status = dbPutField(paddr, DBR_DOUBLE, &val, 1);
+			}
+			break;
+		}
+
+		case LUA_TBOOLEAN:
+		{
+			epicsInt32 val = lua_toboolean(L, val_index);
+			status = dbPutField(paddr, DBR_LONG, &val, 1);
+			break;
+		}
+
+		case LUA_TSTRING:
+		{
+			const char* val = lua_tostring(L, val_index);
+			status = dbPutField(paddr, DBR_STRING, val, 1);
+			break;
+		}
+
+		case LUA_TTABLE:
+		{
+			int tbl_len = (int) lua_rawlen(L, val_index);
+			if (tbl_len == 0) { status = 0; break; }
+
+			lua_rawgeti(L, val_index, 1);
+			int elem_type = lua_type(L, -1);
+			int elem_is_int = lua_isinteger(L, -1);
+			lua_pop(L, 1);
+
+			if (elem_type == LUA_TSTRING)
+			{
+				dbr_string_t* buf = (dbr_string_t*) calloc(tbl_len, sizeof(dbr_string_t));
+				if (!buf) { break; }
+				int i;
+				for (i = 0; i < tbl_len; i++)
+				{
+					lua_rawgeti(L, val_index, i + 1);
+					const char* s = lua_tostring(L, -1);
+					if (s) { strncpy(buf[i], s, MAX_STRING_SIZE - 1); }
+					lua_pop(L, 1);
+				}
+				status = dbPutField(paddr, DBR_STRING, buf, tbl_len);
+				free(buf);
+			}
+			else if (elem_type == LUA_TNUMBER && elem_is_int)
+			{
+				epicsInt32* buf = (epicsInt32*) malloc(tbl_len * sizeof(epicsInt32));
+				if (!buf) { break; }
+				int i;
+				for (i = 0; i < tbl_len; i++)
+				{
+					lua_rawgeti(L, val_index, i + 1);
+					buf[i] = (epicsInt32) lua_tointeger(L, -1);
+					lua_pop(L, 1);
+				}
+				status = dbPutField(paddr, DBR_LONG, buf, tbl_len);
+				free(buf);
+			}
+			else if (elem_type == LUA_TNUMBER)
+			{
+				double* buf = (double*) malloc(tbl_len * sizeof(double));
+				if (!buf) { break; }
+				int i;
+				for (i = 0; i < tbl_len; i++)
+				{
+					lua_rawgeti(L, val_index, i + 1);
+					buf[i] = lua_tonumber(L, -1);
+					lua_pop(L, 1);
+				}
+				status = dbPutField(paddr, DBR_DOUBLE, buf, tbl_len);
+				free(buf);
+			}
+			break;
+		}
+
+		default:
+		{
+			lua_pushnil(L);
+			lua_pushstring(L, "Unsupported value type for put");
+			return 2;
+		}
+	}
+
+	if (status)
+	{
+		lua_pushnil(L);
+		lua_pushstring(L, "Failed to write local PV");
+		return 2;
+	}
+
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
+
+/*
+ * epics_get -- core get function.
+ *
+ * Tries direct database access first (local PV). If the PV is not
+ * found locally, falls through to Channel Access.
  *
  * max_count: 0 = fetch all elements, >0 = limit to this many
  * as_string: -1 = type-dependent default, 0 = force numeric, 1 = force string
@@ -62,6 +430,16 @@ static int epics_get(lua_State* state, const char* pv_name,
 		return 2;
 	}
 
+	/* Try direct database access first (local PV) */
+	{
+		DBADDR addr;
+		if (iocshPpdbbase && *iocshPpdbbase && dbNameToAddr(pv_name, &addr) == 0)
+		{
+			return db_get(state, &addr, max_count, as_string);
+		}
+	}
+
+	/* Remote PV -- use Channel Access */
 	ensure_ca_context(state);
 
 	chid id;
@@ -357,6 +735,16 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 		return 2;
 	}
 
+	/* Try direct database access first (local PV) */
+	{
+		DBADDR addr;
+		if (iocshPpdbbase && *iocshPpdbbase && dbNameToAddr(pv_name, &addr) == 0)
+		{
+			return db_put(state, &addr, offset);
+		}
+	}
+
+	/* Remote PV -- use Channel Access */
 	ensure_ca_context(state);
 
 	chid id;
