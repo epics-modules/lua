@@ -951,50 +951,59 @@ static int l_caput(lua_State* state)
 	return epics_put(state, pv_name, 2, timeout);
 }
 
-static int l_pvgetval(lua_State* state)
+/*
+ * lua_pv -- userdata representing an EPICS PV.
+ * Field access via __index/__newindex dispatches to epics_get/epics_put,
+ * which automatically use direct database access for local PVs or
+ * Channel Access for remote PVs.
+ */
+typedef struct {
+	char pv_name[128];
+} lua_pv;
+
+static int l_pv_index(lua_State* state)
 {
-	lua_getfield(state, 1, "pv_name");
-	const char* pv_name = lua_tostring(state, lua_gettop(state));
-	lua_pop(state, 1);
+	lua_pv* pv = (lua_pv*) luaL_checkudata(state, 1, "lua_pv");
+	const char* key = luaL_checkstring(state, 2);
 
-	const char* field_name = lua_tostring(state, 2);
+	/* Properties */
+	if (strcmp(key, "name") == 0)
+	{
+		lua_pushstring(state, pv->pv_name);
+		return 1;
+	}
 
-	if (!pv_name || !field_name)    { return 0; }
-
-	std::string full_name(pv_name);
+	/* Field access -- build pv_name.field and read */
+	std::string full_name(pv->pv_name);
 	full_name.append(".");
-	full_name.append(field_name);
+	full_name.append(key);
 
 	return epics_get(state, full_name.c_str(), 1.0, 0, -1);
 }
 
-static int l_pvsetval(lua_State* state)
+static int l_pv_newindex(lua_State* state)
 {
-	lua_getfield(state, 1, "pv_name");
-	const char* pv_name = lua_tostring(state, lua_gettop(state));
-	lua_pop(state, 1);
+	lua_pv* pv = (lua_pv*) luaL_checkudata(state, 1, "lua_pv");
+	const char* key = luaL_checkstring(state, 2);
 
-	const char* field_name = lua_tostring(state, 2);
-
-	if (!pv_name || !field_name)    { return 0; }
-
-	std::string full_name(pv_name);
+	std::string full_name(pv->pv_name);
 	full_name.append(".");
-	full_name.append(field_name);
+	full_name.append(key);
 
 	return epics_put(state, full_name.c_str(), 3, 1.0);
 }
 
-static int l_pvgetname(lua_State* state)
+static int l_pv_gc(lua_State* state)
 {
-	if (! lua_istable(state, 1))
-	{
-		printf("PV reference not given. (Did you use '.getName' instead of ':getName'?)\n");
-		return 0;
-	}
+	/* No resources to free currently.
+	 * Future: close cached CA channels here. */
+	return 0;
+}
 
-	lua_getfield(state, -1, "pv_name");
-
+static int l_pv_tostring(lua_State* state)
+{
+	lua_pv* pv = (lua_pv*) luaL_checkudata(state, 1, "lua_pv");
+	lua_pushstring(state, pv->pv_name);
 	return 1;
 }
 
@@ -1002,28 +1011,10 @@ extern "C"
 {
 	void luaGeneratePV(lua_State* state, const char* pv_name)
 	{
-		static const luaL_Reg pv_meta[] = {
-			{"__index", l_pvgetval},
-			{"__newindex", l_pvsetval},
-			{NULL, NULL}
-		};
-
-		static const luaL_Reg pv_funcs[] = {
-			{"getName", l_pvgetname},
-			{NULL, NULL}
-		};
-
-		luaL_newmetatable(state, "pv_meta");
-		luaL_setfuncs(state, pv_meta, 0);
-		lua_pop(state, 1);
-
-		lua_newtable(state);
-		luaL_setfuncs(state, pv_funcs, 0);
-
-		lua_pushstring(state, pv_name);
-		lua_setfield(state, -2, "pv_name");
-
-		luaL_setmetatable(state, "pv_meta");
+		lua_pv* pv = (lua_pv*) lua_newuserdata(state, sizeof(lua_pv));
+		strncpy(pv->pv_name, pv_name, sizeof(pv->pv_name) - 1);
+		pv->pv_name[sizeof(pv->pv_name) - 1] = '\0';
+		luaL_setmetatable(state, "lua_pv");
 	}
 }
 
@@ -1041,6 +1032,22 @@ static int l_createpv(lua_State* state)
 
 int luaopen_epics (lua_State *L)
 {
+	/* Register the lua_pv metatable */
+	if (luaL_newmetatable(L, "lua_pv"))
+	{
+		lua_pushcfunction(L, l_pv_index);
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, l_pv_newindex);
+		lua_setfield(L, -2, "__newindex");
+		lua_pushcfunction(L, l_pv_gc);
+		lua_setfield(L, -2, "__gc");
+		lua_pushcfunction(L, l_pv_tostring);
+		lua_setfield(L, -2, "__tostring");
+		lua_pushstring(L, "epics.pv");
+		lua_setfield(L, -2, "__name");
+	}
+	lua_pop(L, 1);
+
 	static const luaL_Reg mylib[] = {
 		{"get",   l_caget},
 		{"put",   l_caput},

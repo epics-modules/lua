@@ -156,16 +156,32 @@ epics.put("my:stringwf", {"Hello", "World"})
 epics.pv (PV)
 ```
 
-Returns a table representing a PV object. Index accesses can be used to retrieve or
-change record fields. These changes are completed through ca_get or ca_put.
+Returns a PV object. Index accesses can be used to retrieve or change record fields.
+For local PVs, field access uses direct database access; for remote PVs, Channel
+Access is used automatically.
 
 ```lua
 local motor = epics.pv("IOC:m1")
-print(motor.RBV)        -- reads IOC:m1.RBV via CA
-motor.VAL = 10.0        -- writes to IOC:m1.VAL via CA
-print(motor:getName())  -- "IOC:m1"
+
+-- Read fields
+print(motor.RBV)        -- reads IOC:m1.RBV
+print(motor.DESC)       -- reads IOC:m1.DESC
+print(motor.EGU)        -- reads IOC:m1.EGU
+
+-- Write fields
+motor.VAL = 10.0        -- writes to IOC:m1.VAL
+
+-- Properties
+print(motor.name)       -- "IOC:m1" (the PV name, not a field read)
+print(tostring(motor))  -- "IOC:m1"
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
 | PV   |  string | The name of the PV to request. |
+
+The `name` property is reserved and returns the PV name string. All other keys
+are treated as EPICS field names and dispatched to `epics.get`/`epics.put`.
+
+The PV object is also created internally by DTYP device support and passed as
+the first argument to Lua callback functions.
