@@ -455,9 +455,18 @@ static long loadStrings(luascriptRecord* record)
 		short field_type = 0;
 		long elements = 1;
 
-		status = getFieldInfo(field, &field_type, &elements);
+		long newStatus = getFieldInfo(field, &field_type, &elements);
 
-		if (status)    { return status; }
+		if (newStatus)
+		{
+			if (!status)    { status = newStatus; }
+			field++;
+			prev_str++;
+			strvalue += STRING_SIZE;
+			continue;
+		}
+
+		long linkStatus = 0;
 
 		switch(field_type)
 		{
@@ -476,14 +485,14 @@ static long loadStrings(luascriptRecord* record)
 
 				if (field_type == DBF_ENUM)
 				{
-					status = dbGetLink(field, DBF_STRING, tempstr, 0, &elements);
+					linkStatus = dbGetLink(field, DBF_STRING, tempstr, 0, &elements);
 				}
 				else
 				{
-					status = dbGetLink(field, field_type, tempstr, 0, &elements);
+					linkStatus = dbGetLink(field, field_type, tempstr, 0, &elements);
 				}
 
-				if (status)    { break; }
+				if (linkStatus)    { break; }
 				
 				memcpy(strvalue, tempstr, STRING_SIZE);
 				
@@ -493,43 +502,44 @@ static long loadStrings(luascriptRecord* record)
 			}
 			
 			case DBF_CHAR:
-				status = createTable<epicsInt8>(state, field, field_type, &elements, Characters);
+				linkStatus = createTable<epicsInt8>(state, field, field_type, &elements, Characters);
 				break;
 
 			case DBF_UCHAR:
-				status = createTable<epicsUInt8>(state, field, field_type, &elements, Integers);
+				linkStatus = createTable<epicsUInt8>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_SHORT:
-				status = createTable<epicsInt16>(state, field, field_type, &elements, Integers);
+				linkStatus = createTable<epicsInt16>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_USHORT:
-				status = createTable<epicsUInt16>(state, field, field_type, &elements, Integers);
+				linkStatus = createTable<epicsUInt16>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_LONG:
-				status = createTable<epicsInt32>(state, field, field_type, &elements, Integers);
+				linkStatus = createTable<epicsInt32>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_ULONG:
-				status = createTable<epicsUInt32>(state, field, field_type, &elements, Integers);
+				linkStatus = createTable<epicsUInt32>(state, field, field_type, &elements, Integers);
 				break;
 
 			case DBF_FLOAT:
-				status = createTable<epicsFloat32>(state, field, field_type, &elements, Numbers);
+				linkStatus = createTable<epicsFloat32>(state, field, field_type, &elements, Numbers);
 				break;
 
 			case DBF_DOUBLE:
-				status = createTable<epicsFloat64>(state, field, field_type, &elements, Numbers);
+				linkStatus = createTable<epicsFloat64>(state, field, field_type, &elements, Numbers);
 				break;
 
 			default:
-				status = -1;
+				linkStatus = -1;
 				break;
 		}
 
-		if (! status)    { lua_setglobal(state, STR_NAMES[index]); }
+		if (!linkStatus)    { lua_setglobal(state, STR_NAMES[index]); }
+		if (!status)        { status = linkStatus; }
 
 		field++;
 		prev_str++;
