@@ -910,8 +910,12 @@ int l_luaSpawn(lua_State* state)
 
 	int status = luaSpawn(filename, macros.empty() ? NULL : macros.c_str());
 
-	lua_pushinteger(state, status);
-	return 1;
+	if (status)
+	{
+		lua_pushfstring(state, "luaSpawn failed (status %d)", status);
+		return 1;
+	}
+	return 0;
 }
 
 /*
@@ -938,8 +942,12 @@ int l_luash(lua_State* state)
 
 	int status = luashLoad(filename, macros.empty() ? NULL : macros.c_str());
 
-	lua_pushinteger(state, status);
-	return 1;
+	if (status)
+	{
+		lua_pushfstring(state, "luash failed (status %d)", status);
+		return 1;
+	}
+	return 0;
 }
 
 /*
@@ -966,8 +974,12 @@ int l_luaLoadFile(lua_State* state)
 
 	int status = luaLoadFile(filename, macros.empty() ? NULL : macros.c_str());
 
-	lua_pushinteger(state, status);
-	return 1;
+	if (status)
+	{
+		lua_pushfstring(state, "luaLoadFile failed (status %d)", status);
+		return 1;
+	}
+	return 0;
 }
 
 /*
@@ -994,7 +1006,11 @@ int l_luaCmd(lua_State* state)
 
 	int status = luaCmd(command, macros.empty() ? NULL : macros.c_str());
 
-	lua_pushinteger(state, status);
-	return 1;
+	if (status)
+	{
+		lua_pushfstring(state, "luaCmd failed (status %d)", status);
+		return 1;
+	}
+	return 0;
 }
 

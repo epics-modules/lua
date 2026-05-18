@@ -442,21 +442,18 @@ static int db_put(lua_State* L, DBADDR* paddr, int val_index)
 
 		default:
 		{
-			lua_pushnil(L);
 			lua_pushstring(L, "Unsupported value type for put");
-			return 2;
+			return 1;
 		}
 	}
 
 	if (status)
 	{
-		lua_pushnil(L);
 		lua_pushstring(L, "Failed to write local PV");
-		return 2;
+		return 1;
 	}
 
-	lua_pushboolean(L, 1);
-	return 1;
+	return 0;
 }
 
 
@@ -782,9 +779,8 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 {
 	if (pv_name == NULL)
 	{
-		lua_pushnil(state);
 		lua_pushstring(state, "PV name is nil");
-		return 2;
+		return 1;
 	}
 
 	/* Try direct database access first (local PV) */
@@ -805,9 +801,8 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 
 	if (status != ECA_NORMAL)
 	{
-		lua_pushnil(state);
 		lua_pushfstring(state, "Failed to create channel for '%s'", pv_name);
-		return 2;
+		return 1;
 	}
 
 	status = ca_pend_io(timeout);
@@ -815,9 +810,8 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 	if (status != ECA_NORMAL)
 	{
 		ca_clear_channel(id);
-		lua_pushnil(state);
 		lua_pushfstring(state, "Timeout connecting to '%s'", pv_name);
-		return 2;
+		return 1;
 	}
 
 	switch (lua_type(state, offset))
@@ -919,9 +913,8 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 			else
 			{
 				ca_clear_channel(id);
-				lua_pushnil(state);
 				lua_pushfstring(state, "Unsupported table element type for put to '%s'", pv_name);
-				return 2;
+				return 1;
 			}
 			break;
 		}
@@ -929,25 +922,22 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 		default:
 		{
 			ca_clear_channel(id);
-			lua_pushnil(state);
 			lua_pushfstring(state, "Unsupported value type for put to '%s'", pv_name);
-			return 2;
+			return 1;
 		}
 	}
 
 	if (status != ECA_NORMAL)
 	{
 		ca_clear_channel(id);
-		lua_pushnil(state);
 		lua_pushfstring(state, "Failed to put value to '%s'", pv_name);
-		return 2;
+		return 1;
 	}
 
 	ca_pend_io(timeout);
 	ca_clear_channel(id);
 
-	lua_pushboolean(state, 1);
-	return 1;
+	return 0;
 }
 
 
