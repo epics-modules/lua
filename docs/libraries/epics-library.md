@@ -163,13 +163,16 @@ Access is used automatically.
 ```lua
 local motor = epics.pv("IOC:m1")
 
--- Read fields
+-- Read/write fields via dot syntax (default options)
 print(motor.RBV)        -- reads IOC:m1.RBV
-print(motor.DESC)       -- reads IOC:m1.DESC
-print(motor.EGU)        -- reads IOC:m1.EGU
-
--- Write fields
 motor.VAL = 10.0        -- writes to IOC:m1.VAL
+
+-- Read/write with options via methods
+local val = motor:get("VAL", {timeout=5.0})
+local label = motor:get("SPMG", {string=true})
+local wf = motor:get("BPTR", {count=100})
+
+motor:put("VAL", 42, {timeout=5.0})
 
 -- Properties
 print(motor.name)       -- "IOC:m1" (the PV name, not a field read)
@@ -180,8 +183,27 @@ print(tostring(motor))  -- "IOC:m1"
 | - | - | - |
 | PV   |  string | The name of the PV to request. |
 
-The `name` property is reserved and returns the PV name string. All other keys
-are treated as EPICS field names and dispatched to `epics.get`/`epics.put`.
+**Dot syntax** (`pv.FIELD` / `pv.FIELD = value`) uses default options (timeout=1.0,
+all elements, type-dependent string behavior). For reads and writes that need custom
+options, use the `:get()` and `:put()` methods.
+
+**`pv:get(field [, options])`** reads a field with the same options table as `epics.get`:
+
+| Field | Type | Default | Description |
+| - | - | - | - |
+| timeout | number | 1.0 | CA timeout in seconds. |
+| count   | integer | all | Maximum number of array elements to fetch. |
+| string  | boolean | type-dependent | Controls string vs numeric return for enums and char arrays. |
+
+**`pv:put(field, value [, options])`** writes a field with the same options table as
+`epics.put`:
+
+| Field | Type | Default | Description |
+| - | - | - | - |
+| timeout | number | 1.0 | CA timeout in seconds. |
+
+The reserved property and method names (`name`, `get`, `put`) return PV metadata or
+method functions. All other keys are treated as EPICS field names.
 
 The PV object is also created internally by DTYP device support and passed as
 the first argument to Lua callback functions.

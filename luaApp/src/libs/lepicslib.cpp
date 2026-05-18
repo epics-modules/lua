@@ -961,6 +961,78 @@ typedef struct {
 	char pv_name[128];
 } lua_pv;
 
+/*
+ * pv:get(field [, options])
+ *
+ *   pv:get("VAL")
+ *   pv:get("VAL", {timeout=5.0, string=true, count=100})
+ */
+static int l_pv_get(lua_State* state)
+{
+	lua_pv* pv = (lua_pv*) luaL_checkudata(state, 1, "lua_pv");
+	const char* field = luaL_checkstring(state, 2);
+
+	double timeout = 1.0;
+	int max_count = 0;
+	int as_string = -1;
+
+	if (lua_istable(state, 3))
+	{
+		lua_getfield(state, 3, "timeout");
+		if (!lua_isnil(state, -1))    { timeout = lua_tonumber(state, -1); }
+		lua_pop(state, 1);
+
+		lua_getfield(state, 3, "count");
+		if (!lua_isnil(state, -1))    { max_count = (int) lua_tointeger(state, -1); }
+		lua_pop(state, 1);
+
+		lua_getfield(state, 3, "string");
+		if (!lua_isnil(state, -1))    { as_string = lua_toboolean(state, -1); }
+		lua_pop(state, 1);
+	}
+	else if (lua_isnumber(state, 3))
+	{
+		timeout = lua_tonumber(state, 3);
+	}
+
+	std::string full_name(pv->pv_name);
+	full_name.append(".");
+	full_name.append(field);
+
+	return epics_get(state, full_name.c_str(), timeout, max_count, as_string);
+}
+
+/*
+ * pv:put(field, value [, options])
+ *
+ *   pv:put("VAL", 42)
+ *   pv:put("VAL", 42, {timeout=5.0})
+ */
+static int l_pv_put(lua_State* state)
+{
+	lua_pv* pv = (lua_pv*) luaL_checkudata(state, 1, "lua_pv");
+	const char* field = luaL_checkstring(state, 2);
+
+	double timeout = 1.0;
+
+	if (lua_istable(state, 4))
+	{
+		lua_getfield(state, 4, "timeout");
+		if (!lua_isnil(state, -1))    { timeout = lua_tonumber(state, -1); }
+		lua_pop(state, 1);
+	}
+	else if (lua_isnumber(state, 4))
+	{
+		timeout = lua_tonumber(state, 4);
+	}
+
+	std::string full_name(pv->pv_name);
+	full_name.append(".");
+	full_name.append(field);
+
+	return epics_put(state, full_name.c_str(), 3, timeout);
+}
+
 static int l_pv_index(lua_State* state)
 {
 	lua_pv* pv = (lua_pv*) luaL_checkudata(state, 1, "lua_pv");
@@ -972,6 +1044,10 @@ static int l_pv_index(lua_State* state)
 		lua_pushstring(state, pv->pv_name);
 		return 1;
 	}
+
+	/* Methods */
+	if (strcmp(key, "get") == 0)    { lua_pushcfunction(state, l_pv_get); return 1; }
+	if (strcmp(key, "put") == 0)    { lua_pushcfunction(state, l_pv_put); return 1; }
 
 	/* Field access -- build pv_name.field and read */
 	std::string full_name(pv->pv_name);
