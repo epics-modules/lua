@@ -1108,6 +1108,16 @@ int luaopen_database (lua_State *L)
 		lua_setfield(L, -2, "__gc");
 		lua_pushstring(L, "dbrecord");
 		lua_setfield(L, -2, "__name");
+
+		lua_newtable(L);
+		lua_pushstring(L, ".name                       -- record name (property)"); lua_rawseti(L, -2, 1);
+		lua_pushstring(L, ".type                       -- record type (property)"); lua_rawseti(L, -2, 2);
+		lua_pushstring(L, ".FIELD                      -- read field value"); lua_rawseti(L, -2, 3);
+		lua_pushstring(L, ".FIELD = value              -- write field value"); lua_rawseti(L, -2, 4);
+		lua_pushstring(L, ":field(name, value)         -- set field"); lua_rawseti(L, -2, 5);
+		lua_pushstring(L, ":info(name, value)          -- set info tag"); lua_rawseti(L, -2, 6);
+		lua_pushstring(L, "(table)                     -- set multiple fields"); lua_rawseti(L, -2, 7);
+		lua_setfield(L, -2, "_doc");
 	}
 	lua_pop(L, 1);
 	
@@ -1120,6 +1130,16 @@ int luaopen_database (lua_State *L)
 		lua_setfield(L, -2, "__gc");
 		lua_pushstring(L, "dbentry");
 		lua_setfield(L, -2, "__name");
+
+		lua_newtable(L);
+		lua_pushstring(L, "DBENTRY cursor for static database access."); lua_rawseti(L, -2, 1);
+		lua_pushstring(L, "All functions available as entry:func(...) or db.func(entry, ...)."); lua_rawseti(L, -2, 2);
+		lua_pushstring(L, "Record: findRecord, firstRecord, nextRecord, getRecordName, ..."); lua_rawseti(L, -2, 3);
+		lua_pushstring(L, "Field:  findField, firstField, nextField, getFieldName, getString, putString, ..."); lua_rawseti(L, -2, 4);
+		lua_pushstring(L, "Info:   findInfo, firstInfo, nextInfo, getInfoName, getInfoString, putInfo, ..."); lua_rawseti(L, -2, 5);
+		lua_pushstring(L, "Type:   findRecordType, firstRecordType, nextRecordType, getRecordTypeName, ..."); lua_rawseti(L, -2, 6);
+		lua_pushstring(L, "Menu:   getNMenuChoices, getMenuIndex, putMenuIndex, getMenuStringFromIndex, ..."); lua_rawseti(L, -2, 7);
+		lua_setfield(L, -2, "_doc");
 	}
 	lua_pop(L, 1);
 	
@@ -1187,6 +1207,21 @@ int luaopen_database (lua_State *L)
 	};
 	
 	luaL_newlib(L, db_funcs);
+
+	/* Documentation for info(db) */
+	lua_newtable(L);
+	lua_pushstring(L, ".entry() -- create DBENTRY cursor"); lua_rawseti(L, -2, 1);
+	lua_pushstring(L, ".record([type,] name) -- create/find record"); lua_rawseti(L, -2, 2);
+	lua_pushstring(L, ".loadRecords(file [, macros])"); lua_rawseti(L, -2, 3);
+	lua_pushstring(L, ".loadTemplate(file, substitutions)"); lua_rawseti(L, -2, 4);
+	lua_pushstring(L, ".list() -- list all records"); lua_rawseti(L, -2, 5);
+	lua_pushstring(L, ".registerDatabaseHook(func)"); lua_rawseti(L, -2, 6);
+	lua_pushstring(L, "Static database access functions (use with entry object):"); lua_rawseti(L, -2, 7);
+	lua_pushstring(L, "  .findRecord, .firstRecord, .nextRecord, .getRecordName, .createRecord, ..."); lua_rawseti(L, -2, 8);
+	lua_pushstring(L, "  .findField, .firstField, .nextField, .getFieldName, .getString, .putString, ..."); lua_rawseti(L, -2, 9);
+	lua_pushstring(L, "  .findInfo, .firstInfo, .nextInfo, .getInfoName, .getInfoString, .putInfo, ..."); lua_rawseti(L, -2, 10);
+	lua_setfield(L, -2, "_doc");
+
 	lua_setglobal(L, "db");
 	
 	lua_getglobal(L, "db");

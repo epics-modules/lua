@@ -710,6 +710,87 @@ int luaopen_iocsh (lua_State* state)
 static int l_registerState(lua_State* state);
 
 /*
+ * info(library_or_object)
+ *
+ * Displays available functions/methods for a library table or
+ * userdata object. Documentation is stored as a _doc field
+ * (integer-indexed array of signature strings) on the table
+ * itself or on the userdata's metatable.
+ */
+static int l_info(lua_State* L)
+{
+	if (lua_gettop(L) == 0)
+	{
+		printf("Usage:\n");
+		printf("  info(library)  -- list functions in a library (e.g. info(epics))\n");
+		printf("  info(object)   -- list methods/properties of an object\n");
+		return 0;
+	}
+
+	if (lua_isnil(L, 1))
+	{
+		printf("Input is nil.\n");
+		return 0;
+	}
+
+	/* Find the _doc table -- on the table itself or on its metatable */
+	int found_doc = 0;
+
+	if (lua_istable(L, 1))
+	{
+		lua_getfield(L, 1, "_doc");
+		if (lua_istable(L, -1))    { found_doc = 1; }
+		else                       { lua_pop(L, 1); }
+	}
+
+	if (!found_doc && lua_isuserdata(L, 1))
+	{
+		if (lua_getmetatable(L, 1))
+		{
+			lua_getfield(L, -1, "_doc");
+			if (lua_istable(L, -1))    { found_doc = 1; }
+			else                       { lua_pop(L, 1); }
+			lua_remove(L, -2);
+		}
+	}
+
+	if (found_doc)
+	{
+		int len = (int) luaL_len(L, -1);
+		int i;
+		for (i = 1; i <= len; i++)
+		{
+			lua_geti(L, -1, i);
+			printf("  %s\n", lua_tostring(L, -1));
+			lua_pop(L, 1);
+		}
+		lua_pop(L, 1);
+		return 0;
+	}
+
+	/* Fallback for tables without _doc -- list keys */
+	if (lua_istable(L, 1))
+	{
+		lua_pushnil(L);
+		while (lua_next(L, 1))
+		{
+			if (lua_type(L, -2) == LUA_TSTRING)
+			{
+				const char* key = lua_tostring(L, -2);
+				if (key[0] != '_')
+					printf("  .%s\n", key);
+			}
+			lua_pop(L, 1);
+		}
+		return 0;
+	}
+
+	printf("No documentation available.\n");
+	return 0;
+}
+
+
+/*
  * Generates a new lua state for the caller,
  * binds in the defined epics libraries and
  * functions.
@@ -721,6 +802,7 @@ epicsShareFunc lua_State* luaCreateState()
 	luaLoadRegistered(output);
 
 	lua_register(output, "print", l_replaceprint);
+	lua_register(output, "info", l_info);
 	lua_register(output, "luaRegisterState", l_registerState);
 	lua_register(output, "luaSpawn", l_luaSpawn);
 	lua_register(output, "luash", l_luash);

@@ -990,6 +990,21 @@ static void push_clientproxy(lua_State* state, const char* portName, int addr, c
 		lua_setfield(state, -2, "__gc");
 		lua_pushstring(state, "asynOctetClient");
 		lua_setfield(state, -2, "__name");
+
+		lua_newtable(state);
+		lua_pushstring(state, ".portName                   -- port name (property)"); lua_rawseti(state, -2, 1);
+		lua_pushstring(state, ".addr                       -- address (property)"); lua_rawseti(state, -2, 2);
+		lua_pushstring(state, ".InTerminator               -- get/set input terminator"); lua_rawseti(state, -2, 3);
+		lua_pushstring(state, ".OutTerminator              -- get/set output terminator"); lua_rawseti(state, -2, 4);
+		lua_pushstring(state, ":read()"); lua_rawseti(state, -2, 5);
+		lua_pushstring(state, ":write(data)"); lua_rawseti(state, -2, 6);
+		lua_pushstring(state, ":writeread(data)"); lua_rawseti(state, -2, 7);
+		lua_pushstring(state, ":flush()"); lua_rawseti(state, -2, 8);
+		lua_pushstring(state, ":trace(mask) -- error=0x1, device=0x2, filter=0x4, driver=0x8, flow=0x10, warning=0x20"); lua_rawseti(state, -2, 9);
+		lua_pushstring(state, ":traceio(mask) -- nodata=0x0, ascii=0x1, escape=0x2, hex=0x4"); lua_rawseti(state, -2, 10);
+		lua_pushstring(state, ":setOption(key, val)"); lua_rawseti(state, -2, 11);
+		lua_pushstring(state, "[addr]                      -- index by address"); lua_rawseti(state, -2, 12);
+		lua_setfield(state, -2, "_doc");
 	}
 	lua_setmetatable(state, -2);
 }
@@ -1403,6 +1418,14 @@ static void push_paramproxy(lua_State* state, asynPortDriver* driver, lua_State*
 		lua_setfield(state, -2, "__index");
 		lua_pushcfunction(state, l_paramproxy_newindex);
 		lua_setfield(state, -2, "__newindex");
+
+		lua_newtable(state);
+		lua_pushstring(state, ".value                      -- get/set parameter value"); lua_rawseti(state, -2, 1);
+		lua_pushstring(state, ".name                       -- parameter name (property)"); lua_rawseti(state, -2, 2);
+		lua_pushstring(state, ".read = func(self)          -- bind read callback"); lua_rawseti(state, -2, 3);
+		lua_pushstring(state, ".write = func(self, value)  -- bind write callback"); lua_rawseti(state, -2, 4);
+		lua_setfield(state, -2, "_doc");
+
 		lua_pop(state, 1);
 		meta_registered = 1;
 	}
@@ -1629,6 +1652,15 @@ static void push_driverproxy(lua_State* state, asynPortDriver* driver, lua_State
 		lua_setfield(state, -2, "__index");
 		lua_pushcfunction(state, l_driverproxy_newindex);
 		lua_setfield(state, -2, "__newindex");
+
+		lua_newtable(state);
+		lua_pushstring(state, ".portName                   -- port name (property)"); lua_rawseti(state, -2, 1);
+		lua_pushstring(state, ".maxAddr                    -- max address (property)"); lua_rawseti(state, -2, 2);
+		lua_pushstring(state, ".PARAM                      -- access param proxy by name"); lua_rawseti(state, -2, 3);
+		lua_pushstring(state, ":callParamCallbacks()"); lua_rawseti(state, -2, 4);
+		lua_pushstring(state, ":writeParam(name, value)"); lua_rawseti(state, -2, 5);
+		lua_pushstring(state, ":readParam(name)"); lua_rawseti(state, -2, 6);
+		lua_setfield(state, -2, "_doc");
 	}
 	lua_setmetatable(state, -2);
 }
@@ -1850,6 +1882,30 @@ int luaopen_asyn (lua_State *L)
 
 	/* Ensure param spec metatable is registered */
 	ensure_paramspec_meta(L);
+
+	/* Documentation for info(asyn) */
+	lua_newtable(L);
+	lua_pushstring(L, ".read(port [, addr [, param]])"); lua_rawseti(L, -2, 1);
+	lua_pushstring(L, ".write(data, port [, addr [, param]])"); lua_rawseti(L, -2, 2);
+	lua_pushstring(L, ".writeread(data, port [, addr [, param]])"); lua_rawseti(L, -2, 3);
+	lua_pushstring(L, ".setOption(port, key, val [, addr])"); lua_rawseti(L, -2, 4);
+	lua_pushstring(L, ".setInTerminator(term) / .setOutTerminator(term)"); lua_rawseti(L, -2, 5);
+	lua_pushstring(L, ".getInTerminator() / .getOutTerminator()"); lua_rawseti(L, -2, 6);
+	lua_pushstring(L, ".setReadTimeout(t) / .setWriteTimeout(t) / .setWriteReadTimeout(t)"); lua_rawseti(L, -2, 7);
+	lua_pushstring(L, ".getReadTimeout() / .getWriteTimeout() / .getWriteReadTimeout()"); lua_rawseti(L, -2, 8);
+	lua_pushstring(L, ".getParam(port, param [, addr]) / .setParam(port, param, value [, addr])"); lua_rawseti(L, -2, 9);
+	lua_pushstring(L, ".getIntegerParam / .getDoubleParam / .getStringParam"); lua_rawseti(L, -2, 10);
+	lua_pushstring(L, ".setIntegerParam / .setDoubleParam / .setStringParam"); lua_rawseti(L, -2, 11);
+	lua_pushstring(L, ".readParam(port, param [, addr]) / .writeParam(port, param, value [, addr])"); lua_rawseti(L, -2, 12);
+	lua_pushstring(L, ".callParamCallbacks(port [, addr])"); lua_rawseti(L, -2, 13);
+	lua_pushstring(L, ".setTrace(port, mask) -- error=0x1, device=0x2, filter=0x4, driver=0x8, flow=0x10, warning=0x20"); lua_rawseti(L, -2, 14);
+	lua_pushstring(L, ".setTraceIO(port, mask) -- nodata=0x0, ascii=0x1, escape=0x2, hex=0x4"); lua_rawseti(L, -2, 15);
+	lua_pushstring(L, ".driver.new(port, params [, initFunc]) -- create asynPortDriver"); lua_rawseti(L, -2, 16);
+	lua_pushstring(L, ".driver.find(port) -- find existing asynPortDriver"); lua_rawseti(L, -2, 17);
+	lua_pushstring(L, ".client(port [, addr [, param]]) -- create asynOctetClient"); lua_rawseti(L, -2, 18);
+	lua_pushstring(L, ".client.find(port [, addr [, param]]) -- find/create client"); lua_rawseti(L, -2, 19);
+	lua_pushstring(L, ".Int32(name [, default]) / .Float64(name [, default]) / .Octet(name [, default])"); lua_rawseti(L, -2, 20);
+	lua_setfield(L, -2, "_doc");
 
 	return 1;
 }

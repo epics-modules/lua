@@ -83,6 +83,14 @@ int luaopen_osi (lua_State *L)
 	};
 
 	luaL_newlib(L, mylib);
+
+	/* Documentation for info(osi) */
+	lua_newtable(L);
+	lua_pushstring(L, ".sleep(seconds)"); lua_rawseti(L, -2, 1);
+	lua_pushstring(L, ".startRedirectOut(filename)"); lua_rawseti(L, -2, 2);
+	lua_pushstring(L, ".endRedirectOut()"); lua_rawseti(L, -2, 3);
+	lua_setfield(L, -2, "_doc");
+
 	return 1;
 }
 

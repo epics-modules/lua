@@ -1163,6 +1163,15 @@ int luaopen_epics (lua_State *L)
 		lua_setfield(L, -2, "__tostring");
 		lua_pushstring(L, "epics.pv");
 		lua_setfield(L, -2, "__name");
+
+		/* Documentation for info(pv_object) */
+		lua_newtable(L);
+		lua_pushstring(L, ".name                       -- PV name (property)"); lua_rawseti(L, -2, 1);
+		lua_pushstring(L, ".FIELD                      -- read field value"); lua_rawseti(L, -2, 2);
+		lua_pushstring(L, ".FIELD = value              -- write field value"); lua_rawseti(L, -2, 3);
+		lua_pushstring(L, ":get(field [, {timeout, count, string}])"); lua_rawseti(L, -2, 4);
+		lua_pushstring(L, ":put(field, value [, {timeout}])"); lua_rawseti(L, -2, 5);
+		lua_setfield(L, -2, "_doc");
 	}
 	lua_pop(L, 1);
 
@@ -1174,6 +1183,14 @@ int luaopen_epics (lua_State *L)
 	};
 
 	luaL_newlib(L, mylib);
+
+	/* Documentation for info(epics) */
+	lua_newtable(L);
+	lua_pushstring(L, ".get(PV [, timeout | {timeout, count, string}])"); lua_rawseti(L, -2, 1);
+	lua_pushstring(L, ".put(PV, value [, timeout | {timeout}])"); lua_rawseti(L, -2, 2);
+	lua_pushstring(L, ".pv(PV) -- create PV proxy object"); lua_rawseti(L, -2, 3);
+	lua_setfield(L, -2, "_doc");
+
 	return 1;
 }
 
