@@ -89,7 +89,7 @@ recordtype(luascript)
 	{
 		prompt("Last Error Msg")
 		promptgroup(GUI_OUTPUT)
-		size(200)
+		size(256)
 		interest(2)
 	}
 
@@ -605,70 +605,70 @@ recordtype(luascript)
 		prompt("Value of string input AA")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(BB,DBF_STRING) {
 		prompt("Value of string input BB")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(CC,DBF_STRING) {
 		prompt("Value of string input CC")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(DD,DBF_STRING) {
 		prompt("Value of string input DD")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(EE,DBF_STRING) {
 		prompt("Value of string input EE")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(FF,DBF_STRING) {
 		prompt("Value of string input FF")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(GG,DBF_STRING) {
 		prompt("Value of string input GG")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(HH,DBF_STRING) {
 		prompt("Value of string input HH")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(II,DBF_STRING) {
 		prompt("Value of string input II")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(JJ,DBF_STRING) {
 		prompt("Value of string input JJ")
 		promptgroup(GUI_COMMON)
 		interest(4)
-		size(40)
+		size(256)
 		pp(TRUE)
 	}
 	field(PA,DBF_DOUBLE) {
@@ -802,7 +802,7 @@ recordtype(luascript)
 	{
 		prompt("String result 1")
 		asl(ASL0)
-		size(40)
+		size(256)
 	}
 
 	field(AVAL, DBF_NOACCESS)
@@ -836,7 +836,7 @@ recordtype(luascript)
 	{
 		prompt("Previous string result")
 		special(SPC_NOMOD)
-		size(40)
+		size(256)
 		interest(4)
 	}
 

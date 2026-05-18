@@ -31,7 +31,7 @@
 #define STR_ARGS 10
 #define NUM_OUT  10
 
-#define STRING_SIZE 40
+#define STRING_SIZE 256
 
 #define VAL_CHANGE  1
 #define SVAL_CHANGE 2
@@ -244,7 +244,7 @@ static int getState(luascriptRecord* record, std::string name)
 static int initState(luascriptRecord* record)
 {
 	/* Clear existing errors */
-	memset(record->err, 0, 200);
+	memset(record->err, 0, sizeof(record->err));
 	db_post_events(record, &record->err, DBE_VALUE);
 
 	std::string code(record->code);
@@ -478,7 +478,8 @@ static long loadStrings(luascriptRecord* record)
 				// Use AA .. JJ if INAA..INJJ are empty
 				if ( field->type == CONSTANT )
 				{
-					strncpy(tempstr, strvalue, STRING_SIZE);
+					strncpy(tempstr, strvalue, STRING_SIZE - 1);
+					tempstr[STRING_SIZE - 1] = '\0';
  					lua_pushstring(state, tempstr);
  					break;
 				}
@@ -976,8 +977,10 @@ static void processCallback(void* data)
 			}
 			else if (rettype == LUA_TSTRING)
 			{
-				strncpy(record->psvl, record->sval, STRING_SIZE);
-				strncpy(record->sval, lua_tostring(state, -1), STRING_SIZE);
+				strncpy(record->psvl, record->sval, sizeof(record->psvl) - 1);
+				record->psvl[sizeof(record->psvl) - 1] = '\0';
+				strncpy(record->sval, lua_tostring(state, -1), sizeof(record->sval) - 1);
+				record->sval[sizeof(record->sval) - 1] = '\0';
 				record->udf = FALSE;
 
 				if (checkSvalUpdate(record))
@@ -1062,7 +1065,7 @@ static long process(dbCommon* common)
 	long status;
 
 	/* Clear any existing error message */
-	memset(record->err, 0, 200);
+	memset(record->err, 0, sizeof(record->err));
 	db_post_events(record, &record->err, DBE_VALUE);
 
 	record->pact = TRUE;
