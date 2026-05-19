@@ -7,6 +7,7 @@
 #include <recGbl.h>
 #include <errlog.h>
 #include <callback.h>
+#include <menuIvoa.h>
 #include <epicsMutex.h>
 #include <epicsGuard.h>
 
@@ -1020,6 +1021,32 @@ static void processCallback(void* data)
 
 	/* Ensure the Lua stack is clean before finishing */
 	lua_settop(state, 0);
+
+	/* Handle IVOA on Lua error */
+	if (lua_error)
+	{
+		switch (record->ivoa)
+		{
+			case menuIvoaDon_t_drive_outputs:
+				recGblGetTimeStamp(record);
+				checkAlarms(record);
+				monitor(record);
+				record->pact = FALSE;
+				return;
+
+			case menuIvoaSet_output_to_IVOV:
+				record->val = record->ivov;
+				record->udf = FALSE;
+				record->pact = FALSE;
+				writeValue(record);
+				record->pact = TRUE;
+				break;
+
+			case menuIvoaContinue_normally:
+			default:
+				break;
+		}
+	}
 
 	recGblGetTimeStamp(record);
 	checkAlarms(record);

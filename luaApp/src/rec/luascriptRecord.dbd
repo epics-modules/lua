@@ -126,6 +126,21 @@ recordtype(luascript)
 		menu(luascriptOOPT)
 	}
 
+	field(IVOA, DBF_MENU)
+	{
+		prompt("INVALID output action")
+		promptgroup(GUI_OUTPUT)
+		interest(2)
+		menu(menuIvoa)
+	}
+
+	field(IVOV, DBF_DOUBLE)
+	{
+		prompt("INVALID output value")
+		promptgroup(GUI_OUTPUT)
+		interest(2)
+	}
+
 	field(WAIT,DBF_MENU)
 	{
 		prompt("Wait for completion?")

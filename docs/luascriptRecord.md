@@ -215,11 +215,29 @@ asynchronous manner. It is a menu field with two choices:
 
 
 
-|  Field |        Summary          |     Type     | DCT | Default | Read |  Write | Rec Proc Monitor | PP |
-|--------|-------------------------|--------------|:---:|:-------:|:----:|:------:|:----------------:|:--:|
-|  OUT   |  Output Specification   |    OUTLINK   | Yes |    0    |  Yes |   Yes  |        N/A       | No |
-|  OOPT  |  Output Execute Option  |    Menu      | Yes |    0    |  Yes |   Yes  |        No        | No |
-|  SYNC  |  Synchronicity          |    Menu      | Yes |    0    |  Yes |   Yes  |        No        | No |
+The IVOA field determines what to do when the record's Lua script
+produces an error (CALC_ALARM / INVALID_ALARM). It is a menu field
+with three choices:
+
+-  ``Continue normally`` -- process the output and forward link as
+   usual, even though the script failed. This is the default.
+-  ``Don't drive outputs`` -- do not write to the output link and do
+   not process the forward link. Alarms and monitors are still posted.
+-  ``Set output to IVOV`` -- set the VAL field to the value in IVOV
+   and write it to the output link. This only affects the numeric
+   output (VAL); string (SVAL) and array (AVAL) outputs are not
+   overridden. The forward link is processed.
+
+The IVOV field holds the value to use when IVOA is set to
+``Set output to IVOV``.
+
+|  Field |        Summary            |     Type     | DCT | Default | Read |  Write | Rec Proc Monitor | PP |
+|--------|---------------------------|--------------|:---:|:-------:|:----:|:------:|:----------------:|:--:|
+|  OUT   |  Output Specification     |    OUTLINK   | Yes |    0    |  Yes |   Yes  |        N/A       | No |
+|  OOPT  |  Output Execute Option    |    Menu      | Yes |    0    |  Yes |   Yes  |        No        | No |
+|  IVOA  |  INVALID Output Action    |    Menu      | Yes |    0    |  Yes |   Yes  |        No        | No |
+|  IVOV  |  INVALID Output Value     |    DOUBLE    | Yes |    0    |  Yes |   Yes  |        No        | No |
+|  SYNC  |  Synchronicity            |    Menu      | Yes |    0    |  Yes |   Yes  |        No        | No |
 
 The luascript record uses device support to write to the ``OUT`` link.
 Soft device supplied with the record is selected with the .dbd
