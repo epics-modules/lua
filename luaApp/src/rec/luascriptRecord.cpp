@@ -268,7 +268,7 @@ static int initState(luascriptRecord* record)
 		if (curr.first == prev.first && record->state != NULL)    { return 0; }
 	}
 
-	if (((rpvtStruct*) record->rpvt)->my_state == true)   { lua_close((lua_State*) record->state); }
+	if (((rpvtStruct*) record->rpvt)->my_state == true && record->state != NULL)   { lua_close((lua_State*) record->state); }
 
 	return getState(record, curr.first);
 }
