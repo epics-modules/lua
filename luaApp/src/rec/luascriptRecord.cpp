@@ -244,9 +244,12 @@ static int getState(luascriptRecord* record, std::string name)
  */
 static int initState(luascriptRecord* record)
 {
-	/* Clear existing errors */
-	memset(record->err, 0, sizeof(record->err));
-	db_post_events(record, &record->err, DBE_VALUE);
+	/* Clear existing errors (only post if there was a previous error) */
+	if (record->err[0] != '\0')
+	{
+		memset(record->err, 0, sizeof(record->err));
+		db_post_events(record, &record->err, DBE_VALUE);
+	}
 
 	std::string code(record->code);
 	std::string pcode(record->pcode);
@@ -880,7 +883,6 @@ static void writeValue(luascriptRecord* record)
 	{
 		errlogPrintf("%s DSET write does not exist\n", record->name);
 		recGblSetSevr(record, SOFT_ALARM, INVALID_ALARM);
-		record->pact = TRUE;
 		return;
 	}
 
@@ -1091,9 +1093,12 @@ static long process(dbCommon* common)
 
 	long status;
 
-	/* Clear any existing error message */
-	memset(record->err, 0, sizeof(record->err));
-	db_post_events(record, &record->err, DBE_VALUE);
+	/* Clear any existing error message (only post if there was a previous error) */
+	if (record->err[0] != '\0')
+	{
+		memset(record->err, 0, sizeof(record->err));
+		db_post_events(record, &record->err, DBE_VALUE);
+	}
 
 	record->pact = TRUE;
 
