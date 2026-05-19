@@ -421,6 +421,7 @@ recordtype(luascript)
 		special(SPC_NOMOD)
 		interest(1)
 		menu(luascriptINAV)
+		initial("1")
 	}
 
 	field(ADSC,DBF_STRING)

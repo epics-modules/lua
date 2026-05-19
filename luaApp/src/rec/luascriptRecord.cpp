@@ -22,7 +22,6 @@
 
 #include <sstream>
 
-#include <algorithm>
 #include <cstring>
 #include <cmath>
 #include <vector>
@@ -564,7 +563,7 @@ static long loadStrings(luascriptRecord* record)
 }
 
 
-void checkLinks(luascriptRecord* record)
+static void checkLinks(luascriptRecord* record)
 {
 	dbAddr address;
 	dbAddr* paddress = &address;
@@ -684,7 +683,7 @@ static void checkLinksCallback(CALLBACK* callback)
 }
 
 
-long setLinks(luascriptRecord* record)
+static long setLinks(luascriptRecord* record)
 {
 	dbAddr address;
 	dbAddr* paddress = &address;
