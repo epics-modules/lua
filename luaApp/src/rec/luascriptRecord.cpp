@@ -7,6 +7,7 @@
 #include <recGbl.h>
 #include <errlog.h>
 #include <callback.h>
+#include <dbLock.h>
 #include <menuIvoa.h>
 #include <epicsMutex.h>
 #include <epicsGuard.h>
@@ -80,6 +81,7 @@ static const char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","
 static long init_record(dbCommon* common, int pass);
 static long process(dbCommon* common);
 static long special(dbAddr *paddr, int after);
+static void luaExecCallback(CALLBACK* cb);
 static long get_precision(const dbAddr* paddr, long* precision);
 static long get_units(dbAddr* paddr, char* units);
 static long get_graphic_double(dbAddr* paddr, struct dbr_grDouble* pgd);
@@ -99,11 +101,15 @@ typedef struct ScriptDSET
 } ScriptDSET;
 
 typedef struct rpvtStruct {
+	CALLBACK	luaExecCb;
 	CALLBACK	doOutCb;
 	CALLBACK	checkLinkCb;
 	short		wd_id_1_LOCK;
 	short		caLinkStat; /* NO_CA_LINKS,CA_LINKS_ALL_OK,CA_LINKS_NOT_OK */
 	short		outlink_field_type;
+	short		luaError;
+	short		luaReturnType; /* LUA_TNUMBER, LUA_TSTRING, LUA_TTABLE, or LUA_TNIL */
+	short		luaCompleted;  /* set by async callback, checked by process() pass 2 */
 	bool        my_state;
 	epicsMutex* luaStateMutex;
 } rpvtStruct;
@@ -749,6 +755,10 @@ static long init_record(dbCommon* common, int pass)
 		record->call = (char *) calloc(121, sizeof(char));
 		record->rpvt = (void *) calloc(1, sizeof(struct rpvtStruct));
 		((rpvtStruct*) record->rpvt)->luaStateMutex = new epicsMutex;
+		((rpvtStruct*) record->rpvt)->luaError = 0;
+		((rpvtStruct*) record->rpvt)->luaCompleted = 0;
+		callbackSetCallback(luaExecCallback, &((rpvtStruct*) record->rpvt)->luaExecCb);
+		callbackSetUser(record, &((rpvtStruct*) record->rpvt)->luaExecCb);
 
 		int index;
 		char** init_str = (char**) &record->paa;
@@ -907,15 +917,17 @@ static int incomplete(lua_State* L, int status)
 	return 0;
 }
 
-static void processCallback(void* data)
+/*
+ * executeLua -- compile and execute the Lua code in record->call.
+ * Sets pvt->luaError to 1 on failure, 0 on success.
+ * On success, the return value is left on the Lua stack.
+ */
+static void executeLua(luascriptRecord* record)
 {
-	luascriptRecord* record = (luascriptRecord*) data;
 	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
-	epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
-
 	lua_State* state = (lua_State*) record->state;
 
-	int lua_error = 0;
+	pvt->luaError = 0;
 
 	lua_pushstring(state, (const char*) record->call);
 	int status = addreturn(state);
@@ -923,167 +935,175 @@ static void processCallback(void* data)
 	if (status != LUA_OK)
 	{
 		size_t len;
-		const char *buffer = lua_tolstring(state, 1, &len);  /* get what it has */
-		status = luaL_loadbuffer(state, buffer, len, "=stdin");  /* try it */
+		const char *buffer = lua_tolstring(state, 1, &len);
+		status = luaL_loadbuffer(state, buffer, len, "=stdin");
 
 		if (incomplete(state, status))
 		{
-			/* Incomplete statement -- incomplete() already popped the error message */
 			logError(record);
 			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
-			lua_error = 1;
+			pvt->luaError = 1;
+			return;
 		}
 		else if (status != LUA_OK)
 		{
-			/* Non-incomplete syntax error */
-			logError(record);      /* pops error message */
-			lua_pop(state, 1);     /* pop original call_string */
-			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
-			lua_error = 1;
-		}
-	}
-
-	if (!lua_error)
-	{
-		lua_remove(state, 1);
-		status = lua_pcall(state, 0, 1, 0);
-
-		if (status)
-		{
 			logError(record);
-			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
-			lua_error = 1;
-		}
-	}
-
-	// Process the returned values
-	if (!lua_error)
-	{
-		int top = lua_gettop(state);
-
-		if (top > 0)
-		{
-			int rettype = lua_type(state, -1);
-
-			if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
-			{
-				record->pval = record->val;
-				record->val = lua_tonumber(state, -1);
-				record->udf = isnan(record->val);
-
-				if (checkValUpdate(record))
-				{
-					record->pact = FALSE;
-					writeValue(record);
-					record->pact = TRUE;
-				}
-			}
-			else if (rettype == LUA_TSTRING)
-			{
-				strncpy(record->psvl, record->sval, sizeof(record->psvl) - 1);
-				record->psvl[sizeof(record->psvl) - 1] = '\0';
-				strncpy(record->sval, lua_tostring(state, -1), sizeof(record->sval) - 1);
-				record->sval[sizeof(record->sval) - 1] = '\0';
-				record->udf = FALSE;
-
-				if (checkSvalUpdate(record))
-				{
-					record->pact = FALSE;
-					writeValue(record);
-					record->pact = TRUE;
-				}
-			}
-			else if (rettype == LUA_TTABLE)
-			{
-				if (record->pavl != NULL)
-				{
-					if (record->patp == luascriptAVALType_Integer)       { delete [] ((int*) record->pavl); }
-					else if (record->patp == luascriptAVALType_Double)   { delete [] ((double*) record->pavl); }
-					else if (record->patp == luascriptAVALType_Char)     { delete [] ((char*) record->pavl); }
-				}
-
-				record->pavl = record->aval;
-				record->pasz = record->asiz;
-				record->patp = record->atyp;
-
-				record->aval = convertTable(state, &record->asiz, &record->atyp);
-				record->udf = FALSE;
-
-				if (checkAvalUpdate(record))
-				{
-					record->pact = FALSE;
-					writeValue(record);
-					record->pact = TRUE;
-				}
-			}
-
 			lua_pop(state, 1);
+			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
+			pvt->luaError = 1;
+			return;
 		}
 	}
 
-	/* Ensure the Lua stack is clean before finishing */
-	lua_settop(state, 0);
+	lua_remove(state, 1);
+	status = lua_pcall(state, 0, 1, 0);
 
-	/* Handle IVOA on Lua error */
-	if (lua_error)
+	if (status)
 	{
+		logError(record);
+		recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
+		pvt->luaError = 1;
+	}
+}
+
+/*
+ * handleResults -- extract the Lua return value and store
+ * in record fields (VAL, SVAL, or AVAL).
+ * Must be called after executeLua with the return value on the stack.
+ */
+static void handleResults(luascriptRecord* record)
+{
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+	lua_State* state = (lua_State*) record->state;
+
+	pvt->luaReturnType = LUA_TNIL;
+
+	if (pvt->luaError)    { lua_settop(state, 0); return; }
+
+	int top = lua_gettop(state);
+
+	if (top > 0)
+	{
+		int rettype = lua_type(state, -1);
+		pvt->luaReturnType = rettype;
+
+		if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
+		{
+			record->pval = record->val;
+			record->val = lua_tonumber(state, -1);
+			record->udf = isnan(record->val);
+		}
+		else if (rettype == LUA_TSTRING)
+		{
+			strncpy(record->psvl, record->sval, sizeof(record->psvl) - 1);
+			record->psvl[sizeof(record->psvl) - 1] = '\0';
+			strncpy(record->sval, lua_tostring(state, -1), sizeof(record->sval) - 1);
+			record->sval[sizeof(record->sval) - 1] = '\0';
+			record->udf = FALSE;
+		}
+		else if (rettype == LUA_TTABLE)
+		{
+			if (record->pavl != NULL)
+			{
+				if (record->patp == luascriptAVALType_Integer)       { delete [] ((int*) record->pavl); }
+				else if (record->patp == luascriptAVALType_Double)   { delete [] ((double*) record->pavl); }
+				else if (record->patp == luascriptAVALType_Char)     { delete [] ((char*) record->pavl); }
+			}
+
+			record->pavl = record->aval;
+			record->pasz = record->asiz;
+			record->patp = record->atyp;
+
+			record->aval = convertTable(state, &record->asiz, &record->atyp);
+			record->udf = FALSE;
+		}
+
+		lua_pop(state, 1);
+	}
+
+	lua_settop(state, 0);
+}
+
+/*
+ * execOutput -- check the output execution option (OOPT) and
+ * IVOA, then write to the output link if appropriate.
+ */
+static void execOutput(luascriptRecord* record)
+{
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+
+	if (pvt->luaError)
+	{
+		/* Script failed -- check IVOA */
 		switch (record->ivoa)
 		{
 			case menuIvoaDon_t_drive_outputs:
-				recGblGetTimeStamp(record);
-				checkAlarms(record);
-				monitor(record);
-				record->pact = FALSE;
 				return;
 
 			case menuIvoaSet_output_to_IVOV:
 				record->val = record->ivov;
 				record->udf = FALSE;
-				record->pact = FALSE;
 				writeValue(record);
-				record->pact = TRUE;
-				break;
+				return;
 
 			case menuIvoaContinue_normally:
 			default:
 				break;
 		}
 	}
-
-	recGblGetTimeStamp(record);
-	checkAlarms(record);
-	monitor(record);
-	recGblFwdLink(record);
-	record->pact = FALSE;
-}
-
-static long runCode(luascriptRecord* record)
-{
-	if (std::string(record->code).empty())    { record->pact = FALSE; return 0; }
-
-	if (record->sync == luascriptSYNC_Synchronous)
-	{
-		processCallback(record);
-	}
 	else
 	{
-		std::string threadname = std::string("luascript:") + record->name;
+		/* Script succeeded -- check OOPT based on return type */
+		int doOutput = 0;
 
-		epicsThreadCreate(threadname.c_str(),
-		                  epicsThreadPriorityLow,
-		                  epicsThreadGetStackSize(epicsThreadStackMedium),
-		                  (EPICSTHREADFUNC)::processCallback, record);
+		switch (pvt->luaReturnType)
+		{
+			case LUA_TBOOLEAN:
+			case LUA_TNUMBER:
+				doOutput = checkValUpdate(record);
+				break;
+			case LUA_TSTRING:
+				doOutput = checkSvalUpdate(record);
+				break;
+			case LUA_TTABLE:
+				doOutput = checkAvalUpdate(record);
+				break;
+			default:
+				break;
+		}
+
+		if (doOutput)    { writeValue(record); }
 	}
+}
 
-	return 0;
+/*
+ * luaExecCallback -- EPICS callback function for async Lua execution.
+ * Runs the Lua code under the Lua mutex, then calls dbProcess to
+ * complete record processing under dbScanLock.
+ */
+static void luaExecCallback(CALLBACK* cb)
+{
+	void* vrecord;
+	callbackGetUser(vrecord, cb);
+	luascriptRecord* record = (luascriptRecord*) vrecord;
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+
+	epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
+
+	executeLua(record);
+	handleResults(record);
+
+	pvt->luaCompleted = 1;
+
+	dbScanLock((dbCommon*) record);
+	record->pact = FALSE;
+	dbProcess((dbCommon*) record);
+	dbScanUnlock((dbCommon*) record);
 }
 
 static long process(dbCommon* common)
 {
 	luascriptRecord* record = (luascriptRecord*) common;
-
-	/* If pact is set, an async operation is already in progress */
-	if (record->pact)    { return 0; }
 
 	/* No need to process if there's no code */
 	if (record->code[0] == '\0')    { return 0; }
@@ -1091,45 +1111,75 @@ static long process(dbCommon* common)
 	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
 	epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
 
-	long status;
-
-	/* Clear any existing error message (only post if there was a previous error) */
-	if (record->err[0] != '\0')
+	if (pvt->luaCompleted)
 	{
-		memset(record->err, 0, sizeof(record->err));
-		db_post_events(record, &record->err, DBE_VALUE);
+		/* ---- PASS 2: Async Lua execution completed ---- */
+		pvt->luaCompleted = 0;
+	}
+	else
+	{
+		/* ---- PASS 1: Load inputs, execute Lua ---- */
+
+		record->pact = TRUE;
+		recGblGetTimeStamp(record);
+
+		/* Clear any existing error message */
+		if (record->err[0] != '\0')
+		{
+			memset(record->err, 0, sizeof(record->err));
+			db_post_events(record, &record->err, DBE_VALUE);
+		}
+
+		/* Reload state if configured */
+		if (record->relo == luascriptRELO_Always)
+		{
+			memset(record->pcode, 0, 121);
+
+			long status = initState(record);
+
+			if (status) { record->pact = FALSE; return status; }
+		}
+
+		long status = loadNumbers(record);
+
+		if (status)    { record->pact = FALSE; return status; }
+
+		status = loadStrings(record);
+
+		if (status)    { record->pact = FALSE; return status; }
+
+		if (record->sync == luascriptSYNC_Asynchronous)
+		{
+			/* Queue Lua execution to the callback thread */
+			callbackSetPriority(record->prio, &pvt->luaExecCb);
+			callbackRequest(&pvt->luaExecCb);
+			return 0;
+		}
+
+		/* Synchronous: execute Lua inline */
+		executeLua(record);
+		handleResults(record);
 	}
 
-	record->pact = TRUE;
+	/* ---- PASS 2 (async) or continuation (sync): finish processing ---- */
+
 	recGblGetTimeStamp(record);
+	checkAlarms(record);
+	execOutput(record);
 
-	/* luascriptRELO_Always indicates a state reload on every process */
-	if (record->relo == luascriptRELO_Always)
+	/* Don't process forward link if IVOA says don't drive */
+	if (pvt->luaError && record->ivoa == menuIvoaDon_t_drive_outputs)
 	{
-		memset(record->pcode, 0, 121);
-
-		status = initState(record);
-
-		if (status) { record->pact = FALSE; return status; }
-	}
-
-	status = loadNumbers(record);
-
-	if (status)    { record->pact = FALSE; return status; }
-
-	status = loadStrings(record);
-
-	if (status)    { record->pact = FALSE; return status; }
-
-	status = runCode(record);
-
-	if (status)
-	{
-		recGblFwdLink(record);
+		monitor(record);
 		record->pact = FALSE;
+		return 0;
 	}
 
-	return status;
+	monitor(record);
+	recGblFwdLink(record);
+	record->pact = FALSE;
+
+	return 0;
 }
 
 static long special(dbAddr* paddr, int after)
