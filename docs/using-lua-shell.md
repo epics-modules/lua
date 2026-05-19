@@ -47,7 +47,46 @@ luash> #print("This won't print")
 luash> print(#"Check len")
 9
 ```
-    
+
+Comments starting with '#-' are silent -- they are not echoed when running
+scripts in file mode. This matches the iocsh convention for silent comments:
+
+```lua
+#ENABLE_HASH_COMMENTS
+# This comment will be echoed
+#- This comment will be silent
+```
+
+Blank lines in file mode are also elided from the output.
+
+
+info() Function
+---------------
+
+The ``info()`` function is available in all Lua states for discovering
+available functions and methods. It can be called on any library table
+or userdata object:
+
+```
+luash> info(epics)
+  .get(PV [, timeout | {timeout, count, string}])
+  .put(PV, value [, timeout | {timeout}])
+  .pv(PV) -- create PV proxy object
+
+luash> pv = epics.pv("IOC:m1")
+luash> info(pv)
+  .name                       -- PV name (property)
+  .FIELD                      -- read field value
+  .FIELD = value              -- write field value
+  :get(field [, {timeout, count, string}])
+  :put(field, value [, {timeout}])
+```
+
+Calling ``info()`` with no arguments prints usage help. Calling it with
+a nil argument reports that the input is nil, which helps diagnose cases
+where a library hasn't been loaded yet.
+
+
 Calling the Lua Shell From Inside The IOC Shell
 -----------------------------------------------
 

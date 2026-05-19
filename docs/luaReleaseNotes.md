@@ -7,6 +7,211 @@ nav_order: 2
 
 # lua Release Notes
 
+Release 4-0
+-----------
+
+### Major Changes
+
+- **luaaa dependency removed.** The third-party luaaa C++ binding library has been 
+  completely eliminated. All Lua libraries now use the standard Lua C API directly.
+  This removes approximately 2000 lines of template-heavy C++11 code from the build.
+
+- **C++11 no longer required.** All C++11 features have been removed from the codebase.
+  The module now builds with C++98/03 compilers, restoring compatibility with older
+  toolchains such as vxWorks and legacy MSVC versions. The `CXX11_SUPPORT` build flag
+  has been removed.
+
+- **Basic and main library versions unified.** The separate `libs/basic/` implementations 
+  have been replaced with `#include` forwarders to the main versions. All platforms now 
+  get the same full-featured library code.
+
+### New Features
+
+- **`luaLoadFile` command.** New iocsh command that loads and executes a Lua script as
+  a single chunk in a new state. Unlike `luash`, the entire file is compiled at once 
+  (local variables work across lines). Unlike `luaSpawn`, execution is synchronous. 
+  Accepts table macros when called from Lua.
+
+- **`luash` file-mode interleaved output.** When `luash` runs a script file, it now
+  executes each statement as it reads it, with output appearing immediately after the
+  echoed line that produced it. This matches iocsh behavior and makes it easier to trace
+  execution in IOC startup scripts. Multi-line constructs (function/if/for/do blocks)
+  are accumulated until complete.
+
+- **`IVOA`/`IVOV` fields added to luascript record.** The Invalid Output Action field
+  controls behavior when Lua script execution fails: "Continue normally" (default),
+  "Don't drive outputs" (suppress output write and forward link), or "Set output to
+  IVOV" (write the IVOV value instead). Uses the standard `menuIvoa` from EPICS base,
+  matching the calcout/scalcout/acalcout convention.
+
+- **luascript record string fields expanded.** AA-JJ, SVAL, PSVL fields expanded from
+  40 to 256 characters. ERR field expanded from 200 to 256 characters.
+
+- **`info()` function for shell discoverability.** New global function available in all
+  Lua states. Call `info(library)` to list available functions, or `info(object)` to
+  list methods and properties of a userdata object.
+
+- **`db.entry()` with method syntax.** The entry object returned by `db.entry()` now 
+  supports both method syntax (`ent:findRecord("name")`) and module function syntax
+  (`db.findRecord(ent, "name")`). The entry is proper userdata with `__gc` for 
+  automatic cleanup.
+
+- **`db.record()` with `:field()` and `:info()` methods.** The record object now 
+  supports `rec:field("VAL", "test")` and `rec:info("autosave", "VAL")` for setting
+  fields and info tags. The record is proper userdata with `__gc` for automatic cleanup.
+
+- **`epics.get` and `epics.put` array support.** Both functions now support array/waveform
+  PVs. `epics.get` returns a Lua table for multi-element PVs; `epics.put` accepts a Lua
+  table to write arrays. Char waveforms are returned as Lua strings by default.
+
+- **`epics.get` and `epics.put` options table.** Both functions accept an options table
+  as the second/third argument with named parameters: `timeout`, `count` (max elements
+  to fetch), and `string` (force string vs numeric return for enums and char arrays).
+
+- **`epics.get` returns `nil, "error"` on failure.** Returns the value on success, or
+  `nil, "error message"` on failure instead of silently returning nil.
+
+- **`epics.put` returns nothing on success.** Returns an error string on failure. The
+  same convention applies to `luaSpawn`, `luash`, `luaCmd`, and `luaLoadFile` -- all
+  action commands return nothing on success and an error string on failure.
+
+- **`epics.get`/`epics.put` integer distinction.** Integer types (DBF_SHORT, DBF_LONG,
+  DBF_CHAR, DBF_ENUM) are now returned with `lua_pushinteger` instead of `lua_pushnumber`,
+  preserving integer semantics. Scalar integer puts use `DBR_LONG` instead of `DBR_DOUBLE`.
+
+- **CA context cached per Lua state.** The CA context is now created once per Lua state
+  and reused for all subsequent `epics.get`/`epics.put` calls, eliminating the overhead
+  of context creation/destruction on every call.
+
+- **Local PV fast path.** `epics.get` and `epics.put` now automatically detect PVs that
+  exist in the local IOC database and use direct database access (`dbGetField`/`dbPutField`)
+  instead of Channel Access. This eliminates network and CA overhead for local PVs,
+  providing orders-of-magnitude faster access. Remote PVs transparently fall through to CA.
+
+- **`epics.pv` redesigned as proper userdata.** The PV object returned by `epics.pv()`
+  is now a proper Lua userdata with a `__gc` metamethod (ready for future channel
+  caching), `__tostring` support, and type-safe access via `luaL_checkudata`. The
+  `pv.name` property returns the PV name. The old `pv:getName()` method and `pv.pv_name`
+  raw field are removed.
+
+- **`epics.pv` get/put methods.** The PV object supports `pv:get(field, options)` and
+  `pv:put(field, value, options)` for field access with custom timeout, count, and
+  string options.
+
+- **`epics.sleep` removed.** Use `osi.sleep` instead.
+
+- **`#-` silent comments.** When hash comments are enabled, lines starting with `#-`
+  are skipped silently without being echoed, matching the iocsh convention. Blank lines
+  in file mode are also elided from the output.
+
+- **luascript record async rework.** Asynchronous mode (`SYNC=Async`) now uses the
+  EPICS callback system instead of creating a new thread per process cycle. The Lua
+  script runs in an EPICS callback thread, and completion is signaled via `dbProcess`
+  with proper `dbScanLock`. This follows the standard EPICS two-pass asynchronous
+  record processing model.
+
+- **Multiple `asyn.driver.new()` per Lua state.** Each driver now stores its callback
+  functions and proxy reference independently using `luaL_ref`, so multiple drivers 
+  can coexist in the same Lua state without interfering.
+
+### Bug Fixes
+
+#### Memory Leaks
+- `luaLoadMacros`: `macParseDefns` pairs now freed after use
+- `parseHelp`: buffer properly null-terminated; `ftell` error checked
+- `myDatabaseHook`: `macEnvExpand` and `macParseDefns` results now freed; macro pairs 
+  pointer reset for each hook invocation
+- `luaSpawn`: lua_State closed on file-not-found and load-failure error paths
+- `createTable` (luascriptRecord): data array freed on `dbGetLink` failure
+- `luaLoadLibrary`: error message popped from stack on failure
+- `luaPopScope`: stack imbalance fixed; crash prevented when no metatable exists
+- `readInt32`/`readFloat64`/`readOctet` (asyn driver callbacks): nil return value 
+  now always popped from the Lua stack
+- `parseINPOUT`: broken Protocol no longer returned on script load failure; state 
+  and Protocol cleaned up
+- `db.entry()`: now returns full userdata with `__gc` (previously returned light
+  userdata that leaked the DBENTRY)
+- `db.record()`: `__gc` added to free DBENTRY on garbage collection
+
+#### Thread Safety
+- `shell_state` changed from a static global to thread-local storage 
+  (`epicsThreadPrivateId`), preventing races between concurrent shell sessions
+- `default_state` access protected with `epicsMutex`
+- `previousFunctionHook` installation guarded to prevent infinite recursion on 
+  repeated `luash` calls
+- `shellStateId` lazily initialized to prevent segfault when `luash` is called
+  before registrars fire
+
+#### String and Null Safety
+- `logError` (luascriptRecord): guards against `lua_tostring` returning NULL
+- `luaLocateFile`: early return on empty filename (prevents `at(0)` exception)
+- `luaLoadString`: NULL check without constructing `std::string(NULL)`
+- `luaMacrosFromTable`: value duplicated before `lua_tostring` to prevent 
+  corrupting `lua_next` iteration
+- `l_pvgetval`/`l_pvsetval`: NULL guard on field name
+- `l_caget`/`l_caput`: changed from `lua_tostring` to `luaL_checkstring` for 
+  proper argument validation
+- `strcpy` replaced with `strncpy` on `record->call` and `record->pcode`
+- `devLuaBi`/`devLuaMbbi`/`devLuaStringin`: `lua_pop` moved after string 
+  comparison to prevent dangling pointer
+
+#### Logic Bugs
+- `checkSvalUpdate` Transition_To_Non_zero: condition corrected from 
+  `(!prev.empty() && !curr.empty())` to `(prev.empty() && !curr.empty())`
+- `setLinks` callback setup moved outside the per-link loop to prevent 
+  redundant callback requests and `wd_id_1_LOCK` reset issues
+- Async thread names now use `"luascript:" + record->name` for unique 
+  identification (previously truncated to "Script")
+- `luashSetCommonState`: missing `return` after NULL name check
+
+#### Device Support
+- `devLuaLongin`/`devLuaStringin`: `return 2` changed to `return 0` (longin 
+  and stringin record support do not give special meaning to return value 2)
+- `parseINPOUT`: returns NULL on script load failure instead of a broken Protocol
+
+#### Asyn Library
+- `luaL_error`/`longjmp` no longer called from C++ catch blocks in `asyn_read`, 
+  `asyn_write`, `asyn_writeread`, and `push_clientproxy`. Error messages are 
+  captured inside the catch and `luaL_error` is called after the catch exits.
+- `asyn_writeparam`: argument type validation moved before `asynUser` allocation
+  to prevent resource leak on type errors
+- `getIntegerParam`/`getDoubleParam`/`getStringParam`: return value checked 
+  before calling `luaL_check*` to prevent accessing wrong stack position
+- Octet read parameter buffer increased from 256 to 1024 bytes
+
+#### Old Port Driver
+- `readOctet`: output buffer now properly null-terminated
+- `writeOctet`/`writeFloat64`/`writeInt32`: `callParamCallbacks()` called after
+  successful writes so parameter changes propagate to clients
+
+#### Record Support
+- Asynchronous processing reworked to use EPICS callback system instead of 
+  per-process thread creation, with proper `dbScanLock`/`dbProcess` completion
+- `processCallback` stack leak fixed for non-incomplete syntax errors; 
+  `lua_settop` safety net added
+- `checkValUpdate` "On Change" now uses `fabs(pval - val) > 0.0` instead of 
+  `MDEL` deadband (matches calcout behavior)
+- `loadStrings` no longer returns early on first error; preserves first error 
+  while processing all remaining string inputs (matches `loadNumbers` pattern)
+- ERR field only cleared and posted when it contains a previous error message, 
+  eliminating unnecessary monitor traffic
+- `writeValue` no longer sets `pact = TRUE` on DSET error (was dead code)
+- `lua_close(NULL)` guarded in `initState`
+- `recGblGetTimeStamp` called on all process paths including early error returns
+- `OUTV` field now defaults to "Ext PV OK" matching all input validity fields
+- `printf` replaced with `errlogPrintf` for all error/diagnostic messages
+- `checkLinks` and `setLinks` declared `static`
+- Unused `#include <algorithm>` removed
+- DBD pointer fields changed from `size(4)` to `size(8)` for 64-bit correctness
+
+#### Other
+- `all_records` (db library): `lua_call` changed to `lua_pcall` for controlled
+  error handling
+- Protocol char arrays increased from 62 to 256 bytes
+- VLAs in `luaSoft.c` replaced with `malloc`/`free` for portability and to 
+  prevent stack overflow with large arrays
+
+
 Release 3-1
 -----------
 

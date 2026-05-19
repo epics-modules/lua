@@ -111,7 +111,7 @@ epics.put (PV, value, options)
 Calls ca_put to set the value of a PV accessible by the host. When the value
 is a Lua table, performs an array put using ca_array_put.
 
-Returns `true` on success, or `nil, "error message"` on failure.
+Returns nothing on success, or an error string on failure.
 
 The third argument can be either a numeric timeout or an options table:
 

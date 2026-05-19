@@ -210,8 +210,9 @@ The SYNC field controls whether the record processes in a synchronous or
 asynchronous manner. It is a menu field with two choices:
 
 -  ``Sync`` -- process the record's lua code synchronously.
--  ``Async`` -- process the record's lua code in a separate
-   thread.
+-  ``Async`` -- process the record's lua code asynchronously
+   in an EPICS callback thread, freeing the scan thread for
+   other records.
 
 
 
