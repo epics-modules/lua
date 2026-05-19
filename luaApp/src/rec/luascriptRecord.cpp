@@ -1101,6 +1101,7 @@ static long process(dbCommon* common)
 	}
 
 	record->pact = TRUE;
+	recGblGetTimeStamp(record);
 
 	/* luascriptRELO_Always indicates a state reload on every process */
 	if (record->relo == luascriptRELO_Always)
