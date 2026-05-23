@@ -119,3 +119,30 @@ record(stringout, "$(P)$(R)jjval")
 {
 	field(VAL, "")
 }
+
+# POPT/PCAL example: only recalculate when input A or B changes
+# Demonstrates conditional processing using changed flags
+record(luascript, "$(P)$(R)conditional")
+{
+	field(INPA, "$(P)$(R)aval CPP")
+	field(INPB, "$(P)$(R)bval CPP")
+	field(INPC, "$(P)$(R)cval CPP")
+
+	field(POPT, "Conditional")
+	field(PCAL, "_A or _B")
+
+	field(CODE, "@examples.lua conditional_demo()")
+	field(PREC, 3)
+}
+
+# POPT/PCAL example: only process when a threshold is crossed
+record(luascript, "$(P)$(R)threshold")
+{
+	field(INPA, "$(P)$(R)aval CPP")
+
+	field(POPT, "Conditional")
+	field(PCAL, "_A and A > 5")
+
+	field(CODE, "return A * 10")
+	field(PREC, 1)
+}

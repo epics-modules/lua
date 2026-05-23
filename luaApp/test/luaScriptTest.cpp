@@ -350,6 +350,93 @@ static void testOoptNever(void)
 }
 
 
+/* --- POPT/PCAL tests --- */
+
+static void testPoptAlways(void)
+{
+    testDiag("===== luascriptRecord: POPT always =====");
+
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 5.0);
+    testdbPutFieldOk("test:popt_always.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:popt_always.VAL", DBF_DOUBLE, 6.0);
+
+    /* Process again without changing A -- should still run CODE */
+    testdbPutFieldOk("test:popt_always.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:popt_always.VAL", DBF_DOUBLE, 6.0);
+}
+
+static void testPoptConditional(void)
+{
+    testDiag("===== luascriptRecord: POPT conditional =====");
+
+    /* Change A and process -- PCAL="_A" should be true, CODE runs */
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 10.0);
+    testdbPutFieldOk("test:popt_cond.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:popt_cond.VAL", DBF_DOUBLE, 11.0);
+
+    /* Process again without changing A -- _A is false, CODE skipped */
+    testdbPutFieldOk("test:popt_cond.PROC", DBF_LONG, 1);
+    /* VAL should still be 11.0 from the previous process */
+    testdbGetFieldEqual("test:popt_cond.VAL", DBF_DOUBLE, 11.0);
+
+    /* Change A again -- CODE should run again */
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 20.0);
+    testdbPutFieldOk("test:popt_cond.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:popt_cond.VAL", DBF_DOUBLE, 21.0);
+}
+
+static void testPcalEmpty(void)
+{
+    testDiag("===== luascriptRecord: PCAL empty =====");
+
+    /* POPT=Conditional but PCAL is empty -- CODE should NOT run */
+    testdbPutFieldOk("test:popt_empty.PROC", DBF_LONG, 1);
+    /* VAL should remain 0 (never processed) */
+    testdbGetFieldEqual("test:popt_empty.VAL", DBF_DOUBLE, 0.0);
+}
+
+static void testPcalChangedFlag(void)
+{
+    testDiag("===== luascriptRecord: PCAL changed flag =====");
+
+    /* Set A to a value, then process the conditional record */
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 5.0);
+    testdbPutFieldOk("test:popt_cond.PROC", DBF_LONG, 1);
+    double val1;
+    testdbGetFieldEqual("test:popt_cond.VAL", DBF_DOUBLE, 6.0);
+
+    /* Set A to the SAME value -- _A should be false */
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 5.0);
+    testdbPutFieldOk("test:popt_cond.PROC", DBF_LONG, 1);
+    /* VAL unchanged because _A was false */
+    testdbGetFieldEqual("test:popt_cond.VAL", DBF_DOUBLE, 6.0);
+}
+
+static void testPcalError(void)
+{
+    testDiag("===== luascriptRecord: PCAL error =====");
+
+    testdbPutFieldOk("test:popt_err.PROC", DBF_LONG, 1);
+
+    /* ERR field should be populated with PCAL error */
+    DBADDR addr;
+    if (dbNameToAddr("test:popt_err.ERR", &addr) == 0)
+    {
+        char err_msg[256];
+        long nElements = 1;
+        dbGetField(&addr, DBR_STRING, err_msg, NULL, &nElements, NULL);
+        testOk(strlen(err_msg) > 0, "ERR field populated with PCAL error: '%s'", err_msg);
+    }
+    else
+    {
+        testFail("Could not find test:popt_err.ERR");
+    }
+
+    /* VAL should remain 0 (CODE never ran) */
+    testdbGetFieldEqual("test:popt_err.VAL", DBF_DOUBLE, 0.0);
+}
+
+
 MAIN(luaScriptTest)
 {
     testPlan(0);
@@ -401,6 +488,13 @@ MAIN(luaScriptTest)
 
     /* OOPT */
     testOoptNever();
+
+    /* POPT/PCAL */
+    testPoptAlways();
+    testPoptConditional();
+    testPcalEmpty();
+    testPcalChangedFlag();
+    testPcalError();
 
     testIocShutdownOk();
     testdbCleanup();

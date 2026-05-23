@@ -43,6 +43,12 @@ menu(luascriptAVALType)
 	choice(luascriptAVALType_Char, "Char")
 }
 
+menu(luascriptPOPT)
+{
+	choice(luascriptPOPT_Always, "Always")
+	choice(luascriptPOPT_Conditional, "Conditional")
+}
+
 recordtype(luascript)
 {
 	include "dbCommon.dbd"
@@ -91,6 +97,23 @@ recordtype(luascript)
 		promptgroup(GUI_OUTPUT)
 		size(256)
 		interest(2)
+	}
+
+	field(POPT, DBF_MENU)
+	{
+		prompt("Process Option")
+		promptgroup(GUI_CALC)
+		interest(1)
+		menu(luascriptPOPT)
+	}
+
+	field(PCAL, DBF_STRING)
+	{
+		prompt("Process Condition")
+		promptgroup(GUI_CALC)
+		special(SPC_MOD)
+		interest(1)
+		size(121)
 	}
 
 	field(CODE, DBF_STRING)

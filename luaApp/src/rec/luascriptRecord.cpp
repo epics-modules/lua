@@ -76,11 +76,15 @@ enum TableOutput
 static const char NUM_NAMES[NUM_ARGS][2] = {"A","B","C","D","E","F","G","H","I","J"};
 static const char STR_NAMES[STR_ARGS][3] = {"AA","BB","CC","DD","EE","FF","GG","HH","II","JJ"};
 
+static const char CHANGED_NUM_NAMES[NUM_ARGS][3] = {"_A","_B","_C","_D","_E","_F","_G","_H","_I","_J"};
+static const char CHANGED_STR_NAMES[STR_ARGS][4] = {"_AA","_BB","_CC","_DD","_EE","_FF","_GG","_HH","_II","_JJ"};
+
 
 static long init_record(dbCommon* common, int pass);
 static long process(dbCommon* common);
 static long special(dbAddr *paddr, int after);
 static void luaExecCallback(CALLBACK* cb);
+static void compilePcal(luascriptRecord* record);
 static long get_precision(const dbAddr* paddr, long* precision);
 static long get_units(dbAddr* paddr, char* units);
 static long get_graphic_double(dbAddr* paddr, struct dbr_grDouble* pgd);
@@ -109,6 +113,8 @@ typedef struct rpvtStruct {
 	short		luaError;
 	short		luaReturnType; /* LUA_TNUMBER, LUA_TSTRING, LUA_TTABLE, or LUA_TNIL */
 	short		luaCompleted;  /* set by async callback, checked by process() pass 2 */
+	int			pcalRef;       /* luaL_ref key for compiled PCAL chunk */
+	short		stateReloaded; /* force changed flags true after state reload */
 	bool        my_state;
 	epicsMutex* luaStateMutex;
 } rpvtStruct;
@@ -275,6 +281,8 @@ static int initState(luascriptRecord* record)
 
 	if (((rpvtStruct*) record->rpvt)->my_state == true && record->state != NULL)   { lua_close((lua_State*) record->state); }
 
+	((rpvtStruct*) record->rpvt)->stateReloaded = 1;
+
 	return getState(record, curr.first);
 }
 
@@ -317,11 +325,19 @@ static long loadNumbers(luascriptRecord* record)
 
 	long status = 0;
 
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+
 	for (unsigned index = 0; index < NUM_ARGS; index += 1)
 	{
+		double prev = *value;
+
 		long newStatus = dbGetLink(field, DBR_DOUBLE, value, 0, 0);
 
 		if (!status)    { status = newStatus; }
+
+		/* Set changed flag (force true after state reload) */
+		lua_pushboolean(state, pvt->stateReloaded || fabs(*value - prev) > 0.0);
+		lua_setglobal(state, CHANGED_NUM_NAMES[index]);
 
 		lua_pushnumber(state, *value);
 		lua_setglobal(state, NUM_NAMES[index]);
@@ -451,6 +467,7 @@ static void* convertTable(lua_State* state, int* generated_size, epicsEnum16* ar
 static long loadStrings(luascriptRecord* record)
 {
 	lua_State* state = (lua_State*) record->state;
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
 
 	DBLINK* field = &record->inaa;
 
@@ -476,6 +493,7 @@ static long loadStrings(luascriptRecord* record)
 		}
 
 		long linkStatus = 0;
+		int changed = 1;  /* default: assume changed (for table inputs) */
 
 		switch(dbf_to_lua_type(field_type))
 		{
@@ -488,6 +506,7 @@ static long loadStrings(luascriptRecord* record)
 					char tempstr[STRING_SIZE] = { '\0' };
 					strncpy(tempstr, strvalue, STRING_SIZE - 1);
 					tempstr[STRING_SIZE - 1] = '\0';
+					changed = pvt->stateReloaded ? 1 : 0;
  					lua_pushstring(state, tempstr);
  					break;
 				}
@@ -495,6 +514,7 @@ static long loadStrings(luascriptRecord* record)
 				if (elements > 1)
 				{
 					/* String array: create a Lua table of strings */
+					/* changed stays 1 (always true for table inputs) */
 					char* buf = new char[elements * MAX_STRING_SIZE];
 					linkStatus = dbGetLink(field, DBR_STRING, buf, 0, &elements);
 					if (!linkStatus)
@@ -516,6 +536,7 @@ static long loadStrings(luascriptRecord* record)
 
 					if (!linkStatus)
 					{
+						changed = pvt->stateReloaded || (strcmp(tempstr, strvalue) != 0);
 						memcpy(strvalue, tempstr, STRING_SIZE);
 						lua_pushstring(state, tempstr);
 					}
@@ -534,15 +555,24 @@ static long loadStrings(luascriptRecord* record)
 					{
 						buf[elements] = '\0';
 						lua_pushstring(state, buf);
+						
+					/* Detect change before updating strvalue */
+					changed = pvt->stateReloaded || (strcmp(buf, strvalue) != 0);
+						
+						/* Update strvalue for monitoring/change detection */
+						strncpy(strvalue, buf, STRING_SIZE - 1);
+						strvalue[STRING_SIZE - 1] = '\0';
 					}
 					delete[] buf;
 				}
 				else if (field_type == 1)  /* DBF_CHAR scalar */
 				{
+					/* Table output -- changed stays 1 */
 					linkStatus = createTable<epicsInt8>(state, field, DBR_CHAR, &elements, Characters);
 				}
 				else  /* DBF_UCHAR */
 				{
+					/* Table output -- changed stays 1 */
 					linkStatus = createTable<epicsUInt8>(state, field, DBR_CHAR, &elements, Integers);
 				}
 				break;
@@ -550,6 +580,7 @@ static long loadStrings(luascriptRecord* record)
 
 			case DB_LUA_INTEGER:
 			{
+				/* Table output -- changed stays 1 */
 				if (field_type == 3)       /* DBF_SHORT */
 					linkStatus = createTable<epicsInt16>(state, field, DBR_LONG, &elements, Integers);
 				else if (field_type == 4)  /* DBF_USHORT */
@@ -563,6 +594,7 @@ static long loadStrings(luascriptRecord* record)
 
 			case DB_LUA_DOUBLE:
 			{
+				/* Table output -- changed stays 1 */
 				if (field_type == 9)       /* DBF_FLOAT */
 					linkStatus = createTable<epicsFloat32>(state, field, DBR_DOUBLE, &elements, Numbers);
 				else                       /* DBF_DOUBLE, DBF_INT64, DBF_UINT64 */
@@ -574,6 +606,10 @@ static long loadStrings(luascriptRecord* record)
 				linkStatus = -1;
 				break;
 		}
+
+		/* Set the changed flag global */
+		lua_pushboolean(state, changed);
+		lua_setglobal(state, CHANGED_STR_NAMES[index]);
 
 		if (!linkStatus)    { lua_setglobal(state, STR_NAMES[index]); }
 		if (!status)        { status = linkStatus; }
@@ -783,6 +819,8 @@ static long init_record(dbCommon* common, int pass)
 		((rpvtStruct*) record->rpvt)->luaStateMutex = new epicsMutex;
 		((rpvtStruct*) record->rpvt)->luaError = 0;
 		((rpvtStruct*) record->rpvt)->luaCompleted = 0;
+		((rpvtStruct*) record->rpvt)->pcalRef = LUA_NOREF;
+		((rpvtStruct*) record->rpvt)->stateReloaded = 1;
 		callbackSetCallback(luaExecCallback, &((rpvtStruct*) record->rpvt)->luaExecCb);
 		callbackSetUser(record, &((rpvtStruct*) record->rpvt)->luaExecCb);
 
@@ -796,6 +834,8 @@ static long init_record(dbCommon* common, int pass)
 		}
 
 		if (initState(record))    { return -1; }
+
+		compilePcal(record);
 
 		return 0;
 	}
@@ -910,6 +950,48 @@ static bool checkAvalUpdate(luascriptRecord* record)
 
 	return false;
 }
+
+/*
+ * compilePcal -- compile the PCAL expression and store the
+ * compiled chunk in the Lua registry. Wraps the bare expression
+ * as "return (expr)" to make it a valid Lua chunk.
+ */
+static void compilePcal(luascriptRecord* record)
+{
+	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
+	lua_State* state = (lua_State*) record->state;
+
+	/* Free any existing compiled chunk */
+	if (pvt->pcalRef != LUA_NOREF)
+	{
+		luaL_unref(state, LUA_REGISTRYINDEX, pvt->pcalRef);
+		pvt->pcalRef = LUA_NOREF;
+	}
+
+	if (record->pcal[0] == '\0' || state == NULL)    { return; }
+
+	/* Wrap the bare expression: "return (expr)" */
+	std::string chunk = std::string("return (") + record->pcal + ")";
+
+	int status = luaL_loadbuffer(state, chunk.c_str(), chunk.size(), "=pcal");
+
+	if (status == LUA_OK)
+	{
+		pvt->pcalRef = luaL_ref(state, LUA_REGISTRYINDEX);
+	}
+	else
+	{
+		/* Compilation error -- log to ERR field */
+		const char* msg = lua_tostring(state, -1);
+		std::string err(msg ? msg : "PCAL compile error");
+		errlogPrintf("%s PCAL compile error: %s\n", record->name, err.c_str());
+		strncpy(record->err, err.c_str(), sizeof(record->err) - 1);
+		record->err[sizeof(record->err) - 1] = '\0';
+		db_post_events(record, &record->err, DBE_VALUE);
+		lua_pop(state, 1);
+	}
+}
+
 
 static void writeValue(luascriptRecord* record)
 {
@@ -1164,6 +1246,8 @@ static long process(dbCommon* common)
 			long status = initState(record);
 
 			if (status) { record->pact = FALSE; return status; }
+
+			compilePcal(record);
 		}
 
 		long status = loadNumbers(record);
@@ -1173,6 +1257,58 @@ static long process(dbCommon* common)
 		status = loadStrings(record);
 
 		if (status)    { record->pact = FALSE; return status; }
+
+		/* Check process condition (POPT/PCAL) */
+		if (record->popt == luascriptPOPT_Conditional)
+		{
+			lua_State* state = (lua_State*) record->state;
+
+			if (record->pcal[0] == '\0')
+			{
+				/* Empty PCAL -- don't process */
+				record->pact = FALSE;
+				return 0;
+			}
+
+			if (pvt->pcalRef == LUA_NOREF)
+			{
+				/* PCAL compilation failed -- report error, don't process */
+				strncpy(record->err, "PCAL failed to compile", sizeof(record->err) - 1);
+				record->err[sizeof(record->err) - 1] = '\0';
+				db_post_events(record, &record->err, DBE_VALUE);
+				record->pact = FALSE;
+				return 0;
+			}
+
+			/* Push and call the compiled PCAL chunk */
+			lua_rawgeti(state, LUA_REGISTRYINDEX, pvt->pcalRef);
+			int pcal_status = lua_pcall(state, 0, 1, 0);
+
+			if (pcal_status != LUA_OK)
+			{
+				/* PCAL runtime error -- log to ERR, skip CODE */
+				const char* msg = lua_tostring(state, -1);
+				std::string err(msg ? msg : "PCAL error");
+				strncpy(record->err, err.c_str(), sizeof(record->err) - 1);
+				record->err[sizeof(record->err) - 1] = '\0';
+				db_post_events(record, &record->err, DBE_VALUE);
+				lua_pop(state, 1);
+				record->pact = FALSE;
+				return 0;
+			}
+
+			int should_process = lua_toboolean(state, -1);
+			lua_pop(state, 1);
+
+			if (!should_process)
+			{
+				record->pact = FALSE;
+				return 0;
+			}
+		}
+
+		/* Clear the reload flag now that inputs are loaded */
+		pvt->stateReloaded = 0;
 
 		if (record->sync == luascriptSYNC_Asynchronous)
 		{
@@ -1221,12 +1357,19 @@ static long special(dbAddr* paddr, int after)
 	{
 		epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
 		initState(record);
+		compilePcal(record);
+	}
+	else if (field_index == luascriptRecordPCAL)
+	{
+		epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
+		compilePcal(record);
 	}
 	else if (field_index == luascriptRecordFRLD && record->frld)
 	{
 		epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
 		memset(record->pcode, 0, 121);
 		initState(record);
+		compilePcal(record);
 		record->frld = 0;
 	}
 	else if (isLink(field_index))

@@ -201,3 +201,32 @@ record(luascript, "$(P)oopt_never") {
 	field(OOPT, "Never")
 	field(OUT,  "$(P)oopt_target PP")
 }
+
+# --- POPT/PCAL test records ---
+
+# POPT=Always (default) -- CODE always runs
+record(luascript, "$(P)popt_always") {
+	field(CODE, "return A + 1")
+	field(INPA, "$(P)setA")
+}
+
+# POPT=Conditional with PCAL checking changed flag
+record(luascript, "$(P)popt_cond") {
+	field(CODE, "return A + 1")
+	field(INPA, "$(P)setA")
+	field(POPT, "Conditional")
+	field(PCAL, "_A")
+}
+
+# POPT=Conditional with empty PCAL
+record(luascript, "$(P)popt_empty") {
+	field(CODE, "return 42")
+	field(POPT, "Conditional")
+}
+
+# POPT=Conditional with PCAL error
+record(luascript, "$(P)popt_err") {
+	field(CODE, "return 42")
+	field(POPT, "Conditional")
+	field(PCAL, "this is not valid!!!")
+}

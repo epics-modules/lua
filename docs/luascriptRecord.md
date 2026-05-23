@@ -139,12 +139,73 @@ The record also has a second set of calculation-related fields
 
 |  Field |        Summary          |     Type     | DCT | Default | Read |  Write | Rec Proc Monitor | PP |
 |--------|-------------------------|--------------|:---:|:-------:|:----:|:------:|:----------------:|:--:|
+|  POPT  |  Process Option         |    Menu      | Yes |    0    |  Yes |   Yes  |        No        | No |
+|  PCAL  |  Process Condition      | STRING [120] | Yes |    ""   |  Yes |   Yes  |        No        | No |
 |  CODE  |  Script                 | STRING [120] | Yes |    ""   | Yes  |   Yes  |        Yes       | No |
 |  VAL   |  Value                  | DOUBLE       | No  |    0    | Yes  |   Yes  |        Yes       | No |
-|  SVAL  |  String value           | STRING [40]  | No  |    ""   | Yes  |   Yes  |        Yes       | No |
+|  SVAL  |  String value           | STRING [256] | No  |    ""   | Yes  |   Yes  |        Yes       | No |
 |  RELO  |  When to reload state?  | Menu         | Yes |    0    | Yes  |   Yes  |        No        | No |
 |  FRLD  |  Force Reload           | Short        | Yes |    0    | Yes  |   Yes  |        No        | No |
-|  ERR   |  Last Error             | String [200] | No  |    ""   | Yes  |   Yes  |        No        | No |
+|  ERR   |  Last Error             | String [256] | No  |    ""   | Yes  |   Yes  |        No        | No |
+
+
+### Process Condition (POPT/PCAL)
+
+The POPT field controls whether the CODE expression is evaluated every time
+the record processes, or only when a condition is met. It has two choices:
+
+-  ``Always`` -- CODE is evaluated every time the record processes. This is
+   the default and matches the behavior of previous versions.
+-  ``Conditional`` -- CODE is only evaluated when the PCAL expression returns
+   a truthy value (anything other than false or nil). If PCAL is empty,
+   CODE is never evaluated.
+
+The PCAL field contains a Lua expression (not a full statement -- no ``return``
+needed) that is evaluated before CODE runs. The expression has access to all
+input globals (A-J, AA-JJ) and to **changed flags** that indicate which
+inputs changed since the last process cycle:
+
+| Changed Flag | Input | True when... |
+|--------------|-------|-------------|
+| ``_A`` - ``_J`` | A - J | The corresponding numeric input value changed |
+| ``_AA`` - ``_JJ`` | AA - JJ | The corresponding string/char input value changed |
+
+For array inputs (integer, double, or float waveforms read as Lua tables),
+the changed flag is always true since element-level change detection is not
+performed.
+
+The PCAL expression is pre-compiled when the field is set and recompiled
+whenever CODE or PCAL changes, or when the Lua state is reloaded.
+
+#### Examples
+
+```
+field(POPT, "Conditional")
+field(PCAL, "_A")
+```
+
+-  Only run CODE when input A changes.
+
+```
+field(POPT, "Conditional")
+field(PCAL, "_A or _B")
+```
+
+-  Run CODE when either input A or B changes.
+
+```
+field(POPT, "Conditional")
+field(PCAL, "_A and A > 0")
+```
+
+-  Run CODE when input A changes AND its value is positive.
+
+```
+field(POPT, "Conditional")
+field(PCAL, "_AA")
+```
+
+-  Run CODE when string input AA changes.
 
 
 ### Examples

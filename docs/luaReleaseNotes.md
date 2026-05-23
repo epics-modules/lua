@@ -38,6 +38,13 @@ Release 4-0
   execution in IOC startup scripts. Multi-line constructs (function/if/for/do blocks)
   are accumulated until complete.
 
+- **`POPT`/`PCAL` fields added to luascript record.** The Process Option field controls
+  whether CODE runs every time (`Always`, default) or only when a condition is met
+  (`Conditional`). The Process Condition field holds a Lua expression that gates CODE
+  execution. Changed flags (`_A`-`_J`, `_AA`-`_JJ`) are provided as boolean Lua globals
+  indicating which inputs changed since the last process cycle. PCAL is pre-compiled
+  for efficiency and recompiled when changed at runtime.
+
 - **`IVOA`/`IVOV` fields added to luascript record.** The Invalid Output Action field
   controls behavior when Lua script execution fails: "Continue normally" (default),
   "Don't drive outputs" (suppress output write and forward link), or "Set output to

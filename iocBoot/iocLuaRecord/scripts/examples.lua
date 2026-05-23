@@ -70,3 +70,11 @@ function test()
 	
 	return tempa
 end
+
+function conditional_demo()
+	-- Only runs when A or B changes (controlled by PCAL="_A or _B")
+	-- Even though C is also an input, changes to C alone won't trigger this
+	
+	print(string.format("  A=%g B=%g C=%g (A or B changed)", A, B, C))
+	return A + B + C
+end
