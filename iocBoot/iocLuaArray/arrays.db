@@ -1,0 +1,81 @@
+# Input waveforms (initialized by st.lua after iocInit)
+
+record(waveform, "$(P)$(R)double_input")
+{
+	field(FTVL, "DOUBLE")
+	field(NELM, "10")
+}
+
+record(waveform, "$(P)$(R)int_input")
+{
+	field(FTVL, "LONG")
+	field(NELM, "10")
+}
+
+record(waveform, "$(P)$(R)char_input")
+{
+	field(FTVL, "CHAR")
+	field(NELM, "256")
+}
+
+record(waveform, "$(P)$(R)string_input")
+{
+	field(FTVL, "STRING")
+	field(NELM, "5")
+}
+
+# Output waveforms
+
+record(waveform, "$(P)$(R)double_output")
+{
+	field(FTVL, "DOUBLE")
+	field(NELM, "10")
+}
+
+record(waveform, "$(P)$(R)int_output")
+{
+	field(FTVL, "LONG")
+	field(NELM, "10")
+}
+
+# luascript records
+
+# Scale every element of a double array by 2.0
+record(luascript, "$(P)$(R)scale")
+{
+	field(INAA, "$(P)$(R)double_input")
+	field(OUT,  "$(P)$(R)double_output PP")
+	field(OOPT, "Every Time")
+	field(CODE, "@arrays.lua scale(2.0)")
+}
+
+# Sum all elements of a double array, output as scalar VAL
+record(luascript, "$(P)$(R)sum")
+{
+	field(INAA, "$(P)$(R)double_input")
+	field(CODE, "@arrays.lua sum()")
+	field(PREC, "3")
+}
+
+# Reverse an integer array
+record(luascript, "$(P)$(R)reverse")
+{
+	field(INAA, "$(P)$(R)int_input")
+	field(OUT,  "$(P)$(R)int_output PP")
+	field(OOPT, "Every Time")
+	field(CODE, "@arrays.lua reverse()")
+}
+
+# Get the length of a char waveform (long string), output as scalar VAL
+record(luascript, "$(P)$(R)strlen")
+{
+	field(INAA, "$(P)$(R)char_input")
+	field(CODE, "@arrays.lua strlen()")
+}
+
+# Uppercase the first element of a string array, output as SVAL
+record(luascript, "$(P)$(R)upper")
+{
+	field(INAA, "$(P)$(R)string_input")
+	field(CODE, "@arrays.lua upper()")
+}
