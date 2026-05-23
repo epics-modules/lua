@@ -1,0 +1,36 @@
+# Test records for the epics library (epics.get, epics.put, epics.pv)
+
+record(ai, "$(P)test_ai") {
+	field(VAL,  "42.5")
+	field(PINI, "YES")
+}
+
+record(ao, "$(P)test_ao") {
+}
+
+record(longin, "$(P)test_li") {
+	field(VAL,  "100")
+	field(PINI, "YES")
+}
+
+record(stringin, "$(P)test_si") {
+	field(VAL,  "hello")
+	field(PINI, "YES")
+}
+
+record(stringout, "$(P)test_so") {
+}
+
+record(waveform, "$(P)test_dwf") {
+	field(FTVL, "DOUBLE")
+	field(NELM, "5")
+	field(INP,  "[1.0, 2.0, 3.0, 4.0, 5.0]")
+	field(PINI, "YES")
+}
+
+record(waveform, "$(P)test_cwf") {
+	field(FTVL, "CHAR")
+	field(NELM, "256")
+	field(INP,  "[72,101,108,108,111]")
+	field(PINI, "YES")
+}

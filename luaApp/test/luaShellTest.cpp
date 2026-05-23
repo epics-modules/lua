@@ -180,6 +180,34 @@ static void testLuaCmdTableMacros(void)
     }
 }
 
+/* --- info() function tests --- */
+
+static void testInfoNoArgs(void)
+{
+    testDiag("===== Lua shell: info() no args =====");
+
+    lua_State* state = luaCreateState();
+    testOk(state != NULL, "State created for info test");
+
+    int status = luaL_dostring(state, "info()");
+    testOk(status == 0, "info() with no args succeeds");
+
+    lua_close(state);
+}
+
+static void testInfoNilInput(void)
+{
+    testDiag("===== Lua shell: info(nil) =====");
+
+    lua_State* state = luaCreateState();
+
+    int status = luaL_dostring(state, "info(nil)");
+    testOk(status == 0, "info(nil) succeeds");
+
+    lua_close(state);
+}
+
+
 MAIN(luaShellTest)
 {
     testPlan(0);
@@ -201,6 +229,10 @@ MAIN(luaShellTest)
     testRegisterState();
     testFindNamedStateNotFound();
     testLuaCmdTableMacros();
+
+    /* info() function */
+    testInfoNoArgs();
+    testInfoNilInput();
 
     testIocShutdownOk();
     testdbCleanup();

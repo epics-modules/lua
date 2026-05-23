@@ -78,5 +78,126 @@ record(luascript, "$(P)alarm_hihi") {
 
 # Test: UDF clearing (starts as UDF=1 before first process)
 record(luascript, "$(P)udf") {
-    field(CODE, "return 42")
+	field(CODE, "return 42")
+}
+
+# --- Array I/O test records ---
+
+record(waveform, "$(P)double_wf") {
+	field(FTVL, "DOUBLE")
+	field(NELM, "5")
+	field(INP,  "[1.0, 2.0, 3.0, 4.0, 5.0]")
+	field(PINI, "YES")
+}
+
+record(waveform, "$(P)int_wf") {
+	field(FTVL, "LONG")
+	field(NELM, "5")
+	field(INP,  "[10, 20, 30, 40, 50]")
+	field(PINI, "YES")
+}
+
+record(waveform, "$(P)char_wf") {
+	field(FTVL, "CHAR")
+	field(NELM, "256")
+	field(INP,  "[72, 101, 108, 108, 111]")
+	field(PINI, "YES")
+}
+
+record(waveform, "$(P)string_wf") {
+	field(FTVL, "STRING")
+	field(NELM, "3")
+	field(INP,  "[\"alpha\", \"beta\", \"gamma\"]")
+	field(PINI, "YES")
+}
+
+record(waveform, "$(P)output_wf") {
+	field(FTVL, "DOUBLE")
+	field(NELM, "10")
+}
+
+record(luascript, "$(P)arr_double") {
+	field(INAA, "$(P)double_wf")
+	field(CODE, "@luaScriptTest.lua arr_sum()")
+}
+
+record(luascript, "$(P)arr_int") {
+	field(INAA, "$(P)int_wf")
+	field(CODE, "@luaScriptTest.lua arr_count()")
+}
+
+record(luascript, "$(P)arr_char") {
+	field(INAA, "$(P)char_wf")
+	field(CODE, "@luaScriptTest.lua str_len()")
+}
+
+record(luascript, "$(P)arr_string") {
+	field(INAA, "$(P)string_wf")
+	field(CODE, "@luaScriptTest.lua str_first()")
+}
+
+record(luascript, "$(P)arr_output") {
+	field(CODE, "return {10.0, 20.0, 30.0}")
+	field(OUT,  "$(P)output_wf PP")
+	field(OOPT, "Every Time")
+}
+
+# --- Async test records ---
+
+record(luascript, "$(P)async_val") {
+	field(CODE, "return A + B")
+	field(INPA, "$(P)setA")
+	field(INPB, "$(P)setB")
+	field(SYNC, "Async")
+}
+
+record(luascript, "$(P)async_err") {
+	field(CODE, "this is not valid lua!!!")
+	field(SYNC, "Async")
+}
+
+# --- IVOA test records ---
+
+record(ao, "$(P)ivoa_target") {
+}
+
+record(luascript, "$(P)ivoa_continue") {
+	field(CODE, "error('test error')")
+	field(IVOA, "Continue normally")
+	field(OUT,  "$(P)ivoa_target PP")
+	field(OOPT, "Every Time")
+}
+
+record(luascript, "$(P)ivoa_dont") {
+	field(CODE, "error('test error')")
+	field(IVOA, "Don't drive outputs")
+	field(OUT,  "$(P)ivoa_target PP")
+	field(OOPT, "Every Time")
+}
+
+record(luascript, "$(P)ivoa_setivov") {
+	field(CODE, "error('test error')")
+	field(IVOA, "Set output to IVOV")
+	field(IVOV, "99.0")
+	field(OUT,  "$(P)ivoa_target PP")
+	field(OOPT, "Every Time")
+}
+
+record(luascript, "$(P)ivoa_success") {
+	field(CODE, "return 42")
+	field(IVOA, "Set output to IVOV")
+	field(IVOV, "99.0")
+	field(OUT,  "$(P)ivoa_target PP")
+	field(OOPT, "Every Time")
+}
+
+# --- OOPT test records ---
+
+record(ao, "$(P)oopt_target") {
+}
+
+record(luascript, "$(P)oopt_never") {
+	field(CODE, "return 42")
+	field(OOPT, "Never")
+	field(OUT,  "$(P)oopt_target PP")
 }

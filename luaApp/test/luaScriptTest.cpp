@@ -203,6 +203,153 @@ static void testNoAlarm(void)
     testdbGetFieldEqual("test:alarm_hihi.SEVR", DBF_SHORT, (int) NO_ALARM);
 }
 
+/* --- Array I/O tests --- */
+
+static void testDoubleArrayInput(void)
+{
+    testDiag("===== luascriptRecord: double array input =====");
+
+    testdbPutFieldOk("test:arr_double.PROC", DBF_LONG, 1);
+    /* arr_sum adds 1+2+3+4+5 = 15 */
+    testdbGetFieldEqual("test:arr_double.VAL", DBF_DOUBLE, 15.0);
+}
+
+static void testIntArrayInput(void)
+{
+    testDiag("===== luascriptRecord: integer array input =====");
+
+    testdbPutFieldOk("test:arr_int.PROC", DBF_LONG, 1);
+    /* arr_count returns #AA = 5 */
+    testdbGetFieldEqual("test:arr_int.VAL", DBF_DOUBLE, 5.0);
+}
+
+static void testCharArrayInput(void)
+{
+    testDiag("===== luascriptRecord: char array input (string) =====");
+
+    testdbPutFieldOk("test:arr_char.PROC", DBF_LONG, 1);
+    /* str_len returns #AA where AA is "Hello" (5 chars) */
+    testdbGetFieldEqual("test:arr_char.VAL", DBF_DOUBLE, 5.0);
+}
+
+static void testStringArrayInput(void)
+{
+    testDiag("===== luascriptRecord: string array input =====");
+
+    testdbPutFieldOk("test:arr_string.PROC", DBF_LONG, 1);
+    /* str_first returns AA[1] = "alpha" */
+    testdbGetFieldEqual("test:arr_string.SVAL", DBF_STRING, "alpha");
+}
+
+static void testArrayOutput(void)
+{
+    testDiag("===== luascriptRecord: array output =====");
+
+    testdbPutFieldOk("test:arr_output.PROC", DBF_LONG, 1);
+    /* Returns {10,20,30} -- ASIZ should be non-zero */
+    testdbGetFieldEqual("test:arr_output.ASIZ", DBF_LONG, (int)(3 * sizeof(double)));
+}
+
+/* --- Additional async tests --- */
+
+static void testAsyncSameResult(void)
+{
+    testDiag("===== luascriptRecord: async same result as sync =====");
+
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 7.0);
+    testdbPutFieldOk("test:setB", DBF_DOUBLE, 3.0);
+    testdbPutFieldOk("test:async_val.PROC", DBF_LONG, 1);
+
+    epicsThreadSleep(0.5);
+
+    testdbGetFieldEqual("test:async_val.VAL", DBF_DOUBLE, 10.0);
+}
+
+static void testAsyncPactClears(void)
+{
+    testDiag("===== luascriptRecord: async PACT clears =====");
+
+    testdbPutFieldOk("test:async_val.PROC", DBF_LONG, 1);
+
+    epicsThreadSleep(0.5);
+
+    testdbGetFieldEqual("test:async_val.PACT", DBF_SHORT, 0);
+}
+
+static void testAsyncError(void)
+{
+    testDiag("===== luascriptRecord: async error sets alarm =====");
+
+    testdbPutFieldOk("test:async_err.PROC", DBF_LONG, 1);
+
+    epicsThreadSleep(0.5);
+
+    testdbGetFieldEqual("test:async_err.SEVR", DBF_SHORT, (int) INVALID_ALARM);
+    testdbGetFieldEqual("test:async_err.STAT", DBF_SHORT, (int) CALC_ALARM);
+}
+
+/* --- IVOA tests --- */
+
+static void testIvoaContinue(void)
+{
+    testDiag("===== luascriptRecord: IVOA continue normally =====");
+
+    testdbPutFieldOk("test:ivoa_continue.PROC", DBF_LONG, 1);
+    /* Error occurred but IVOA=Continue -- alarm should be set */
+    testdbGetFieldEqual("test:ivoa_continue.SEVR", DBF_SHORT, (int) INVALID_ALARM);
+}
+
+static void testIvoaDontDrive(void)
+{
+    testDiag("===== luascriptRecord: IVOA don't drive outputs =====");
+
+    /* Set target to a known value */
+    testdbPutFieldOk("test:ivoa_target", DBF_DOUBLE, 123.0);
+
+    testdbPutFieldOk("test:ivoa_dont.PROC", DBF_LONG, 1);
+    /* Target should NOT have changed */
+    testdbGetFieldEqual("test:ivoa_target.VAL", DBF_DOUBLE, 123.0);
+    /* Alarm should still be set */
+    testdbGetFieldEqual("test:ivoa_dont.SEVR", DBF_SHORT, (int) INVALID_ALARM);
+}
+
+static void testIvoaSetToIvov(void)
+{
+    testDiag("===== luascriptRecord: IVOA set to IVOV =====");
+
+    /* Set target to a known value */
+    testdbPutFieldOk("test:ivoa_target", DBF_DOUBLE, 0.0);
+
+    testdbPutFieldOk("test:ivoa_setivov.PROC", DBF_LONG, 1);
+    /* VAL should be IVOV (99.0) */
+    testdbGetFieldEqual("test:ivoa_setivov.VAL", DBF_DOUBLE, 99.0);
+}
+
+static void testIvoaNoEffectOnSuccess(void)
+{
+    testDiag("===== luascriptRecord: IVOA no effect on success =====");
+
+    testdbPutFieldOk("test:ivoa_success.PROC", DBF_LONG, 1);
+    /* Code returns 42, not IVOV (99) */
+    testdbGetFieldEqual("test:ivoa_success.VAL", DBF_DOUBLE, 42.0);
+}
+
+/* --- OOPT tests --- */
+
+static void testOoptNever(void)
+{
+    testDiag("===== luascriptRecord: OOPT never =====");
+
+    /* Set target to known value */
+    testdbPutFieldOk("test:oopt_target", DBF_DOUBLE, 0.0);
+
+    testdbPutFieldOk("test:oopt_never.PROC", DBF_LONG, 1);
+    /* VAL is 42 but OOPT=Never, so target should NOT change */
+    testdbGetFieldEqual("test:oopt_never.VAL", DBF_DOUBLE, 42.0);
+    testdbGetFieldEqual("test:oopt_target.VAL", DBF_DOUBLE, 0.0);
+}
+
+
 MAIN(luaScriptTest)
 {
     testPlan(0);
@@ -233,6 +380,27 @@ MAIN(luaScriptTest)
     testLowAlarm();
     testLoloAlarm();
     testNoAlarm();
+
+    /* Array I/O */
+    testDoubleArrayInput();
+    testIntArrayInput();
+    testCharArrayInput();
+    testStringArrayInput();
+    testArrayOutput();
+
+    /* Async processing */
+    testAsyncSameResult();
+    testAsyncPactClears();
+    testAsyncError();
+
+    /* IVOA */
+    testIvoaContinue();
+    testIvoaDontDrive();
+    testIvoaSetToIvov();
+    testIvoaNoEffectOnSuccess();
+
+    /* OOPT */
+    testOoptNever();
 
     testIocShutdownOk();
     testdbCleanup();
