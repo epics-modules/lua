@@ -55,6 +55,56 @@ epicsShareFunc int  luaStateIsRegistered(lua_State* state);
 
 epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index);
 
+/*
+ * Database field type mapping.
+ *
+ * The native field_type values from dbFldTypes.h conflict with the
+ * DBF_* macros from db_access.h (included by cadef.h) -- they use
+ * different numeric values for the same names. These constants and
+ * the dbf_to_lua_type mapping resolve this by using the known numeric
+ * values from dbFldTypes.h directly.
+ */
+
+/* Database-side DBR request type values from dbFldTypes.h */
+#define DB_DBR_STRING   0
+#define DB_DBR_CHAR     1
+#define DB_DBR_LONG     5
+#define DB_DBR_DOUBLE  10
+
+enum db_lua_type {
+	DB_LUA_STRING,
+	DB_LUA_CHAR,
+	DB_LUA_INTEGER,
+	DB_LUA_DOUBLE,
+	DB_LUA_ENUM,
+	DB_LUA_UNKNOWN
+};
+
+/*
+ * Map the native database field_type (dbFldTypes.h enum values)
+ * to a Lua type category.
+ *
+ * dbFldTypes.h enum:
+ *   0=STRING, 1=CHAR, 2=UCHAR, 3=SHORT, 4=USHORT,
+ *   5=LONG, 6=ULONG, 7=INT64, 8=UINT64, 9=FLOAT,
+ *   10=DOUBLE, 11=ENUM, 12=MENU, 13=DEVICE
+ */
+static inline enum db_lua_type dbf_to_lua_type(short field_type)
+{
+	switch (field_type)
+	{
+		case 0:              return DB_LUA_STRING;
+		case 1:  case 2:     return DB_LUA_CHAR;
+		case 3:  case 4:     return DB_LUA_INTEGER;
+		case 5:  case 6:     return DB_LUA_INTEGER;
+		case 7:  case 8:     return DB_LUA_DOUBLE;
+		case 9:  case 10:    return DB_LUA_DOUBLE;
+		case 11: case 12:
+		case 13:             return DB_LUA_ENUM;
+		default:             return DB_LUA_UNKNOWN;
+	}
+}
+
 #endif
 
 #endif

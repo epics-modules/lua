@@ -51,61 +51,6 @@ static void ensure_ca_context(lua_State* L)
 /* ------------------------------------------------------------------ */
 
 /*
- * Lua type categories for database field mapping.
- *
- * The native field_type values from dbFldTypes.h conflict with the
- * DBF_* macros from db_access.h (included by cadef.h) -- they use
- * different numeric values for the same names. To avoid this, we
- * map the native field_type to our own category enum and switch on
- * that instead of using any DBF_* constants.
- */
-enum db_lua_type {
-	DB_LUA_STRING,
-	DB_LUA_CHAR,
-	DB_LUA_INTEGER,
-	DB_LUA_DOUBLE,
-	DB_LUA_ENUM,
-	DB_LUA_UNKNOWN
-};
-
-/*
- * Database-side DBR request type values from dbFldTypes.h.
- * These must be used instead of the DBR_* macros from db_access.h
- * when calling dbGetField/dbPutField, because db_access.h uses a
- * different numbering scheme than the database functions expect.
- */
-#define DB_DBR_STRING   0   /* dbFldTypes: DBF_STRING */
-#define DB_DBR_CHAR     1   /* dbFldTypes: DBF_CHAR */
-#define DB_DBR_LONG     5   /* dbFldTypes: DBF_LONG */
-#define DB_DBR_DOUBLE  10   /* dbFldTypes: DBF_DOUBLE */
-
-/*
- * Map the native database field_type (dbFldTypes.h enum values)
- * to a Lua type category. Uses numeric values directly to avoid
- * the db_access.h #define conflict.
- *
- * dbFldTypes.h enum:
- *   0=STRING, 1=CHAR, 2=UCHAR, 3=SHORT, 4=USHORT,
- *   5=LONG, 6=ULONG, 7=INT64, 8=UINT64, 9=FLOAT,
- *   10=DOUBLE, 11=ENUM, 12=MENU, 13=DEVICE
- */
-static enum db_lua_type dbf_to_lua_type(short field_type)
-{
-	switch (field_type)
-	{
-		case 0:              return DB_LUA_STRING;   /* DBF_STRING */
-		case 1:  case 2:     return DB_LUA_CHAR;     /* DBF_CHAR, DBF_UCHAR */
-		case 3:  case 4:     return DB_LUA_INTEGER;  /* DBF_SHORT, DBF_USHORT */
-		case 5:  case 6:     return DB_LUA_INTEGER;  /* DBF_LONG, DBF_ULONG */
-		case 7:  case 8:     return DB_LUA_DOUBLE;   /* DBF_INT64, DBF_UINT64 */
-		case 9:  case 10:    return DB_LUA_DOUBLE;   /* DBF_FLOAT, DBF_DOUBLE */
-		case 11: case 12:
-		case 13:             return DB_LUA_ENUM;     /* DBF_ENUM, DBF_MENU, DBF_DEVICE */
-		default:             return DB_LUA_UNKNOWN;
-	}
-}
-
-/*
  * db_get -- read a local PV via dbGetField.
  * Returns: number of Lua values pushed (1 on success, 2 on error).
  */
@@ -380,7 +325,18 @@ static int db_put(lua_State* L, DBADDR* paddr, int val_index)
 		case LUA_TSTRING:
 		{
 			const char* val = lua_tostring(L, val_index);
-			status = dbPutField(paddr, DB_DBR_STRING, val, 1);
+
+			/* If the target is a char array, write as individual chars (long string) */
+			if (paddr->no_elements > 1 && dbf_to_lua_type(paddr->field_type) == DB_LUA_CHAR)
+			{
+				long len = (long) strlen(val) + 1;
+				if (len > paddr->no_elements) len = paddr->no_elements;
+				status = dbPutField(paddr, DB_DBR_CHAR, val, len);
+			}
+			else
+			{
+				status = dbPutField(paddr, DB_DBR_STRING, val, 1);
+			}
 			break;
 		}
 
