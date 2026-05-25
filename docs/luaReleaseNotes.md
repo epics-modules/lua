@@ -111,6 +111,11 @@ Release 4-0
   are skipped silently without being echoed, matching the iocsh convention. Blank lines
   in file mode are also elided from the output.
 
+- **LPeg pattern matching library embedded.** The LPeg 1.1.0 library (Parsing
+  Expression Grammars for Lua) is now included and automatically available via
+  `require("lpeg")`. The companion `re.lua` module is installed to the lib directory.
+  LPeg is Copyright (c) 2007-2023 Lua.org, PUC-Rio (MIT License).
+
 - **luascript record async rework.** Asynchronous mode (`SYNC=Async`) now uses the
   EPICS callback system instead of creating a new thread per process cycle. The Lua
   script runs in an EPICS callback thread, and completion is signaled via `dbProcess`

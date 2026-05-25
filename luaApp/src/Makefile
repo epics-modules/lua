@@ -105,9 +105,22 @@ lua_SRCS += losilib.cpp
 lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
 lua_SRCS += ldatabaselib.cpp
+lua_SRCS += llpeglib.cpp
 
 INC += lasynlib.h
 INC += lepicslib.h
+
+# Build LPeg pattern matching library
+SRC_DIRS += $(TOP)/luaApp/src/lpeg
+
+lua_SRCS += lpcap.c
+lua_SRCS += lpcode.c
+lua_SRCS += lpcset.c
+lua_SRCS += lpprint.c
+lua_SRCS += lptree.c
+lua_SRCS += lpvm.c
+
+LIB_INSTALLS += ../lpeg/re.lua
 
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
