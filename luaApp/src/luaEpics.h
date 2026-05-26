@@ -50,8 +50,14 @@ epicsShareFunc lua_State* luaFindNamedState(const char* name);
 epicsShareFunc void luaRegisterState(lua_State* state, const char* name);
 epicsShareFunc int  luaStateIsRegistered(lua_State* state);
 
+epicsShareFunc void luaAddPath(const char* directory);
+epicsShareFunc void luaAddModule(const char* module_top);
+
 #ifdef __cplusplus
 }
+
+int l_luaAddPath(lua_State* state);
+int l_luaAddModule(lua_State* state);
 
 epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index);
 

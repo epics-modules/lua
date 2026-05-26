@@ -885,6 +885,24 @@ epicsShareFunc void epicsShareAPI luashSetCommonState(const char* name)
 }
 
 
+static const iocshArg addPathArg0 = { "directory", iocshArgString};
+static const iocshArg *addPathArgs[1] = {&addPathArg0};
+static const iocshFuncDef addPathFuncDef = {"luaAddPath", 1, addPathArgs};
+
+static void addPathCallFunc(const iocshArgBuf* args)
+{
+	luaAddPath(args[0].sval);
+}
+
+static const iocshArg addModuleArg0 = { "module_top", iocshArgString};
+static const iocshArg *addModuleArgs[1] = {&addModuleArg0};
+static const iocshFuncDef addModuleFuncDef = {"luaAddModule", 1, addModuleArgs};
+
+static void addModuleCallFunc(const iocshArgBuf* args)
+{
+	luaAddModule(args[0].sval);
+}
+
 static void luashRegister(void)
 {
 	ensureShellStateId();
@@ -892,6 +910,8 @@ static void luashRegister(void)
 	iocshRegister(&spawnFuncDef, spawnCallFunc);
 	iocshRegister(&luaCmdFuncDef, luaCmdCallFunc);
 	iocshRegister(&loadFileFuncDef, loadFileCallFunc);
+	iocshRegister(&addPathFuncDef, addPathCallFunc);
+	iocshRegister(&addModuleFuncDef, addModuleCallFunc);
 }
 
 epicsExportRegistrar(luashRegister);

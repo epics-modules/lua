@@ -111,6 +111,21 @@ Release 4-0
   are skipped silently without being echoed, matching the iocsh convention. Blank lines
   in file mode are also elided from the output.
 
+- **`luaAddPath` and `luaAddModule` commands.** New iocsh commands and Lua functions
+  for registering directories with both `require()` (`package.path`/`package.cpath`)
+  and script file resolution (`luaLocateFile`). `luaAddModule` is a convenience wrapper
+  for EPICS modules that automatically constructs `lib/<arch>/` and `bin/<arch>/` paths
+  from a module's top directory using `EPICS_HOST_ARCH`. Duplicate paths are silently
+  ignored. When called from Lua, paths take effect immediately in the calling state.
+
+- **Bytestream library.** New pure-Lua library for scanf-style parsing
+  (`bytestream.match`) and printf-style formatting (`bytestream.format`) of byte
+  stream data, plus a client wrapper (`bytestream.client`) around `asyn.client` for
+  structured device I/O. Format specifiers follow StreamDevice conventions. Includes
+  binary (`%b`), raw bytes (`%r`), and enumeration (`%{val0|val1|...}`) specifiers.
+  Installed via `LIB_INSTALLS`; available with `require("bytestream")` after calling
+  `luaAddModule`.
+
 - **LPeg pattern matching library embedded.** The LPeg 1.1.0 library (Parsing
   Expression Grammars for Lua) is now included and automatically available via
   `require("lpeg")`. The companion `re.lua` module is installed to the lib directory.

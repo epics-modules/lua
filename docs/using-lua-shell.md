@@ -166,6 +166,94 @@ to a function 'exit()' by the shell. This is done to make the code proper
 in regards to lua syntax, while still being able to provide syntactic sugar.
 
 
+luaAddPath / luaAddModule
+-------------------------
+
+The `luaAddPath` and `luaAddModule` commands register directories for both
+`require()` (Lua's module loader) and script file resolution (used by
+`luaLoadFile`, `luaSpawn`, luascript `@file`, and DTYP `@file`).
+
+### luaAddPath
+
+```
+luaAddPath "directory"
+```
+
+Adds a single directory to the search paths. The directory is used for:
+
+- `require()`: appends `dir/?.lua` and `dir/?/init.lua` to `package.path`,
+  and `dir/?.so` (or `dir/?.dll` on Windows) to `package.cpath`
+- Script loading: the directory is searched by `luaLocateFile` (after
+  `LUA_SCRIPT_PATH` directories but before the current directory)
+
+```lua
+-- From a Lua startup script:
+luaAddPath("/usr/local/share/lua/5.4")
+
+local mylib = require("mylib")  -- finds /usr/local/share/lua/5.4/mylib.lua
+```
+
+```
+# From iocsh:
+luaAddPath("/opt/lua-libs")
+```
+
+Duplicate paths are silently ignored. When called from Lua, the path takes
+effect immediately in the calling state (so `require()` on the next line
+will find it). When called from iocsh, the path takes effect for all future
+Lua states.
+
+### luaAddModule
+
+```
+luaAddModule "module_top"
+```
+
+Convenience wrapper for EPICS modules. Reads the `EPICS_HOST_ARCH` environment
+variable and adds two directories:
+
+- `module_top/lib/<arch>/`  -- for libraries installed via `LIB_INSTALLS`
+- `module_top/bin/<arch>/`  -- for scripts installed via `SCRIPTS` or `BIN_INSTALLS`
+
+Each directory is added via `luaAddPath`, so it participates in both
+`require()` and script file resolution.
+
+```lua
+-- From a Lua startup script (st.lua):
+luaAddModule("../..")            -- this module's own top directory
+luaAddModule(MYMODULE)           -- another EPICS module (macro from envPaths)
+
+local bs = require("bytestream")  -- found in ../../lib/<arch>/bytestream.lua
+```
+
+```
+# From iocsh (st.cmd):
+< envPaths
+luaAddModule("$(LUA)")
+luaAddModule("$(MYMODULE)")
+```
+
+If `EPICS_HOST_ARCH` is not set, `luaAddModule` prints a warning and does
+nothing.
+
+### Path search order
+
+Paths are searched in the order they are registered:
+
+```lua
+luaAddPath("/first")
+luaAddPath("/second")
+-- package.path: /first/?.lua;/first/?/init.lua;/second/?.lua;/second/?/init.lua;<defaults>
+-- luaLocateFile: LUA_SCRIPT_PATH dirs, /first/, /second/, .
+```
+
+| Function | Available from | Calling state | Future states |
+| - | - | - | - |
+| `luaAddPath(dir)` | Lua, iocsh, C | Updated immediately (Lua only) | Yes |
+| `luaAddModule(top)` | Lua, iocsh, C | Updated immediately (Lua only) | Yes |
+
+<br>
+
 luaLoadFile
 -----------
 

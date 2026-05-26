@@ -8,6 +8,44 @@ nav_order: 6
 
 # Adding Libraries to the lua Environment
 
+Registering Module Paths
+------------------------
+
+The easiest way to make Lua libraries from other EPICS modules available
+is to register the module's install directory with `luaAddModule`. This
+adds the module's `lib/<arch>/` and `bin/<arch>/` directories to both the
+`require()` search path and the script file search path.
+
+```
+# st.cmd -- register modules so require() finds their Lua files
+< envPaths
+luaAddModule("$(LUA)")
+luaAddModule("$(MYMODULE)")
+```
+
+```lua
+-- st.lua equivalent
+luaAddModule("../..")
+luaAddModule(MYMODULE)
+```
+
+After registering, `require("libname")` will find `.lua` files installed
+via `LIB_INSTALLS` and `.so`/`.dll` files in those directories. Script
+loading functions (`luaLoadFile`, `luaSpawn`, `@file` references in
+luascript CODE and DTYP INP/OUT) will also search the registered
+directories.
+
+For adding individual directories (not full EPICS modules), use
+`luaAddPath`:
+
+```
+luaAddPath("/usr/local/share/lua/5.4")
+```
+
+See the [Lua Shell]({{ site.baseurl }}{% link using-lua-shell.md %})
+documentation for full details on `luaAddPath` and `luaAddModule`.
+
+
 Dynamic Libraries
 -----------------
 
@@ -16,9 +54,10 @@ functions into lua using the *require* function. Compile a dynamic
 library with the function int luaopen_xxxx(lua_State\* L), where xxxx
 matches the name of the library file.
 
-Then, you’ll need to tell lua the location of the library in question.
-This is accomplished by either setting the environment variable
-LUA_CPATH or LUA_CPATH_5_3 before lua is invoked, or the global variable
+After registering the directory with `luaAddPath` or `luaAddModule`,
+`require` will find the library automatically. You can also configure
+the search path manually by setting the environment variable
+LUA_CPATH or LUA_CPATH_5_4 before lua is invoked, or the global variable
 package.cpath if you are already in lua.
 
 These variables are not a set of search directories, like a normal path,
@@ -31,7 +70,7 @@ to see if that file exists. So, a package.cpath that is set as
 ```
 
 would try to search for the files ./foo.so and /usr/local/foo/init.so
-when you call require(“foo”). The first such file that is found gets
+when you call require("foo"). The first such file that is found gets
 dynamically loaded and then the function luaopen_xxxx is attempted to be
 called, in this instance luaopen_foo (**NOTE:** If you compile the
 library with epics, the resulting file will be called libxxxx.so or

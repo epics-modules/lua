@@ -13,6 +13,7 @@
 
 #include <macLib.h>
 #include <iocsh.h>
+#include <errlog.h>
 #include <epicsStdio.h>
 #include <epicsFindSymbol.h>
 #include <epicsMutex.h>
@@ -28,11 +29,15 @@ typedef std::vector<std::pair<const char*, lua_CFunction> >::iterator reg_iter;
 
 static std::vector<std::pair<const char*, lua_CFunction> > registered_libs;
 static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
+static std::vector<std::string> registered_paths;
 
 static std::map<std::string, lua_State*> named_states;
 
 static epicsMutex registryMutex;
 static epicsMutex namedStatesMutex;
+
+/* Forward declaration: defined in path management section below */
+static void rebuildPaths(lua_State* state);
 
 static FILE* temp_help = tmpfile();
 
@@ -69,23 +74,34 @@ epicsShareFunc std::string luaLocateFile(std::string filename)
 	}
 	#endif
 
-	std::stringstream path;
-
-	if   (env_path)
+	/* Search LUA_SCRIPT_PATH directories */
+	if (env_path)
 	{
+		std::stringstream path;
 		path << env_path;
-		path << ":";
+
+		std::string segment;
+		while (std::getline(path, segment, ':'))
+		{
+			std::string fullpath = segment + "/" + filename;
+			if (std::ifstream(fullpath.c_str()).good())    { return fullpath; }
+		}
 	}
 
-	path << ".";
-
-	std::string segment;
-
-	while (std::getline(path, segment, ':'))
+	/* Search directories registered via luaAddPath */
 	{
-		std::string fullpath = segment + "/" + filename;
+		epicsGuard<epicsMutex> guard(registryMutex);
 
-		/* Check if file exists. If so, return the full filepath */
+		for (size_t i = 0; i < registered_paths.size(); i++)
+		{
+			std::string fullpath = registered_paths[i] + "/" + filename;
+			if (std::ifstream(fullpath.c_str()).good())    { return fullpath; }
+		}
+	}
+
+	/* Search current directory */
+	{
+		std::string fullpath = std::string("./") + filename;
 		if (std::ifstream(fullpath.c_str()).good())    { return fullpath; }
 	}
 
@@ -801,6 +817,12 @@ epicsShareFunc lua_State* luaCreateState()
 	luaL_openlibs(output);
 	luaLoadRegistered(output);
 
+	/* Apply registered paths to package.path and package.cpath */
+	{
+		epicsGuard<epicsMutex> guard(registryMutex);
+		rebuildPaths(output);
+	}
+
 	lua_register(output, "print", l_replaceprint);
 	lua_register(output, "info", l_info);
 	lua_register(output, "luaRegisterState", l_registerState);
@@ -808,6 +830,8 @@ epicsShareFunc lua_State* luaCreateState()
 	lua_register(output, "luash", l_luash);
 	lua_register(output, "luaCmd", l_luaCmd);
 	lua_register(output, "luaLoadFile", l_luaLoadFile);
+	lua_register(output, "luaAddPath", l_luaAddPath);
+	lua_register(output, "luaAddModule", l_luaAddModule);
 
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
 	lua_pop(output, 1);
@@ -909,6 +933,204 @@ static int l_registerState(lua_State* state)
 	const char* name = luaL_checkstring(state, 1);
 
 	luaRegisterState(state, name);
+
+	return 0;
+}
+
+
+/*
+ * =========================================================================
+ * Path management: luaAddPath / luaAddModule
+ * =========================================================================
+ *
+ * luaAddPath registers a directory so that:
+ *   - require() finds .lua files via package.path
+ *   - require() finds .so/.dll files via package.cpath
+ *   - luaLocateFile finds scripts (luaLoadFile, @file, luaSpawn, etc.)
+ *
+ * luaAddModule is a convenience wrapper that constructs lib/<arch>/
+ * and bin/<arch>/ paths from a module's top directory.
+ *
+ * Paths registered via luaAddPath are applied to:
+ *   - The calling Lua state (when called from Lua)
+ *   - All future states created via luaCreateState
+ *
+ * Duplicate paths are silently ignored.
+ */
+
+/*
+ * Save the pristine package.path and package.cpath values into
+ * the Lua registry. Called once per state, before any paths are
+ * modified. Subsequent calls are no-ops.
+ */
+static void ensureDefaultPaths(lua_State* state)
+{
+	lua_getfield(state, LUA_REGISTRYINDEX, "_lua_default_path");
+
+	if (lua_isnil(state, -1))
+	{
+		lua_pop(state, 1);
+
+		lua_getglobal(state, "package");
+
+		lua_getfield(state, -1, "path");
+		lua_setfield(state, LUA_REGISTRYINDEX, "_lua_default_path");
+
+		lua_getfield(state, -1, "cpath");
+		lua_setfield(state, LUA_REGISTRYINDEX, "_lua_default_cpath");
+
+		lua_pop(state, 1);  /* pop package */
+	}
+	else
+	{
+		lua_pop(state, 1);
+	}
+}
+
+/*
+ * Rebuild package.path and package.cpath on a state from the
+ * full registered_paths list. Caller must hold registryMutex.
+ */
+static void rebuildPaths(lua_State* state)
+{
+	ensureDefaultPaths(state);
+
+	/* Build prefix strings from registered_paths in order */
+	std::string path_prefix;
+	std::string cpath_prefix;
+
+	for (size_t i = 0; i < registered_paths.size(); i++)
+	{
+		const std::string& dir = registered_paths[i];
+
+		path_prefix += dir + "/?.lua;";
+		path_prefix += dir + "/?/init.lua;";
+
+		#ifdef _WIN32
+		cpath_prefix += dir + "/?.dll;";
+		#else
+		cpath_prefix += dir + "/?.so;";
+		#endif
+	}
+
+	/* Retrieve saved defaults */
+	lua_getfield(state, LUA_REGISTRYINDEX, "_lua_default_path");
+	const char* def_path = lua_tostring(state, -1);
+
+	lua_getfield(state, LUA_REGISTRYINDEX, "_lua_default_cpath");
+	const char* def_cpath = lua_tostring(state, -1);
+
+	std::string new_path  = path_prefix  + (def_path  ? def_path  : "");
+	std::string new_cpath = cpath_prefix + (def_cpath ? def_cpath : "");
+
+	lua_pop(state, 2);
+
+	/* Set the rebuilt paths */
+	lua_getglobal(state, "package");
+
+	lua_pushstring(state, new_path.c_str());
+	lua_setfield(state, -2, "path");
+
+	lua_pushstring(state, new_cpath.c_str());
+	lua_setfield(state, -2, "cpath");
+
+	lua_pop(state, 1);  /* pop package */
+}
+
+
+/*
+ * Add a directory to the global path registry. The directory is
+ * searched by require() (via package.path/cpath) and by luaLocateFile
+ * (for luaLoadFile, @file, luaSpawn, etc.) on all states created
+ * after this call.
+ *
+ * Duplicate directories are silently ignored.
+ */
+epicsShareFunc void luaAddPath(const char* directory)
+{
+	if (! directory || ! directory[0])    { return; }
+
+	epicsGuard<epicsMutex> guard(registryMutex);
+
+	/* Duplicate check */
+	std::string dir(directory);
+
+	for (size_t i = 0; i < registered_paths.size(); i++)
+	{
+		if (registered_paths[i] == dir)    { return; }
+	}
+
+	registered_paths.push_back(dir);
+}
+
+
+/*
+ * Add an EPICS module's lib/<arch>/ and bin/<arch>/ directories
+ * to the path registry. Reads EPICS_HOST_ARCH from the environment
+ * to determine the architecture subdirectory.
+ */
+epicsShareFunc void luaAddModule(const char* module_top)
+{
+	if (! module_top || ! module_top[0])    { return; }
+
+	const char* arch = std::getenv("EPICS_HOST_ARCH");
+
+	if (! arch || ! arch[0])
+	{
+		errlogPrintf("luaAddModule: EPICS_HOST_ARCH not set\n");
+		return;
+	}
+
+	std::string top(module_top);
+	std::string archstr(arch);
+
+	luaAddPath((top + "/lib/" + archstr).c_str());
+	luaAddPath((top + "/bin/" + archstr).c_str());
+}
+
+
+/*
+ * Lua-callable wrapper for luaAddPath.
+ * Registers the path globally and applies it to the calling state.
+ *
+ *   luaAddPath("/path/to/libs")
+ */
+int l_luaAddPath(lua_State* state)
+{
+	const char* dir = luaL_checkstring(state, 1);
+
+	{
+		/* Global registration (also used by luaLocateFile) */
+		luaAddPath(dir);
+
+		/* Rebuild package.path/cpath on calling state */
+		epicsGuard<epicsMutex> guard(registryMutex);
+		rebuildPaths(state);
+	}
+
+	return 0;
+}
+
+
+/*
+ * Lua-callable wrapper for luaAddModule.
+ * Adds lib/<arch>/ and bin/<arch>/ for the given module top directory.
+ *
+ *   luaAddModule("/path/to/module")
+ *   luaAddModule("../..")
+ */
+int l_luaAddModule(lua_State* state)
+{
+	const char* top = luaL_checkstring(state, 1);
+
+	{
+		/* Global registration */
+		luaAddModule(top);
+
+		/* Rebuild package.path/cpath on calling state */
+		epicsGuard<epicsMutex> guard(registryMutex);
+		rebuildPaths(state);
+	}
 
 	return 0;
 }

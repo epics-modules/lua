@@ -19,10 +19,14 @@ for byte stream device communication. It is a pure Lua library built on top of
 LPeg and asyn.client.
 
 Format specifiers follow StreamDevice conventions, making it straightforward
-to translate StreamDevice protocol files into Lua code. The library is loaded
-on demand via `require`:
+to translate StreamDevice protocol files into Lua code. The library is installed
+as a `.lua` file in the module's `lib/<arch>/` directory and loaded via `require`:
 
 ```lua
+-- In your startup script, register the lua module's paths first:
+luaAddModule("$(LUA)")     -- from iocsh, or luaAddModule(LUA) from Lua
+
+-- Then require works in any Lua state:
 local bs = require("bytestream")
 ```
 
@@ -381,6 +385,22 @@ Usage with DTYP Device Support
 The bytestream library is most commonly used in DTYP "lua" callback functions
 for instrument communication. Errors raised by bytestream (and the underlying
 asyn operations) are caught by device support and mapped to record alarm states.
+
+The IOC startup script must register the lua module's paths so that
+`require("bytestream")` works in the Lua states created by device support:
+
+```
+# st.cmd
+< envPaths
+luaAddModule("$(LUA)")
+```
+
+Or from a Lua startup script:
+
+```lua
+-- st.lua
+luaAddModule("../..")   -- relative to iocBoot/<ioc>/
+```
 
 ### Example: SCPI Temperature Sensor
 
