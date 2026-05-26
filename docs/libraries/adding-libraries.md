@@ -2,7 +2,7 @@
 layout: default
 title: Adding Addtional Libraries
 parent: Included Libraries
-nav_order: 5
+nav_order: 6
 ---
 
 

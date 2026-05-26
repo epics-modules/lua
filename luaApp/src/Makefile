@@ -121,6 +121,7 @@ lua_SRCS += lptree.c
 lua_SRCS += lpvm.c
 
 LIB_INSTALLS += ../lpeg/re.lua
+LIB_INSTALLS += ../libs/bytestream.lua
 
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
