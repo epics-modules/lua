@@ -1,13 +1,13 @@
 -- Lua script to demonstrate lua device support
 
--- Function to increment an ai record by a 
+-- Function to increment an ai record by a
 -- given value everytime it's processed.
 function next_int(record, amount)
 
-	-- record is an object representing an
-	-- epics PV, you can use array notation
-	-- to access values from the pv
-	local curr_val = record["VAL"]
+	-- record is a PV object representing the
+	-- record being processed. Use dot notation
+	-- to access field values.
+	local curr_val = record.VAL
 
 	-- Log information to the shell
 	-- Amount is a parameter fed by the INP field of the record
@@ -21,7 +21,7 @@ end
 -- Function to flip-flop a bi record between
 -- True and False each time it's processed
 function next_bool(record)
-	local curr_val = record["VAL"]
+	local curr_val = record.VAL
 
 	if curr_val == 0 then
 		return "True"
