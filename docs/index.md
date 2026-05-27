@@ -79,8 +79,8 @@ Custom libraries can be added to extend the Lua environment.
 [Library Documentation](libraries/epics-functions)
 
 
-luaPortDriver
--------------
+Lua Port Drivers
+-----------------
 
 Lua-based asynPortDrivers can be created entirely from Lua scripts using
 the `asyn.driver.new` API. Parameters are defined with type constructors,

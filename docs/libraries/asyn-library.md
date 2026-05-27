@@ -530,14 +530,45 @@ Sets an asynOption for the port this client is connected to.
 |    val    |  string  | The value to set the option to. |
 
 
-	
-asynPortDriver Object
----------------------
+
+asynPortDriver
+--------------
 
 ### asyn.driver / asyn.driver.find
 ---
 
 ```
+asyn.driver (portName)
+asyn.driver.find (portName)
+```
+
+Finds an existing asynPortDriver and returns a driver proxy object. You can
+access parameters by name through the proxy, which returns parameter proxy
+objects for reading and writing values.
+
+`asyn.driver(portName)` and `asyn.driver.find(portName)` are equivalent.
+
+```lua
+local drv = asyn.driver("MYPORT")
+
+-- Read a parameter value
+print(drv.TEMPERATURE.value)
+
+-- Write a parameter value (also calls callParamCallbacks)
+drv.SETPOINT.value = 25.0
+
+-- Access driver properties
+print(drv.portName)
+print(drv.maxAddr)
+```
+
+| Parameter |   Type   | Description |
+|-----------|----------|-|
+| portName  |  string  | A registered asynPortDriver port name |
+
+For creating new asynPortDrivers from Lua, binding read/write callbacks,
+and defining parameters with type constructors, see the
+[Lua Port Drivers](../luaPortDriver) documentation.
 asyn.driver (portName)
 asyn.driver.find (portName)
 ```
