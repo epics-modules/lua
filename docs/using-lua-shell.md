@@ -6,38 +6,41 @@ nav_order: 3
 
 
 # Using the Lua Shell
+{: .no_toc}
 
-The lua shell is exposed as both a c function and is registered as a function
-with iocsh. Thus, the shell can either be invoked in a startup script or be 
-run as the startup program in general.
+## Table of contents
+{: .no_toc .text-delta }
 
-The shell has been set up so as to be as backwards compatible with the iocsh
-style startup scripts as possible. While within the lua shell, the global
-environment is set up so that lookups of names that don't have an associated
-variable will attempt to pull values from, first, the running epics environment,
-and then, if no environment variable is found, try to find a matching function
-name. This means that functions that are registered with the ioc shell can
-be treated as if they were defined lua functions.
+- TOC
+{:toc}
 
+
+Introduction
+------------
+
+The Lua shell is an alternative to the ioc shell for IOC startup scripts
+and interactive use. It can be invoked from an iocsh startup script or
+used as the startup program directly.
+
+The shell is designed for compatibility with iocsh-style startup scripts.
+The global environment is set up so that name lookups fall through to
+EPICS environment variables and iocsh-registered functions. This means
+iocsh functions can be called directly without any special syntax:
 
 ```
 luash> EPICS_VERSION_MAJOR
 7
 luash>
-luash> epicsEnvShow
-func_meta: 0x673150
-luash>
 luash> epicsEnvShow("EPICS_VERSION_MAJOR")
 EPICS_VERSION_MAJOR=7
 ```
-    
-As well, the special directive '#ENABLE_HASH_COMMENTS' is provided. While lua normally
-reserves the '#' character for determining the length of a table, putting the line
-'#ENABLE_HASH_COMMENTS' in your scripts will set the shell to accept iocsh style
-comments that use '#'. This setting only applies to lines where '#' is the first
-non-empty character in the line, it will not affect the use of '#' in normal lua
-operations.
 
+### Hash Comments
+
+The directive `#ENABLE_HASH_COMMENTS` configures the shell to accept
+iocsh-style `#` comments. This only applies to lines where `#` is the
+first non-whitespace character -- it does not affect the use of `#` for
+table length in normal Lua expressions.
 
 ```
 luash> #ENABLE_HASH_COMMENTS
@@ -48,8 +51,8 @@ luash> print(#"Check len")
 9
 ```
 
-Comments starting with '#-' are silent -- they are not echoed when running
-scripts in file mode. This matches the iocsh convention for silent comments:
+Comments starting with `#-` are silent -- they are not echoed when
+running scripts in file mode. This matches the iocsh convention:
 
 ```lua
 #ENABLE_HASH_COMMENTS
@@ -63,7 +66,7 @@ Blank lines in file mode are also elided from the output.
 info() Function
 ---------------
 
-The ``info()`` function is available in all Lua states for discovering
+The `info()` function is available in all Lua states for discovering
 available functions and methods. It can be called on any library table
 or userdata object:
 
@@ -82,96 +85,232 @@ luash> info(pv)
   :put(field, value [, {timeout}])
 ```
 
-Calling ``info()`` with no arguments prints usage help. Calling it with
+Calling `info()` with no arguments prints usage help. Calling it with
 a nil argument reports that the input is nil, which helps diagnose cases
 where a library hasn't been loaded yet.
 
 
-Calling the Lua Shell From Inside The IOC Shell
------------------------------------------------
+Shell Commands
+--------------
 
-Once the dbd has been loaded and the registerRecordDeviceDriver command
-has been called on an IOC, you can call the *luash* command. Luash takes
-in two parameters, the first, the name of a lua script to run, and the
-second a set of macros to be set as global variables in the lua shell's
-state. The macros are defined in the same "aaa=bbb,ccc=ddd" form that
-the ioc shell uses for iocshLoad/iocshRun and that is used for
-dbLoadRecords/dbLoadTemplate. One difference, however, is that strings
-need to be quoted in order to be recognized as string variables, any
-non-quoted value will be interpreted as a number. So to create a global
-numeric variable X with the value 5 and a string variable TEXT with the
-value "Hello, World!" you would have your second parameter as
-"X=5,TEXT='Hello,World'".
+### luash
+---
 
-When called from within Lua (e.g., from a running luash session), all
-shell and script commands also accept a Lua table for macros:
+```
+luash "file.lua" ["macros"]
+```
+
+Runs a Lua script in the calling shell's state. The script shares
+variables, loaded modules, and function definitions with the shell
+session.
+
+Macros are set as global variables in the shell's state. They use the
+same `"KEY=val,KEY2=val2"` format as iocsh. Strings must be quoted;
+unquoted values are interpreted as numbers:
+
+```
+luash "config.lua" "P='dev1:',PORT='serial1',ADDR=0"
+```
+
+When called from Lua, table macros are also accepted:
 
 ```lua
-luash("script.lua", {X=5, TEXT="Hello,World"})
-luaSpawn("driver.lua", {PORT="serial1"})
-luaLoadFile("config.lua", {P="dev1:", R="sensor"})
-luaCmd("epicsEnvSet('K','V')", {P="dev1:"})
+luash("config.lua", {P="dev1:", PORT="serial1", ADDR=0})
 ```
 
-The luash command will then attempt to find the script you have given
-it. It does this by searching for a file with the given name in a set of
-folders as given by the environment variable LUA_SCRIPT_PATH. If this
-variable is undefined, the command will search within the current
-directory. As well, if no script name is given, the shell will take
-commands from the standard input, with a prompt set by the environment
-variable LUASH_PS1. Additionally, within the shell, you can find and
-include other scripts by using the '<' character. Putting
+The file is located by searching `LUA_SCRIPT_PATH`, paths registered
+via `luaAddPath`/`luaAddModule`, and the current directory. If no
+filename is given, the shell reads from standard input with a prompt
+set by `LUASH_PS1`.
 
+**File mode:** When running a script file, each statement is executed as
+it is read, with lines echoed and output interleaved (matching iocsh
+behavior). Multi-line constructs such as function definitions, if blocks,
+and loops are accumulated until the statement is complete. Return values
+from expressions are printed automatically.
+
+**Include directive:** The `<` command includes another script at the
+current point:
 
 ```
-< script.lua
+< other_script.lua
 ```
-    
-Will attempt to find script.lua by the same process as detailed above
-and include all the text of that file at the insertion point. When
-running any script the lua shell will exit at the end of the file being
-read.
 
-When luash runs a file, it executes each statement as it reads it,
-echoing lines and displaying output interleaved (matching iocsh behavior).
-Multi-line constructs such as function definitions, if blocks, and loops
-are accumulated until the statement is complete before execution. This
-means that output from print() calls and errors appear immediately after
-the line that produced them, making it easy to trace execution in IOC
-startup scripts.
+**Exit:** A line containing only `exit` ends the current script and
+returns to the caller.
 
-Note that because each top-level statement is compiled separately in
-file mode, `local` variables do not persist between statements. If you
-need local variable scope across multiple lines, use `luaLoadFile` (see
-below), which compiles the entire file as a single chunk, or wrap your
-code in a `do ... end` block.
+<br>
 
-For both files and commands from the standard input, a single line
-with only the word 'exit' will break from the current level of shell
-execution. In example, if you were to load the file script.lua as seen
-above, and the file had the following code within it
+### luaLoadFile
+---
 
+```
+luaLoadFile "file.lua" ["macros"]
+```
+
+Loads and executes a Lua script in a **new state**. The entire file is
+compiled as a single chunk, so `local` variables work across lines.
+Execution is synchronous -- the command blocks until the script
+completes.
 
 ```lua
-if (true) then
-    exit
+luaLoadFile("driver.lua", {P="dev1:", PORT="SENSOR1"})
+```
+
+The new state has access to all registered libraries and paths. If the
+script calls `luaRegisterState`, the state is kept alive after execution
+(see Named States below). Otherwise, the state is closed when the script
+finishes.
+
+<br>
+
+### luaSpawn
+---
+
+```
+luaSpawn "file.lua" ["macros"]
+```
+
+Loads and executes a Lua script in a **new state** on a background
+thread. The command returns immediately. The file is compiled as a
+single chunk.
+
+```lua
+luaSpawn("tick.lua", "INTERVAL=1.0")
+```
+
+Commonly used for long-running scripts such as device polling loops
+or port driver definitions.
+
+<br>
+
+### luaCmd
+---
+
+```
+luaCmd "lua code" ["macros"]
+```
+
+Executes a single Lua statement in a **new state**. The state is closed
+after the statement completes.
+
+```lua
+luaCmd("print(P .. ' started')", {P="dev1:"})
+```
+
+<br>
+
+### Command Comparison
+---
+
+| Command | Runs in | Execution | Line echoing |
+| ------- | ------- | --------- | ------------ |
+| `luash "file"` | Calling shell | Synchronous, line-by-line | Yes |
+| `< file` | Calling shell | Synchronous, line-by-line | Yes |
+| `luaLoadFile "file"` | New state | Synchronous, whole file | No |
+| `luaSpawn "file"` | New state, background thread | Whole file | No |
+| `luaCmd "code"` | New state | Synchronous, single statement | No |
+
+Commands that run in the **calling shell** share variables, loaded
+modules, and function definitions with the shell session. Commands
+that run in a **new state** start fresh -- pass configuration via
+macros.
+
+Because `luash` executes each line as a separate statement, `local`
+variables do not persist between lines. Use global variables, or use
+`luaLoadFile` which compiles the entire file as one chunk.
+
+
+Named States
+------------
+
+By default, a Lua state created by `luaLoadFile` or `luaSpawn` is
+closed when the script finishes. A **named state** is one that has been
+registered with a name, making it persistent and referenceable from
+other parts of the IOC.
+
+### Creating a Named State
+
+Call `luaRegisterState` from within a script to register the current
+state under a name:
+
+```lua
+-- Inside a script loaded via luaLoadFile or luaSpawn
+luaRegisterState("mydevice")
+```
+
+The state will not be closed when the script finishes. All global
+variables and function definitions in the state remain available.
+
+### Referencing Named States
+
+Named states are referenced using the `@name` syntax in luascript
+record CODE fields and DTYP device support INP/OUT fields. When the
+name after `@` does not resolve to a file on disk, it is looked up
+as a named state:
+
+```lua
+-- In a script loaded with luaLoadFile:
+luaRegisterState(PORT)
+
+function read_temperature()
+    return client:write("MEAS:TEMP?"):read("%f")
 end
 ```
 
-That exit will end the reading of just the script.lua file and flow would
-resume to the shell that called script.lua.
+```lua
+-- Record references the named state and function:
+db.record("ai", P .. "temperature") {
+    DTYP = "lua",
+    INP  = "@" .. PORT .. " read_temperature()",
+    SCAN = "1 second",
+}
+```
 
-As a note, the use of 'exit' is replaced automatically with an actual call
-to a function 'exit()' by the shell. This is done to make the code proper
-in regards to lua syntax, while still being able to provide syntactic sugar.
+### Typical Pattern
+
+The most common pattern is a single file loaded via `luaLoadFile` that:
+
+1. Registers its state under a unique name (typically a port name or prefix)
+2. Creates records using `db.record`
+3. Defines the callback functions those records reference
+
+```lua
+-- device.lua: loaded before iocInit via luaLoadFile
+local db = require("db")
+
+luaRegisterState(PORT)
+
+-- ... set up clients, define functions ...
+
+db.record("ai", P .. "reading") {
+    DTYP = "lua",
+    INP  = "@" .. PORT .. " read_value()",
+}
+
+function read_value()
+    -- this function runs in the named state
+    return get_reading()
+end
+```
+
+```lua
+-- st.lua: startup script
+luaLoadFile("device.lua", {P="dev1:", PORT="DEV1"})
+luaLoadFile("device.lua", {P="dev2:", PORT="DEV2"})
+iocInit()
+```
+
+Each call to `luaLoadFile` creates a separate named state, so the two
+instances do not interfere with each other.
 
 
 luaAddPath / luaAddModule
 -------------------------
 
-The `luaAddPath` and `luaAddModule` commands register directories for both
-`require()` (Lua's module loader) and script file resolution (used by
-`luaLoadFile`, `luaSpawn`, luascript `@file`, and DTYP `@file`).
+The `luaAddPath` and `luaAddModule` commands register directories for
+both `require()` (Lua's module loader) and script file resolution (used
+by `luaLoadFile`, `luaSpawn`, luascript `@file`, and DTYP `@file`).
 
 ### luaAddPath
 
@@ -183,25 +322,18 @@ Adds a single directory to the search paths. The directory is used for:
 
 - `require()`: appends `dir/?.lua` and `dir/?/init.lua` to `package.path`,
   and `dir/?.so` (or `dir/?.dll` on Windows) to `package.cpath`
-- Script loading: the directory is searched by `luaLocateFile` (after
-  `LUA_SCRIPT_PATH` directories but before the current directory)
+- Script loading: the directory is searched after `LUA_SCRIPT_PATH`
+  directories but before the current directory
 
 ```lua
--- From a Lua startup script:
 luaAddPath("/usr/local/share/lua/5.4")
 
 local mylib = require("mylib")  -- finds /usr/local/share/lua/5.4/mylib.lua
 ```
 
-```
-# From iocsh:
-luaAddPath("/opt/lua-libs")
-```
-
-Duplicate paths are silently ignored. When called from Lua, the path takes
-effect immediately in the calling state (so `require()` on the next line
-will find it). When called from iocsh, the path takes effect for all future
-Lua states.
+Duplicate paths are silently ignored. When called from Lua, the path
+takes effect immediately in the calling state. When called from iocsh,
+the path takes effect for all future Lua states.
 
 ### luaAddModule
 
@@ -209,139 +341,37 @@ Lua states.
 luaAddModule "module_top"
 ```
 
-Convenience wrapper for EPICS modules. Reads the `EPICS_HOST_ARCH` environment
-variable and adds two directories:
+Convenience wrapper for EPICS modules. Reads the `EPICS_HOST_ARCH`
+environment variable and adds two directories via `luaAddPath`:
 
-- `module_top/lib/<arch>/`  -- for libraries installed via `LIB_INSTALLS`
-- `module_top/bin/<arch>/`  -- for scripts installed via `SCRIPTS` or `BIN_INSTALLS`
-
-Each directory is added via `luaAddPath`, so it participates in both
-`require()` and script file resolution.
+- `module_top/lib/<arch>/` -- for libraries installed via `LIB_INSTALLS`
+- `module_top/bin/<arch>/` -- for scripts installed via `SCRIPTS` or `BIN_INSTALLS`
 
 ```lua
--- From a Lua startup script (st.lua):
-luaAddModule("../..")            -- this module's own top directory
-luaAddModule(MYMODULE)           -- another EPICS module (macro from envPaths)
+-- From a Lua startup script:
+luaAddModule("../..")
+luaAddModule(MYMODULE)
 
-local bs = require("bytestream")  -- found in ../../lib/<arch>/bytestream.lua
+local bs = require("bytestream")
 ```
 
 ```
-# From iocsh (st.cmd):
+# From iocsh:
 < envPaths
 luaAddModule("$(LUA)")
 luaAddModule("$(MYMODULE)")
 ```
 
-If `EPICS_HOST_ARCH` is not set, `luaAddModule` prints a warning and does
-nothing.
+If `EPICS_HOST_ARCH` is not set, `luaAddModule` prints a warning and
+does nothing.
 
-### Path search order
+### Path Search Order
 
 Paths are searched in the order they are registered:
 
 ```lua
 luaAddPath("/first")
 luaAddPath("/second")
--- package.path: /first/?.lua;/first/?/init.lua;/second/?.lua;/second/?/init.lua;<defaults>
--- luaLocateFile: LUA_SCRIPT_PATH dirs, /first/, /second/, .
-```
-
-| Function | Available from | Calling state | Future states |
-| - | - | - | - |
-| `luaAddPath(dir)` | Lua, iocsh, C | Updated immediately (Lua only) | Yes |
-| `luaAddModule(top)` | Lua, iocsh, C | Updated immediately (Lua only) | Yes |
-
-<br>
-
-luaLoadFile
------------
-
-The `luaLoadFile` command loads and executes a Lua script file as a single
-chunk in a new Lua state. Unlike `luash`, the entire file is compiled at
-once, so `local` variables work across lines. Unlike `luaSpawn`, execution
-is synchronous -- the command blocks until the script completes.
-
-```
-luaLoadFile "script.lua" "P=dev1:,R=sensor"
-```
-
-From within Lua, table macros are also supported:
-
-```lua
-luaLoadFile("config.lua", {P="dev1:", R="sensor"})
-```
-
-If the script registers its Lua state (via `luaRegisterState`), the state
-is kept alive after execution. Otherwise, the state is closed when the
-script finishes.
-
-
-### Command Comparison
-
-| Command | Execution | Scope | Line echoing | Use case |
-| ------- | --------- | ----- | ------------ | -------- |
-| `luash "file.lua"` | Synchronous, line-by-line | Per-statement | Yes, interleaved with output | IOC startup scripts |
-| `luaLoadFile "file.lua"` | Synchronous, whole-file | Single chunk (locals work) | No | Library/config scripts |
-| `luaSpawn "file.lua"` | Background thread, whole-file | Single chunk (locals work) | No | Long-running driver scripts |
-| `luaCmd "code"` | Synchronous, single statement | One-shot | No | One-liner commands |
-
-Lua Shell As A Replacement For The IOC Shell
---------------------------------------------
-
-The lua shell can also be called as a c function, which allows it to be
-used on vxWorks or as a replacement for the IOC shell in a soft IOC. The
-same parameters apply as when calling the command inside the IOC shell.
-So your main.cpp file might look like:
-
-```c++
-#include "luaShell.h"
-
-int main(int argc,char *argv[])
-{
-    if(argc>=2) {
-        luash(argv[1]);
-        epicsThreadSleep(.2);
-    }
-    luash(NULL);
-    epicsExit(0);
-    return(0);
-}
-```
-
-Common Lua Environments
------------------------
-
-In the above code, there are two different lua shell calls. One to read in
-a given script, and one to provide an interactive shell. As the code stands,
-any objects that are created in the input script aren't available to the
-interactive shell. Say, for example, you have a library that provides useful
-functions that are used in scripts, you would have to include that library
-again once you are in the interactive shell, and there wouldn't be a way to
-automate that.
-
-Therefore, there is a way to define that you want different calls to luash
-to use a common environment. The luashSetCommonState command is included
-in the luaShell.h file and sets a default environment that subsequent
-luash calls will use. The command takes a c-string, if the string matches
-the name of an environment created using luaNamedState(), it will use that
-environment, otherwise it will create a new state with that name. So the
-above code changed to allow the interactive shell to reference code from
-the interpreted script would look like:
-
-```c++
-#include "luaShell.h"
-
-int main(int argc,char *argv[])
-{
-    luashSetCommonState("default");
-
-    if(argc>=2) {
-        luash(argv[1]);
-        epicsThreadSleep(.2);
-    }
-    luash(NULL);
-    epicsExit(0);
-    return(0);
-}
+-- package.path: /first/?.lua;...;/second/?.lua;...;<defaults>
+-- script search: LUA_SCRIPT_PATH dirs, /first/, /second/, .
 ```

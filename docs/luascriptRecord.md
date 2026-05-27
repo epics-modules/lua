@@ -223,7 +223,7 @@ field(CODE, "return AA .. BB")
 -  Sets SVAL to the concatenation of AA and BB
 
 ```
-field(CODE, "@test.lua example")
+field(CODE, "@test.lua example()")
 ```
 
 -  Runs the function 'example' from the file test.lua with zero
