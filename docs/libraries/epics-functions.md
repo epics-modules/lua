@@ -1,49 +1,86 @@
 ---
 layout: default
 title: Included Libraries
-nav_order: 6
+nav_order: 7
 has_children: true
 ---
 
 
-# Included lua Library Functions
+# Included Libraries
 
-In addition to the standard lua libraries, the following are 
-additional libraries built into the lua runtime interpreter to 
-help with common epics tasks.
+In addition to the standard Lua libraries, the following libraries are
+available in the Lua runtime to help with common EPICS tasks. Each
+library is loaded on demand via `require()`:
 
-The 'asyn' Library - [Documentation](asyn-library) -
-This library contains functions to allow users to get and set 
-asyn parameters and communicate over an asyn octet port. It is 
-primarily for use as an easy debugging tool for devices that 
-have a command-response style control scheme, or a framework to 
-allow control of said devices.
+```lua
+local epics = require("epics")
+local db    = require("db")
+local asyn  = require("asyn")
+```
 
-The 'db' Library - [Documentation](database-library) -
-This library contains functions to allow users to generate 
-database records like one would using the dbLoadDatabase function
-to load a db file. Instead, all records can be generated entirely
-within lua.
-
-The 'epics' Library - [Documentation](epics-library) - 
-This library contains functions to get and set pv values, as well 
-as operating system independent tasks, like letting a thread sleep.
-
-The 'iocsh' Library - [Documentation](iocsh-library) - 
-This library provides the tools to interact with the existing epics 
-framework for the ioc shell. It's major use is to allow the lua shell 
-to be able to call all the same functions as the ioc shell without 
-having to have to change the code for those functions.
+The built-in C libraries (epics, db, asyn, osi, iocsh, lpeg) are
+available in every Lua state without any path configuration. Pure Lua
+libraries (bytestream, re) are installed to the module's `lib/<arch>/`
+directory and require `luaAddModule` to be called first.
 
 
-# C++11 Support
+EPICS Libraries
+---------------
 
-As of release R3-1, the included libraries have been updated to 
-use the [luaaa](https://github.com/gengyong/luaaa) lua/c++ binding
-library. This requires a compiler with c++11 support.
+**asyn** -- [Documentation](asyn-library) --
+Communicate with asyn ports via octet read/write, get and set
+asynPortDriver parameters, create new asynPortDrivers from Lua
+with `asyn.driver.new`, and manage client connections with
+`asyn.client`.
 
-The libraries as they existed pre-R3-1 remain available for use
-under architectures that don't have c++11 support. Whether the lua
-module uses the new or the old versions of the library is controlled
-by the config macro CXX11_SUPPORT. You can change this in the module's
-CONFIG_SITE files. 
+**db** -- [Documentation](database-library) --
+Create and inspect EPICS database records from Lua using
+`db.record`, `db.loadRecords`, and `db.loadTemplate`. Provides
+static database access functions and record enumeration with
+`db.list`.
+
+**epics** -- [Documentation](epics-library) --
+Read and write PV values with `epics.get` and `epics.put`,
+including array support and an options table for timeout, count,
+and string formatting. Create PV proxy objects with `epics.pv`
+for convenient dot-syntax field access.
+
+**iocsh** -- [Documentation](iocsh-library) --
+Access environment variables and iocsh-registered functions from
+Lua. In the Lua shell, this functionality is embedded into the
+global environment automatically.
+
+**bytestream** -- [Documentation](bytestream-library) --
+Scanf-style parsing (`bytestream.match`) and printf-style formatting
+(`bytestream.format`) for byte stream device communication.
+Includes a `bytestream.client` wrapper around `asyn.client` for
+structured write/read I/O with format specifiers following
+StreamDevice conventions.
+
+**osi** --
+OS-independent utilities provided by the EPICS OSI layer.
+Functions: `osi.sleep(seconds)`, `osi.startRedirectOut(filename)`,
+`osi.endRedirectOut()`.
+
+
+Pattern Matching Libraries
+--------------------------
+
+**lpeg** --
+The LPeg 1.1.0 library (Parsing Expression Grammars for Lua) is
+compiled into the module and available via `require("lpeg")`.
+LPeg is used internally by the bytestream library.
+See the [LPeg documentation](http://www.inf.puc-rio.br/~roberto/lpeg/)
+for details.
+
+**re** --
+LPeg's regex-style interface, available via `require("re")`.
+Installed to `lib/<arch>/re.lua`.
+
+
+Custom Libraries
+----------------
+
+You can add your own Lua or C libraries to extend the environment.
+See [Adding Additional Libraries](adding-libraries) for details on
+registering libraries and configuring search paths.

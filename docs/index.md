@@ -7,61 +7,84 @@ nav_order: 1
 
 # Lua EPICS Module
 
-The lua EPICS Module is an embedding of the lua language interpreter
-into an EPICS IOC. From there, the interpreter is exposed to the user
-in the form of the luascript record, which uses the interpreter to
-allow for scriptable record support; the lua shell, an addition to
-or replacement of the ioc shell; and functions to allow easy use of
-lua in other modules.
+The Lua EPICS Module embeds the Lua language interpreter into an EPICS
+IOC, providing a scriptable alternative to the traditional ioc shell and
+calcout/scalcout record types. Lua scripts can be used for IOC startup,
+record processing logic, device communication, and asynPortDriver
+creation.
 
-Currently, the lua module uses lua version 5.4.6. A reference manual
-describing the details of the language can be [found here](https://www.lua.org/manual/5.4/)
+The module uses Lua version 5.4.6. A reference manual describing the
+details of the language can be [found here](https://www.lua.org/manual/5.4/).
 
 
-luascriptRecord
----------------
+Lua Shell
+---------
 
-The luascript record type provides customizeable record behavior in
-much the same way as the calcout or scalcout record. Every time the
-record is processeed, lua code is executed and any returned variables
-are outputted to an OUT_LINK. The record has both double and string
-input links that get exposed as global variables for the code to use.
+The Lua shell is an alternative to the ioc shell for IOC startup scripts
+and interactive use. It can call all iocsh-registered functions directly,
+while also providing variables, conditionals, loops, and functions within
+startup scripts. The shell can be used alongside or as a complete
+replacement for the ioc shell.
 
-The record has access to a set of [library functions](libraries/epics-functions)
-that allow it to get and put values from other PV's or asyn port
-parameters, sleep, call iocsh functions, send commands to a device,
-or you can [bind your own functions](libraries/adding-libraries) to extend
-its functionality.
+[Full Documentation](using-lua-shell)
 
-Full documentation can be found [here](luascriptRecord)
+
+luascript Record
+----------------
+
+The luascript record type provides scriptable record behavior, similar
+to the calcout or scalcout record. Each time the record processes, Lua
+code is executed and any returned value is stored in the record's output
+fields. The record supports double and string input links exposed as
+global variables, external Lua script files, conditional processing via
+POPT/PCAL, and asynchronous execution.
+
+[Full Documentation](luascriptRecord)
+
+
+Device Support
+--------------
+
+DTYP "lua" device support allows standard EPICS record types to use Lua
+callback functions for their read and write operations. Supported record
+types include ai, ao, bi, bo, longin, longout, mbbi, mbbo, stringin,
+and stringout. Each callback receives a PV object for accessing the
+record's fields, and errors in the callback are reported as record
+alarms.
+
+[Full Documentation](device-support)
+
+
+Included Libraries
+------------------
+
+In addition to the standard Lua libraries, several EPICS-specific
+libraries are available via `require()`:
+
+- **epics** -- Read and write PV values with local-PV fast path, array
+  support, and PV proxy objects.
+- **db** -- Create and inspect EPICS database records from Lua,
+  replacing .db files and substitution files.
+- **asyn** -- Communicate with asyn ports, access parameters, and create
+  asynPortDrivers with read/write callbacks.
+- **bytestream** -- Scanf-style parsing and printf-style formatting for
+  byte stream device communication.
+- **iocsh** -- Access environment variables and iocsh-registered
+  functions from Lua.
+- **osi** -- OS-independent utilities: sleep and stdout redirection.
+- **lpeg** -- Parsing Expression Grammars for Lua (LPeg 1.1.0).
+
+Custom libraries can be added to extend the Lua environment.
+
+[Library Documentation](libraries/epics-functions)
 
 
 luaPortDriver
 -------------
 
-luaPortDriver support is included to generate asynPortDrivers with
-parameters generated from a lua script. Each parameter gets snippets
-of lua code associated with its reading and writing that get called
-when the asyn callbacks are triggered.
+Lua-based asynPortDrivers can be created entirely from Lua scripts using
+the `asyn.driver.new` API. Parameters are defined with type constructors,
+and read/write callbacks are bound as Lua functions. A legacy
+`luaPortDriver` iocsh command is also available.
 
-Full documentation can be found [here](luaPortDriver)
-
-
-lua Shell
----------
-
-The lua shell is an alternate shell to either the vxWorks or ioc
-shell environment. It has all the same functionality of those
-shells, while also providing the ability to conditionally
-execute code, calculate necessary values, construct loops over
-code, and define functions within startup scripts.
-
-The lua Shell is able to access all the same [epics lua libraries](libraries/epics-functions)
-as the luascriptRecord, including any functions or libraries that
-you [build yourself](libraries/adding-libraries) into your IOC. The shell
-even implicitly loads the iocsh library, which means you can call
-iocsh-registered functions in the lua shell exactly like you would 
-in the ioc shell. 
-
-[Further Information](using-lua-shell)
-
+[Full Documentation](luaPortDriver)
