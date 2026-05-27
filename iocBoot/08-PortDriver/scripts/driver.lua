@@ -13,11 +13,11 @@ local drv = asyn.driver.new(PORT, {
 end)
 
 drv.READBACK.read = function(self)
-    return drv.SETPOINT.value * self.scale
+    return self.SETPOINT.value * self.scale
 end
 
 drv.SETPOINT.write = function(value, self)
-    drv.SETPOINT.value = value
+    self.SETPOINT.value = value
 end
 
 
