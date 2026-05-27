@@ -26,22 +26,27 @@ epics.put("lua:arr:char_input",   "Hello, World!")
 epics.put("lua:arr:string_input", {"Hello", "World", "Lua", "EPICS", "Array"})
 
 -- Process each record and display results
-print("\n--- Double array: scale by 2.0 ---")
+--
+--- Double array: scale by 2.0 ---
 dbpf("lua:arr:scale.PROC", 1)
 dbgf("lua:arr:double_output")
 
-print("\n--- Double array: sum ---")
+--
+--- Double array: sum ---
 dbpf("lua:arr:sum.PROC", 1)
 dbgf("lua:arr:sum.VAL")
 
-print("\n--- Integer array: reverse ---")
+--
+--- Integer array: reverse ---
 dbpf("lua:arr:reverse.PROC", 1)
 dbgf("lua:arr:int_output")
 
-print("\n--- Char waveform: string length ---")
+--
+--- Char waveform: string length ---
 dbpf("lua:arr:strlen.PROC", 1)
 dbgf("lua:arr:strlen.VAL")
 
-print("\n--- String array: uppercase first element ---")
+--
+--- String array: uppercase first element ---
 dbpf("lua:arr:upper.PROC", 1)
 dbgf("lua:arr:upper.SVAL")
