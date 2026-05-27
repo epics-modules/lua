@@ -133,7 +133,7 @@ error encountered during processing.
 
  
 The record also has a second set of calculation-related fields
-  described in `[Section 4, Output Parameters](#output-parameters)
+  described in `[Section 4, Output Parameters](#output-parameters)`
   
 
 
