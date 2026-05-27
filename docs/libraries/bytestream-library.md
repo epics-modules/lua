@@ -404,59 +404,67 @@ luaAddModule("../..")   -- relative to iocBoot/<ioc>/
 
 ### Example: SCPI Temperature Sensor
 
-**Database:**
-
-```
-record(ai, "$(P)Temperature") {
-    field(DTYP, "lua")
-    field(INP,  "@sensor.lua read_temp('$(PORT)')")
-    field(SCAN, "1 second")
-    field(EGU,  "degC")
-    field(PREC, "2")
-}
-
-record(ao, "$(P)Setpoint") {
-    field(DTYP, "lua")
-    field(OUT,  "@sensor.lua write_setpoint('$(PORT)')")
-    field(EGU,  "degC")
-    field(PREC, "1")
-}
-
-record(longin, "$(P)Status") {
-    field(DTYP, "lua")
-    field(INP,  "@sensor.lua read_status('$(PORT)')")
-    field(SCAN, "1 second")
-}
-```
+Each load of the script creates a separate Lua state registered under the
+port name, so multiple instances for different devices work without collisions.
 
 **Lua script (sensor.lua):**
 
 ```lua
+local db = require("db")
 local bs = require("bytestream")
 
-local clients = {}
+local P    = P    or "dev:"
+local PORT = PORT or "SENSOR"
 
-local function dev(port)
-    if not clients[port] then
-        local c = bs.client(port)
-        c.OutTerminator = "\n"
-        c.InTerminator  = "\n"
-        clients[port] = c
-    end
-    return clients[port]
+luaRegisterState(PORT)
+
+local client = bs.client(PORT)
+client.OutTerminator = "\n"
+client.InTerminator  = "\n"
+
+db.record("ai", P .. "Temperature") {
+    DTYP = "lua",
+    INP  = "@" .. PORT .. " read_temp()",
+    SCAN = "1 second",
+    EGU  = "degC",
+    PREC = "2",
+}
+
+function read_temp()
+    return client:write("MEAS:TEMP?"):read("%f")
 end
 
-function read_temp(port)
-    return dev(port):write("MEAS:TEMP?"):read("%f")
+db.record("ao", P .. "Setpoint") {
+    DTYP = "lua",
+    OUT  = "@" .. PORT .. " write_setpoint()",
+    EGU  = "degC",
+    PREC = "1",
+}
+
+function write_setpoint(record)
+    client:write("SET:TEMP %.1f", record.VAL)
 end
 
-function write_setpoint(port, pv)
-    dev(port):write("SET:TEMP %.1f", pv.VAL)
-end
+db.record("longin", P .. "Status") {
+    DTYP = "lua",
+    INP  = "@" .. PORT .. " read_status()",
+    SCAN = "1 second",
+}
 
-function read_status(port)
-    return dev(port):write("STAT?"):read("%{off|on|standby}")
+function read_status()
+    return client:write("STAT?"):read("%{off|on|standby}")
 end
+```
+
+**Startup:**
+
+```lua
+luaAddModule("$(LUA)")
+drvAsynIPPortConfigure("SENSOR1", "192.168.1.100:5025")
+luaLoadFile("sensor.lua", {P="dev1:", PORT="SENSOR1"})
+
+drvAsynIPPortConfigure("SENSOR2", "192.168.1.101:5025")
+luaLoadFile("sensor.lua", {P="dev2:", PORT="SENSOR2"})
 ```
 
 ### Example: Multi-Value Response
@@ -465,9 +473,9 @@ Some instruments return multiple values in a single response. Use multiple
 format conversions to extract them all:
 
 ```lua
-function read_measurements(port)
+function read_measurements()
     -- Device responds with: "12.34,56.78,90.12"
-    local v1, v2, v3 = dev(port):write("MEAS:ALL?"):read("%f,%f,%f")
+    local v1, v2, v3 = client:write("MEAS:ALL?"):read("%f,%f,%f")
     return v1  -- returned as record VAL
 end
 ```
@@ -477,10 +485,10 @@ end
 Use the `*` flag to match but discard unwanted fields:
 
 ```lua
-function read_third_value(port)
+function read_third_value()
     -- Response: "1.0 2.0 3.0 4.0"
     -- Skip first two values, capture the third
-    return dev(port):write("READ?"):read("%*f %*f %f")
+    return client:write("READ?"):read("%*f %*f %f")
 end
 ```
 
@@ -498,9 +506,9 @@ differences are:
 | Format specifiers | `%f`, `%d`, `%s`, etc. | Same syntax |
 | Enum syntax | `%{val0\|val1\|val2}` | Same syntax |
 | Separator handling | `Separator` field | Literal text in format string |
-| Terminators | `Terminator` field | `dev.OutTerminator` / `dev.InTerminator` |
+| Terminators | `Terminator` field | `client.OutTerminator` / `client.InTerminator` |
 | Error handling | Record alarm on mismatch | `error()` caught by DTYP support |
-| I/O direction | `out`, `in` protocol commands | `dev:write(...)`, `dev:read(...)` |
+| I/O direction | `out`, `in` protocol commands | `client:write(...)`, `client:read(...)` |
 | Conditional logic | Limited (`@init`, `@mismatch`) | Full Lua control flow |
 
 ### StreamDevice Protocol vs. Lua
@@ -515,7 +523,7 @@ getTemperature {
 
 Equivalent Lua with bytestream:
 ```lua
-function read_temp(port)
-    return dev(port):write("MEAS:TEMP?"):read("%f")
+function read_temp()
+    return client:write("MEAS:TEMP?"):read("%f")
 end
 ```
