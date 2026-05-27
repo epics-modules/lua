@@ -1,3 +1,4 @@
+-- OS independent library, used to provide sleep function
 osi = require("osi")
 
 local flip = false
