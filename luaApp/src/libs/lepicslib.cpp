@@ -1081,10 +1081,32 @@ static int l_pv_tostring(lua_State* state)
 	return 1;
 }
 
+/* Forward declaration: defined below */
+int luaopen_epics(lua_State* L);
+
 extern "C"
 {
 	void luaGeneratePV(lua_State* state, const char* pv_name)
 	{
+		/*
+		 * Ensure the lua_pv metatable exists. It is created by
+		 * luaopen_epics, which may not have been called yet in this
+		 * state (e.g., DTYP device support scripts that don't
+		 * explicitly require("epics")). Requiring it here is safe
+		 * because the epics library is always in package.preload.
+		 */
+		luaL_getmetatable(state, "lua_pv");
+		if (lua_isnil(state, -1))
+		{
+			lua_pop(state, 1);
+			luaL_requiref(state, "epics", luaopen_epics, 0);
+			lua_pop(state, 1);
+		}
+		else
+		{
+			lua_pop(state, 1);
+		}
+
 		lua_pv* pv = (lua_pv*) lua_newuserdata(state, sizeof(lua_pv));
 		strncpy(pv->pv_name, pv_name, sizeof(pv->pv_name) - 1);
 		pv->pv_name[sizeof(pv->pv_name) - 1] = '\0';
