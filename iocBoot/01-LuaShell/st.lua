@@ -1,3 +1,10 @@
+-- Lua Shell Example IOC
+--
+-- Demonstrates using the Lua shell as a replacement for the EPICS
+-- ioc shell.
+--
+-- Run with: ../../bin/<arch>/testLuaShell st.lua
+
 -- You can enable hash comments, if you want better compatibility with iocShell scripts
 #ENABLE_HASH_COMMENTS
 
