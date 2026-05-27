@@ -1,14 +1,65 @@
+# DTYP "lua" device support examples
+#
+# Each record's INP or OUT field references a Lua script file and function.
+# The function receives a PV object as its first argument, followed by
+# any parameters specified in parentheses.
+#
+# Input records (ai, bi, longin, stringin):
+#   - The function's return value becomes the record's value
+#   - Return nil to leave the value unchanged
+#
+# Output records (ao, stringout):
+#   - The function reads the value being written via record.VAL
+#   - Return nil for success; any other return sets WRITE_ALARM
+
+
+# --- Input Records ---
+
+# ai: increment by a fixed step on each process
 record(ai, "$(P)$(R)ai")
 {
 	field(DTYP, "lua")
 	field(INP, "@dtyp.lua next_int(10)")
 }
 
+# bi: toggle between True and False
 record(bi, "$(P)$(R)bi")
 {
 	field(DTYP, "lua")
 	field(INP, "@dtyp.lua next_bool")
-	
 	field(ONAM, "True")
 	field(ZNAM, "False")
+}
+
+# longin: current time as Unix epoch seconds
+record(longin, "$(P)$(R)longin")
+{
+	field(DTYP, "lua")
+	field(INP, "@dtyp.lua epoch_seconds")
+}
+
+# stringin: current time as a formatted string
+record(stringin, "$(P)$(R)stringin")
+{
+	field(DTYP, "lua")
+	field(INP, "@dtyp.lua timestamp")
+}
+
+
+# --- Output Records ---
+
+# ao: log the value being written
+record(ao, "$(P)$(R)ao")
+{
+	field(DTYP, "lua")
+	field(EGU, "input")
+	field(OUT, "@dtyp.lua on_write")
+	field(PREC, "3")
+}
+
+# stringout: log the string being written
+record(stringout, "$(P)$(R)stringout")
+{
+	field(DTYP, "lua")
+	field(OUT, "@dtyp.lua on_string_write")
 }
