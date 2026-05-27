@@ -3,7 +3,7 @@
 -- Demonstrates luascript records with external Lua functions,
 -- POPT/PCAL conditional processing, and inline CODE.
 --
--- Run with: ../../bin/<arch>/testLuaShell examples.lua
+-- Run with: ../../bin/<arch>/testLuaShell st.lua
 
 dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
