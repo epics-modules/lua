@@ -1,6 +1,10 @@
+-- You can enable hash comments, if you want better compatibility with iocShell scripts
 #ENABLE_HASH_COMMENTS
 
 #print("This won't get run")
+
+-- Also allows for silent comments
+#- print("This wont' get shown")
 
 -- Get the version of Epics we're running under
 
@@ -18,11 +22,14 @@ if (VERSION_INT < VERSION_CHECK) then
 	print("You are using a version below base-3.15.6")
 end
 
+-- LUA_SCRIPT_PATH is an environment variable that provides a search path to 
+-- find scripts for luash, luaSpawn, and luaRecord 
 epicsEnvSet("LUA_SCRIPT_PATH", "./scripts")
 
 dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
 
+-- The '<' command is equivalent to calling luash
 < load_userscripts.lua
 
 ---------------
