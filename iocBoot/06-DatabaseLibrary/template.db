@@ -1,0 +1,8 @@
+# Simple template for db.loadRecords and db.loadTemplate examples
+
+record(ai, "$(P)sensor_$(N)")
+{
+	field(DESC, "$(DESC)")
+	field(EGU,  "$(EGU)")
+	field(PREC, "$(PREC)")
+}

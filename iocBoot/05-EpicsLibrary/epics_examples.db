@@ -1,0 +1,57 @@
+# Records for the epics library example IOC
+
+record(ai, "$(P)ai")
+{
+	field(VAL,  "42.5")
+	field(PREC, "2")
+	field(EGU,  "degC")
+	field(PINI, "YES")
+}
+
+record(ao, "$(P)ao")
+{
+	field(PREC, "2")
+	field(EGU,  "V")
+}
+
+record(longin, "$(P)longin")
+{
+	field(VAL,  "100")
+	field(PINI, "YES")
+}
+
+record(stringin, "$(P)stringin")
+{
+	field(VAL,  "hello")
+	field(PINI, "YES")
+}
+
+record(stringout, "$(P)stringout")
+{
+}
+
+record(waveform, "$(P)double_wf")
+{
+	field(FTVL, "DOUBLE")
+	field(NELM, "10")
+}
+
+record(waveform, "$(P)int_wf")
+{
+	field(FTVL, "LONG")
+	field(NELM, "10")
+}
+
+record(waveform, "$(P)char_wf")
+{
+	field(FTVL, "CHAR")
+	field(NELM, "256")
+}
+
+record(mbbo, "$(P)mode")
+{
+	field(ZRST, "off")
+	field(ONST, "on")
+	field(TWST, "standby")
+	field(PINI, "YES")
+}
