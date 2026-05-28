@@ -30,14 +30,6 @@ luaAddModule("$(LUA)")     -- from iocsh, or luaAddModule(LUA) from Lua
 local bs = require("bytestream")
 ```
 
-Dependencies (lpeg and asyn) are loaded lazily on first use -- requiring
-bytestream does not force asyn to load until a client is created.
-
-All functions that encounter errors raise them via `error()`. When used from
-DTYP "lua" device support, raised errors are caught by `lua_pcall` and mapped
-to record alarm states automatically.
-
-
 Format Specifiers
 -----------------
 
@@ -308,7 +300,7 @@ local val = dev:write("MEAS?"):read("%f")
 | ...         | varies | Values to format (only when using format mode). |
 
 The `OutTerminator` property is appended automatically by the underlying
-asyn port -- do not include terminators in the write data.
+asyn port.
 
 <br>
 
@@ -369,12 +361,15 @@ The following properties are delegated to the underlying `asyn.client`:
 | - | - | - |
 | `InTerminator` | string | Get or set the input end-of-string terminator. |
 | `OutTerminator` | string | Get or set the output end-of-string terminator. |
+| `ReadTimeout` | number | Get or set the read timeout in seconds (default 1.0). |
+| `WriteTimeout` | number | Get or set the write timeout in seconds (default 1.0). |
 | `portName` | string | Read-only. The port name this client is connected to. |
 | `addr` | number | Read-only. The address this client is connected to. |
 
 ```lua
 dev.OutTerminator = "\r\n"
 dev.InTerminator  = "\r\n"
+dev.ReadTimeout   = 5.0
 print(dev.portName)       -- "SERIAL1"
 ```
 

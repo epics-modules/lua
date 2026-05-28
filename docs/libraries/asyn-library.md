@@ -412,6 +412,28 @@ port.OutTerminator = "\r\n"
 print(port.OutTerminator)
 ```
 
+### client.ReadTimeout
+---
+
+Get or set the read timeout in seconds for this client. Used by
+`:read()` and `:writeread()`. Default is 1.0.
+
+```lua
+port.ReadTimeout = 5.0
+print(port.ReadTimeout)
+```
+
+### client.WriteTimeout
+---
+
+Get or set the write timeout in seconds for this client. Used by
+`:write()`. Default is 1.0.
+
+```lua
+port.WriteTimeout = 0.5
+print(port.WriteTimeout)
+```
+
 ### client[addr]
 ---
 

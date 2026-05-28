@@ -764,6 +764,8 @@ typedef struct {
 	asynOctetClient* client;
 	char portName[64];
 	int addr;
+	double readTimeout;
+	double writeTimeout;
 } ClientUD;
 
 static ClientUD* check_clientud(lua_State* state, int idx)
@@ -792,6 +794,7 @@ static void push_clientproxy(lua_State* state, const char* portName, int addr, c
 static int l_client_read(lua_State* state)
 {
 	ClientUD* ud = check_clientud(state, 1);
+	ud->client->setTimeout(ud->readTimeout);
 	return asyn_read(state, ud->client);
 }
 
@@ -799,6 +802,7 @@ static int l_client_write(lua_State* state)
 {
 	ClientUD* ud = check_clientud(state, 1);
 	const char* data = luaL_checkstring(state, 2);
+	ud->client->setTimeout(ud->writeTimeout);
 	return asyn_write(state, ud->client, data, strlen(data));
 }
 
@@ -806,6 +810,7 @@ static int l_client_writeread(lua_State* state)
 {
 	ClientUD* ud = check_clientud(state, 1);
 	const char* data = luaL_checkstring(state, 2);
+	ud->client->setTimeout(ud->readTimeout);
 	return asyn_writeread(state, ud->client, data, strlen(data));
 }
 
@@ -911,6 +916,10 @@ static int l_client_index(lua_State* state)
 	if (strcmp(key, "portName") == 0)   { lua_pushstring(state, ud->portName); return 1; }
 	if (strcmp(key, "addr") == 0)       { lua_pushinteger(state, ud->addr); return 1; }
 
+	/* Timeouts */
+	if (strcmp(key, "ReadTimeout") == 0)  { lua_pushnumber(state, ud->readTimeout); return 1; }
+	if (strcmp(key, "WriteTimeout") == 0) { lua_pushnumber(state, ud->writeTimeout); return 1; }
+
 	/* Terminators */
 	if (strcmp(key, "InTerminator") == 0)
 	{
@@ -948,6 +957,14 @@ static int l_client_newindex(lua_State* state)
 		const char* eos = lua_tostring(state, 3);
 		ud->client->setOutputEos(eos, strlen(eos));
 	}
+	else if (strcmp(key, "ReadTimeout") == 0)
+	{
+		ud->readTimeout = luaL_checknumber(state, 3);
+	}
+	else if (strcmp(key, "WriteTimeout") == 0)
+	{
+		ud->writeTimeout = luaL_checknumber(state, 3);
+	}
 
 	return 0;
 }
@@ -960,6 +977,8 @@ static void push_clientproxy(lua_State* state, const char* portName, int addr, c
 	strncpy(ud->portName, portName, sizeof(ud->portName) - 1);
 	ud->portName[sizeof(ud->portName) - 1] = '\0';
 	ud->addr = addr;
+	ud->readTimeout = DEFAULT_TIMEOUT;
+	ud->writeTimeout = DEFAULT_TIMEOUT;
 
 	{
 		char errbuf[256] = { '\0' };
@@ -997,14 +1016,16 @@ static void push_clientproxy(lua_State* state, const char* portName, int addr, c
 		lua_pushstring(state, ".addr                       -- address (property)"); lua_rawseti(state, -2, 2);
 		lua_pushstring(state, ".InTerminator               -- get/set input terminator"); lua_rawseti(state, -2, 3);
 		lua_pushstring(state, ".OutTerminator              -- get/set output terminator"); lua_rawseti(state, -2, 4);
-		lua_pushstring(state, ":read()"); lua_rawseti(state, -2, 5);
-		lua_pushstring(state, ":write(data)"); lua_rawseti(state, -2, 6);
-		lua_pushstring(state, ":writeread(data)"); lua_rawseti(state, -2, 7);
-		lua_pushstring(state, ":flush()"); lua_rawseti(state, -2, 8);
-		lua_pushstring(state, ":trace(mask) -- error=0x1, device=0x2, filter=0x4, driver=0x8, flow=0x10, warning=0x20"); lua_rawseti(state, -2, 9);
-		lua_pushstring(state, ":traceio(mask) -- nodata=0x0, ascii=0x1, escape=0x2, hex=0x4"); lua_rawseti(state, -2, 10);
-		lua_pushstring(state, ":setOption(key, val)"); lua_rawseti(state, -2, 11);
-		lua_pushstring(state, "[addr]                      -- index by address"); lua_rawseti(state, -2, 12);
+		lua_pushstring(state, ".ReadTimeout                -- get/set read timeout (seconds)"); lua_rawseti(state, -2, 5);
+		lua_pushstring(state, ".WriteTimeout               -- get/set write timeout (seconds)"); lua_rawseti(state, -2, 6);
+		lua_pushstring(state, ":read()"); lua_rawseti(state, -2, 7);
+		lua_pushstring(state, ":write(data)"); lua_rawseti(state, -2, 8);
+		lua_pushstring(state, ":writeread(data)"); lua_rawseti(state, -2, 9);
+		lua_pushstring(state, ":flush()"); lua_rawseti(state, -2, 10);
+		lua_pushstring(state, ":trace(mask) -- error=0x1, device=0x2, filter=0x4, driver=0x8, flow=0x10, warning=0x20"); lua_rawseti(state, -2, 11);
+		lua_pushstring(state, ":traceio(mask) -- nodata=0x0, ascii=0x1, escape=0x2, hex=0x4"); lua_rawseti(state, -2, 12);
+		lua_pushstring(state, ":setOption(key, val)"); lua_rawseti(state, -2, 13);
+		lua_pushstring(state, "[addr]                      -- index by address"); lua_rawseti(state, -2, 14);
 		lua_setfield(state, -2, "_doc");
 	}
 	lua_setmetatable(state, -2);
