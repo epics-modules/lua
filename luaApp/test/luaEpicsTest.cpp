@@ -360,6 +360,18 @@ MAIN(luaEpicsTest)
 	testIocInitOk();
 	eltc(1);
 
+	/* Initialize waveform test data (replaces JSON INP syntax for 3.15 compat) */
+	{
+		DBADDR addr;
+		double dvals[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+		dbNameToAddr("etest:test_dwf", &addr);
+		dbPutField(&addr, DBF_DOUBLE, dvals, 5);
+
+		char cvals[] = {72, 101, 108, 108, 111};  /* "Hello" */
+		dbNameToAddr("etest:test_cwf", &addr);
+		dbPutField(&addr, DBF_CHAR, cvals, 5);
+	}
+
 	/* Local PV fast path */
 	testGetLocalDouble();
 	testGetLocalString();

@@ -66,16 +66,33 @@ epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index);
  *
  * The native field_type values from dbFldTypes.h conflict with the
  * DBF_* macros from db_access.h (included by cadef.h) -- they use
- * different numeric values for the same names. These constants and
- * the dbf_to_lua_type mapping resolve this by using the known numeric
- * values from dbFldTypes.h directly.
+ * different numeric values for the same names. These DB_DBR_*
+ * constants use the dbFldTypes.h numbering for dbGetField/dbPutField.
+ *
+ * Base 7.0 inserted INT64/UINT64 at positions 7-8, shifting
+ * FLOAT/DOUBLE/ENUM by 2 relative to 3.15.
+ *
+ * dbFldTypes.h enum (3.15):
+ *   0=STRING, 1=CHAR, 2=UCHAR, 3=SHORT, 4=USHORT,
+ *   5=LONG, 6=ULONG, 7=FLOAT, 8=DOUBLE, 9=ENUM,
+ *   10=MENU, 11=DEVICE
+ *
+ * dbFldTypes.h enum (7.0+):
+ *   0=STRING, 1=CHAR, 2=UCHAR, 3=SHORT, 4=USHORT,
+ *   5=LONG, 6=ULONG, 7=INT64, 8=UINT64, 9=FLOAT,
+ *   10=DOUBLE, 11=ENUM, 12=MENU, 13=DEVICE
  */
 
-/* Database-side DBR request type values from dbFldTypes.h */
+/* Database-side request type values from dbFldTypes.h */
 #define DB_DBR_STRING   0
 #define DB_DBR_CHAR     1
 #define DB_DBR_LONG     5
+
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
 #define DB_DBR_DOUBLE  10
+#else
+#define DB_DBR_DOUBLE   8
+#endif
 
 enum db_lua_type {
 	DB_LUA_STRING,
@@ -88,25 +105,27 @@ enum db_lua_type {
 
 /*
  * Map the native database field_type (dbFldTypes.h enum values)
- * to a Lua type category.
- *
- * dbFldTypes.h enum:
- *   0=STRING, 1=CHAR, 2=UCHAR, 3=SHORT, 4=USHORT,
- *   5=LONG, 6=ULONG, 7=INT64, 8=UINT64, 9=FLOAT,
- *   10=DOUBLE, 11=ENUM, 12=MENU, 13=DEVICE
+ * to a Lua type category. Version-guarded for the INT64/UINT64
+ * shift between base 3.15 and 7.0.
  */
 static inline enum db_lua_type dbf_to_lua_type(short field_type)
 {
 	switch (field_type)
 	{
-		case 0:              return DB_LUA_STRING;
-		case 1:  case 2:     return DB_LUA_CHAR;
-		case 3:  case 4:     return DB_LUA_INTEGER;
-		case 5:  case 6:     return DB_LUA_INTEGER;
-		case 7:  case 8:     return DB_LUA_DOUBLE;
-		case 9:  case 10:    return DB_LUA_DOUBLE;
+		case 0:              return DB_LUA_STRING;   /* STRING */
+		case 1:  case 2:     return DB_LUA_CHAR;     /* CHAR, UCHAR */
+		case 3:  case 4:     return DB_LUA_INTEGER;  /* SHORT, USHORT */
+		case 5:  case 6:     return DB_LUA_INTEGER;  /* LONG, ULONG */
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
+		case 7:  case 8:     return DB_LUA_DOUBLE;   /* INT64, UINT64 */
+		case 9:  case 10:    return DB_LUA_DOUBLE;   /* FLOAT, DOUBLE */
 		case 11: case 12:
-		case 13:             return DB_LUA_ENUM;
+		case 13:             return DB_LUA_ENUM;     /* ENUM, MENU, DEVICE */
+#else
+		case 7:  case 8:     return DB_LUA_DOUBLE;   /* FLOAT, DOUBLE */
+		case 9:  case 10:
+		case 11:             return DB_LUA_ENUM;     /* ENUM, MENU, DEVICE */
+#endif
 		default:             return DB_LUA_UNKNOWN;
 	}
 }

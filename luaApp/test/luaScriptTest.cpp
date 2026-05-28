@@ -453,6 +453,30 @@ MAIN(luaScriptTest)
     testIocInitOk();
     eltc(1);
 
+    /* Initialize waveform test data (replaces JSON INP syntax for 3.15 compat) */
+    {
+        DBADDR addr;
+        double dvals[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+        dbNameToAddr("test:double_wf", &addr);
+        dbPutField(&addr, DBF_DOUBLE, dvals, 5);
+
+        epicsInt32 ivals[] = {10, 20, 30, 40, 50};
+        dbNameToAddr("test:int_wf", &addr);
+        dbPutField(&addr, DBF_LONG, ivals, 5);
+
+        char cvals[] = {72, 101, 108, 108, 111};  /* "Hello" */
+        dbNameToAddr("test:char_wf", &addr);
+        dbPutField(&addr, DBF_CHAR, cvals, 5);
+
+        char svals[3][MAX_STRING_SIZE];
+        memset(svals, 0, sizeof(svals));
+        strncpy(svals[0], "alpha", MAX_STRING_SIZE - 1);
+        strncpy(svals[1], "beta",  MAX_STRING_SIZE - 1);
+        strncpy(svals[2], "gamma", MAX_STRING_SIZE - 1);
+        dbNameToAddr("test:string_wf", &addr);
+        dbPutField(&addr, DBF_STRING, svals, 3);
+    }
+
     testNumericReturn();
     testStringReturn();
     testTableReturn();

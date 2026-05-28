@@ -86,29 +86,21 @@ record(luascript, "$(P)udf") {
 record(waveform, "$(P)double_wf") {
 	field(FTVL, "DOUBLE")
 	field(NELM, "5")
-	field(INP,  "[1.0, 2.0, 3.0, 4.0, 5.0]")
-	field(PINI, "YES")
 }
 
 record(waveform, "$(P)int_wf") {
 	field(FTVL, "LONG")
 	field(NELM, "5")
-	field(INP,  "[10, 20, 30, 40, 50]")
-	field(PINI, "YES")
 }
 
 record(waveform, "$(P)char_wf") {
 	field(FTVL, "CHAR")
 	field(NELM, "256")
-	field(INP,  "[72, 101, 108, 108, 111]")
-	field(PINI, "YES")
 }
 
 record(waveform, "$(P)string_wf") {
 	field(FTVL, "STRING")
 	field(NELM, "3")
-	field(INP,  "[\"alpha\", \"beta\", \"gamma\"]")
-	field(PINI, "YES")
 }
 
 record(waveform, "$(P)output_wf") {
