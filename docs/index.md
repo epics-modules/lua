@@ -69,6 +69,7 @@ libraries are available via `require()`:
   asynPortDrivers with read/write callbacks.
 - **bytestream** -- Scanf-style parsing and printf-style formatting for
   byte stream device communication.
+- **event** -- Synchronization primitives for inter-thread signaling.
 - **iocsh** -- Access environment variables and iocsh-registered
   functions from Lua.
 - **osi** -- OS-independent utilities: sleep and stdout redirection.

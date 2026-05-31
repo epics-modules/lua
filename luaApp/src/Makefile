@@ -106,6 +106,7 @@ lua_SRCS += lasynlib.cpp
 lua_SRCS += lepicslib.cpp
 lua_SRCS += ldatabaselib.cpp
 lua_SRCS += llpeglib.cpp
+lua_SRCS += leventlib.cpp
 
 INC += lasynlib.h
 INC += lepicslib.h

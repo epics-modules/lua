@@ -57,6 +57,11 @@ Includes a `bytestream.client` wrapper around `asyn.client` for
 structured write/read I/O with format specifiers following
 StreamDevice conventions.
 
+**event** -- [Documentation](event-library) --
+Synchronization primitives for inter-thread communication.
+Provides event flags that can be shared across Lua states by
+name, with set, clear, test, testAndClear, and wait operations.
+
 **osi** --
 OS-independent utilities provided by the EPICS OSI layer.
 Functions: `osi.sleep(seconds)`, `osi.startRedirectOut(filename)`,

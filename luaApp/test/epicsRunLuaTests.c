@@ -12,6 +12,7 @@ int luaDtypTest(void);
 int luaPortDriverTest(void);
 int luaShellTest(void);
 int luaEpicsTest(void);
+int luaEventTest(void);
 
 void epicsRunLuaTests(void)
 {
@@ -22,6 +23,7 @@ void epicsRunLuaTests(void)
     runTest(luaPortDriverTest);
     runTest(luaShellTest);
     runTest(luaEpicsTest);
+    runTest(luaEventTest);
 
     epicsExit(0);
 }

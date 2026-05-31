@@ -114,6 +114,11 @@ Release 4-0
 - **luascript record async rework.** Asynchronous mode (`SYNC=Async`) now uses the
   EPICS callback system instead of creating a new thread per process cycle.
 
+- **Event synchronization library.** New `event` library providing event flags for
+  inter-thread signaling. Flags can be anonymous (local to a Lua state) or named
+  (shared across all Lua states by name). Operations: `set`, `clear`, `test`,
+  `testAndClear`, and `wait` with explicit timeout.
+
 ### Bug Fixes
 
 - **Concurrent shell sessions** no longer interfere with each other.

@@ -62,6 +62,13 @@ testHarness_SRCS += luaEpicsTest.cpp
 TESTFILES += ../luaEpicsTest.db
 TESTS += luaEpicsTest
 
+# --- event library tests ---
+TESTPROD_HOST += luaEventTest
+luaEventTest_SRCS += luaEventTest.cpp
+luaEventTest_SRCS += luaTest_registerRecordDeviceDriver.cpp
+testHarness_SRCS += luaEventTest.cpp
+TESTS += luaEventTest
+
 # --- Test harness for embedded targets ---
 testHarness_SRCS += epicsRunLuaTests.c
 luaTestHarness_SRCS += $(testHarness_SRCS)
