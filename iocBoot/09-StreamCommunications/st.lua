@@ -22,8 +22,6 @@ luaLoadFile("bytestream_examples.lua", {P="bs:"})
 -- Device I/O examples (requires a real asyn port).
 -- Uncomment and configure for your instrument:
 --
---   luaAddModule(MYMODULE)
---   drvAsynIPPortConfigure("SENSOR", "192.168.1.100:5025")
---   luaLoadFile("device.lua", {P="bs:", PORT="SENSOR"})
+--   luaLoadFile("device.lua", {P="bs:", PORT="SENSOR", IP="192.168.1.100:5025"})
 
 iocInit()
