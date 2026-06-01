@@ -107,6 +107,7 @@ lua_SRCS += lepicslib.cpp
 lua_SRCS += ldatabaselib.cpp
 lua_SRCS += llpeglib.cpp
 lua_SRCS += leventlib.cpp
+lua_SRCS += lseqlib.cpp
 
 INC += lasynlib.h
 INC += lepicslib.h
@@ -123,6 +124,7 @@ lua_SRCS += lpvm.c
 
 LIB_INSTALLS += ../lpeg/re.lua
 LIB_INSTALLS += ../libs/bytestream.lua
+LIB_INSTALLS += ../libs/seq.lua
 
 lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
