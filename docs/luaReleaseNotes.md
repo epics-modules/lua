@@ -119,6 +119,26 @@ Release 4-0
   (shared across all Lua states by name). Operations: `set`, `clear`, `test`,
   `testAndClear`, and `wait` with explicit timeout.
 
+- **Sequencer library.** New `seq` library providing a Lua-native state machine
+  sequencer as an alternative to the EPICS State Notation Language (SNL). Programs
+  define states with transitions driven by PV values, timers (`seq.delay`), and
+  event flags. Multiple programs run as coroutines in a single background thread.
+  Can be combined with `db.record` to create records and state machines in one file.
+
+- **`osi` library time functions.** New functions: `osi.monotonic()` returns a
+  monotonic time in seconds for interval measurement, `osi.time()` returns the
+  current EPICS epoch time with sub-second precision, and `osi.timestr()` formats
+  an EPICS timestamp as a string with configurable format.
+
+- **Per-client asyn timeouts.** `asyn.client` and `bytestream.client` objects now
+  support `ReadTimeout` and `WriteTimeout` properties for per-client timeout
+  configuration. Default is 1.0 seconds.
+
+- **Lua state reference counting.** New `luaStateRef`/`luaStateUnref` API for
+  managing Lua state lifetimes. States are automatically closed when all references
+  are released. Used internally by the sequencer to keep states alive between
+  `luaLoadFile` and post-iocInit thread spawning.
+
 ### Bug Fixes
 
 - **Concurrent shell sessions** no longer interfere with each other.

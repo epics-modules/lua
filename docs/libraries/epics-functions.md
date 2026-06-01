@@ -62,10 +62,18 @@ Synchronization primitives for inter-thread communication.
 Provides event flags that can be shared across Lua states by
 name, with set, clear, test, testAndClear, and wait operations.
 
+**seq** -- [Documentation](seq-library) --
+State machine sequencer as a Lua alternative to the EPICS State
+Notation Language (SNL). Programs define states with transitions
+driven by PV values, timers, and event flags, and run
+automatically in background threads after iocInit.
+
 **osi** --
 OS-independent utilities provided by the EPICS OSI layer.
-Functions: `osi.sleep(seconds)`, `osi.startRedirectOut(filename)`,
-`osi.endRedirectOut()`.
+Functions: `osi.sleep(seconds)`, `osi.monotonic()` (monotonic
+time for interval measurement), `osi.time()` (EPICS epoch time),
+`osi.timestr()` (formatted time string),
+`osi.startRedirectOut(filename)`, `osi.endRedirectOut()`.
 
 
 Pattern Matching Libraries
