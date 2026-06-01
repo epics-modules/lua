@@ -92,7 +92,7 @@ extern "C"
 		if (luaLoadScript(output->state, output->filename))
 		{
 			errlogPrintf("Error loading file: %s\n", output->filename);
-			lua_close(output->state);
+			luaStateUnref(output->state);
 			delete output;
 			return NULL;
 		}

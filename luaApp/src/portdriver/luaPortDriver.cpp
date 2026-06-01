@@ -205,7 +205,7 @@ static int l_index(lua_State* state)
 }
 
 
-luaPortDriver::~luaPortDriver()   { lua_close(this->state); }
+luaPortDriver::~luaPortDriver()   { luaStateUnref(this->state); }
 
 luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, const char* lua_macros)
 	:asynPortDriver(port_name, 1,

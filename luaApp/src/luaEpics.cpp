@@ -32,9 +32,11 @@ static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
 static std::vector<std::string> registered_paths;
 
 static std::map<std::string, lua_State*> named_states;
+static std::map<lua_State*, int> state_refcounts;
 
 static epicsMutex registryMutex;
 static epicsMutex namedStatesMutex;
+static epicsMutex refcountMutex;
 
 /* Forward declaration: defined in path management section below */
 static void rebuildPaths(lua_State* state);
@@ -807,9 +809,74 @@ static int l_info(lua_State* L)
 
 
 /*
+ * =========================================================================
+ * Lua state reference counting
+ *
+ * States created by luaCreateState are tracked with a reference count.
+ * The creator starts with refcount=1. Additional references (named
+ * state registration, sequencer registration, etc.) increment the count.
+ * luaStateUnref decrements the count and closes the state when it
+ * reaches zero.
+ * =========================================================================
+ */
+
+epicsShareFunc void luaStateRef(lua_State* state)
+{
+	if (! state)    { return; }
+
+	epicsGuard<epicsMutex> guard(refcountMutex);
+
+	std::map<lua_State*, int>::iterator it = state_refcounts.find(state);
+
+	if (it != state_refcounts.end())
+	{
+		it->second++;
+	}
+	else
+	{
+		state_refcounts[state] = 1;
+	}
+}
+
+epicsShareFunc void luaStateUnref(lua_State* state)
+{
+	if (! state)    { return; }
+
+	bool should_close = false;
+
+	{
+		epicsGuard<epicsMutex> guard(refcountMutex);
+
+		std::map<lua_State*, int>::iterator it = state_refcounts.find(state);
+
+		if (it == state_refcounts.end())
+		{
+			/* State not managed by refcount -- close directly */
+			should_close = true;
+		}
+		else
+		{
+			it->second--;
+
+			if (it->second <= 0)
+			{
+				state_refcounts.erase(it);
+				should_close = true;
+			}
+		}
+	}
+
+	if (should_close)
+	{
+		lua_close(state);
+	}
+}
+
+
+/*
  * Generates a new lua state for the caller,
  * binds in the defined epics libraries and
- * functions.
+ * functions. The state starts with a reference count of 1.
  */
 epicsShareFunc lua_State* luaCreateState()
 {
@@ -835,6 +902,9 @@ epicsShareFunc lua_State* luaCreateState()
 
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
 	lua_pop(output, 1);
+
+	/* Initial reference count of 1 (owned by the caller) */
+	luaStateRef(output);
 
 	return output;
 }
@@ -863,6 +933,7 @@ epicsShareFunc lua_State* luaNamedState(const char* name)
 	lua_State* output = luaCreateState();
 
 	named_states[state_name] = output;
+	luaStateRef(output);  /* named state registration holds a reference */
 
 	return output;
 }
@@ -901,6 +972,7 @@ epicsShareFunc void luaRegisterState(lua_State* state, const char* name)
 	epicsGuard<epicsMutex> guard(namedStatesMutex);
 
 	named_states[std::string(name)] = state;
+	luaStateRef(state);  /* named state registration holds a reference */
 }
 
 /*

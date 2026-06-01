@@ -501,7 +501,7 @@ void spawn_thread_callback(void* arg)
 
 	if (status != LUA_OK)    { report(state, status); }
 
-	if (!luaStateIsRegistered(state))    { lua_close(state); }
+	luaStateUnref(state);
 }
 
 static int l_execcode(lua_State* state)
@@ -696,9 +696,9 @@ static int luashBegin(const char* pathname, const char* macros, lua_State* state
 
 	luashBody(shell_state, pathname, macros);
 
-	if (check_state == NULL && !luaStateIsRegistered(shell_state))
+	if (check_state == NULL)
 	{
-		lua_close(shell_state);
+		luaStateUnref(shell_state);
 	}
 
 	epicsThreadPrivateSet(shellStateId, NULL);
@@ -753,7 +753,7 @@ epicsShareFunc int epicsShareAPI luaCmd(lua_State* state, const char* command, c
 	//Pop iocsh_meta scope
 	luaPopScope(used_environ);
 
-	if (!state && !luaStateIsRegistered(used_environ))    { lua_close(used_environ); }
+	if (!state)    { luaStateUnref(used_environ); }
 
 	return 0;
 }
@@ -795,7 +795,7 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 	std::string temp(filename);
 	std::string found = luaLocateFile(temp);
 
-	if (found.empty())    { lua_close(state); return -1; }
+	if (found.empty())    { luaStateUnref(state); return -1; }
 
 	int status = luaL_loadfile(state, found.c_str());
 
@@ -805,7 +805,7 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
 		lua_pop(state, 1);
 
 		printf("%s\n", err.c_str());
-		lua_close(state);
+		luaStateUnref(state);
 		return status;
 	}
 
@@ -846,7 +846,7 @@ epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* m
 	if (found.empty())
 	{
 		printf("luaLoadFile: file not found: %s\n", filename);
-		lua_close(state);
+		luaStateUnref(state);
 		return -1;
 	}
 
@@ -856,7 +856,7 @@ epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* m
 	{
 		printf("%s\n", lua_tostring(state, -1));
 		lua_pop(state, 1);
-		lua_close(state);
+		luaStateUnref(state);
 		return status;
 	}
 
@@ -868,7 +868,7 @@ epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* m
 		lua_pop(state, 1);
 	}
 
-	if (!luaStateIsRegistered(state))    { lua_close(state); }
+	luaStateUnref(state);
 
 	return status;
 }
