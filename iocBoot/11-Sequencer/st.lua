@@ -28,5 +28,10 @@ osi = require("osi")
 
 for i = 1, 20 do
 	osi.sleep(1.0)
-	do r = epics.get("lua:red"); y = epics.get("lua:yellow"); g = epics.get("lua:green"); print(string.format("  Red: %d  Yellow: %d  Green: %d", r, y, g)) end
+	do 
+		r = epics.get("lua:red"); 
+		y = epics.get("lua:yellow"); 
+		g = epics.get("lua:green"); 
+		print(string.format("  Red: %d  Yellow: %d  Green: %d", r, y, g)) 
+	end
 end
