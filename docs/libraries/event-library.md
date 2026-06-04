@@ -5,7 +5,7 @@ parent: Included Libraries
 nav_order: 6
 ---
 
-# Event Library Documentation
+# Event Library
 {: .no_toc}
 
 ## Table of contents
@@ -15,116 +15,122 @@ nav_order: 6
 {:toc}
 
 The event library provides synchronization primitives for inter-thread
-communication in Lua scripts. It is loaded via `require`:
+communication in Lua scripts.
 
 ```lua
 local event = require("event")
 ```
 
 
-Event Flags
------------
+Creating Flags
+--------------
 
 ### event.flag
 ---
+
+Create or look up an event flag.
 
 ```
 event.flag ()
 event.flag (name)
 ```
 
-Creates an event flag for signaling between threads. An event flag is a
-boolean value that can be set, cleared, and tested atomically.
+Creates an event flag for signaling between threads. An event flag is
+a boolean value that can be set, cleared, and tested atomically.
 
-**Anonymous flags** are created when no name is given. They are local
-to the Lua state that created them and are garbage-collected when no
-longer referenced.
+**Anonymous flags** are created when no name is given. They are local to
+the Lua state that created them and are garbage-collected when no longer
+referenced.
 
 **Named flags** are created or looked up by name. All calls to
 `event.flag("name")` with the same name -- even from different Lua
 states -- return a reference to the same underlying flag. Named flags
-persist for the lifetime of the IOC and are never garbage-collected.
+persist for the lifetime of the IOC.
 
 ```lua
--- Anonymous flag (local to this state)
-local done = event.flag()
-
--- Named flag (shared across states)
-local ready = event.flag("dataReady")
+local done  = event.flag()              -- anonymous
+local ready = event.flag("dataReady")   -- named (shared)
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
 | name | string | Optional. Name for a shared flag. If omitted, creates an anonymous flag. |
 
-<br>
+**Returns:** an event flag object.
+
+
+Flag Methods
+------------
 
 ### flag:set
 ---
+
+Set the flag.
 
 ```
 flag:set ()
 ```
 
-Sets the flag. If any thread is blocked in `flag:wait()`, it will be
-woken up. Setting an already-set flag is a no-op.
+Sets the flag to true. If any thread is blocked in `flag:wait()`, it
+will be woken up. Setting an already-set flag is a no-op.
 
 <br>
 
 ### flag:clear
 ---
 
+Clear the flag.
+
 ```
 flag:clear ()
 ```
 
-Clears the flag.
+Sets the flag to false.
 
 <br>
 
 ### flag:test
 ---
 
+Test whether the flag is set.
+
 ```
 flag:test ()
 ```
 
-Returns `true` if the flag is set, `false` otherwise. Does not modify
-the flag.
+**Returns:** `true` if the flag is set, `false` otherwise. Does not
+modify the flag.
 
 <br>
 
 ### flag:testAndClear
 ---
 
+Test and atomically clear the flag.
+
 ```
 flag:testAndClear ()
 ```
 
-Returns `true` if the flag was set, `false` otherwise. Atomically
-clears the flag. This is useful for consuming a one-shot signal
-without a race between testing and clearing.
+**Returns:** `true` if the flag was set, `false` otherwise. The flag
+is cleared regardless.
 
 <br>
 
 ### flag:wait
 ---
 
+Block until the flag is set or a timeout expires.
+
 ```
 flag:wait (timeout)
 ```
 
-Blocks until the flag is set or the timeout expires. Returns `true` if
-the flag is set, `false` if the timeout expired.
-
+Blocks the calling thread until the flag is set or the timeout expires.
 A timeout of `-1` waits indefinitely. A timeout of `0` tests without
-blocking (equivalent to `flag:test()`).
+blocking.
 
 The timeout argument is required.
-
-| Parameter | Type | Description |
-| - | - | - |
-| timeout | number | Seconds to wait. Use `-1` for indefinite wait. |
 
 ```lua
 if flag:wait(5.0) then
@@ -134,6 +140,12 @@ else
 end
 ```
 
+| Parameter | Type | Description |
+| - | - | - |
+| timeout | number | Seconds to wait. Use `-1` for indefinite. |
+
+**Returns:** `true` if the flag is set, `false` if the timeout expired.
+
 
 Examples
 --------
@@ -141,13 +153,13 @@ Examples
 ### Basic signaling between threads
 
 ```lua
--- shared.lua: loaded via luaLoadFile, defines a named flag
+-- shared.lua: loaded via luaLoadFile
 local event = require("event")
 local ready = event.flag("sensorReady")
 
 -- ... sensor initialization ...
 
-ready:set()  -- signal that initialization is complete
+ready:set()
 ```
 
 ```lua

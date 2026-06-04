@@ -137,8 +137,9 @@ function read_enable(record)
 end
 ```
 
-Returning `nil` from an input callback leaves the record's value
-unchanged.
+{: .note }
+> Returning `nil` from an input callback leaves the record's value
+> unchanged.
 
 ### Output records
 
@@ -178,8 +179,12 @@ end
 The PV Object
 -------------
 
-The PV object passed to callbacks is the same type of object created by
-`epics.pv()`. It provides dot-syntax access to record fields:
+{: .note }
+> The PV object passed to callbacks is the same type created by
+> `epics.pv()`. See the [epics library documentation](libraries/epics-library)
+> for full details.
+
+It provides dot-syntax access to record fields:
 
 ```lua
 function my_callback(record)
@@ -202,11 +207,10 @@ written by the callback.
 Error Handling
 --------------
 
-If a callback function raises an error (via `error()` or a runtime
-fault), the record is placed into alarm. For input records, a
-`READ_ALARM` with `INVALID` severity is set. For output records, a
-`WRITE_ALARM` with `INVALID` severity is set. The error message is
-printed to the IOC console.
+{: .important }
+> If a callback raises an error, the record is placed into alarm
+> (`READ_ALARM` or `WRITE_ALARM` with `INVALID` severity). The error
+> message is printed to the IOC console.
 
 This means library functions that raise errors on failure (such as
 `bytestream.client:read()` or `asyn.client:write()`) will automatically

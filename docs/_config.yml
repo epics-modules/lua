@@ -1,1 +1,13 @@
 remote_theme: BCDA-APS/bcda-pages-style
+
+callouts_level: quiet
+callouts:
+  note:
+    title: Note
+    color: purple
+  important:
+    title: Important
+    color: blue
+  warning:
+    title: Warning
+    color: red

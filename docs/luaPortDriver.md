@@ -39,16 +39,14 @@ Creating a Driver
 ### asyn.driver.new
 ---
 
+Create a new asynPortDriver with Lua callbacks.
+
 ```
 asyn.driver.new (portName, paramTable [, initFunc])
 ```
 
-Creates a new asynPortDriver with parameters defined in the parameter
-table, and optional initialization code. Returns a driver proxy object.
-
-The parameter table is an array of parameter specifications created using
-the type constructors `asyn.Int32`, `asyn.Float64`, and `asyn.Octet`.
-Each type constructor takes a parameter name and an optional default value:
+Creates a driver with parameters defined in the parameter table and
+optional initialization code.
 
 ```lua
 local asyn = require("asyn")
@@ -60,23 +58,25 @@ local drv = asyn.driver.new(PORT, {
     Int32   "ENABLED"     (0),
     Octet   "STATUS"      ("OK"),
 }, function(self)
-    -- Initialization code: runs once at creation time
-    -- 'self' is the driver proxy object
     self.port = asyn.client(DEVICE_PORT, 0, "")
     self.conversion = tonumber(CONV) or 1.0
 end)
 ```
 
-| Parameter  |   Type   | Description |
-|------------|----------|-|
-| portName   |  string  | The asyn port name for the new driver |
-| paramTable |  table   | Array of parameter specs created with `asyn.Int32`, `asyn.Float64`, or `asyn.Octet` |
-| initFunc   | function | Optional initialization function. Receives the driver proxy as its argument. |
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | The asyn port name for the new driver. |
+| paramTable | table | Array of parameter specs from `asyn.Int32`, `asyn.Float64`, or `asyn.Octet`. |
+| initFunc | function | Optional. Initialization function, receives the driver proxy as its argument. |
+
+**Returns:** a driver proxy object.
 
 <br>
 
 ### Type Constructors
 ---
+
+Create parameter specifications for `asyn.driver.new`.
 
 ```
 asyn.Int32 "PARAM_NAME" [(default_value)]
@@ -84,17 +84,16 @@ asyn.Float64 "PARAM_NAME" [(default_value)]
 asyn.Octet "PARAM_NAME" [(default_value)]
 ```
 
-Create parameter specifications for use with `asyn.driver.new`. Each returns a
-table describing the parameter's name and type. The optional parenthesized
-default value sets the parameter's initial value.
+The optional parenthesized default value sets the parameter's initial
+value.
 
 ```lua
-local Int32, Float64, Octet = asyn.Int32, asyn.Float64, asyn.Octet
-
 Int32   "COUNTER"              -- integer param, default 0
 Float64 "TEMPERATURE" (20.0)   -- float param, default 20.0
 Octet   "MESSAGE" ("Ready")    -- string param, default "Ready"
 ```
+
+**Returns:** a parameter specification table.
 
 
 Parameter Access
@@ -103,8 +102,10 @@ Parameter Access
 ### Parameter Proxy
 ---
 
-When you access a parameter name on a driver proxy (e.g., `drv.TEMPERATURE`),
-you get a parameter proxy object with the following properties:
+Access parameters through the driver proxy by name.
+
+When you access a parameter name on a driver proxy (e.g.,
+`drv.TEMPERATURE`), you get a parameter proxy object:
 
 ```lua
 drv.PARAM.value          -- read the current parameter value
@@ -117,66 +118,76 @@ drv.PARAM.name           -- the parameter name string
 ### driver:callParamCallbacks
 ---
 
+Trigger asyn parameter callbacks on the driver.
+
 ```
 driver:callParamCallbacks ()
 ```
 
-Triggers asyn parameter callbacks on the driver. This is automatically called
-when setting a parameter value via `drv.PARAM.value = x`, but can also be
-called explicitly.
+This is called automatically when setting a parameter value via
+`drv.PARAM.value = x`, but can also be called explicitly.
 
 <br>
 
 ### driver:writeParam / driver:readParam
 ---
 
+Read or write a parameter value by name.
+
 ```
 driver:writeParam (paramName, value)
 driver:readParam (paramName)
 ```
 
-Write or read a parameter value by name using the asyn parameter library.
-These are convenience methods that work on both `find` and `new` drivers.
+Convenience methods that work on both `find` and `new` drivers.
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| paramName |  string  | The name of a parameter in the driver |
-| value     |  varies  | The new value to write (for writeParam) |
+| Parameter | Type | Description |
+| - | - | - |
+| paramName | string | The name of a parameter in the driver. |
+| value | varies | The new value to write (for writeParam). |
+
+**Returns:** the parameter value (for readParam).
 
 
 Read and Write Callbacks
 -------------------------
 
-For drivers created with `asyn.driver.new`, you can bind read and write
-callbacks to individual parameters. These callbacks are called when
-asyn device support records read from or write to the parameter.
+### Binding Callbacks
+---
+
+Bind Lua functions to parameter read/write events.
+
+For drivers created with `asyn.driver.new`, you can bind callbacks
+to individual parameters. These are called when asyn device support
+records read from or write to the parameter.
 
 ```lua
 drv.PARAM.read = function(self)
-    -- Called when a record reads this parameter
-    -- 'self' is the driver proxy (access internal state via self.xxx)
+    -- 'self' is the driver proxy
     -- Return the value to send back to the reader
     return some_value
 end
 
 drv.PARAM.write = function(value, self)
-    -- Called when a record writes to this parameter
     -- 'value' is the incoming value from the writer
     -- 'self' is the driver proxy
-    drv.PARAM.value = value  -- store the value
+    drv.PARAM.value = value
 end
 ```
 
-Callbacks cannot be bound on drivers found with `asyn.driver.find` -- only
-on drivers created with `asyn.driver.new`.
+{: .note }
+> Callbacks can only be bound on drivers created with
+> `asyn.driver.new`, not on drivers found with `asyn.driver.find`.
 
 <br>
 
 ### Driver Internal State
 ---
 
-The init function can set arbitrary fields on the driver proxy via `self`.
-These fields persist and are accessible from all callbacks:
+Store persistent state on the driver proxy.
+
+The init function can set arbitrary fields on the driver proxy via
+`self`. These fields persist and are accessible from all callbacks:
 
 ```lua
 local drv = asyn.driver.new(PORT, {
@@ -207,17 +218,12 @@ accessed using `asyn.driver.find`. See the
 ```lua
 local drv = asyn.driver("MYPORT")
 
--- Read a parameter value
 print(drv.TEMPERATURE.value)
-
--- Write a parameter value (also calls callParamCallbacks)
 drv.SETPOINT.value = 25.0
 ```
 
 The parameter proxy, `callParamCallbacks`, `writeParam`, and `readParam`
-methods documented above all work on drivers obtained via `find` as well.
-Callback binding (`.read` / `.write`) is only available on drivers
-created with `asyn.driver.new`.
+documented above all work on drivers obtained via `find` as well.
 
 
 Creating Records
@@ -284,59 +290,41 @@ luaSpawn("device.lua", {P="dev1:", PORT="DEV1", DEVICE_PORT="serial1", CONV="0.0
 luaSpawn("device.lua", {P="dev2:", PORT="DEV2", DEVICE_PORT="serial2", CONV="0.1"})
 ```
 
-The `08-PortDriver` example IOC demonstrates this pattern.
+The `09-PortDriver` example IOC demonstrates this pattern.
 
 
 Legacy: luaPortDriver iocsh Command
 ------------------------------------
 
-The `luaPortDriver` iocsh command takes the name of an asyn port, a lua script,
-and a string of macro definitions:
+The `luaPortDriver` iocsh command takes the name of an asyn port, a
+Lua script, and a string of macro definitions:
 
 ```
 luaPortDriver("EXAMPLE", "exampleDriver.lua", "VAL=10")
 ```
 
-An asynPortDriver is created with the given asyn port name and the lua script
-is run with the defined macro values. Within the script, parameters can be
-implemented using the following convention:
+An asynPortDriver is created with the given asyn port name and the
+Lua script is run with the defined macro values. Within the script,
+parameters are defined using the following convention:
 
 ```
 param.<param_type> "<NAME>"
 ```
 
-The parameter type can be any of Int32, Float64, or Octet, each corresponding
-to the equivalent asynParamType that shares their name. You can also use
-String as an alternative for an Octet definition. None of these definitions
-are case sensitive. Name defines the name that the parameter is created with.
+The parameter type can be any of Int32, Float64, or Octet (String is
+an alias for Octet). Names are case insensitive.
 
-The above, basic definition of a parameter only creates a correctly typed
-parameter in the port driver. Values can be written or read from the parameter,
-but nothing else is actually done. Instead, a slightly more advanced form is
-used to bind lua code to reading and writing callbacks.
+To bind callbacks to reading or writing:
 
 ```
-param.<param_type>.<read/write> "NAME" [[ 
-    CODE 
+param.<param_type>.<read/write> "NAME" [[
+    CODE
 ]]
 ```
 
-The same parameter type and name conventions remain, but the definition now
-also includes a specifier on whether you are providing a function for the 
-reading of a parameter or the writing of a parameter. The code is then lua
-code as a multi-line string. 
-
-Implicitly defined within the code is a variable named "self". This is a
-driver proxy object representing the luaPortDriver you are creating.
-This is useful for being able to read from and write to other parameters
-in the driver during execution. As well, for code that implements a write
-callback, you also have the variable "value" that contains the value to
-write coming from the asyn callback. For read callbacks, a value that is
-returned by the code will be written out to the value parameter in the 
-asyn callback.
-
-Put together, here is a small example of a functional luaPortDriver for a simple
-calculation of the length of a hypotenuse:
+Inside the code, `self` is a driver proxy object and `value` (for
+write callbacks) contains the incoming value. Read callbacks return
+a value to send back to the reader.
 
 ```lua
 param.int32 "BASE"

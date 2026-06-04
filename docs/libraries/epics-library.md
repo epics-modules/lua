@@ -5,7 +5,7 @@ parent: Included Libraries
 nav_order: 3
 ---
 
-# Epics Library Documentation
+# Epics Library
 {: .no_toc}
 
 ## Table of contents
@@ -14,80 +14,191 @@ nav_order: 3
 - TOC
 {:toc}
 
-The epics library provides functions for reading and writing EPICS PVs from 
-Lua scripts. When a PV exists in the local IOC database, reads and writes use 
-direct database access (`dbGetField`/`dbPutField`) for maximum performance. 
-When the PV is not found locally, Channel Access is used automatically. A CA 
-context is created on first remote access and cached for the lifetime of the 
-Lua state.
-
-All functions that can fail return `nil, "error message"` on error, allowing
-idiomatic Lua error handling:
+The epics library provides functions for reading and writing EPICS PVs
+from Lua scripts. When a PV exists in the local IOC database, reads and
+writes use direct database access for maximum performance. When the PV
+is not found locally, Channel Access is used automatically.
 
 ```lua
-local val, err = epics.get("my:pv")
-if not val then
-    print("Error: " .. err)
-end
+local epics = require("epics")
 ```
+
+
+Reading and Writing PVs
+------------------------
 
 ### epics.get
 ---
 
+Read the value of a PV.
+
 ```
-epics.get (PV[, timeout])
+epics.get (PV [, timeout])
 epics.get (PV, options)
 ```
 
-Calls ca_get to retrieve the value of a PV accessible by the host. For scalar PVs,
-returns a single value. For array/waveform PVs, returns a Lua table of values.
-
-Returns the value on success, or `nil, "error message"` on failure.
-
-The second argument can be either a numeric timeout (for backward compatibility) or
-an options table with named parameters:
+Retrieves the current value of a PV. For scalar PVs, returns a single
+value. For array/waveform PVs, returns a Lua table.
 
 ```lua
--- Simple scalar read:
-local val = epics.get("my:ai")
-
--- With timeout:
-local val = epics.get("my:ai", 5.0)
-
--- With options table:
-local val = epics.get("my:ai", {timeout=5.0})
-
--- Read first 100 elements of a waveform:
-local arr = epics.get("my:waveform", {count=100})
-
--- Read enum as string label instead of numeric index:
+local val   = epics.get("my:ai")
+local val   = epics.get("my:ai", 5.0)
+local arr   = epics.get("my:waveform", {count=100})
 local label = epics.get("my:mbbo", {string=true})
-
--- Read char waveform as table of integers instead of string:
-local bytes = epics.get("my:charwf", {string=false})
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
-| PV       |   string | The name of the PV to request.
-| timeout  |   number | Amount of seconds to search for pv before giving a timeout, default is 1.0 (can be fractional).
+| PV | string | The name of the PV to read. |
+| timeout | number | Optional. Timeout in seconds. Default: 1.0. |
+| options | table | Optional. Named parameters (see below). |
 
-**Options table fields:**
+**Options table:**
 
 | Field | Type | Default | Description |
 | - | - | - | - |
-| timeout | number | 1.0 | CA connection and read timeout in seconds. |
-| count   | integer | all | Maximum number of array elements to fetch. |
-| string  | boolean | type-dependent | Controls string vs numeric return for certain types. |
+| timeout | number | 1.0 | Connection and read timeout in seconds. |
+| count | integer | all | Maximum number of array elements to fetch. |
+| string | boolean | type-dependent | Controls string vs numeric return for enums and char arrays. |
 
-The `string` option affects these field types:
+{: .note }
+> Char waveforms are returned as Lua strings by default. Use
+> `{string=false}` to get a table of byte values instead.
 
-| Field Type | Default | string=true | string=false |
-| - | - | - | - |
-| DBF_ENUM (scalar) | numeric index | string label | numeric index |
-| DBF_CHAR (array) | Lua string | Lua string | table of integers |
+**Returns:** the value on success. For arrays, returns a Lua table.
 
-**Array return types:**
+**Returns:** `nil, "error message"` on failure.
+
+<br>
+
+### epics.put
+---
+
+Write a value to a PV.
+
+```
+epics.put (PV, value [, timeout])
+epics.put (PV, value, options)
+```
+
+Writes a value to a PV. When the value is a Lua table, performs an
+array write.
+
+```lua
+epics.put("my:ao", 42.0)
+epics.put("my:ao", 42.0, 5.0)
+epics.put("my:waveform", {1.0, 2.0, 3.0})
+epics.put("my:stringwf", {"Hello", "World"})
+```
+
+| Parameter | Type | Description |
+| - | - | - |
+| PV | string | The name of the PV to write. |
+| value | varies | The value to write. Can be a number, integer, boolean, string, or a Lua table for array writes. |
+| timeout | number | Optional. Timeout in seconds. Default: 1.0. |
+| options | table | Optional. `{timeout=N}` for custom timeout. |
+
+**Returns:** nothing on success.
+
+**Returns:** an error string on failure.
+
+
+PV Object
+---------
+
+### epics.pv
+---
+
+Create a PV proxy object for convenient field access.
+
+```
+epics.pv (PV)
+```
+
+Returns a PV object that provides dot-syntax access to record fields.
+For local PVs, field access uses direct database access; for remote PVs,
+Channel Access is used automatically.
+
+```lua
+local motor = epics.pv("IOC:m1")
+
+-- Read/write fields via dot syntax
+print(motor.RBV)
+motor.VAL = 10.0
+
+-- Read/write with options via methods
+local val = motor:get("VAL", {timeout=5.0})
+motor:put("VAL", 42, {timeout=5.0})
+
+-- Properties
+print(motor.name)         -- "IOC:m1"
+print(tostring(motor))    -- "IOC:m1"
+```
+
+| Parameter | Type | Description |
+| - | - | - |
+| PV | string | The name of the PV. |
+
+**Returns:** a PV object.
+
+{: .note }
+> The reserved names `name`, `get`, and `put` return PV metadata or
+> methods. All other keys are treated as EPICS field names.
+
+<br>
+
+### pv.name
+---
+
+The PV name as a string (read-only property).
+
+<br>
+
+### pv:get
+---
+
+Read a field with custom options.
+
+```
+pv:get (field [, options])
+```
+
+Reads a field using the same options as `epics.get`.
+
+| Parameter | Type | Description |
+| - | - | - |
+| field | string | The field name (e.g., `"VAL"`, `"EGU"`). |
+| options | table | Optional. `{timeout, count, string}` -- same as `epics.get`. |
+
+**Returns:** the field value, or `nil, "error message"` on failure.
+
+<br>
+
+### pv:put
+---
+
+Write a field with custom options.
+
+```
+pv:put (field, value [, options])
+```
+
+Writes a field using the same options as `epics.put`.
+
+| Parameter | Type | Description |
+| - | - | - |
+| field | string | The field name. |
+| value | varies | The value to write. |
+| options | table | Optional. `{timeout}` -- same as `epics.put`. |
+
+**Returns:** nothing on success, error string on failure.
+
+
+Array Types
+-----------
+
+The following table shows how PV field types map to Lua return types
+when reading array/waveform PVs:
 
 | PV Field Type | Lua Return Type |
 | - | - |
@@ -97,113 +208,3 @@ The `string` option affects these field types:
 | DBF_FLOAT, DBF_DOUBLE | table of numbers |
 | DBF_STRING | table of strings |
 | DBF_ENUM | table of integers (or strings if string=true) |
-
-<br>
-
-### epics.put
----
-
-```
-epics.put (PV, value[, timeout])
-epics.put (PV, value, options)
-```
-
-Calls ca_put to set the value of a PV accessible by the host. When the value
-is a Lua table, performs an array put using ca_array_put.
-
-Returns nothing on success, or an error string on failure.
-
-The third argument can be either a numeric timeout or an options table:
-
-```lua
--- Scalar put:
-epics.put("my:ao", 42.0)
-
--- With timeout:
-epics.put("my:ao", 42.0, 5.0)
-
--- With options:
-epics.put("my:ao", 42.0, {timeout=5.0})
-
--- Array put (table of numbers):
-epics.put("my:waveform", {1.0, 2.0, 3.0})
-
--- Array put (table of integers):
-epics.put("my:longwf", {1, 2, 3})
-
--- Array put (table of strings):
-epics.put("my:stringwf", {"Hello", "World"})
-```
-
-| Parameter | Type | Description |
-| - | - | - |
-| PV       |   string | The name of the PV to request.
-| value    |   varies | The value to write. Can be a number, integer, boolean, string, or a Lua table for array writes. For tables, the element type is determined from the first element.
-| timeout  |   number | Amount of seconds to wait for connection and completion, default is 1.0 (can be fractional).
-
-**Options table fields:**
-
-| Field | Type | Default | Description |
-| - | - | - | - |
-| timeout | number | 1.0 | CA connection and write timeout in seconds. |
-
-<br>
-
-### epics.pv
----
-
-```
-epics.pv (PV)
-```
-
-Returns a PV object. Index accesses can be used to retrieve or change record fields.
-For local PVs, field access uses direct database access; for remote PVs, Channel
-Access is used automatically.
-
-```lua
-local motor = epics.pv("IOC:m1")
-
--- Read/write fields via dot syntax (default options)
-print(motor.RBV)        -- reads IOC:m1.RBV
-motor.VAL = 10.0        -- writes to IOC:m1.VAL
-
--- Read/write with options via methods
-local val = motor:get("VAL", {timeout=5.0})
-local label = motor:get("SPMG", {string=true})
-local wf = motor:get("BPTR", {count=100})
-
-motor:put("VAL", 42, {timeout=5.0})
-
--- Properties
-print(motor.name)       -- "IOC:m1" (the PV name, not a field read)
-print(tostring(motor))  -- "IOC:m1"
-```
-
-| Parameter | Type | Description |
-| - | - | - |
-| PV   |  string | The name of the PV to request. |
-
-**Dot syntax** (`pv.FIELD` / `pv.FIELD = value`) uses default options (timeout=1.0,
-all elements, type-dependent string behavior). For reads and writes that need custom
-options, use the `:get()` and `:put()` methods.
-
-**`pv:get(field [, options])`** reads a field with the same options table as `epics.get`:
-
-| Field | Type | Default | Description |
-| - | - | - | - |
-| timeout | number | 1.0 | CA timeout in seconds. |
-| count   | integer | all | Maximum number of array elements to fetch. |
-| string  | boolean | type-dependent | Controls string vs numeric return for enums and char arrays. |
-
-**`pv:put(field, value [, options])`** writes a field with the same options table as
-`epics.put`:
-
-| Field | Type | Default | Description |
-| - | - | - | - |
-| timeout | number | 1.0 | CA timeout in seconds. |
-
-The reserved property and method names (`name`, `get`, `put`) return PV metadata or
-method functions. All other keys are treated as EPICS field names.
-
-The PV object is also created internally by DTYP device support and passed as
-the first argument to Lua callback functions.

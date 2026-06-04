@@ -5,7 +5,7 @@ parent: Included Libraries
 nav_order: 5
 ---
 
-# Bytestream Library Documentation
+# Bytestream Library
 {: .no_toc}
 
 ## Table of contents
@@ -14,30 +14,27 @@ nav_order: 5
 - TOC
 {:toc}
 
-The bytestream library provides scanf-style parsing and printf-style formatting
-for byte stream device communication. It is a pure Lua library built on top of
-LPeg and asyn.client.
+The bytestream library provides scanf-style parsing and printf-style
+formatting for byte stream device communication. It is a pure Lua
+library built on top of LPeg and asyn.client.
 
-Format specifiers follow StreamDevice conventions, making it straightforward
-to translate StreamDevice protocol files into Lua code. The library is installed
-as a `.lua` file in the module's `lib/<arch>/` directory and loaded via `require`:
+Format specifiers follow StreamDevice conventions, making it
+straightforward to translate protocol files into Lua code.
+
+{: .note }
+> The bytestream library is installed to `lib/<arch>/`. Call
+> `luaAddModule` in your startup script to make it available via
+> `require`.
 
 ```lua
--- In your startup script, register the lua module's paths first:
-luaAddModule("$(LUA)")     -- from iocsh, or luaAddModule(LUA) from Lua
-
--- Then require works in any Lua state:
 local bs = require("bytestream")
 ```
+
 
 Format Specifiers
 -----------------
 
-All format specifiers use the syntax:
-
-```
-%[flags][width][.precision]<specifier>
-```
+All format specifiers use the syntax `%[flags][width][.precision]<specifier>`.
 
 ### Specifiers
 
@@ -67,38 +64,33 @@ All format specifiers use the syntax:
 | `-` | Allow negative sign on `%o`, `%x` | Left-align output |
 | `0` | (none) | Zero-pad output |
 | `#` | Allow spaces after sign | (reserved) |
-| `?` | Lenient: return default on no match instead of nil | (reserved) |
+| `?` | Lenient: return default on no match | (reserved) |
 | `!` | Width is exact, not maximum | (reserved) |
 
 ### Width and Precision
 
-On the read side, width limits the maximum number of characters consumed by the
-pattern. With the `!` flag, width becomes an exact character count.
+On the read side, width limits the maximum characters consumed. With
+the `!` flag, width becomes an exact count.
 
 On the write side, width and precision work like `string.format`:
 
 ```lua
-bs.format("%10d", 42)       -- "        42"  (right-aligned in 10 chars)
-bs.format("%-10d", 42)      -- "42        "  (left-aligned)
-bs.format("%05d", 42)       -- "00042"       (zero-padded)
-bs.format("%.2f", 3.14159)  -- "3.14"        (2 decimal places)
-bs.format("%08b", 42)       -- "00101010"    (8-bit zero-padded binary)
+bs.format("%10d", 42)       -- "        42"
+bs.format("%-10d", 42)      -- "42        "
+bs.format("%05d", 42)       -- "00042"
+bs.format("%.2f", 3.14159)  -- "3.14"
+bs.format("%08b", 42)       -- "00101010"
 ```
 
 ### Enumerations
 
-Enum specifiers use `{value0|value1|value2}` syntax with 0-based indexing:
+Enum specifiers use `{value0|value1|value2}` syntax with 0-based
+indexing. Longest match is tried first to avoid prefix conflicts.
 
 ```lua
--- Read: match string, return index
-bs.match("%{off|on|standby}", "standby")       -- returns 2
-
--- Write: index to string
-bs.format("%{off|on|standby}", 1)              -- returns "on"
+bs.match("%{off|on|standby}", "standby")    -- returns 2
+bs.format("%{off|on|standby}", 1)           -- returns "on"
 ```
-
-When enum values share a common prefix (e.g., `{on|one|only}`), the longest
-match is tried first to avoid false matches.
 
 
 Formatting and Parsing
@@ -107,117 +99,83 @@ Formatting and Parsing
 ### bytestream.match
 ---
 
+Parse an input string using a format specifier.
+
 ```
 bytestream.match (format, input)
 ```
 
-Parses an input string according to the format specifier and returns the
-extracted values. Multiple conversions produce multiple return values.
-
-Returns the parsed values on success, or nil if the input does not match
-the format. Raises an error if the format specifier itself is invalid.
+Extracts values from the input string according to the format.
+Multiple conversions produce multiple return values.
 
 ```lua
-local bs = require("bytestream")
-
--- Single value
-local n = bs.match("%d", "42")                        -- 42
-
--- Multiple values
-local x, y = bs.match("%d %d", "10 20")               -- 10, 20
-
--- Mixed types with literal context
-local v, u = bs.match("VOLTS %f %s", "VOLTS 3.14 V")  -- 3.14, "V"
-
--- Hex with optional prefix
-local h = bs.match("%x", "0xFF")                       -- 255
-
--- Enum
-local mode = bs.match("%{off|on}", "on")               -- 1
-
--- Ignore flag: match but don't capture
-local val = bs.match("%*s %d", "skip 42")              -- 42
-
--- Literal percent
-local n = bs.match("%%%d", "%42")                      -- 42
+local n      = bs.match("%d", "42")
+local x, y   = bs.match("%d %d", "10 20")
+local v, u   = bs.match("VOLTS %f %s", "VOLTS 3.14 V")
+local val    = bs.match("%*s %d", "skip 42")
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
-| format | string | Format specifier using `%` conversions and literal text. |
-| input  | string | The string to parse. |
+| format | string | Format specifier with `%` conversions and literal text. |
+| input | string | The string to parse. |
 
-Compiled patterns are cached internally -- calling `match` with the same
-format string multiple times reuses the compiled LPeg grammar.
+**Returns:** the extracted values, or `nil` if the input does not match.
+
+**Raises:** an error if the format specifier is invalid.
 
 <br>
 
 ### bytestream.format
 ---
 
+Format values into a string.
+
 ```
 bytestream.format (format, ...)
 ```
 
-Formats values into a string according to the format specifier.
-
-Returns the formatted string. Raises an error if there are not enough
-arguments for the number of conversions, or if an enum index is out of range.
+Produces an output string from the format specifier and values.
 
 ```lua
-local bs = require("bytestream")
-
--- Simple formatting
-local s = bs.format("%d", 42)                    -- "42"
-local s = bs.format("%.2f", 3.14159)             -- "3.14"
-
--- Multiple values with literal text
-local s = bs.format("X=%d Y=%d", 10, 20)         -- "X=10 Y=20"
-
--- Enum
-local s = bs.format("%{off|on|standby}", 2)       -- "standby"
-
--- Binary
-local s = bs.format("%08b", 42)                   -- "00101010"
-
--- Ignore flag: skip conversion, consume no argument
-local s = bs.format("A%*dB%d", 99)                -- "AB99"
-
--- Literal percent
-local s = bs.format("100%%")                       -- "100%"
+local s = bs.format("%d", 42)                   -- "42"
+local s = bs.format("X=%d Y=%d", 10, 20)        -- "X=10 Y=20"
+local s = bs.format("%{off|on|standby}", 2)      -- "standby"
+local s = bs.format("%08b", 42)                  -- "00101010"
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
-| format | string | Format specifier using `%` conversions and literal text. |
-| ...    | varies | Values to format, consumed left-to-right by each conversion. |
+| format | string | Format specifier with `%` conversions and literal text. |
+| ... | varies | Values to format, consumed left-to-right. |
 
-Compiled output grammars are cached internally.
+**Returns:** the formatted string.
+
+**Raises:** an error if there are not enough arguments or an enum
+index is out of range.
 
 <br>
 
 ### bytestream.add_format
 ---
 
+Register a custom format specifier.
+
 ```
 bytestream.add_format (specifier)
 ```
 
-Registers a custom format specifier for use with `match` and `format`.
-The specifier table must contain an `identifier` (the format letter) and
-either or both of `read` (for match) and `write` (for format).
+Adds a new format letter for use with `match` and `format`. The
+specifier table must contain an `identifier` and either or both of
+`read` and `write`.
 
 ```lua
-local bs = require("bytestream")
-
--- Add a custom %B specifier for boolean strings
 bs.add_format {
     identifier = "B",
     read = function(flags)
         local lpeg = require("lpeg")
-        local pattern = lpeg.P("true") * lpeg.Cc(true)
-                      + lpeg.P("false") * lpeg.Cc(false)
-        return pattern
+        return lpeg.P("true") * lpeg.Cc(true)
+             + lpeg.P("false") * lpeg.Cc(false)
     end,
     write = function(flags)
         return function(value)
@@ -225,36 +183,29 @@ bs.add_format {
         end
     end,
 }
-
-bs.match("%B", "true")        -- true
-bs.format("%B", false)         -- "false"
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
 | specifier | table | Table with `identifier` (string), `read` (function), and/or `write` (function). |
 
-Note: adding a format specifier invalidates the pattern cache. The new
-specifier will be available in subsequent calls to `match` and `format`.
-
 
 Bytestream Client
------------------
+------------------
 
 ### bytestream.client
 ---
+
+Create a client for structured device I/O.
 
 ```
 bytestream.client (portName [, addr])
 ```
 
-Creates a bytestream client wrapping an `asyn.client` connected to the
-specified port. The client provides `:write()` and `:read()` methods with
-built-in formatting and parsing.
+Wraps an `asyn.client` with `:write()` and `:read()` methods that
+support format specifiers.
 
 ```lua
-local bs = require("bytestream")
-
 local dev = bs.client("SERIAL1")
 dev.OutTerminator = "\n"
 dev.InTerminator  = "\n"
@@ -263,99 +214,92 @@ dev.InTerminator  = "\n"
 | Parameter | Type | Description |
 | - | - | - |
 | portName | string | A registered asyn port name. |
-| addr     | number | The asyn address. Optional, default is 0. |
+| addr | number | Optional. The asyn address. Default: 0. |
+
+**Returns:** a bytestream client object.
 
 <br>
 
 ### client:write
 ---
 
+Write data to the port.
+
 ```
 client:write (data)
 client:write (format, ...)
 ```
 
-Writes data to the port. If called with a single string argument, writes it
-as-is. If called with a format string and additional arguments, formats the
-data using `bytestream.format` before writing.
-
-Returns the client object (`self`) to allow chaining with `:read()`.
-
-Raises an error on write failure.
+Writes a literal string or formats data using `bytestream.format`
+before writing. Returns `self` for chaining with `:read()`.
 
 ```lua
--- Write a literal command
 dev:write("*RST")
-
--- Write a formatted command
 dev:write("SET:VOLT %.3f", 3.300)
-
--- Chain with read
 local val = dev:write("MEAS?"):read("%f")
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
-| data/format | string | Literal string to write, or a format specifier if additional arguments follow. |
-| ...         | varies | Values to format (only when using format mode). |
+| data/format | string | Literal string, or format specifier if additional arguments follow. |
+| ... | varies | Values to format. |
 
-The `OutTerminator` property is appended automatically by the underlying
-asyn port.
+**Returns:** the client object (for chaining).
+
+**Raises:** an error on write failure.
+
+{: .important }
+> The `OutTerminator` is appended automatically by the asyn port.
+> Do not include terminators in the write data.
 
 <br>
 
 ### client:read
 ---
 
+Read and optionally parse data from the port.
+
 ```
 client:read ()
 client:read (format)
 ```
 
-Reads data from the port. If a format string is provided, parses the
-response using `bytestream.match` and returns the extracted values.
-Without a format string, returns the raw response string.
-
-Returns multiple values when the format contains multiple conversions.
-
-Raises an error if no data is read from the port, or if the underlying
-asyn read fails.
+Reads from the port. If a format string is given, parses the response
+using `bytestream.match` and returns the extracted values.
 
 ```lua
--- Raw read
-local raw = dev:read()
-
--- Parsed read
-local temp = dev:read("%f")
-
--- Multiple values
-local volts, amps = dev:read("%f %f")
-
--- Chained after write
+local raw    = dev:read()
+local temp   = dev:read("%f")
+local v, a   = dev:read("%f %f")
 local status = dev:write("STAT?"):read("%{off|on|standby}")
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
-| format | string | Optional format specifier for parsing the response. |
+| format | string | Optional. Format specifier for parsing. |
+
+**Returns:** the parsed values, or the raw string if no format given.
+
+**Raises:** an error if no data is read or the asyn read fails.
 
 <br>
 
 ### client:flush
 ---
 
+Flush the input buffer.
+
 ```
 client:flush ()
 ```
 
-Flushes the input buffer on the port. Returns the client object for chaining.
+**Returns:** the client object (for chaining).
 
 <br>
 
 ### Client Properties
----
 
-The following properties are delegated to the underlying `asyn.client`:
+Properties delegated to the underlying `asyn.client`:
 
 | Property | Type | Description |
 | - | - | - |
@@ -363,53 +307,29 @@ The following properties are delegated to the underlying `asyn.client`:
 | `OutTerminator` | string | Get or set the output end-of-string terminator. |
 | `ReadTimeout` | number | Get or set the read timeout in seconds (default 1.0). |
 | `WriteTimeout` | number | Get or set the write timeout in seconds (default 1.0). |
-| `portName` | string | Read-only. The port name this client is connected to. |
-| `addr` | number | Read-only. The address this client is connected to. |
-
-```lua
-dev.OutTerminator = "\r\n"
-dev.InTerminator  = "\r\n"
-dev.ReadTimeout   = 5.0
-print(dev.portName)       -- "SERIAL1"
-```
+| `portName` | string | Read-only. The port name. |
+| `addr` | number | Read-only. The address. |
 
 
 Usage with DTYP Device Support
 ------------------------------
 
-The bytestream library is most commonly used in DTYP "lua" callback functions
-for instrument communication. Errors raised by bytestream (and the underlying
-asyn operations) are caught by device support and mapped to record alarm states.
+The bytestream library is commonly used in DTYP "lua" callbacks for
+instrument communication. Errors raised by bytestream are caught by
+device support and mapped to record alarm states.
 
-The IOC startup script must register the lua module's paths so that
-`require("bytestream")` works in the Lua states created by device support:
-
-```
-# st.cmd
-< envPaths
-luaAddModule("$(LUA)")
-```
-
-Or from a Lua startup script:
-
-```lua
--- st.lua
-luaAddModule("../..")   -- relative to iocBoot/<ioc>/
-```
+{: .note }
+> Call `luaAddModule("$(LUA)")` in your startup script to make
+> `require("bytestream")` available in device support states.
 
 ### Example: SCPI Temperature Sensor
 
-Each load of the script creates a separate Lua state registered under the
-port name, so multiple instances for different devices work without collisions.
-
-**Lua script (sensor.lua):**
+Each load creates a separate Lua state registered under the port name,
+allowing multiple instances without collisions.
 
 ```lua
 local db = require("db")
 local bs = require("bytestream")
-
-local P    = P    or "dev:"
-local PORT = PORT or "SENSOR"
 
 luaRegisterState(PORT)
 
@@ -428,27 +348,6 @@ db.record("ai", P .. "Temperature") {
 function read_temp()
     return client:write("MEAS:TEMP?"):read("%f")
 end
-
-db.record("ao", P .. "Setpoint") {
-    DTYP = "lua",
-    OUT  = "@" .. PORT .. " write_setpoint()",
-    EGU  = "degC",
-    PREC = "1",
-}
-
-function write_setpoint(record)
-    client:write("SET:TEMP %.1f", record.VAL)
-end
-
-db.record("longin", P .. "Status") {
-    DTYP = "lua",
-    INP  = "@" .. PORT .. " read_status()",
-    SCAN = "1 second",
-}
-
-function read_status()
-    return client:write("STAT?"):read("%{off|on|standby}")
-end
 ```
 
 **Startup:**
@@ -457,43 +356,11 @@ end
 luaAddModule("$(LUA)")
 drvAsynIPPortConfigure("SENSOR1", "192.168.1.100:5025")
 luaLoadFile("sensor.lua", {P="dev1:", PORT="SENSOR1"})
-
-drvAsynIPPortConfigure("SENSOR2", "192.168.1.101:5025")
-luaLoadFile("sensor.lua", {P="dev2:", PORT="SENSOR2"})
-```
-
-### Example: Multi-Value Response
-
-Some instruments return multiple values in a single response. Use multiple
-format conversions to extract them all:
-
-```lua
-function read_measurements()
-    -- Device responds with: "12.34,56.78,90.12"
-    local v1, v2, v3 = client:write("MEAS:ALL?"):read("%f,%f,%f")
-    return v1  -- returned as record VAL
-end
-```
-
-### Example: Ignoring Fields in a Response
-
-Use the `*` flag to match but discard unwanted fields:
-
-```lua
-function read_third_value()
-    -- Response: "1.0 2.0 3.0 4.0"
-    -- Skip first two values, capture the third
-    return client:write("READ?"):read("%*f %*f %f")
-end
 ```
 
 
 Comparison with StreamDevice
 ----------------------------
-
-The bytestream library follows StreamDevice format specifier conventions,
-making it straightforward to translate protocol files into Lua. The key
-differences are:
 
 | Feature | StreamDevice | bytestream |
 | - | - | - |
@@ -502,23 +369,5 @@ differences are:
 | Enum syntax | `%{val0\|val1\|val2}` | Same syntax |
 | Separator handling | `Separator` field | Literal text in format string |
 | Terminators | `Terminator` field | `client.OutTerminator` / `client.InTerminator` |
-| Error handling | Record alarm on mismatch | `error()` caught by DTYP support |
 | I/O direction | `out`, `in` protocol commands | `client:write(...)`, `client:read(...)` |
 | Conditional logic | Limited (`@init`, `@mismatch`) | Full Lua control flow |
-
-### StreamDevice Protocol vs. Lua
-
-StreamDevice protocol:
-```
-getTemperature {
-    out "MEAS:TEMP?";
-    in "%f";
-}
-```
-
-Equivalent Lua with bytestream:
-```lua
-function read_temp()
-    return client:write("MEAS:TEMP?"):read("%f")
-end
-```

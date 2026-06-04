@@ -5,30 +5,65 @@ parent: Included Libraries
 nav_order: 4
 ---
 
+# IOC Shell Library
+{: .no_toc}
 
-# IOC Shell Functions
+## Table of contents
+{: .no_toc .text-delta }
 
-### iocsh.<item>
+- TOC
+{:toc}
+
+The iocsh library provides access to EPICS environment variables and
+iocsh-registered functions from Lua. In the Lua shell, this functionality
+is embedded into the global environment automatically -- you can reference
+environment variables and iocsh functions by name without loading the
+library explicitly.
+
+```lua
+local iocsh = require("iocsh")
+```
+
+
+Environment and Function Lookup
+--------------------------------
+
+### iocsh.\<item\>
 ---
 
+Look up an environment variable or iocsh function by name.
+
 ```
-iocsh. <item> [(arguments…)]
+iocsh.<item> [(arguments)]
 ```
 
-Performs an environment check for the given item. First, the user's environment is
-checked to see if there are any environment variables that match up with the item's
-name. If there aren't, the search then drops back to trying to find a matching
-ioc shell function. Only functions that are registered in the iocsh function database
-will be found. If there are no matching elements in either of these two locations,
-a nil will be returned.
+First checks for an EPICS environment variable matching the name. If
+none is found, searches for a registered iocsh function. Returns `nil`
+if neither is found.
 
-When using the lua shell interpreter, this functionality is embedded into the global
-environment. Any attempt to reference a name that hasn't been set as a lua variable
-will attempt a search to see if the name references an environment variable or iocsh
-function. These are, however, read-only accesses. If you attempt to set a given
-item name to a value, all you will do is create a new lua variable with the given
-value.
+```lua
+-- Access an environment variable
+local arch = iocsh.EPICS_HOST_ARCH
+
+-- Call an iocsh function
+iocsh.dbLoadRecords("my.db", "P=test:")
+
+-- In the Lua shell, the iocsh prefix is optional:
+EPICS_HOST_ARCH
+dbLoadRecords("my.db", "P=test:")
+```
+
+{: .note }
+> When using the Lua shell, iocsh lookups are built into the global
+> environment. Any name that isn't a Lua variable is automatically
+> checked as an environment variable or iocsh function. The explicit
+> `iocsh.` prefix is only needed when using `require("iocsh")` in
+> scripts outside the shell.
 
 | Parameter | Type | Description |
 | - | - | - |
-| arguments |  varies | If you are referencing an ioc shell function, these are the arguments that will get sent to the function. Since function references can be passed around, parentheses are necessary to actually invoke the function. |
+| item | string | The name of an environment variable or iocsh function. |
+| arguments | varies | If referencing an iocsh function, the arguments to pass to it. |
+
+**Returns:** the environment variable value (as a string), the iocsh
+function reference, or `nil` if not found.

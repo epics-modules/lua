@@ -6,7 +6,7 @@ nav_order: 2
 ---
 
 
-# Database Library Documentation
+# Database Library
 {: .no_toc}
 
 ## Table of contents
@@ -15,217 +15,100 @@ nav_order: 2
 - TOC
 {:toc}
 
-
-Static Database Access
-----------------------
-
-### db.entry
----
-
-```
-db.entry ()
-```
-
-Creates a DBENTRY cursor which can be used with all implemented static database 
-access functions. dbFreeEntry will be called on the cursor automatically when it
-is garbage collected.
-
-The entry object supports two calling styles. Functions can be called as methods
-on the entry object using the `:` syntax, or as module functions on the `db`
-table with the entry passed as the first argument:
+The db library provides functions for creating and inspecting EPICS
+database records from Lua, replacing traditional `.db` files and
+substitution files with programmatic record creation.
 
 ```lua
-local ent = db.entry()
-
--- Method syntax
-ent:findRecord("myrecord")
-print(ent:getFieldName())
-
--- Module function syntax (equivalent)
-db.findRecord(ent, "myrecord")
-print(db.getFieldName(ent))
+local db = require("db")
 ```
 
-<br>
 
-### EPICS Base Functions
-
-The following list of static database access functions are implemented, largely unchanged from their
-C API. Naming conventions have been changed to drop the initial "db" prefix and for the next character
-to be lowercase; so, for example, dbGetFieldName would become the module function getFieldName. 
-
-Functions which would return a status code, like dbFindRecord, will instead return a boolean representing
-success or failure (true or false respectively). Where a DBENTRY pointer is required as a parameter, instead
-instances of the dbentry object will be used, created with the aforementioned db.entry function.
-
-* getNRecordTypes
-* findRecordType
-* firstRecordType
-* nextRecordType
-* getRecordTypeName
-* getNFields
-* firstField
-* nextField
-* getFieldDbfType
-* getFieldName
-* getDefault
-* getPrompt
-* getPromptGroup
-* putRecordAttribute
-* getRecordAttribute
-* getNAliases
-* getNRecords
-* findRecord
-* firstRecord
-* nextRecord
-* getRecordName
-* isAlias
-* createRecord
-* createAlias
-* deleteRecord
-* deleteAliases
-* copyRecord
-* findField
-* foundField
-* getString
-* putString
-* isDefaultValue
-* getNMenuChoices
-* getMenuIndex
-* putMenuIndex
-* getMenuStringFromIndex
-* getMenuIndexFromString
-* getNLinks
-* getLinkField
-* firstInfo
-* nextInfo
-* findInfo
-* getInfoName
-* getInfoString
-* putInfoString
-* putInfo
-* deleteInfo
-* getInfo
-
-
-<br>
-
-### db.registerDatabaseHook
----
-
-```
-db.registerDatabaseHook (dbhook)
-```
-
-Registers the provided function so that it is invoked each time the dbLoadRecords 
-function is called by the IOC. The callback hook is invoked with two parameters;
-the first being the filepath to the database file being loaded, and the other 
-being a table of the macro definitions provided to dbLoadRecords.
-
-| Parameter | Type | Description |
-| - | - | - | 
-| dbhook  |  function |  The callback function to be invoked |
-
-<br>
+Record Creation
+---------------
 
 ### db.record
 ---
+
+Create or find a database record.
 
 ```
 db.record ([recordtype,] recordname)
 ```
 
-Creates an instance of the dbrecord class, a wrapper around record creation/access.
+Creates an instance of the dbrecord class. If both a type and name are
+given and the record does not exist, it is created. If only a name is
+given, the constructor finds an existing record.
 
-Returns a class instance with four instance methods, name, type, field, and info. 
-'name' and 'type' are accessor methods that will return the record name and the
-RTYP of the record. 
-
-'field' and 'info' are both functions that take in two strings as parameters, the 
-first being a name and the second a value. 'field' attempts to find the record 
-field with the given name and then calls dbPutString to set the value. While 'info' 
-calls dbPutInfo to add a new info field with the given name and value to the record.
-
-Record fields can also be read and written using dot notation:
-
-```lua
-rec = db.record("stringin", "x:y:z")
-
--- Set fields
-rec.VAL = "test"
-rec.DESC = "My record"
-
--- Read fields
-print(rec.VAL)     --> "test"
-print(rec.DESC)    --> "My record"
-
--- Methods still work
-rec:field("VAL", "test")
-rec:info("autosave", "VAL")
-```
-
-The class instance itself can also be called as a function, taking in a dictionary
-of name-value pairs. In doing so, the 'field' function is called for each pair, 
-passing through the names and values to the function.
-
-With lua syntactical sugar, you can chain together the record creation and the
-setting of fields like so:
+The returned object can be called as a function with a table of
+field name-value pairs to set multiple fields at once:
 
 ```lua
 db.record("ai", "x:y:z") {
     DTYP = "asynInt32",
-    INP = "@asyn(A_PORT,0,1)PARAM_NAME"
+    INP  = "@asyn(A_PORT,0,1)PARAM_NAME",
+    PREC = "2",
 }
+```
+
+Fields can also be read and written using dot notation:
+
+```lua
+local rec = db.record("stringin", "x:y:z")
+
+rec.VAL  = "test"
+rec.DESC = "My record"
+
+print(rec.VAL)    -- "test"
 ```
 
 | Parameter | Type | Description |
 | - | - | - |
-| recordtype  | string | The typename of the record (ai, mbbo, calc, etc) Optional. If the typename is left out, constructor will operate only to find a record, not create one. |
-| recordname  | string | The name of the record. If the name already exists, the returned instance will refer to the existing record. If there is no record by that name, the constructor will create one. |
+| recordtype | string | Optional. The record type (ai, ao, bi, etc). If omitted, finds an existing record by name. |
+| recordname | string | The name of the record. |
+
+**Returns:** a dbrecord object.
 
 <br>
 
 ### db.loadRecords
 ---
 
+Load a database file with macro substitutions.
+
 ```
 db.loadRecords (filename [, macros])
 ```
 
-Loads an EPICS database file with optional macro substitutions. Macros can be
-provided as a Lua table of key-value pairs, which is more convenient than the
-traditional comma-separated string format.
+Loads an EPICS database file. Macros can be provided as a Lua table
+of key-value pairs or as a comma-separated string.
 
 ```lua
--- Using a Lua table for macros
-db.loadRecords("motor.db", {P="ioc:", M="m1", PORT="serial1", ADDR="0"})
-
--- Using a plain string (also supported)
-db.loadRecords("motor.db", "P=ioc:,M=m1,PORT=serial1,ADDR=0")
-
--- No macros
+db.loadRecords("motor.db", {P="ioc:", M="m1", PORT="serial1"})
+db.loadRecords("motor.db", "P=ioc:,M=m1,PORT=serial1")
 db.loadRecords("simple.db")
 ```
 
-Returns 0 on success, non-zero on error.
-
 | Parameter | Type | Description |
 | - | - | - |
-| filename | string | Path to the database (.db) file to load |
-| macros | table or string | Optional. Macro substitutions as a table of key=value pairs or a comma-separated string |
+| filename | string | Path to the database (.db) file to load. |
+| macros | table or string | Optional. Macro substitutions. |
+
+**Returns:** 0 on success, non-zero on error.
 
 <br>
 
 ### db.loadTemplate
 ---
 
+Load a template with multiple sets of substitutions.
+
 ```
 db.loadTemplate (filename, substitutions)
 ```
 
-Loads a database file multiple times with different sets of macro substitutions,
-equivalent to the EPICS `dbLoadTemplate` function and `.substitutions` file format.
-This is useful for creating many similar record instances from a single template.
+Loads a database file multiple times with different macro substitutions,
+equivalent to the EPICS `dbLoadTemplate` function.
 
 Three styles of substitution are supported:
 
@@ -235,77 +118,149 @@ Three styles of substitution are supported:
 db.loadTemplate("motor.db", {
     {P="ioc:", M="m1", PORT="serial1", ADDR="0"},
     {P="ioc:", M="m2", PORT="serial1", ADDR="1"},
-    {P="ioc:", M="m3", PORT="serial2", ADDR="0"},
 })
 ```
 
-**Pattern style** -- a `pattern` key names the macro variables, and each subsequent
-entry provides positional values. This mirrors the `pattern` directive in EPICS
-substitution files:
+**Pattern style** -- a `pattern` key names the macro variables:
 
 ```lua
 db.loadTemplate("motor.db", {
     pattern = {"P", "M", "PORT", "ADDR"},
     {"ioc:", "m1", "serial1", "0"},
     {"ioc:", "m2", "serial1", "1"},
-    {"ioc:", "m3", "serial2", "0"},
 })
 ```
 
-**Global macros** -- a `global` key provides macros that are merged into every
-instance. This mirrors the `global` directive in EPICS substitution files:
+**Global macros** -- a `global` key provides macros shared by all entries:
 
 ```lua
 db.loadTemplate("motor.db", {
-    global = {P="ioc:", PORT="serial1"},
-    {M="m1", ADDR="0"},
-    {M="m2", ADDR="1"},
-    {M="m3", ADDR="2"},
+    global  = {P="ioc:", PORT="serial1"},
+    pattern = {"M", "ADDR"},
+    {"m1", "0"},
+    {"m2", "1"},
 })
 ```
-
-Global and pattern styles can be combined:
-
-```lua
-db.loadTemplate("motor.db", {
-    global  = {P="ioc:"},
-    pattern = {"M", "PORT", "ADDR", "DESC"},
-    {"m1", "serial1", "0", "Sample X"},
-    {"m2", "serial1", "1", "Sample Y"},
-    {"m3", "serial2", "0", "Detector Z"},
-})
-```
-
-Because this is Lua, you can use loops and computed values to generate
-substitution tables programmatically:
-
-```lua
-local motors = {}
-for i = 1, 10 do
-    table.insert(motors, {
-        P="ioc:", M="m"..i, PORT="serial1",
-        ADDR=tostring(i-1), DESC="Motor "..i
-    })
-end
-db.loadTemplate("motor.db", motors)
-```
-
-Internally, `db.loadTemplate` calls `dbLoadRecords` for each substitution entry,
-so the standard `dbLoadRecordsHook` mechanism fires for each instance.
 
 | Parameter | Type | Description |
 | - | - | - |
-| filename | string | Path to the database (.db or .template) file to load |
-| substitutions | table | A list of macro tables. May optionally contain `pattern` and/or `global` keys. |
+| filename | string | Path to the database file to load. |
+| substitutions | table | A list of macro tables. May contain `pattern` and/or `global` keys. |
 
-<br>
+**Returns:** nothing.
+
+
+Record Inspection
+-----------------
 
 ### db.list
 ---
+
+List all records in the IOC.
 
 ```
 db.list ()
 ```
 
-Returns a list of all the PVs currently defined in the IOC. Each element of the
-list is a db.record instance.
+**Returns:** a table of dbrecord objects, one for each PV defined in
+the IOC.
+
+```lua
+local records = db.list()
+for _, rec in ipairs(records) do
+    print(rec.name)
+end
+```
+
+
+Record Object
+-------------
+
+The dbrecord object returned by `db.record` and `db.list` provides:
+
+| Property/Method | Description |
+| - | - |
+| `rec.name` | The record name (read-only property). |
+| `rec.type` | The record type, e.g., `"ai"` (read-only property). |
+| `rec.FIELD` | Read a field value via dot syntax. |
+| `rec.FIELD = value` | Write a field value via dot syntax. |
+| `rec:field(name, value)` | Set a field value by name. |
+| `rec:info(name, value)` | Add an info tag to the record. |
+
+
+Database Hooks
+--------------
+
+### db.registerDatabaseHook
+---
+
+Register a callback for database loading events.
+
+```
+db.registerDatabaseHook (callback)
+```
+
+Registers a function that is called each time `dbLoadRecords` is
+invoked. The callback receives the file path and a table of macros.
+
+| Parameter | Type | Description |
+| - | - | - |
+| callback | function | Called with `(filepath, macros_table)`. |
+
+
+Static Database Access
+----------------------
+
+### db.entry
+---
+
+Create a DBENTRY cursor for low-level database inspection.
+
+```
+db.entry ()
+```
+
+Creates a cursor that can be used with all static database access
+functions listed below. The cursor is automatically freed when
+garbage collected.
+
+The entry object supports two calling styles:
+
+```lua
+local ent = db.entry()
+
+-- Method syntax
+ent:findRecord("myrecord")
+print(ent:getFieldName())
+
+-- Module function syntax
+db.findRecord(ent, "myrecord")
+print(db.getFieldName(ent))
+```
+
+**Returns:** a dbentry object.
+
+### EPICS Base Functions
+
+The following static database access functions are available, with
+names adapted from the C API (the `db` prefix is dropped, and the
+next character is lowercased):
+
+* getNRecordTypes, findRecordType, firstRecordType, nextRecordType,
+  getRecordTypeName
+* getNFields, firstField, nextField, getFieldDbfType, getFieldName,
+  getDefault, getPrompt, getPromptGroup
+* putRecordAttribute, getRecordAttribute
+* getNAliases, getNRecords
+* findRecord, firstRecord, nextRecord, getRecordName
+* isAlias, createRecord, createAlias, deleteRecord, deleteAliases,
+  copyRecord
+* findField, foundField, getString, putString, isDefaultValue
+* getNMenuChoices, getMenuIndex, putMenuIndex,
+  getMenuStringFromIndex, getMenuIndexFromString
+* getNLinks, getLinkField
+* firstInfo, nextInfo, findInfo, getInfoName, getInfoString,
+  putInfoString, putInfo, deleteInfo, getInfo
+
+Functions that return a status code in C return a boolean (`true` for
+success, `false` for failure) in Lua.

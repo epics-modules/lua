@@ -6,7 +6,7 @@ nav_order: 1
 ---
 
 
-# Asyn Library Documentation
+# Asyn Library
 {: .no_toc}
 
 ## Table of contents
@@ -15,216 +15,194 @@ nav_order: 1
 - TOC
 {:toc}
 
+The asyn library provides functions for communicating with asyn ports,
+accessing asynPortDriver parameters, and configuring port connections.
+
+```lua
+local asyn = require("asyn")
+```
+
 
 Getting / Setting Parameters
 ----------------------------
 
-
-### asyn.get____
+### asyn.getParam
 ---
 
-```
-asyn.getParam (portName[, addr], paramName)  
-asyn.getStringParam (portName[, addr], paramName)  
-asyn.getDoubleParam (portName[, addr], paramName)  
-asyn.getIntegerParam (portName[, addr], paramName)  
-```
-Fetches the value of an asyn parameter. These work like the asynPortDriver functions of the same name, retrieving the value from the param list.
+Read a parameter value from an asynPortDriver.
 
-Returns the value of the asyn parameter as the type specified, if no type was specified, uses the asynParamType of the parameter to determine       
+```
+asyn.getParam (portName [, addr], paramName)
+asyn.getStringParam (portName [, addr], paramName)
+asyn.getDoubleParam (portName [, addr], paramName)
+asyn.getIntegerParam (portName [, addr], paramName)
+```
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | The registered asyn port name that contains the parameter you are getting. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
-| paramName |  string  | The name of the parameter to fetch. |
+The typed variants force conversion to a specific type. The generic
+`getParam` uses the parameter's `asynParamType` to determine the type.
+
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| paramName | string | The name of the parameter. |
+
+**Returns:** the parameter value.
 
 <br>
 
-### asyn.set____
+### asyn.setParam
 ---
 
+Write a parameter value to an asynPortDriver.
+
 ```
-asyn.setParam (portName[, addr], paramName)  
-asyn.setStringParam (portName[, addr], paramName, value)  
-asyn.setDoubleParam (portName[, addr], paramName, value)  
-asyn.setIntegerParam (portName[, addr], paramName, value)  
+asyn.setParam (portName [, addr], paramName, value)
+asyn.setStringParam (portName [, addr], paramName, value)
+asyn.setDoubleParam (portName [, addr], paramName, value)
+asyn.setIntegerParam (portName [, addr], paramName, value)
 ```
 
-Sets the value of an asyn parameter. These work like the asynPortDriver functions of the same name, saving the value in the param list.
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | The registered asyn port name that contains the parameter you are setting. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
-| paramName |  string  | The name of the parameter to set. |
-| value     |  varies  | The value to set the parameter to. Type should match the type of the parameter you are setting. |
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| paramName | string | The name of the parameter. |
+| value | varies | The value to set. Type should match the parameter type. |
 
 <br>
 
 ### asyn.callParamCallbacks
 ---
 
+Trigger parameter callbacks on changed values.
+
 ```
-asyn.callParamCallbacks (portName[, addr, parameter])
+asyn.callParamCallbacks (portName [, addr, parameter])
 ```
 
-Tells an asyn port to call parameter callbacks on changed values.
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | A registered asyn port name. |
-| addr      |  number  | The index of the parameter list to do callbacks on. Optional, default value is 0. |
-| parameter |  string  | A specific parameter to do callbacks on. Optional, default is to perform callbacks on all values that have been changed. |
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The parameter list index. Default: 0. |
+| parameter | string | Optional. A specific parameter. Default: all changed values. |
 
 
-						
 Reading / Writing Values
 ------------------------
 
 ### asyn.readParam
 ---
 
+Read a parameter by calling the asyn interface's read function.
+
 ```
-asyn.readParam (portName[, addr], paramName)
+asyn.readParam (portName [, addr], paramName)
 ```
 
-Calls the read function of the correct asyn interface
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| paramName | string | The name of the parameter. |
 
-Returns the value of the asyn parameter as the type specified, if no type was specified, uses the asynParamType of the parameter to determine
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | The registered asyn port name that contains the parameter you are getting. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
-| paramName |  string  | The name of the parameter to fetch. |
+**Returns:** the parameter value.
 
 <br>
 
 ### asyn.writeParam
 ---
 
+Write a parameter by calling the asyn interface's write function.
+
 ```
-asyn.writeParam (portName[, addr], paramName, value)
+asyn.writeParam (portName [, addr], paramName, value)
 ```
 
-Calls the write function of the correct asyn interface
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | The registered asyn port name that contains the parameter you are setting. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
-| paramName |  string  | The name of the parameter to set. |
-| value     |  varies  | The value to write to the parameter. Type should match the type of the parameter you are setting. |
-
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| paramName | string | The name of the parameter. |
+| value | varies | The value to write. |
 
 
 Configuration Parameters
 ------------------------
 
-
-### asyn.setOutTerminator
+### asyn.setOutTerminator / asyn.getOutTerminator
 ---
+
+Set or get the global output terminator string.
 
 ```
 asyn.setOutTerminator (terminator)
-```
-
-Sets the global variable OutTerminator, which controls asyn write commands
-
-| Parameter  |   Type   | Description |
-|------------|----------|-|
-| terminator |  string  | The string value to append to the end of all asyn write calls. |
-
-<br>
-
-### asyn.getOutTerminator
----
-
-```
 asyn.getOutTerminator ()
 ```
 
-Returns the value of the global variable OutTerminator
+The output terminator is appended to all `asyn.write` calls.
+
+| Parameter | Type | Description |
+| - | - | - |
+| terminator | string | The string to append to writes. |
+
+**Returns:** the current terminator (for get).
 
 <br>
 
-### asyn.setInTerminator
+### asyn.setInTerminator / asyn.getInTerminator
 ---
+
+Set or get the global input terminator string.
 
 ```
 asyn.setInTerminator (terminator)
-```
-
-Sets the global variable InTerminator, which controls asyn read commands
-
-| Parameter  |   Type   | Description |
-|------------|----------|-|
-| terminator |  string  | The string value to wait for when reading from an asyn port. |
-
-<br>
-
-### asyn.getInTerminator
----
-
-```
 asyn.getInTerminator ()
 ```
 
-Returns the value of the global variable InTerminator
+The input terminator controls when `asyn.read` stops reading.
+
+| Parameter | Type | Description |
+| - | - | - |
+| terminator | string | The terminator string. |
+
+**Returns:** the current terminator (for get).
 
 <br>
 
-### asyn.setWriteTimeout
+### asyn.setWriteTimeout / asyn.getWriteTimeout
 ---
+
+Set or get the global write timeout.
 
 ```
 asyn.setWriteTimeout (timeout)
-```
-
-Sets the global variable WriteTimeout, which controls asyn write commands
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-|  timeout  |  number  | The number of milliseconds for an asyn write command to wait before failure. |
-
-<br>
-
-### asyn.getWriteTimeout
----
-
-```
 asyn.getWriteTimeout ()
 ```
 
-Returns the value of the global variable WriteTimeout
+| Parameter | Type | Description |
+| - | - | - |
+| timeout | number | Timeout in milliseconds. |
+
+**Returns:** the current timeout (for get).
 
 <br>
 
-### asyn.setReadTimeout
+### asyn.setReadTimeout / asyn.getReadTimeout
 ---
+
+Set or get the global read timeout.
 
 ```
 asyn.setReadTimeout (timeout)
-```
-
-Sets the global variable ReadTimeout, which controls asyn read commands
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-|  timeout  |  number  | The number of milliseconds for an asyn read command to wait before failure. |
-
-<br>
-
-### asyn.getReadTimeout
----
-
-```
 asyn.getReadTimeout ()
 ```
 
-Returns the value of the global variable ReadTimeout
+| Parameter | Type | Description |
+| - | - | - |
+| timeout | number | Timeout in milliseconds. |
 
+**Returns:** the current timeout (for get).
 
 
 Debug Information
@@ -233,39 +211,43 @@ Debug Information
 ### asyn.setTrace
 ---
 
+Set trace mask flags on a port.
+
 ```
-asyn.setTrace (portName[, addr], key, val)  
-asyn.setTrace (portName[, addr], {key1=val1, ...})
+asyn.setTrace (portName [, addr], key, val)
+asyn.setTrace (portName [, addr], {key1=val1, ...})
 ```
 
-Turns on or off asyn's tracing for a mask on a given port. Valid keys are  "error", "device", "filter", "driver", "flow", and "warning", case insensitive.
-       
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | A registered asyn port name. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
-| key       |  string  | Which mask to change |
-| val       |  boolean | Whether to turn on or off the mask |
+Valid keys: `"error"`, `"device"`, `"filter"`, `"driver"`, `"flow"`,
+`"warning"` (case insensitive).
+
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| key | string | Which mask to change. |
+| val | boolean | Whether to turn on or off the mask. |
 
 <br>
 
 ### asyn.setTraceIO
 ---
 
+Set trace I/O mask flags on a port.
+
 ```
-asyn.setTraceIO (portName[, addr], key, val)  
-asyn.setTraceIO (portName[, addr], {key1=val1, ...})
+asyn.setTraceIO (portName [, addr], key, val)
+asyn.setTraceIO (portName [, addr], {key1=val1, ...})
 ```
 
-Turns on or off asyn's tracing for a mask on a given port. Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
+Valid keys: `"nodata"`, `"ascii"`, `"escape"`, `"hex"` (case insensitive).
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | A registered asyn port name. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
-| key       |  string  | Which mask to change |
-| val       |  boolean | Whether to turn on or off the mask |
-
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| key | string | Which mask to change. |
+| val | boolean | Whether to turn on or off the mask. |
 
 
 Octet Communications
@@ -274,283 +256,251 @@ Octet Communications
 ### asyn.write
 ---
 
+Write a string to an asynOctet port.
+
 ```
-asyn.write (data, portName[, addr, parameter])
+asyn.write (data, portName [, addr, parameter])
 ```
 
-Write a string to a given asynOctet port
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| data      |  string  | The string to write to the port. This string will automatically have the value of the global variable OutTerminator appended to it. |
-| portName  |  string  | A registered asyn port name. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |     
-| parameter |  string  | An asyn parameter to write to. Optional. |
+| Parameter | Type | Description |
+| - | - | - |
+| data | string | The string to write. The global OutTerminator is appended automatically. |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| parameter | string | Optional. An asyn parameter to write to. |
 
 <br>
 
 ### asyn.read
 ---
 
+Read a string from an asynOctet port.
+
 ```
-asyn.read (portName[, addr, parameter])
+asyn.read (portName [, addr, parameter])
 ```
 
-Read a string from a given asynOctet port
+Reads until the global InTerminator is encountered or the ReadTimeout
+is reached.
 
-Returns a string containing all data read from the asynOctet port until encountering
-the input terminator set by the global variable InTerminator, or until the timeout set
-by the global variable ReadTimeout is reached.
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| parameter | string | Optional. An asyn parameter to read from. |
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | A registered asyn port name. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |     
-| parameter |  string  | An asyn parameter to read from. Optional. |
+**Returns:** the data read as a string, or `nil` on timeout.
 
 <br>
 
 ### asyn.writeread
 ---
 
+Write data to a port and read the response atomically.
+
 ```
-asyn.writeread (data, portName[, addr, parameter])
+asyn.writeread (data, portName [, addr, parameter])
 ```
 
-Writes data to a port and then reads data from that same port.
+| Parameter | Type | Description |
+| - | - | - |
+| data | string | The string to write. |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| parameter | string | Optional. An asyn parameter. |
 
-Returns a string containing all data read from the asynOctet port until encountering
-the input terminator set by the global variable InTerminator, or until the timeout set
-by the global variable ReadTimeout is reached.
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | A registered asyn port name. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |     
-| parameter |  string  | An asyn parameter to read to and write from. Optional. |
+**Returns:** the data read as a string, or `nil` on timeout.
 
 <br>
 
 ### asyn.setOption
 ---
 
+Set a driver-specific option on a port.
+
 ```
-asyn.setOption (portName[, addr], key, val)
+asyn.setOption (portName [, addr], key, val)
 ```
 
-Sets driver-specific options
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| key | string | The option name. |
+| val | string | The option value. |
 
-Returns the asynStatus value of the asynSetOption call.
-
-   
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |   string | A registered asyn port name. |
-| addr      |   number | The asyn address of the parameter. Optional, default value is 0. |
-| key       |   string | The name of the option you are setting. |
-| val       |   string | The value to set the option to. |
+**Returns:** the asynStatus value.
 
 
-   
 asynOctetClient Object
 ----------------------
 
 ### asyn.client
 ---
 
+Create a persistent asynOctet client connection.
+
 ```
-asyn.client (portName[, addr, parameter])
-asyn.client.find (portName[, addr, parameter])
+asyn.client (portName [, addr, parameter])
+asyn.client.find (portName [, addr, parameter])
 ```
 
-Creates an asynOctetClient object connected to the specified port. The object
-provides methods for reading, writing, and configuring the connection.
-
-`asyn.client(...)` and `asyn.client.find(...)` are equivalent.
+Creates a client object with methods for reading, writing, and
+configuring the connection. `asyn.client(...)` and
+`asyn.client.find(...)` are equivalent.
 
 ```lua
 local port = asyn.client("SERIAL1")
-local port = asyn.client("SERIAL1", 0, "PARAM")
-local port = asyn.client.find("SERIAL1")
+port.OutTerminator = "\n"
+port.InTerminator  = "\n"
+port.ReadTimeout   = 5.0
 ```
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | A registered asyn port name. |
-| addr      |  number  | The asyn address of the parameter. Optional, default value is 0. |
-| parameter |  string  | A specific asyn parameter. Optional, default is empty string. |
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asyn port name. |
+| addr | number | Optional. The asyn address. Default: 0. |
+| parameter | string | Optional. An asyn parameter. Default: empty string. |
+
+**Returns:** an asynOctetClient object.
 
 <br>
 
-### client.portName
----
+### Client Properties
 
-Read-only property. Returns the port name this client is connected to.
-
-### client.addr
----
-
-Read-only property. Returns the address this client is connected to.
-
-### client.InTerminator
----
-
-Get or set the input end-of-string terminator for this client.
-
-```lua
-port.InTerminator = "\r\n"
-print(port.InTerminator)
-```
-
-### client.OutTerminator
----
-
-Get or set the output end-of-string terminator for this client.
-
-```lua
-port.OutTerminator = "\r\n"
-print(port.OutTerminator)
-```
-
-### client.ReadTimeout
----
-
-Get or set the read timeout in seconds for this client. Used by
-`:read()` and `:writeread()`. Default is 1.0.
-
-```lua
-port.ReadTimeout = 5.0
-print(port.ReadTimeout)
-```
-
-### client.WriteTimeout
----
-
-Get or set the write timeout in seconds for this client. Used by
-`:write()`. Default is 1.0.
-
-```lua
-port.WriteTimeout = 0.5
-print(port.WriteTimeout)
-```
-
-### client[addr]
----
-
-Returns a new client connected to the same port but at a different address.
-
-```lua
-local port0 = asyn.client("SERIAL1")
-local port1 = port0[1]   -- same port, address 1
-```
+| Property | Type | Description |
+| - | - | - |
+| `portName` | string | Read-only. The port name. |
+| `addr` | number | Read-only. The address. |
+| `InTerminator` | string | Get or set the input terminator. |
+| `OutTerminator` | string | Get or set the output terminator. |
+| `ReadTimeout` | number | Get or set the read timeout in seconds (default 1.0). |
+| `WriteTimeout` | number | Get or set the write timeout in seconds (default 1.0). |
 
 <br>
 
 ### client:read
 ---
 
+Read a string from the port.
+
 ```
 client:read ()
 ```
 
-Reads a string from the port. Returns the data read, or nil on timeout.
+**Returns:** the data read, or `nil` on timeout.
 
 <br>
 
 ### client:write
 ---
 
+Write a string to the port.
+
 ```
 client:write (data)
 ```
 
-Writes a string to the port.
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| data      |  string  | The string to write to the port. |
+| Parameter | Type | Description |
+| - | - | - |
+| data | string | The string to write. |
 
 <br>
 
 ### client:writeread
 ---
 
+Write data and read the response atomically.
+
 ```
 client:writeread (data)
 ```
 
-Writes data to the port and reads the response as an atomic operation.
+| Parameter | Type | Description |
+| - | - | - |
+| data | string | The string to write. |
 
-Returns the data read from the port.
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| data      |  string  | The string to write to the port. |
+**Returns:** the data read from the port.
 
 <br>
 
 ### client:flush
 ---
 
+Flush the input buffer.
+
 ```
 client:flush ()
 ```
-
-Flushes the input buffer on the port.
 
 <br>
 
 ### client:trace
 ---
 
+Set trace mask flags on this client's port.
+
 ```
-client:trace (key, val)  
+client:trace (key, val)
 client:trace ({key1=val1, ...})
 ```
 
-Turns on or off asyn's tracing for a given mask on the port this client is connected 
-to. Valid keys are "error", "device", "filter", "driver", "flow", and "warning", case
-insensitive.
+Valid keys: `"error"`, `"device"`, `"filter"`, `"driver"`, `"flow"`,
+`"warning"`.
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-|    key    |  string  | Which mask to change |
-|    val    |  boolean | Whether to turn on or off the mask |
+| Parameter | Type | Description |
+| - | - | - |
+| key | string | Which mask to change. |
+| val | boolean | Whether to turn on or off the mask. |
 
 <br>
 
 ### client:traceio
 ---
 
+Set trace I/O mask flags on this client's port.
+
 ```
-client:traceio (key, val)  
+client:traceio (key, val)
 client:traceio ({key1=val1, ...})
 ```
 
-Turns on or off asyn's tracing for a given mask on the port this client is connected 
-to. Valid keys are "nodata", "ascii", "escape", and "hex", case insensitive.
+Valid keys: `"nodata"`, `"ascii"`, `"escape"`, `"hex"`.
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-|    key    |  string  | Which mask to change |
-|    val    |  boolean | Whether to turn on or off the mask |
+| Parameter | Type | Description |
+| - | - | - |
+| key | string | Which mask to change. |
+| val | boolean | Whether to turn on or off the mask. |
 
 <br>
 
 ### client:setOption
 ---
 
+Set a driver-specific option.
+
 ```
 client:setOption (key, val)
 ```
 
-Sets an asynOption for the port this client is connected to.
+| Parameter | Type | Description |
+| - | - | - |
+| key | string | The option name. |
+| val | string | The option value. |
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-|    key    |  string  | The name of the option you are setting. |
-|    val    |  string  | The value to set the option to. |
+<br>
 
+### client[addr]
+---
+
+Create a new client at a different address on the same port.
+
+```lua
+local port0 = asyn.client("SERIAL1")
+local port1 = port0[1]   -- same port, address 1
+```
+
+**Returns:** a new asynOctetClient object.
 
 
 asynPortDriver
@@ -559,278 +509,28 @@ asynPortDriver
 ### asyn.driver / asyn.driver.find
 ---
 
+Find an existing asynPortDriver and return a driver proxy object.
+
 ```
 asyn.driver (portName)
 asyn.driver.find (portName)
 ```
 
-Finds an existing asynPortDriver and returns a driver proxy object. You can
-access parameters by name through the proxy, which returns parameter proxy
-objects for reading and writing values.
-
-`asyn.driver(portName)` and `asyn.driver.find(portName)` are equivalent.
+Access parameters by name through the proxy. `asyn.driver(...)` and
+`asyn.driver.find(...)` are equivalent.
 
 ```lua
 local drv = asyn.driver("MYPORT")
 
--- Read a parameter value
 print(drv.TEMPERATURE.value)
-
--- Write a parameter value (also calls callParamCallbacks)
 drv.SETPOINT.value = 25.0
-
--- Access driver properties
-print(drv.portName)
-print(drv.maxAddr)
 ```
 
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | A registered asynPortDriver port name |
+| Parameter | Type | Description |
+| - | - | - |
+| portName | string | A registered asynPortDriver port name. |
 
-For creating new asynPortDrivers from Lua, binding read/write callbacks,
-and defining parameters with type constructors, see the
-[Lua Port Drivers](../luaPortDriver) documentation.
-asyn.driver (portName)
-asyn.driver.find (portName)
-```
+**Returns:** a driver proxy object.
 
-Finds an existing asynPortDriver and returns a driver proxy object. You can 
-access parameters by name through the proxy, which returns parameter proxy
-objects for reading and writing values.
-
-`asyn.driver(portName)` and `asyn.driver.find(portName)` are equivalent.
-
-```lua
-local drv = asyn.driver("MYPORT")
-
--- Read a parameter value
-print(drv.TEMPERATURE.value)
-
--- Write a parameter value (also calls callParamCallbacks)
-drv.SETPOINT.value = 25.0
-
--- Access driver properties
-print(drv.portName)
-print(drv.maxAddr)
-```
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| portName  |  string  | A registered asynPortDriver port name |
-
-<br>
-
-### asyn.driver.new
----
-
-```
-asyn.driver.new (portName, paramTable [, initFunc])
-```
-
-Creates a new asynPortDriver with parameters defined in the parameter table,
-and optional initialization code. Returns a driver proxy object.
-
-The parameter table is an array of parameter specifications created using
-the type constructors `asyn.Int32`, `asyn.Float64`, and `asyn.Octet`.
-Each type constructor takes a parameter name and an optional default value:
-
-```lua
-local asyn = require("asyn")
-local Int32, Float64, Octet = asyn.Int32, asyn.Float64, asyn.Octet
-
-local drv = asyn.driver.new(PORT, {
-    Float64 "TEMPERATURE" (0.0),
-    Float64 "SETPOINT"    (25.0),
-    Int32   "ENABLED"     (0),
-    Octet   "STATUS"      ("OK"),
-}, function(self)
-    -- Initialization code: runs once at creation time
-    -- 'self' is the driver proxy object
-    self.port = asyn.client(DEVICE_PORT, 0, "")
-    self.conversion = tonumber(CONV) or 1.0
-end)
-```
-
-| Parameter  |   Type   | Description |
-|------------|----------|-|
-| portName   |  string  | The asyn port name for the new driver |
-| paramTable |  table   | Array of parameter specs created with `asyn.Int32`, `asyn.Float64`, or `asyn.Octet` |
-| initFunc   | function | Optional initialization function. Receives the driver proxy as its argument. |
-
-<br>
-
-### Type Constructors
----
-
-```
-asyn.Int32 "PARAM_NAME" [(default_value)]
-asyn.Float64 "PARAM_NAME" [(default_value)]
-asyn.Octet "PARAM_NAME" [(default_value)]
-```
-
-Create parameter specifications for use with `asyn.driver.new`. Each returns a
-table describing the parameter's name and type. The optional parenthesized
-default value sets the parameter's initial value.
-
-```lua
-local Int32, Float64, Octet = asyn.Int32, asyn.Float64, asyn.Octet
-
-Int32   "COUNTER"              -- integer param, default 0
-Float64 "TEMPERATURE" (20.0)   -- float param, default 20.0
-Octet   "MESSAGE" ("Ready")    -- string param, default "Ready"
-```
-
-<br>
-
-### Parameter Proxy
----
-
-When you access a parameter name on a driver proxy (e.g., `drv.TEMPERATURE`),
-you get a parameter proxy object with the following properties:
-
-```lua
-drv.PARAM.value          -- read the current parameter value
-drv.PARAM.value = x      -- write a new value + call param callbacks
-drv.PARAM.name           -- the parameter name string
-```
-
-For drivers created with `asyn.driver.new`, you can also bind read and write
-callbacks:
-
-```lua
-drv.PARAM.read = function(self)
-    -- Called when a record reads this parameter
-    -- 'self' is the driver proxy (access internal state via self.xxx)
-    -- Return the value to send back to the reader
-    return some_value
-end
-
-drv.PARAM.write = function(value, self)
-    -- Called when a record writes to this parameter
-    -- 'value' is the incoming value from the writer
-    -- 'self' is the driver proxy
-    drv.PARAM.value = value  -- store the value
-end
-```
-
-Callbacks cannot be bound on drivers found with `asyn.driver.find` -- only
-on drivers created with `asyn.driver.new`.
-
-<br>
-
-### driver:callParamCallbacks
----
-
-```
-driver:callParamCallbacks ()
-```
-
-Triggers asyn parameter callbacks on the driver. This is automatically called
-when setting a parameter value via `drv.PARAM.value = x`, but can also be
-called explicitly.
-
-<br>
-
-### driver:writeParam / driver:readParam
----
-
-```
-driver:writeParam (paramName, value)
-driver:readParam (paramName)
-```
-
-Write or read a parameter value by name using the asyn parameter library.
-These are convenience methods that work on both `find` and `new` drivers.
-
-| Parameter |   Type   | Description |
-|-----------|----------|-|
-| paramName |  string  | The name of a parameter in the driver |
-| value     |  varies  | The new value to write (for writeParam) |
-
-<br>
-
-### Driver Internal State
----
-
-For drivers created with `asyn.driver.new`, the init function can set
-arbitrary fields on the driver proxy via `self`. These fields persist
-and are accessible from all callbacks:
-
-```lua
-local drv = asyn.driver.new(PORT, {
-    Float64 "READING" (0.0),
-}, function(self)
-    self.scale = 2.0
-    self.offset = 10.0
-end)
-
-drv.READING.read = function(self)
-    local raw = get_raw_value()
-    return raw * self.scale + self.offset
-end
-```
-
-Internal state fields do not conflict with parameter names. Parameters
-are accessed via the parameter proxy (`drv.PARAM.value`), while internal
-state is accessed directly (`self.fieldname`).
-
-
-### Full Example
----
-
-```lua
-local asyn = require("asyn")
-local db = require("db")
-local Int32, Float64, Octet = asyn.Int32, asyn.Float64, asyn.Octet
-
-luaRegisterState(PORT)
-
-local drv = asyn.driver.new(PORT, {
-    Float64 "TEMPERATURE" (0.0),
-    Float64 "SETPOINT"    (25.0),
-    Int32   "ERRORS"      (0),
-    Octet   "STATUS"      ("OK"),
-}, function(self)
-    self.port = asyn.client(DEVICE_PORT, 0, "")
-    self.port.InTerminator = "\r\n"
-    self.port.OutTerminator = "\r\n"
-    self.conversion = tonumber(CONV) or 1.0
-end)
-
-drv.TEMPERATURE.read = function(self)
-    local response = self.port:writeread("READ:TEMP?")
-    if response then
-        drv.STATUS.value = "OK"
-        return tonumber(response) * self.conversion
-    end
-    drv.ERRORS.value = drv.ERRORS.value + 1
-    drv.STATUS.value = "Read error"
-    return drv.TEMPERATURE.value
-end
-
-drv.SETPOINT.write = function(value, self)
-    drv.SETPOINT.value = value
-end
-
-db.record("ai", P .. "Temperature") {
-    DTYP = "asynFloat64",
-    INP  = "@asyn(" .. PORT .. ",0,0)TEMPERATURE",
-    SCAN = "I/O Intr",
-    PINI = "1",
-    EGU  = "degC",
-    PREC = "2",
-}
-
-db.record("ao", P .. "Setpoint") {
-    DTYP = "asynFloat64",
-    OUT  = "@asyn(" .. PORT .. ",0,0)SETPOINT",
-    EGU  = "degC",
-}
-```
-
-Startup:
-```lua
-luaSpawn("device.lua", {P="dev1:", PORT="DEV1", DEVICE_PORT="serial1", CONV="0.01"})
-luaSpawn("device.lua", {P="dev2:", PORT="DEV2", DEVICE_PORT="serial2", CONV="0.1"})
-```
+For creating new drivers, binding callbacks, and full port driver
+documentation, see [Lua Port Drivers](../luaPortDriver).

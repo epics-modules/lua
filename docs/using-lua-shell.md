@@ -96,11 +96,13 @@ Shell Commands
 ### luash
 ---
 
+Run a Lua script in the calling shell's state.
+
 ```
 luash "file.lua" ["macros"]
 ```
 
-Runs a Lua script in the calling shell's state. The script shares
+The script shares
 variables, loaded modules, and function definitions with the shell
 session.
 
@@ -139,16 +141,20 @@ current point:
 **Exit:** A line containing only `exit` ends the current script and
 returns to the caller.
 
+**Returns:** nothing on success, error string on failure.
+
 <br>
 
 ### luaLoadFile
 ---
 
+Load and execute a Lua script in a new state.
+
 ```
 luaLoadFile "file.lua" ["macros"]
 ```
 
-Loads and executes a Lua script in a **new state**. The entire file is
+The entire file is
 compiled as a single chunk, so `local` variables work across lines.
 Execution is synchronous -- the command blocks until the script
 completes.
@@ -162,10 +168,14 @@ script calls `luaRegisterState`, the state is kept alive after execution
 (see Named States below). Otherwise, the state is closed when the script
 finishes.
 
+**Returns:** nothing on success, error string on failure.
+
 <br>
 
 ### luaSpawn
 ---
+
+Run a Lua script in a background thread.
 
 ```
 luaSpawn "file.lua" ["macros"]
@@ -182,21 +192,27 @@ luaSpawn("tick.lua", "INTERVAL=1.0")
 Commonly used for long-running scripts such as device polling loops
 or port driver definitions.
 
+**Returns:** nothing on success, error string on failure.
+
 <br>
 
 ### luaCmd
 ---
 
+Execute a single Lua statement.
+
 ```
 luaCmd "lua code" ["macros"]
 ```
 
-Executes a single Lua statement in a **new state**. The state is closed
-after the statement completes.
+Runs the statement in a **new state** which is closed after the
+statement completes.
 
 ```lua
 luaCmd("print(P .. ' started')", {P="dev1:"})
 ```
+
+**Returns:** nothing on success, error string on failure.
 
 <br>
 
@@ -313,12 +329,15 @@ both `require()` (Lua's module loader) and script file resolution (used
 by `luaLoadFile`, `luaSpawn`, luascript `@file`, and DTYP `@file`).
 
 ### luaAddPath
+---
+
+Add a directory to the library and script search paths.
 
 ```
 luaAddPath "directory"
 ```
 
-Adds a single directory to the search paths. The directory is used for:
+The directory is used for:
 
 - `require()`: appends `dir/?.lua` and `dir/?/init.lua` to `package.path`,
   and `dir/?.so` (or `dir/?.dll` on Windows) to `package.cpath`
@@ -336,12 +355,15 @@ takes effect immediately in the calling state. When called from iocsh,
 the path takes effect for all future Lua states.
 
 ### luaAddModule
+---
+
+Register an EPICS module's library and script directories.
 
 ```
 luaAddModule "module_top"
 ```
 
-Convenience wrapper for EPICS modules. Reads the `EPICS_HOST_ARCH`
+Reads the `EPICS_HOST_ARCH`
 environment variable and adds two directories via `luaAddPath`:
 
 - `module_top/lib/<arch>/` -- for libraries installed via `LIB_INSTALLS`
