@@ -32,6 +32,7 @@ as Lua functions. There are two approaches:
 Both approaches produce a standard asynPortDriver that works with all
 asyn device support record types (asynInt32, asynFloat64, asynOctet).
 
+<br>
 
 Creating a Driver
 -----------------
@@ -95,6 +96,7 @@ Octet   "MESSAGE" ("Ready")    -- string param, default "Ready"
 
 **Returns:** a parameter specification table.
 
+<br>
 
 Parameter Access
 ----------------
@@ -148,6 +150,7 @@ Convenience methods that work on both `find` and `new` drivers.
 
 **Returns:** the parameter value (for readParam).
 
+<br>
 
 Read and Write Callbacks
 -------------------------
@@ -207,6 +210,7 @@ Internal state fields do not conflict with parameter names. Parameters
 are accessed via the parameter proxy (`drv.PARAM.value`), while internal
 state is accessed directly (`self.fieldname`).
 
+<br>
 
 Finding Existing Drivers
 ------------------------
@@ -225,6 +229,7 @@ drv.SETPOINT.value = 25.0
 The parameter proxy, `callParamCallbacks`, `writeParam`, and `readParam`
 documented above all work on drivers obtained via `find` as well.
 
+<br>
 
 Creating Records
 ----------------
@@ -292,6 +297,7 @@ luaSpawn("device.lua", {P="dev2:", PORT="DEV2", DEVICE_PORT="serial2", CONV="0.1
 
 The `09-PortDriver` example IOC demonstrates this pattern.
 
+<br>
 
 Legacy: luaPortDriver iocsh Command
 ------------------------------------

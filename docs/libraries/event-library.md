@@ -58,6 +58,7 @@ local ready = event.flag("dataReady")   -- named (shared)
 
 **Returns:** an event flag object.
 
+<br>
 
 Flag Methods
 ------------
@@ -146,6 +147,7 @@ end
 
 **Returns:** `true` if the flag is set, `false` if the timeout expired.
 
+<br>
 
 Examples
 --------

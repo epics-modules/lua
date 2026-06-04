@@ -87,6 +87,7 @@ asyn.callParamCallbacks (portName [, addr, parameter])
 | addr | number | Optional. The parameter list index. Default: 0. |
 | parameter | string | Optional. A specific parameter. Default: all changed values. |
 
+<br>
 
 Reading / Writing Values
 ------------------------
@@ -126,6 +127,7 @@ asyn.writeParam (portName [, addr], paramName, value)
 | paramName | string | The name of the parameter. |
 | value | varies | The value to write. |
 
+<br>
 
 Configuration Parameters
 ------------------------
@@ -204,6 +206,7 @@ asyn.getReadTimeout ()
 
 **Returns:** the current timeout (for get).
 
+<br>
 
 Debug Information
 -----------------
@@ -249,6 +252,7 @@ Valid keys: `"nodata"`, `"ascii"`, `"escape"`, `"hex"` (case insensitive).
 | key | string | Which mask to change. |
 | val | boolean | Whether to turn on or off the mask. |
 
+<br>
 
 Octet Communications
 --------------------
@@ -331,6 +335,7 @@ asyn.setOption (portName [, addr], key, val)
 
 **Returns:** the asynStatus value.
 
+<br>
 
 asynOctetClient Object
 ----------------------
@@ -502,6 +507,7 @@ local port1 = port0[1]   -- same port, address 1
 
 **Returns:** a new asynOctetClient object.
 
+<br>
 
 asynPortDriver
 --------------

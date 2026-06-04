@@ -60,6 +60,7 @@ local prog = seq.program("myProgram", { poll = 0.05 })
 
 **Returns:** a program object.
 
+<br>
 
 Defining States
 ---------------
@@ -120,6 +121,7 @@ current state name):
 
 By default, `entry` and `exit` only run when the state actually changes.
 
+<br>
 
 Transitions
 -----------
@@ -183,6 +185,7 @@ seq.when(seq.delay(5.0)) {
 
 **Returns:** a delay condition object.
 
+<br>
 
 Running Programs
 ----------------
@@ -223,6 +226,7 @@ prog:stop ()
 
 The program exits at the end of its current evaluation cycle.
 
+<br>
 
 Error Handling
 --------------
@@ -231,6 +235,7 @@ If a condition, action, or entry/exit function raises an error, the
 sequencer logs the error message and continues running. Condition
 errors are treated as false (the transition does not fire).
 
+<br>
 
 Usage Pattern
 -------------
@@ -281,6 +286,7 @@ iocInit()
 The `11-Sequencer` example IOC demonstrates this pattern with a
 traffic light controller and a voltage monitor.
 
+<br>
 
 Comparison with SNL
 -------------------

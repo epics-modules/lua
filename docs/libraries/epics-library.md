@@ -102,6 +102,7 @@ epics.put("my:stringwf", {"Hello", "World"})
 
 **Returns:** an error string on failure.
 
+<br>
 
 PV Object
 ---------
@@ -193,6 +194,7 @@ Writes a field using the same options as `epics.put`.
 
 **Returns:** nothing on success, error string on failure.
 
+<br>
 
 Array Types
 -----------

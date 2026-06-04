@@ -92,6 +92,7 @@ bs.match("%{off|on|standby}", "standby")    -- returns 2
 bs.format("%{off|on|standby}", 1)           -- returns "on"
 ```
 
+<br>
 
 Formatting and Parsing
 ----------------------
@@ -189,6 +190,7 @@ bs.add_format {
 | - | - | - |
 | specifier | table | Table with `identifier` (string), `read` (function), and/or `write` (function). |
 
+<br>
 
 Bytestream Client
 ------------------
@@ -310,6 +312,7 @@ Properties delegated to the underlying `asyn.client`:
 | `portName` | string | Read-only. The port name. |
 | `addr` | number | Read-only. The address. |
 
+<br>
 
 Usage with DTYP Device Support
 ------------------------------
@@ -358,6 +361,7 @@ drvAsynIPPortConfigure("SENSOR1", "192.168.1.100:5025")
 luaLoadFile("sensor.lua", {P="dev1:", PORT="SENSOR1"})
 ```
 
+<br>
 
 Comparison with StreamDevice
 ----------------------------

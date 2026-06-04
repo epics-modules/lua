@@ -149,6 +149,7 @@ db.loadTemplate("motor.db", {
 
 **Returns:** nothing.
 
+<br>
 
 Record Inspection
 -----------------
@@ -172,6 +173,7 @@ for _, rec in ipairs(records) do
 end
 ```
 
+<br>
 
 Record Object
 -------------
@@ -187,6 +189,7 @@ The dbrecord object returned by `db.record` and `db.list` provides:
 | `rec:field(name, value)` | Set a field value by name. |
 | `rec:info(name, value)` | Add an info tag to the record. |
 
+<br>
 
 Database Hooks
 --------------
@@ -207,6 +210,7 @@ invoked. The callback receives the file path and a table of macros.
 | - | - | - |
 | callback | function | Called with `(filepath, macros_table)`. |
 
+<br>
 
 Static Database Access
 ----------------------
