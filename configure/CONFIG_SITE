@@ -8,6 +8,10 @@
 #   CONFIG_SITE.Common.$(T_A)
 #   CONFIG_SITE.$(EPICS_HOST_ARCH).$(T_A)
 
+# Build IOC applications.
+# Set to YES in configure/CONFIG_SITE.local to build the IOC.
+BUILD_IOCS = NO
+
 # Module name for cfg-based build dependencies.
 MODULE = LUA
 

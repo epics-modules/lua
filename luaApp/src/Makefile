@@ -132,51 +132,6 @@ lua_LIBS += asyn
 lua_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
-
-
-#Build an IOC with the ioc shell
-
-PROD_IOC_DEFAULT = testLuaIoc
-PROD_IOC_RTEMS = -nil-
-
-DBD += testLuaIoc.dbd
-testLuaIoc_DBD += base.dbd
-testLuaIoc_DBD += asyn.dbd
-testLuaIoc_DBD += drvAsynIPPort.dbd
-testLuaIoc_DBD += luaSupport.dbd
-
-testLuaIoc_LIBS += lua
-testLuaIoc_LIBS += asyn
-testLuaIoc_LIBS += $(EPICS_BASE_IOC_LIBS)
-
-testLuaIoc_SRCS += testLuaIoc_registerRecordDeviceDriver.cpp
-
-testLuaIoc_SRCS_DEFAULT += luaMain.cpp
-testLuaIoc_SRCS_vxWorks += -nil-
-
-
-
-#And build an IOC with the luashell
-
-PROD_IOC_DEFAULT += testLuaShell
-
-DBD += testLuaShell.dbd
-testLuaShell_DBD += base.dbd
-testLuaShell_DBD += asyn.dbd
-testLuaShell_DBD += drvAsynIPPort.dbd
-testLuaShell_DBD += luaSupport.dbd
-
-testLuaShell_LIBS += lua
-testLuaShell_LIBS += asyn
-testLuaShell_LIBS += $(EPICS_BASE_IOC_LIBS)
-
-testLuaShell_SRCS += testLuaShell_registerRecordDeviceDriver.cpp
-
-testLuaShell_SRCS_DEFAULT += luashMain.cpp
-testLuaShell_SRCS_vxWorks += -nil-
-
-
-
 #===========================
 
 include $(TOP)/configure/RULES
