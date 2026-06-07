@@ -3,6 +3,7 @@ O.*
 *.swp
 *BAK.adl
 bin/
+cfg/
 /db/
 dbd/
 html/

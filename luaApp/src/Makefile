@@ -12,6 +12,8 @@ LIBRARY_IOC_RTEMS = -nil-
 
 DBD += luaSupport.dbd
 
+CFG += LUA_DEPS
+
 
 INC += luaEpics.h
 lua_SRCS += luaEpics.cpp
