@@ -153,8 +153,19 @@ epicsShareFunc int luaLoadString(lua_State* state, const char* lua_code)
  */
 static void strtolua(lua_State* state, std::string text)
 {
-	size_t trim_front = text.find_first_not_of(" ");
-	size_t trim_back  = text.find_last_not_of(" ");
+	size_t trim_front = text.find_first_not_of(" \t\r\n");
+
+	/* Empty or all-whitespace token: push an empty string. This keeps
+	 * the pushed-value count consistent with the number of parsed
+	 * fields (luaLoadParams uses that count as the pcall arg count) and
+	 * avoids substr(npos, ...) throwing std::out_of_range. */
+	if (trim_front == std::string::npos)
+	{
+		lua_pushstring(state, "");
+		return;
+	}
+
+	size_t trim_back = text.find_last_not_of(" \t\r\n");
 
 	text = text.substr(trim_front, trim_back - trim_front + 1);
 
@@ -162,6 +173,14 @@ static void strtolua(lua_State* state, std::string text)
 	convert << "return " << text;
 
 	lua_State* sandbox = luaL_newstate();
+
+	/* Out of memory: fall back to treating the token as a plain string. */
+	if (sandbox == NULL)
+	{
+		lua_pushstring(state, text.c_str());
+		return;
+	}
+
 	int err = luaL_dostring(sandbox, convert.str().c_str());
 
 	int type = lua_type(sandbox, -1);

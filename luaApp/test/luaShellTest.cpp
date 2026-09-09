@@ -109,6 +109,63 @@ static void testLoadParams(void)
     }
 }
 
+static void testLoadParamsEmpty(void)
+{
+    testDiag("===== Lua shell: luaLoadParams empty/whitespace tokens =====");
+
+    lua_State* state = luaCreateState();
+    testOk(state != NULL, "State created for empty-param test");
+
+    if (state)
+    {
+        /* Adjacent commas -> empty middle token (previously crashed) */
+        int count = luaLoadParams(state, "1,,3");
+        testOk(count == 3, "luaLoadParams('1,,3') returns 3, got %d", count);
+        testOk(lua_isstring(state, -2), "Empty middle token is a string");
+        {
+            const char* mid = lua_tostring(state, -2);
+            testOk(mid && strcmp(mid, "") == 0, "Empty middle token is empty string");
+        }
+        lua_pop(state, count);
+
+        /* Leading comma -> empty first token */
+        count = luaLoadParams(state, ",2");
+        testOk(count == 2, "luaLoadParams(',2') returns 2, got %d", count);
+        lua_pop(state, count);
+
+        /* Whitespace-only token (previously crashed) */
+        count = luaLoadParams(state, "1, ,3");
+        testOk(count == 3, "luaLoadParams('1, ,3') returns 3, got %d", count);
+        lua_pop(state, count);
+
+        lua_close(state);
+    }
+}
+
+static void testLoadMacrosEmptyValue(void)
+{
+    testDiag("===== Lua shell: luaLoadMacros empty value =====");
+
+    lua_State* state = luaCreateState();
+    testOk(state != NULL, "State created for empty-macro test");
+
+    if (state)
+    {
+        /* Empty macro value P= previously crashed in strtolua */
+        luaLoadMacros(state, "P=,Q=hello");
+
+        int status = luaL_dostring(state, "result = (P == '') and (Q == 'hello')");
+        testOk(status == 0, "Script referencing macros runs without error");
+
+        lua_getglobal(state, "result");
+        testOk(lua_toboolean(state, -1), "P is empty string and Q is 'hello'");
+        lua_pop(state, 1);
+
+        luaPopScope(state);   /* luaLoadMacros pushed a scope */
+        lua_close(state);
+    }
+}
+
 static void testNullNamedState(void)
 {
     testDiag("===== Lua shell: luaNamedState(NULL) =====");
@@ -225,6 +282,8 @@ MAIN(luaShellTest)
     testNamedState();
     testLuaCmd();
     testLoadParams();
+    testLoadParamsEmpty();
+    testLoadMacrosEmptyValue();
     testNullNamedState();
     testRegisterState();
     testFindNamedStateNotFound();
