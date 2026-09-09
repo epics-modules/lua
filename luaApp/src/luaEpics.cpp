@@ -990,6 +990,21 @@ epicsShareFunc void luaRegisterState(lua_State* state, const char* name)
 
 	epicsGuard<epicsMutex> guard(namedStatesMutex);
 
+	std::map<std::string, lua_State*>::iterator it = named_states.find(std::string(name));
+
+	if (it != named_states.end())
+	{
+		/* Same name already registered to the same state: no-op. */
+		if (it->second == state)    { return; }
+
+		/* Same name bound to a *different* state: reject the overwrite.
+		 * Blindly overwriting would leak the previously-bound state's
+		 * registration reference and silently rebind the name, leaving
+		 * existing users pointing at the old state. */
+		errlogPrintf("luaRegisterState: name '%s' is already registered to a different Lua state; ignoring\n", name);
+		return;
+	}
+
 	named_states[std::string(name)] = state;
 	luaStateRef(state);  /* named state registration holds a reference */
 }
@@ -1022,6 +1037,16 @@ epicsShareFunc int luaStateIsRegistered(lua_State* state)
 static int l_registerState(lua_State* state)
 {
 	const char* name = luaL_checkstring(state, 1);
+
+	/* If the name is already bound to a *different* state, this is a
+	 * naming collision -- abort the script rather than silently
+	 * corrupting the shared-state mapping. */
+	lua_State* existing = luaFindNamedState(name);
+
+	if (existing != NULL && existing != state)
+	{
+		return luaL_error(state, "luaRegisterState: name '%s' is already registered to a different Lua state", name);
+	}
 
 	luaRegisterState(state, name);
 

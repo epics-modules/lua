@@ -199,6 +199,45 @@ static void testRegisterState(void)
     lua_close(fresh);
 }
 
+static void testRegisterStateCollision(void)
+{
+    testDiag("===== Lua shell: luaRegisterState name collision =====");
+
+    lua_State* stateA = luaNamedState("collide_a");
+    lua_State* stateB = luaNamedState("collide_b");
+    testOk(stateA != NULL && stateB != NULL && stateA != stateB,
+           "Two distinct named states created");
+
+    /* Register a fresh name to stateA */
+    luaRegisterState(stateA, "collide_name");
+    testOk(luaFindNamedState("collide_name") == stateA,
+           "Name registered to state A");
+
+    /* Attempt to register the SAME name to a DIFFERENT state (stateB).
+     * The C API must reject the overwrite and preserve the A binding. */
+    luaRegisterState(stateB, "collide_name");
+    testOk(luaFindNamedState("collide_name") == stateA,
+           "Collision rejected: name still bound to state A");
+
+    /* Idempotent re-register of the same name to the same state (A):
+     * should be a harmless no-op and preserve the binding. */
+    luaRegisterState(stateA, "collide_name");
+    testOk(luaFindNamedState("collide_name") == stateA,
+           "Idempotent re-register keeps binding to state A");
+    testOk(luaStateIsRegistered(stateA) != 0, "State A still registered");
+
+    /* Lua path: first registration in state A succeeds. */
+    int status = luaL_dostring(stateA, "luaRegisterState('lua_collide')");
+    testOk(status == LUA_OK, "Lua luaRegisterState('lua_collide') succeeds in state A");
+
+    /* Lua path: second registration of the same name from state B must
+     * raise a Lua error (abort the chunk). */
+    status = luaL_dostring(stateB, "luaRegisterState('lua_collide')");
+    testOk(status != LUA_OK, "Lua luaRegisterState collision aborts the script");
+    testOk(luaFindNamedState("lua_collide") == stateA,
+           "Lua collision rejected: name still bound to state A");
+}
+
 static void testFindNamedStateNotFound(void)
 {
     testDiag("===== Lua shell: luaFindNamedState not found =====");
@@ -286,6 +325,7 @@ MAIN(luaShellTest)
     testLoadMacrosEmptyValue();
     testNullNamedState();
     testRegisterState();
+    testRegisterStateCollision();
     testFindNamedStateNotFound();
     testLuaCmdTableMacros();
 
