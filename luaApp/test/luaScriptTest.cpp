@@ -274,6 +274,77 @@ static void testFloatArrayInput(void)
     testdbGetFieldEqual("test:arr_float.VAL", DBF_DOUBLE, 55.0);
 }
 
+static void testTablePromote(void)
+{
+    testDiag("===== luascriptRecord: table int/float promotion (bug #13) =====");
+
+    testdbPutFieldOk("test:tbl_promote.PROC", DBF_LONG, 1);
+
+    /* {1, 2.5, 3} must become a DOUBLE array (ATYP=Double=1), 3 elems. */
+    testdbGetFieldEqual("test:tbl_promote.ATYP", DBF_SHORT, 1);   /* Double */
+    testdbGetFieldEqual("test:tbl_promote.ASIZ", DBF_LONG, (int)(3 * sizeof(double)));
+
+    /* The promoted values (esp. 2.5) must be preserved in the output. */
+    DBADDR addr;
+    if (dbNameToAddr("test:promote_wf", &addr) == 0)
+    {
+        double vals[10] = {0};
+        long n = 3;
+        dbGetField(&addr, DBF_DOUBLE, vals, NULL, &n, NULL);
+        testOk(vals[0] == 1.0 && vals[1] == 2.5 && vals[2] == 3.0,
+               "promoted values are {1, 2.5, 3}, got {%g, %g, %g}",
+               vals[0], vals[1], vals[2]);
+    }
+    else
+    {
+        testFail("Could not find test:promote_wf");
+    }
+}
+
+static void testTableInteger(void)
+{
+    testDiag("===== luascriptRecord: all-integer table stays integer (bug #13) =====");
+
+    testdbPutFieldOk("test:tbl_int.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:tbl_int.ATYP", DBF_SHORT, 0);   /* Integer */
+    testdbGetFieldEqual("test:tbl_int.ASIZ", DBF_LONG, (int)(3 * sizeof(int)));
+}
+
+static void testTableHole(void)
+{
+    testDiag("===== luascriptRecord: nil hole ends the array (bug #13) =====");
+
+    testdbPutFieldOk("test:tbl_hole.PROC", DBF_LONG, 1);
+    /* {1, nil, 3} -> stops at first nil -> 1 integer element, no crash. */
+    testdbGetFieldEqual("test:tbl_hole.ATYP", DBF_SHORT, 0);   /* Integer */
+    testdbGetFieldEqual("test:tbl_hole.ASIZ", DBF_LONG, (int)(1 * sizeof(int)));
+}
+
+static void testTableCoerce(void)
+{
+    testDiag("===== luascriptRecord: non-number coerced in numeric table (bug #13) =====");
+
+    testdbPutFieldOk("test:tbl_coerce.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:tbl_coerce.ATYP", DBF_SHORT, 0);   /* Integer */
+    testdbGetFieldEqual("test:tbl_coerce.ASIZ", DBF_LONG, (int)(3 * sizeof(int)));
+
+    /* {1, 'x', 3} -> 'x' coerces to 0 -> {1, 0, 3}. */
+    DBADDR addr;
+    if (dbNameToAddr("test:coerce_wf", &addr) == 0)
+    {
+        epicsInt32 vals[10] = {0};
+        long n = 3;
+        dbGetField(&addr, DBF_LONG, vals, NULL, &n, NULL);
+        testOk(vals[0] == 1 && vals[1] == 0 && vals[2] == 3,
+               "coerced values are {1, 0, 3}, got {%d, %d, %d}",
+               (int) vals[0], (int) vals[1], (int) vals[2]);
+    }
+    else
+    {
+        testFail("Could not find test:coerce_wf");
+    }
+}
+
 static void testArrayOutput(void)
 {
     testDiag("===== luascriptRecord: array output =====");
@@ -580,6 +651,10 @@ MAIN(luaScriptTest)
     testShortArrayInput();
     testFloatArrayInput();
     testArrayOutput();
+    testTablePromote();
+    testTableInteger();
+    testTableHole();
+    testTableCoerce();
 
     /* Async processing */
     testAsyncSameResult();

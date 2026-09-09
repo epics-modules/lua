@@ -385,53 +385,80 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
 
 /*
  * Converts a lua table into a generated array of basic elements
- * so that it can be written to an epics PV. The type of the
- * returned array is based on the type of the first element of
- * the array in lua.
+ * so that it can be written to an epics PV.
+ *
+ * Typing rules:
+ *   - The element category (numeric vs string) is taken from the first
+ *     element. A first element that is neither a number/boolean nor a
+ *     string yields no array (NULL).
+ *   - Numeric arrays use an integer buffer only if EVERY element is an
+ *     integer (booleans count as integers); otherwise the array is
+ *     promoted to double, so a mix like {1, 2.5, 3} is not silently
+ *     truncated to integers.
+ *   - The array ends at the first nil (standard Lua sequence
+ *     semantics); #t is not trusted, since it is undefined for tables
+ *     with holes.
+ *   - Non-number elements in a numeric array are coerced via
+ *     lua_tonumber (0 if not convertible).
+ *
+ * NOTE: string tables are converted to a char array of the FIRST
+ * character of each element (ATYP = Char), which is the historical
+ * behavior. Proper multi-element DBF_STRING array output is a separate
+ * follow-up.
+ *
+ * The table is expected at the top of the stack.
  */
 static void* convertTable(lua_State* state, int* generated_size, epicsEnum16* arraytype)
 {
-	// Get the length of the array
-	lua_len(state, -1);
-	int array_size = lua_tonumber(state, -1);
-	lua_pop(state, 1);
-
-	// Get type of first value
+	/* Determine the element category from the first element. */
 	lua_geti(state, -1, 1);
-	int is_integer = lua_isinteger(state, -1);
-	int data_type = lua_type(state, -1);
+	int first_type = lua_type(state, -1);
 	lua_pop(state, 1);
 
-	switch (data_type)
+	if (first_type == LUA_TNUMBER || first_type == LUA_TBOOLEAN)
 	{
-		case LUA_TNUMBER:
+		/* Pass 1: find the contiguous length (stop at first nil) and
+		 * decide integer vs double (promote if any non-integer). */
+		int count = 0;
+		bool all_integer = true;
+
+		while (true)
 		{
-			if (! is_integer)
-			{
-				double* output = new double[array_size];
-				*generated_size = sizeof(double) * array_size;
-				*arraytype = luascriptAVALType_Double;
+			lua_geti(state, -1, count + 1);
+			int t = lua_type(state, -1);
 
-				for (int index = 0; index < array_size; index += 1)
-				{
-					lua_geti(state, -1, index + 1);
-					output[index] = lua_tonumber(state, -1);
-					lua_pop(state, 1);
-				}
+			if (t == LUA_TNIL)    { lua_pop(state, 1); break; }
 
-				return output;
-			}
+			if (t == LUA_TNUMBER && ! lua_isinteger(state, -1))    { all_integer = false; }
+			/* booleans and other coercible values count as integers */
 
-			//Intentional Fall-through for integers
+			lua_pop(state, 1);
+			count += 1;
 		}
 
-		case LUA_TBOOLEAN:
+		/* Pass 2: allocate and fill. */
+		if (all_integer)
 		{
-			int* output = new int[array_size];
-			*generated_size = sizeof(int) * array_size;
+			int* output = new int[count > 0 ? count : 1];
+			*generated_size = sizeof(int) * count;
 			*arraytype = luascriptAVALType_Integer;
 
-			for (int index = 0; index < array_size; index += 1)
+			for (int index = 0; index < count; index += 1)
+			{
+				lua_geti(state, -1, index + 1);
+				output[index] = (int) lua_tonumber(state, -1);
+				lua_pop(state, 1);
+			}
+
+			return output;
+		}
+		else
+		{
+			double* output = new double[count > 0 ? count : 1];
+			*generated_size = sizeof(double) * count;
+			*arraytype = luascriptAVALType_Double;
+
+			for (int index = 0; index < count; index += 1)
 			{
 				lua_geti(state, -1, index + 1);
 				output[index] = lua_tonumber(state, -1);
@@ -440,27 +467,39 @@ static void* convertTable(lua_State* state, int* generated_size, epicsEnum16* ar
 
 			return output;
 		}
+	}
+	else if (first_type == LUA_TSTRING)
+	{
+		/* Count contiguous (non-nil) elements. */
+		int count = 0;
 
-		case LUA_TSTRING:
+		while (true)
 		{
-			char* output = new char[array_size];
-			*generated_size = sizeof(char) * array_size;
-			*arraytype = luascriptAVALType_Char;
+			lua_geti(state, -1, count + 1);
+			int t = lua_type(state, -1);
+			lua_pop(state, 1);
 
-			for (int index = 0; index < array_size; index += 1)
-			{
-				lua_geti(state, -1, index + 1);
-				output[index] = lua_tostring(state, -1)[0];
-				lua_pop(state, 1);
-			}
-
-			return output;
+			if (t == LUA_TNIL)    { break; }
+			count += 1;
 		}
 
-		default:
-			*generated_size = 0;
-			return NULL;
+		char* output = new char[count > 0 ? count : 1];
+		*generated_size = sizeof(char) * count;
+		*arraytype = luascriptAVALType_Char;
+
+		for (int index = 0; index < count; index += 1)
+		{
+			lua_geti(state, -1, index + 1);
+			const char* s = lua_tostring(state, -1);   /* NULL for non-string/number */
+			output[index] = (s != NULL) ? s[0] : '\0';
+			lua_pop(state, 1);
+		}
+
+		return output;
 	}
+
+	*generated_size = 0;
+	return NULL;
 }
 
 static long loadStrings(luascriptRecord* record)

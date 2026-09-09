@@ -161,6 +161,42 @@ record(luascript, "$(P)arr_short") {
 	field(CODE, "@luaScriptTest.lua arr_sum()")
 }
 
+# --- convertTable (table output) tests (bug #13) ---
+
+# Mixed int/float must PROMOTE to double (not truncate 2.5 -> 2).
+record(luascript, "$(P)tbl_promote") {
+	field(CODE, "return {1, 2.5, 3}")
+	field(OUT,  "$(P)promote_wf PP")
+	field(OOPT, "Every Time")
+}
+
+record(waveform, "$(P)promote_wf") {
+	field(FTVL, "DOUBLE")
+	field(NELM, "10")
+}
+
+# All-integer stays integer.
+record(luascript, "$(P)tbl_int") {
+	field(CODE, "return {4, 5, 6}")
+}
+
+# Nil hole: array ends at the first nil.
+record(luascript, "$(P)tbl_hole") {
+	field(CODE, "return {1, nil, 3}")
+}
+
+# Non-number element in a numeric array: coerced via lua_tonumber (0).
+record(luascript, "$(P)tbl_coerce") {
+	field(CODE, "return {1, 'x', 3}")
+	field(OUT,  "$(P)coerce_wf PP")
+	field(OOPT, "Every Time")
+}
+
+record(waveform, "$(P)coerce_wf") {
+	field(FTVL, "LONG")
+	field(NELM, "10")
+}
+
 record(luascript, "$(P)arr_float") {
 	field(INAA, "$(P)float_wf")
 	field(CODE, "@luaScriptTest.lua arr_sum()")
