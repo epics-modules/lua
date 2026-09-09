@@ -1212,10 +1212,20 @@ public:
 		if (this->callRead()) return asynError;
 		if (!lua_isnil(this->state, -1))
 		{
-			const char* retval = lua_tolstring(this->state, -1, actual);
+			size_t len;
+			const char* retval = lua_tolstring(this->state, -1, &len);
 			if (retval)
 			{
-				strncpy(value, retval, maxChars);
+				/* Clamp to maxChars-1 so there is room for the NUL
+				 * terminator; never report *actual > maxChars. */
+				size_t copy_len = (len < maxChars) ? len : (maxChars > 0 ? maxChars - 1 : 0);
+				memcpy(value, retval, copy_len);
+				value[copy_len] = '\0';
+				*actual = copy_len;
+				if (eomReason)
+				{
+					*eomReason = (copy_len < len) ? ASYN_EOM_CNT : ASYN_EOM_END;
+				}
 			}
 		}
 		lua_pop(this->state, 1);
@@ -1231,8 +1241,15 @@ public:
 			lua_pop(this->state, 1);
 			return asynPortDriver::writeOctet(pasynUser, value, maxChars, actual);
 		}
-		lua_pushstring(this->state, value);
-		if (this->callWrite()) return asynError;
+		if (value != NULL)
+		{
+			/* Length-bounded push: value is not guaranteed to be
+			 * NUL-terminated at maxChars, so lua_pushstring could
+			 * over-read past the buffer. */
+			lua_pushlstring(this->state, value, maxChars);
+			if (this->callWrite()) return asynError;
+		}
+		if (actual) { *actual = maxChars; }
 		return asynSuccess;
 	}
 };

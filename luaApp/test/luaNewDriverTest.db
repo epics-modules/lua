@@ -17,3 +17,24 @@ record(ai, "$(P)computed") {
     field(INP,  "@asyn($(PORT),0) COMPUTED")
     field(SCAN, "Passive")
 }
+
+# Octet read: driver returns a 100-char string; stringin VAL is 40
+# bytes. Exercises readOctet truncation + NUL-termination (bug #4).
+record(stringin, "$(P)str_rb") {
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),0) STR_RB")
+    field(SCAN, "Passive")
+}
+
+# Octet write/read round-trip (bug #5).
+record(stringout, "$(P)str_sp") {
+    field(DTYP, "asynOctetWrite")
+    field(OUT,  "@asyn($(PORT),0) STR_SP")
+    field(SCAN, "Passive")
+}
+
+record(stringin, "$(P)str_sp_rb") {
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),0) STR_SP")
+    field(SCAN, "Passive")
+}

@@ -376,12 +376,15 @@ asynStatus luaPortDriver::writeOctet(asynUser* pasynuser, const char* value, siz
 
 	if (value != NULL)
 	{
-		std::string output(value);
-		output.erase(maxChars);
-
-		lua_pushstring(this->state, output.c_str());
+		/* Length-bounded push: value is not guaranteed NUL-terminated
+		 * at maxChars. The previous std::string(value).erase(maxChars)
+		 * both over-read to the first NUL and could throw
+		 * std::out_of_range when maxChars > strlen(value). */
+		lua_pushlstring(this->state, value, maxChars);
 		if (this->callWriteFunction())   { return asynError; }
 	}
+
+	if (actual) { *actual = maxChars; }
 
 	this->callParamCallbacks();
 	return asynSuccess;
