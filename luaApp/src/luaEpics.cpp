@@ -34,6 +34,14 @@ static std::vector<std::string> registered_paths;
 static std::map<std::string, lua_State*> named_states;
 static std::map<lua_State*, int> state_refcounts;
 
+/*
+ * Per-state recursive mutex, keyed by lua_State*. The lifetime tracks
+ * the state's reference count: created in luaCreateState, destroyed in
+ * luaStateUnref when the state is closed. Guarded by refcountMutex,
+ * which is held for the same create/destroy lifetime events.
+ */
+static std::map<lua_State*, epicsMutex*> state_mutexes;
+
 static epicsMutex registryMutex;
 static epicsMutex namedStatesMutex;
 static epicsMutex refcountMutex;
@@ -862,6 +870,7 @@ epicsShareFunc void luaStateUnref(lua_State* state)
 	if (! state)    { return; }
 
 	bool should_close = false;
+	epicsMutex* state_lock = NULL;
 
 	{
 		epicsGuard<epicsMutex> guard(refcountMutex);
@@ -883,12 +892,79 @@ epicsShareFunc void luaStateUnref(lua_State* state)
 				should_close = true;
 			}
 		}
+
+		/* If the state is being closed, remove its per-state lock from
+		 * the registry (still under refcountMutex, so removal is atomic
+		 * with the refcount reaching zero). The mutex object itself is
+		 * deleted below, after the guard is released. Any legitimate
+		 * lock holder also holds a state reference, so the refcount
+		 * cannot reach zero while the lock is held. */
+		if (should_close)
+		{
+			std::map<lua_State*, epicsMutex*>::iterator mit = state_mutexes.find(state);
+
+			if (mit != state_mutexes.end())
+			{
+				state_lock = mit->second;
+				state_mutexes.erase(mit);
+			}
+		}
 	}
+
+	if (state_lock)    { delete state_lock; }
 
 	if (should_close)
 	{
 		lua_close(state);
 	}
+}
+
+
+/*
+ * Acquire the per-state lock for a lua_State. Serializes access to
+ * the state's Lua stack across records/subsystems that may share it
+ * (e.g. named states used by DTYP device support, luascript records,
+ * and the shell). The lock is recursive (epicsMutex), so a thread may
+ * take it multiple times.
+ *
+ * States not created via luaCreateState (e.g. raw luaL_newstate) are
+ * not tracked and locking is a safe no-op.
+ */
+epicsShareFunc void luaLockState(lua_State* state)
+{
+	if (! state)    { return; }
+
+	epicsMutex* state_lock = NULL;
+
+	{
+		epicsGuard<epicsMutex> guard(refcountMutex);
+
+		std::map<lua_State*, epicsMutex*>::iterator it = state_mutexes.find(state);
+
+		if (it != state_mutexes.end())    { state_lock = it->second; }
+	}
+
+	/* Lock outside the registry guard: a blocking wait on the state
+	 * lock must not serialize through refcountMutex. The pointer stays
+	 * valid because the caller holds a reference to the state. */
+	if (state_lock)    { state_lock->lock(); }
+}
+
+epicsShareFunc void luaUnlockState(lua_State* state)
+{
+	if (! state)    { return; }
+
+	epicsMutex* state_lock = NULL;
+
+	{
+		epicsGuard<epicsMutex> guard(refcountMutex);
+
+		std::map<lua_State*, epicsMutex*>::iterator it = state_mutexes.find(state);
+
+		if (it != state_mutexes.end())    { state_lock = it->second; }
+	}
+
+	if (state_lock)    { state_lock->unlock(); }
 }
 
 
@@ -924,6 +1000,16 @@ epicsShareFunc lua_State* luaCreateState()
 
 	/* Initial reference count of 1 (owned by the caller) */
 	luaStateRef(output);
+
+	/* Create the per-state lock. Lifetime matches the reference count:
+	 * destroyed in luaStateUnref when the state is closed. */
+	{
+		epicsGuard<epicsMutex> guard(refcountMutex);
+		if (state_mutexes.find(output) == state_mutexes.end())
+		{
+			state_mutexes[output] = new epicsMutex;
+		}
+	}
 
 	return output;
 }

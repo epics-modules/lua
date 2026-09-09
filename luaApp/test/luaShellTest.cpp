@@ -238,6 +238,60 @@ static void testRegisterStateCollision(void)
            "Lua collision rejected: name still bound to state A");
 }
 
+static void testStateLock(void)
+{
+    testDiag("===== Lua shell: luaLockState / luaUnlockState =====");
+
+    /* Managed state (created via luaCreateState): lock/unlock works */
+    lua_State* state = luaCreateState();
+    testOk(state != NULL, "State created for lock test");
+
+    if (state)
+    {
+        luaLockState(state);
+        luaUnlockState(state);
+        testPass("lock/unlock pair on managed state completes");
+
+        /* Recursive: same thread locks twice, unlocks twice (epicsMutex
+         * is recursive). If this hangs, the test harness will time out. */
+        luaLockState(state);
+        luaLockState(state);
+        luaUnlockState(state);
+        luaUnlockState(state);
+        testPass("recursive lock/unlock on managed state completes");
+
+        luaStateUnref(state);  /* close the state (also frees its lock) */
+    }
+
+    /* Unmanaged state (raw luaL_newstate): lock/unlock are safe no-ops */
+    lua_State* raw = luaL_newstate();
+    testOk(raw != NULL, "Raw state created");
+
+    if (raw)
+    {
+        luaLockState(raw);
+        luaUnlockState(raw);
+        testPass("lock/unlock no-op on unmanaged state does not crash");
+        lua_close(raw);
+    }
+
+    /* NULL is a safe no-op */
+    luaLockState(NULL);
+    luaUnlockState(NULL);
+    testPass("lock/unlock no-op on NULL does not crash");
+
+    /* After closing a state, a fresh managed state still locks cleanly
+     * (sanity that teardown removed the registry entry). */
+    lua_State* state2 = luaCreateState();
+    if (state2)
+    {
+        luaLockState(state2);
+        luaUnlockState(state2);
+        testPass("lock/unlock on a fresh state after prior teardown works");
+        luaStateUnref(state2);
+    }
+}
+
 static void testFindNamedStateNotFound(void)
 {
     testDiag("===== Lua shell: luaFindNamedState not found =====");
@@ -326,6 +380,7 @@ MAIN(luaShellTest)
     testNullNamedState();
     testRegisterState();
     testRegisterStateCollision();
+    testStateLock();
     testFindNamedStateNotFound();
     testLuaCmdTableMacros();
 

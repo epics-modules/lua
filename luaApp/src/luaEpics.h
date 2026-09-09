@@ -56,6 +56,9 @@ epicsShareFunc void luaAddModule(const char* module_top);
 epicsShareFunc void luaStateRef(lua_State* state);
 epicsShareFunc void luaStateUnref(lua_State* state);
 
+epicsShareFunc void luaLockState(lua_State* state);
+epicsShareFunc void luaUnlockState(lua_State* state);
+
 #ifdef __cplusplus
 }
 
