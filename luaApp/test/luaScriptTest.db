@@ -21,6 +21,15 @@ record(luascript, "$(P)str") {
     field(CODE, "return 'hello'")
 }
 
+# Test: inline CODE returning booleans (true -> VAL=1, false -> VAL=0)
+record(luascript, "$(P)bool_true") {
+    field(CODE, "return true")
+}
+
+record(luascript, "$(P)bool_false") {
+    field(CODE, "return false")
+}
+
 # Test: inline CODE returning a table (array)
 record(luascript, "$(P)tbl") {
     field(CODE, "return {10, 20, 30}")

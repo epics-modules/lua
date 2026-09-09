@@ -1095,11 +1095,19 @@ static void handleResults(luascriptRecord* record)
 		int rettype = lua_type(state, -1);
 		pvt->luaReturnType = rettype;
 
-		if (rettype == LUA_TBOOLEAN || rettype == LUA_TNUMBER)
+		if (rettype == LUA_TNUMBER)
 		{
 			record->pval = record->val;
 			record->val = lua_tonumber(state, -1);
 			record->udf = isnan(record->val);
+		}
+		else if (rettype == LUA_TBOOLEAN)
+		{
+			/* lua_tonumber on a boolean returns 0 for both true and
+			 * false; use lua_toboolean so true -> 1, false -> 0. */
+			record->pval = record->val;
+			record->val = lua_toboolean(state, -1) ? 1.0 : 0.0;
+			record->udf = FALSE;
 		}
 		else if (rettype == LUA_TSTRING)
 		{

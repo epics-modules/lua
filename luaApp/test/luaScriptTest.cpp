@@ -37,6 +37,18 @@ static void testNumericReturn(void)
     testdbGetFieldEqual("test:add.VAL", DBF_DOUBLE, 7.0);
 }
 
+static void testBooleanReturn(void)
+{
+    testDiag("===== luascriptRecord: boolean return =====");
+
+    testdbPutFieldOk("test:bool_true.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:bool_true.VAL", DBF_DOUBLE, 1.0);
+    testdbGetFieldEqual("test:bool_true.UDF", DBF_SHORT, 0);
+
+    testdbPutFieldOk("test:bool_false.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:bool_false.VAL", DBF_DOUBLE, 0.0);
+}
+
 static void testStringReturn(void)
 {
     testDiag("===== luascriptRecord: string return =====");
@@ -478,6 +490,7 @@ MAIN(luaScriptTest)
     }
 
     testNumericReturn();
+    testBooleanReturn();
     testStringReturn();
     testTableReturn();
     testErrorHandling();
