@@ -65,16 +65,16 @@ lua_SRCS += lzio.c
 SRC_DIRS += $(TOP)/luaApp/src/devSupport
 INC += devUtil.h
 
-lua_SRCS += devLuaAi.c
-lua_SRCS += devLuaAo.c
-lua_SRCS += devLuaBi.c
-lua_SRCS += devLuaBo.c
-lua_SRCS += devLuaMbbi.c
-lua_SRCS += devLuaMbbo.c
-lua_SRCS += devLuaLongin.c
-lua_SRCS += devLuaLongout.c
-lua_SRCS += devLuaStringin.c
-lua_SRCS += devLuaStringout.c
+lua_SRCS += devLuaAi.cpp
+lua_SRCS += devLuaAo.cpp
+lua_SRCS += devLuaBi.cpp
+lua_SRCS += devLuaBo.cpp
+lua_SRCS += devLuaMbbi.cpp
+lua_SRCS += devLuaMbbo.cpp
+lua_SRCS += devLuaLongin.cpp
+lua_SRCS += devLuaLongout.cpp
+lua_SRCS += devLuaStringin.cpp
+lua_SRCS += devLuaStringout.cpp
 lua_SRCS += devUtil.cpp
 
 

@@ -69,6 +69,15 @@ luaEventTest_SRCS += luaTest_registerRecordDeviceDriver.cpp
 testHarness_SRCS += luaEventTest.cpp
 TESTS += luaEventTest
 
+# --- DTYP "lua" concurrency stress test ---
+TESTPROD_HOST += luaConcurrencyTest
+luaConcurrencyTest_SRCS += luaConcurrencyTest.cpp
+luaConcurrencyTest_SRCS += luaTest_registerRecordDeviceDriver.cpp
+testHarness_SRCS += luaConcurrencyTest.cpp
+TESTFILES += ../luaConcurrencyTest.db
+TESTFILES += ../luaConcurrencyTest.lua
+TESTS += luaConcurrencyTest
+
 # --- Test harness for embedded targets ---
 testHarness_SRCS += epicsRunLuaTests.c
 luaTestHarness_SRCS += $(testHarness_SRCS)

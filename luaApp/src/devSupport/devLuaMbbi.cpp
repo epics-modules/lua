@@ -1,15 +1,17 @@
 #include "devUtil.h"
+#include "luaEpics.h"
 
 #include "lua.h"
 
-#include <longinRecord.h>
+#include <mbbiRecord.h>
 #include <dbCommon.h>
 #include <devSup.h>
 #include <recGbl.h>
 #include <alarm.h>
+#include <string.h>
 #include <epicsExport.h>
 
-static void pushRecord(struct longinRecord* record)
+static void pushRecord(struct mbbiRecord* record)
 {
 	Protocol* proto = (Protocol*) record->dpvt;
 	lua_State* state = proto->state;
@@ -17,9 +19,9 @@ static void pushRecord(struct longinRecord* record)
 	luaGeneratePV(state, record->name);
 }
 
-static long readData(struct longinRecord* record)
+static long readData(struct mbbiRecord* record)
 {
-	int type;
+	int type, index;
 	Protocol* proto = (Protocol*) record->dpvt;
 	
 	if (!proto)
@@ -28,6 +30,8 @@ static long readData(struct longinRecord* record)
 		return -1;
 	}
 	
+	LuaStateGuard guard(proto->state);
+
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	
@@ -36,28 +40,62 @@ static long readData(struct longinRecord* record)
 		recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 		return -1;
 	}
-	
+
 	type = lua_type(proto->state, -1);
 	
 	switch (type)
 	{		
 		case LUA_TNUMBER:
 		{
+			int val;
+			
 			if (! lua_isinteger(proto->state, -1))
 			{ 
 				lua_pop(proto->state, 1);
 				recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 				return -1;
 			}
-			else
-			{
-				long val = lua_tointeger(proto->state, -1);
-				record->val = val;
-				record->udf = FALSE;
 			
-				lua_pop(proto->state, 1);
-				return 0;
+			val = lua_tointeger(proto->state, -1);
+			
+			if (record->sdef)
+			{
+				for (index = 0; index < 16; index += 1)
+				{
+					if ((&record->zrvl)[index])
+					{
+					if (record->mask)    { val &= record->mask; }
+					record->rval = val;
+					record->udf = FALSE;
+					lua_pop(proto->state, 1);
+					return 0;
+					}
+				}
 			}
+			
+			record->val = (short) val;
+			record->udf = FALSE;
+			lua_pop(proto->state, 1);
+			return 2;
+		}
+		
+		case LUA_TSTRING:
+		{
+			const char* buffer = lua_tostring(proto->state, -1);
+			for (index = 0; index < 16; index += 1)
+			{
+				if (strcmp((&record->zrst)[index], buffer) == 0)
+				{
+					record->val = (short) index;
+					record->udf = FALSE;
+					lua_pop(proto->state, 1);
+					return 2;
+				}
+			}
+			
+			lua_pop(proto->state, 1);
+			recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
+			return -1;
 		}
 		
 		case LUA_TNIL:
@@ -76,11 +114,11 @@ static long readData(struct longinRecord* record)
 
 static long initRecord (dbCommon* record)
 {
-	longinRecord* longin = (longinRecord*) record;
+	mbbiRecord* mbbi = (mbbiRecord*) record;
 	
-	longin->dpvt = parseINPOUT(&longin->inp);
+	mbbi->dpvt = parseINPOUT(&mbbi->inp);
 	
-	if (!longin->dpvt)
+	if (!mbbi->dpvt)
 	{
 		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
 		return -1;
@@ -89,6 +127,9 @@ static long initRecord (dbCommon* record)
 	return 0;
 }
 
+extern "C"
+{
+
 struct {
     long number;
     DEVSUPFUN report;
@@ -96,13 +137,15 @@ struct {
     DEVSUPFUN init_record;
     DEVSUPFUN get_ioint_info;
     DEVSUPFUN read;
-} devLuaLongin = {
+} devLuaMbbi = {
     5,
     NULL,
     NULL,
-    initRecord,
+    DEVSUPFUN_CAST initRecord,
     NULL,
-    readData
+    DEVSUPFUN_CAST readData
 };
 
-epicsExportAddress(dset, devLuaLongin);
+epicsExportAddress(dset, devLuaMbbi);
+
+}

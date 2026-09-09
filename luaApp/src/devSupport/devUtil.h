@@ -6,6 +6,10 @@
 #include <lua.h>
 
 #ifdef __cplusplus
+/* Device support is compiled as C++; DEVSUPFUN assignments need an
+ * explicit cast (parallels RECSUPFUN_CAST used by the record). */
+#include <devSup.h>
+#define DEVSUPFUN_CAST (DEVSUPFUN)
 extern "C" {
 #endif
 

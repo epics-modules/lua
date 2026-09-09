@@ -1,17 +1,17 @@
 #include "devUtil.h"
-
-#include "stdio.h"
+#include "luaEpics.h"
 
 #include "lua.h"
 
-#include <aiRecord.h>
+#include <stringinRecord.h>
 #include <dbCommon.h>
 #include <devSup.h>
 #include <recGbl.h>
 #include <alarm.h>
+#include <string.h>
 #include <epicsExport.h>
 
-static void pushRecord(struct aiRecord* record)
+static void pushRecord(struct stringinRecord* record)
 {
 	Protocol* proto = (Protocol*) record->dpvt;
 	lua_State* state = proto->state;
@@ -19,7 +19,7 @@ static void pushRecord(struct aiRecord* record)
 	luaGeneratePV(state, record->name);
 }
 
-static long readData(struct aiRecord* record)
+static long readData(struct stringinRecord* record)
 {
 	int type;
 	Protocol* proto = (Protocol*) record->dpvt;
@@ -30,6 +30,8 @@ static long readData(struct aiRecord* record)
 		return -1;
 	}
 	
+	LuaStateGuard guard(proto->state);
+
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	
@@ -43,12 +45,15 @@ static long readData(struct aiRecord* record)
 	
 	switch (type)
 	{		
-		case LUA_TNUMBER:
+		case LUA_TSTRING:
 		{
-			record->val = lua_tonumber(proto->state, -1);
+			const char* temp = lua_tostring(proto->state, -1);
+			
+			strncpy(record->val, temp, sizeof(record->val) - 1);
+			record->val[sizeof(record->val) - 1] = '\0';
 			record->udf = FALSE;
 			lua_pop(proto->state, 1);
-			return 2;
+			return 0;
 		}
 		
 		case LUA_TNIL:
@@ -67,11 +72,11 @@ static long readData(struct aiRecord* record)
 
 static long initRecord (dbCommon* record)
 {
-	aiRecord* ai = (aiRecord*) record;
+	stringinRecord* stringin = (stringinRecord*) record;
 	
-	ai->dpvt = parseINPOUT(&ai->inp);
+	stringin->dpvt = parseINPOUT(&stringin->inp);
 	
-	if (!ai->dpvt)
+	if (!stringin->dpvt)
 	{
 		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
 		return -1;
@@ -80,6 +85,9 @@ static long initRecord (dbCommon* record)
 	return 0;
 }
 
+extern "C"
+{
+
 struct {
     long number;
     DEVSUPFUN report;
@@ -87,15 +95,15 @@ struct {
     DEVSUPFUN init_record;
     DEVSUPFUN get_ioint_info;
     DEVSUPFUN read;
-    DEVSUPFUN special_linconv;
-} devLuaAi = {
-    6,
+} devLuaStringin = {
+    5,
     NULL,
     NULL,
-    initRecord,
+    DEVSUPFUN_CAST initRecord,
     NULL,
-    readData,
-    NULL
+    DEVSUPFUN_CAST readData
 };
 
-epicsExportAddress(dset, devLuaAi);
+epicsExportAddress(dset, devLuaStringin);
+
+}

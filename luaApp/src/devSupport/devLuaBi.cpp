@@ -1,8 +1,9 @@
 #include "devUtil.h"
+#include "luaEpics.h"
 
 #include "lua.h"
 
-#include <mbbiRecord.h>
+#include <biRecord.h>
 #include <dbCommon.h>
 #include <devSup.h>
 #include <recGbl.h>
@@ -10,7 +11,7 @@
 #include <string.h>
 #include <epicsExport.h>
 
-static void pushRecord(struct mbbiRecord* record)
+static void pushRecord(struct biRecord* record)
 {
 	Protocol* proto = (Protocol*) record->dpvt;
 	lua_State* state = proto->state;
@@ -18,9 +19,9 @@ static void pushRecord(struct mbbiRecord* record)
 	luaGeneratePV(state, record->name);
 }
 
-static long readData(struct mbbiRecord* record)
+static long readData(struct biRecord* record)
 {
-	int type, index;
+	int type;
 	Protocol* proto = (Protocol*) record->dpvt;
 	
 	if (!proto)
@@ -29,6 +30,8 @@ static long readData(struct mbbiRecord* record)
 		return -1;
 	}
 	
+	LuaStateGuard guard(proto->state);
+
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	
@@ -37,57 +40,51 @@ static long readData(struct mbbiRecord* record)
 		recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 		return -1;
 	}
-
+	
 	type = lua_type(proto->state, -1);
 	
 	switch (type)
 	{		
 		case LUA_TNUMBER:
 		{
-			int val;
-			
 			if (! lua_isinteger(proto->state, -1))
-			{ 
+			{
 				lua_pop(proto->state, 1);
 				recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 				return -1;
 			}
-			
-			val = lua_tointeger(proto->state, -1);
-			
-			if (record->sdef)
+			else
 			{
-				for (index = 0; index < 16; index += 1)
-				{
-					if ((&record->zrvl)[index])
-					{
-					if (record->mask)    { val &= record->mask; }
-					record->rval = val;
-					record->udf = FALSE;
-					lua_pop(proto->state, 1);
-					return 0;
-					}
-				}
-			}
+			    int val = lua_tointeger(proto->state, -1);
 			
-			record->val = (short) val;
-			record->udf = FALSE;
-			lua_pop(proto->state, 1);
-			return 2;
+			    if (record->mask) val &= record->mask;
+			
+		    record->rval = val;
+		    record->udf = FALSE;
+		
+		    lua_pop(proto->state, 1);
+		    return 0;
+			}
 		}
 		
 		case LUA_TSTRING:
 		{
 			const char* buffer = lua_tostring(proto->state, -1);
-			for (index = 0; index < 16; index += 1)
+			
+			if (strcmp(record->znam, buffer) == 0)
 			{
-				if (strcmp((&record->zrst)[index], buffer) == 0)
-				{
-					record->val = (short) index;
-					record->udf = FALSE;
-					lua_pop(proto->state, 1);
-					return 2;
-				}
+				record->val = 0;
+				record->udf = FALSE;
+				lua_pop(proto->state, 1);
+				return 2;
+			}
+			
+			if (strcmp(record->onam, buffer) == 0)
+			{
+				record->val = 1;
+				record->udf = FALSE;
+				lua_pop(proto->state, 1);
+				return 2;
 			}
 			
 			lua_pop(proto->state, 1);
@@ -111,11 +108,11 @@ static long readData(struct mbbiRecord* record)
 
 static long initRecord (dbCommon* record)
 {
-	mbbiRecord* mbbi = (mbbiRecord*) record;
+	biRecord* bi = (biRecord*) record;
 	
-	mbbi->dpvt = parseINPOUT(&mbbi->inp);
+	bi->dpvt = parseINPOUT(&bi->inp);
 	
-	if (!mbbi->dpvt)
+	if (!bi->dpvt)
 	{
 		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
 		return -1;
@@ -124,6 +121,9 @@ static long initRecord (dbCommon* record)
 	return 0;
 }
 
+extern "C"
+{
+
 struct {
     long number;
     DEVSUPFUN report;
@@ -131,13 +131,15 @@ struct {
     DEVSUPFUN init_record;
     DEVSUPFUN get_ioint_info;
     DEVSUPFUN read;
-} devLuaMbbi = {
+} devLuaBi = {
     5,
     NULL,
     NULL,
-    initRecord,
+    DEVSUPFUN_CAST initRecord,
     NULL,
-    readData
+    DEVSUPFUN_CAST readData
 };
 
-epicsExportAddress(dset, devLuaMbbi);
+epicsExportAddress(dset, devLuaBi);
+
+}

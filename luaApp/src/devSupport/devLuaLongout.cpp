@@ -1,13 +1,14 @@
 #include "devUtil.h"
+#include "luaEpics.h"
 
-#include <stringoutRecord.h>
+#include <longoutRecord.h>
 #include <dbCommon.h>
 #include <devSup.h>
 #include <recGbl.h>
 #include <alarm.h>
 #include <epicsExport.h>
 
-static void pushRecord(struct stringoutRecord* record)
+static void pushRecord(struct longoutRecord* record)
 {
 	Protocol* proto = (Protocol*) record->dpvt;
 	lua_State* state = proto->state;
@@ -15,7 +16,7 @@ static void pushRecord(struct stringoutRecord* record)
 	luaGeneratePV(state, record->name);
 }
 
-static long writeData(struct stringoutRecord* record)
+static long writeData(struct longoutRecord* record)
 {
 	Protocol* proto = (Protocol*) record->dpvt;
 	
@@ -25,6 +26,8 @@ static long writeData(struct stringoutRecord* record)
 		return -1;
 	}
 	
+	LuaStateGuard guard(proto->state);
+
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	
@@ -41,11 +44,11 @@ static long writeData(struct stringoutRecord* record)
 
 static long initRecord (dbCommon* record)
 {
-	stringoutRecord* stringout = (stringoutRecord*) record;
+	longoutRecord* longout = (longoutRecord*) record;
 	
-	stringout->dpvt = parseINPOUT(&stringout->out);
+	longout->dpvt = parseINPOUT(&longout->out);
 	
-	if (!stringout->dpvt)
+	if (!longout->dpvt)
 	{
 		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
 		return -1;
@@ -54,6 +57,9 @@ static long initRecord (dbCommon* record)
 	return 0;
 }
 
+extern "C"
+{
+
 struct {
     long number;
     DEVSUPFUN report;
@@ -61,13 +67,15 @@ struct {
     DEVSUPFUN init_record;
     DEVSUPFUN get_ioint_info;
     DEVSUPFUN write;
-} devLuaStringout = {
+} devLuaLongout = {
     5,
     NULL,
     NULL,
-    initRecord,
+    DEVSUPFUN_CAST initRecord,
     NULL,
-    writeData
+    DEVSUPFUN_CAST writeData
 };
 
-epicsExportAddress(dset, devLuaStringout);
+epicsExportAddress(dset, devLuaLongout);
+
+}

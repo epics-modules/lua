@@ -1,0 +1,43 @@
+# Records for the DTYP "lua" concurrency stress test.
+#
+# All records share a single named Lua state ("stress_state"), created
+# and registered by the test before iocInit. The INP/OUT "@stress_state"
+# does not resolve to a file on disk, so parseINPOUT binds these records
+# to the pre-registered named state via luaFindNamedState -- i.e. they
+# all execute against the SAME lua_State.
+
+record(ai, "$(P)ai1") {
+    field(DTYP, "lua")
+    field(INP,  "@stress_state stress_read")
+    field(SCAN, "Passive")
+}
+
+record(ai, "$(P)ai2") {
+    field(DTYP, "lua")
+    field(INP,  "@stress_state stress_read")
+    field(SCAN, "Passive")
+}
+
+record(longin, "$(P)li1") {
+    field(DTYP, "lua")
+    field(INP,  "@stress_state stress_read")
+    field(SCAN, "Passive")
+}
+
+record(stringin, "$(P)si1") {
+    field(DTYP, "lua")
+    field(INP,  "@stress_state stress_read_string")
+    field(SCAN, "Passive")
+}
+
+record(ao, "$(P)ao1") {
+    field(DTYP, "lua")
+    field(OUT,  "@stress_state stress_write")
+    field(SCAN, "Passive")
+}
+
+record(longout, "$(P)lo1") {
+    field(DTYP, "lua")
+    field(OUT,  "@stress_state stress_write")
+    field(SCAN, "Passive")
+}

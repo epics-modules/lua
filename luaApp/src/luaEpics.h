@@ -65,6 +65,25 @@ epicsShareFunc void luaUnlockState(lua_State* state);
 int l_luaAddPath(lua_State* state);
 int l_luaAddModule(lua_State* state);
 
+/*
+ * RAII guard for the per-state lock. Locks the state on construction
+ * and unlocks on destruction, so every return/exception path releases
+ * the lock. Safe on unmanaged/NULL states (luaLockState is a no-op
+ * for those).
+ */
+class LuaStateGuard
+{
+public:
+	LuaStateGuard(lua_State* s) : state(s) { luaLockState(state); }
+	~LuaStateGuard() { luaUnlockState(state); }
+
+private:
+	lua_State* state;
+
+	LuaStateGuard(const LuaStateGuard&);
+	LuaStateGuard& operator=(const LuaStateGuard&);
+};
+
 epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index);
 
 /*

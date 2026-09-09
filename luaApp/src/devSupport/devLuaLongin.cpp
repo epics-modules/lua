@@ -1,16 +1,16 @@
 #include "devUtil.h"
+#include "luaEpics.h"
 
 #include "lua.h"
 
-#include <biRecord.h>
+#include <longinRecord.h>
 #include <dbCommon.h>
 #include <devSup.h>
 #include <recGbl.h>
 #include <alarm.h>
-#include <string.h>
 #include <epicsExport.h>
 
-static void pushRecord(struct biRecord* record)
+static void pushRecord(struct longinRecord* record)
 {
 	Protocol* proto = (Protocol*) record->dpvt;
 	lua_State* state = proto->state;
@@ -18,7 +18,7 @@ static void pushRecord(struct biRecord* record)
 	luaGeneratePV(state, record->name);
 }
 
-static long readData(struct biRecord* record)
+static long readData(struct longinRecord* record)
 {
 	int type;
 	Protocol* proto = (Protocol*) record->dpvt;
@@ -29,6 +29,8 @@ static long readData(struct biRecord* record)
 		return -1;
 	}
 	
+	LuaStateGuard guard(proto->state);
+
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	
@@ -45,48 +47,20 @@ static long readData(struct biRecord* record)
 		case LUA_TNUMBER:
 		{
 			if (! lua_isinteger(proto->state, -1))
-			{
+			{ 
 				lua_pop(proto->state, 1);
 				recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
 				return -1;
 			}
 			else
 			{
-			    int val = lua_tointeger(proto->state, -1);
-			
-			    if (record->mask) val &= record->mask;
-			
-		    record->rval = val;
-		    record->udf = FALSE;
-		
-		    lua_pop(proto->state, 1);
-		    return 0;
-			}
-		}
-		
-		case LUA_TSTRING:
-		{
-			const char* buffer = lua_tostring(proto->state, -1);
-			
-			if (strcmp(record->znam, buffer) == 0)
-			{
-				record->val = 0;
+				long val = lua_tointeger(proto->state, -1);
+				record->val = val;
 				record->udf = FALSE;
-				lua_pop(proto->state, 1);
-				return 2;
-			}
 			
-			if (strcmp(record->onam, buffer) == 0)
-			{
-				record->val = 1;
-				record->udf = FALSE;
 				lua_pop(proto->state, 1);
-				return 2;
+				return 0;
 			}
-			
-			lua_pop(proto->state, 1);
-			recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
-			return -1;
 		}
 		
 		case LUA_TNIL:
@@ -105,11 +79,11 @@ static long readData(struct biRecord* record)
 
 static long initRecord (dbCommon* record)
 {
-	biRecord* bi = (biRecord*) record;
+	longinRecord* longin = (longinRecord*) record;
 	
-	bi->dpvt = parseINPOUT(&bi->inp);
+	longin->dpvt = parseINPOUT(&longin->inp);
 	
-	if (!bi->dpvt)
+	if (!longin->dpvt)
 	{
 		recGblSetSevr(record, LINK_ALARM, INVALID_ALARM);
 		return -1;
@@ -118,6 +92,9 @@ static long initRecord (dbCommon* record)
 	return 0;
 }
 
+extern "C"
+{
+
 struct {
     long number;
     DEVSUPFUN report;
@@ -125,13 +102,15 @@ struct {
     DEVSUPFUN init_record;
     DEVSUPFUN get_ioint_info;
     DEVSUPFUN read;
-} devLuaBi = {
+} devLuaLongin = {
     5,
     NULL,
     NULL,
-    initRecord,
+    DEVSUPFUN_CAST initRecord,
     NULL,
-    readData
+    DEVSUPFUN_CAST readData
 };
 
-epicsExportAddress(dset, devLuaBi);
+epicsExportAddress(dset, devLuaLongin);
+
+}
