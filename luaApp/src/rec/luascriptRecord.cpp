@@ -546,7 +546,7 @@ static long loadStrings(luascriptRecord* record)
 			
 			case DB_LUA_CHAR:
 			{
-				if (field_type == 1 && elements > 1)  /* DBF_CHAR array: read as string */
+				if (field_type == DBF_CHAR && elements > 1)  /* DBF_CHAR array: read as string */
 				{
 					char* buf = new char[elements + 1];
 					linkStatus = dbGetLink(field, DBR_CHAR, buf, 0, &elements);
@@ -564,7 +564,7 @@ static long loadStrings(luascriptRecord* record)
 					}
 					delete[] buf;
 				}
-				else if (field_type == 1)  /* DBF_CHAR scalar */
+				else if (field_type == DBF_CHAR)  /* DBF_CHAR scalar */
 				{
 					/* Table output -- changed stays 1 */
 					linkStatus = createTable<epicsInt8>(state, field, DBR_CHAR, &elements, Characters);
@@ -579,12 +579,22 @@ static long loadStrings(luascriptRecord* record)
 
 			case DB_LUA_INTEGER:
 			{
-				/* Table output -- changed stays 1 */
-				if (field_type == 3)       /* DBF_SHORT */
-					linkStatus = createTable<epicsInt16>(state, field, DBR_LONG, &elements, Integers);
-				else if (field_type == 4)  /* DBF_USHORT */
-					linkStatus = createTable<epicsUInt16>(state, field, DBR_LONG, &elements, Integers);
-				else if (field_type == 5)  /* DBF_LONG */
+				/* Table output -- changed stays 1.
+				 *
+				 * The createTable<T> buffer element type MUST match the
+				 * DBR_* request type's size, or dbGetLink overruns the
+				 * buffer (e.g. DBR_LONG writes 4-byte ints). Use DBF_*
+				 * macros rather than raw enum values: the dbFldTypes.h
+				 * numbering shifted between 3.15 and 7.0 (INT64/UINT64
+				 * inserted), so hard-coded integers are version-wrong.
+				 *
+				 * Note: DBF_ULONG values > INT32_MAX may wrap when read
+				 * via DBR_LONG. Pre-existing limitation, left as-is. */
+				if (field_type == DBF_SHORT)
+					linkStatus = createTable<epicsInt16>(state, field, DBR_SHORT, &elements, Integers);
+				else if (field_type == DBF_USHORT)
+					linkStatus = createTable<epicsUInt16>(state, field, DBR_SHORT, &elements, Integers);
+				else if (field_type == DBF_LONG)
 					linkStatus = createTable<epicsInt32>(state, field, DBR_LONG, &elements, Integers);
 				else                       /* DBF_ULONG */
 					linkStatus = createTable<epicsUInt32>(state, field, DBR_LONG, &elements, Integers);
@@ -593,9 +603,15 @@ static long loadStrings(luascriptRecord* record)
 
 			case DB_LUA_DOUBLE:
 			{
-				/* Table output -- changed stays 1 */
-				if (field_type == 9)       /* DBF_FLOAT */
-					linkStatus = createTable<epicsFloat32>(state, field, DBR_DOUBLE, &elements, Numbers);
+				/* Table output -- changed stays 1. Match buffer type to
+				 * the DBR_* request size (see note above).
+				 *
+				 * On 7.0, DBF_INT64/UINT64 also map here (via
+				 * dbf_to_lua_type) and are read as double, which may lose
+				 * precision for very large magnitudes -- acceptable, as
+				 * Lua numbers are doubles. */
+				if (field_type == DBF_FLOAT)
+					linkStatus = createTable<epicsFloat32>(state, field, DBR_FLOAT, &elements, Numbers);
 				else                       /* DBF_DOUBLE, DBF_INT64, DBF_UINT64 */
 					linkStatus = createTable<epicsFloat64>(state, field, DBR_DOUBLE, &elements, Numbers);
 				break;

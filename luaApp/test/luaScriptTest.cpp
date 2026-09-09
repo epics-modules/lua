@@ -253,6 +253,27 @@ static void testStringArrayInput(void)
     testdbGetFieldEqual("test:arr_string.SVAL", DBF_STRING, "alpha");
 }
 
+static void testShortArrayInput(void)
+{
+    testDiag("===== luascriptRecord: SHORT array input (bug #8) =====");
+
+    /* arr_sum over {1..10} = 55. Without the fix, createTable<epicsInt16>
+     * with DBR_LONG writes 4-byte ints into a 2-byte buffer -> overflow
+     * and garbage sum. */
+    testdbPutFieldOk("test:arr_short.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:arr_short.VAL", DBF_DOUBLE, 55.0);
+}
+
+static void testFloatArrayInput(void)
+{
+    testDiag("===== luascriptRecord: FLOAT array input (bug #8) =====");
+
+    /* arr_sum over {1..10} = 55. Without the fix, createTable<epicsFloat32>
+     * with DBR_DOUBLE writes 8-byte doubles into a 4-byte buffer. */
+    testdbPutFieldOk("test:arr_float.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:arr_float.VAL", DBF_DOUBLE, 55.0);
+}
+
 static void testArrayOutput(void)
 {
     testDiag("===== luascriptRecord: array output =====");
@@ -523,6 +544,16 @@ MAIN(luaScriptTest)
         strncpy(svals[2], "gamma", MAX_STRING_SIZE - 1);
         dbNameToAddr("test:string_wf", &addr);
         dbPutField(&addr, DBF_STRING, svals, 3);
+
+        /* 10 elements each: 1..10 sums to 55. Large NELM so a
+         * createTable<T>/DBR size mismatch (#8) overruns observably. */
+        epicsInt16 svals16[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        dbNameToAddr("test:short_wf", &addr);
+        dbPutField(&addr, DBF_SHORT, svals16, 10);
+
+        epicsFloat32 fvals[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        dbNameToAddr("test:float_wf", &addr);
+        dbPutField(&addr, DBF_FLOAT, fvals, 10);
     }
 
     testNumericReturn();
@@ -546,6 +577,8 @@ MAIN(luaScriptTest)
     testIntArrayInput();
     testCharArrayInput();
     testStringArrayInput();
+    testShortArrayInput();
+    testFloatArrayInput();
     testArrayOutput();
 
     /* Async processing */

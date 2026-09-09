@@ -112,6 +112,19 @@ record(waveform, "$(P)string_wf") {
 	field(NELM, "3")
 }
 
+# SHORT and FLOAT waveforms: exercise the createTable<T> branches whose
+# buffer element size must match the DBR request size (bug #8). NELM is
+# large so a size mismatch reliably overruns the buffer.
+record(waveform, "$(P)short_wf") {
+	field(FTVL, "SHORT")
+	field(NELM, "10")
+}
+
+record(waveform, "$(P)float_wf") {
+	field(FTVL, "FLOAT")
+	field(NELM, "10")
+}
+
 record(waveform, "$(P)output_wf") {
 	field(FTVL, "DOUBLE")
 	field(NELM, "10")
@@ -141,6 +154,16 @@ record(luascript, "$(P)arr_output") {
 	field(CODE, "return {10.0, 20.0, 30.0}")
 	field(OUT,  "$(P)output_wf PP")
 	field(OOPT, "Every Time")
+}
+
+record(luascript, "$(P)arr_short") {
+	field(INAA, "$(P)short_wf")
+	field(CODE, "@luaScriptTest.lua arr_sum()")
+}
+
+record(luascript, "$(P)arr_float") {
+	field(INAA, "$(P)float_wf")
+	field(CODE, "@luaScriptTest.lua arr_sum()")
 }
 
 # --- Async test records ---
