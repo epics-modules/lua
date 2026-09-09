@@ -116,7 +116,6 @@ typedef struct rpvtStruct {
 	int			pcalRef;       /* luaL_ref key for compiled PCAL chunk */
 	short		stateReloaded; /* force changed flags true after state reload */
 	bool        my_state;
-	epicsMutex* luaStateMutex;
 } rpvtStruct;
 
 extern "C"
@@ -816,7 +815,6 @@ static long init_record(dbCommon* common, int pass)
 		record->pcode = (char *) calloc(121, sizeof(char));
 		record->call = (char *) calloc(121, sizeof(char));
 		record->rpvt = (void *) calloc(1, sizeof(struct rpvtStruct));
-		((rpvtStruct*) record->rpvt)->luaStateMutex = new epicsMutex;
 		((rpvtStruct*) record->rpvt)->luaError = 0;
 		((rpvtStruct*) record->rpvt)->luaCompleted = 0;
 		((rpvtStruct*) record->rpvt)->pcalRef = LUA_NOREF;
@@ -1204,12 +1202,19 @@ static void luaExecCallback(CALLBACK* cb)
 	luascriptRecord* record = (luascriptRecord*) vrecord;
 	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
 
-	epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
+	/* Run the Lua work under the per-state lock, then RELEASE it before
+	 * taking dbScanLock. Holding the Lua lock across dbScanLock would
+	 * invert the lock order used everywhere else (scanLock -> luaState)
+	 * and create an AB-BA deadlock, especially now that the lock is
+	 * shared per-state across records/device-support. */
+	{
+		LuaStateGuard guard((lua_State*) record->state);
 
-	executeLua(record);
-	handleResults(record);
+		executeLua(record);
+		handleResults(record);
 
-	pvt->luaCompleted = 1;
+		pvt->luaCompleted = 1;
+	}
 
 	dbScanLock((dbCommon*) record);
 	record->pact = FALSE;
@@ -1225,17 +1230,24 @@ static long process(dbCommon* common)
 	if (record->code[0] == '\0')    { return 0; }
 
 	rpvtStruct* pvt = (rpvtStruct*) record->rpvt;
-	epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
 
 	if (pvt->luaCompleted)
 	{
-		/* ---- PASS 2: Async Lua execution completed ---- */
+		/* ---- PASS 2: Async Lua execution completed ----
+		 *
+		 * The Lua work already ran (and its results were stored into
+		 * record fields) in the async callback. The finish section
+		 * below (checkAlarms/execOutput/monitor/fwdlink) touches no Lua
+		 * state, so no per-state lock is needed here. */
 		pvt->luaCompleted = 0;
 	}
 	else
 	{
 		/* ---- PASS 1: Load inputs, execute Lua ---- */
 
+		/* Set pact FIRST: while pact is TRUE, dbProcess() will not
+		 * re-enter process(), which guarantees a RELO state swap below
+		 * cannot race an in-flight async callback for this record. */
 		record->pact = TRUE;
 		recGblGetTimeStamp(record);
 
@@ -1246,7 +1258,12 @@ static long process(dbCommon* common)
 			db_post_events(record, &record->err, DBE_VALUE);
 		}
 
-		/* Reload state if configured */
+		/* Reload state if configured. Done OUTSIDE the per-state lock:
+		 * initState() may luaStateUnref()/recreate record->state, which
+		 * would free the very mutex a guard is holding. This is safe
+		 * because the pact interlock (above) prevents concurrent access
+		 * to this record's state during the swap, and owned states are
+		 * private to the record. */
 		if (record->relo == luascriptRELO_Always)
 		{
 			memset(record->pcode, 0, 121);
@@ -1258,77 +1275,85 @@ static long process(dbCommon* common)
 			compilePcal(record);
 		}
 
-		long status = loadNumbers(record);
-
-		if (status)    { record->pact = FALSE; return status; }
-
-		status = loadStrings(record);
-
-		if (status)    { record->pact = FALSE; return status; }
-
-		/* Check process condition (POPT/PCAL) */
-		if (record->popt == luascriptPOPT_Conditional)
+		/* Lock the (possibly newly-created) current state for the
+		 * input-load, PCAL evaluation, and (sync) execution. Every
+		 * return path below auto-releases via RAII. */
 		{
-			lua_State* state = (lua_State*) record->state;
+			LuaStateGuard guard((lua_State*) record->state);
 
-			if (record->pcal[0] == '\0')
+			long status = loadNumbers(record);
+
+			if (status)    { record->pact = FALSE; return status; }
+
+			status = loadStrings(record);
+
+			if (status)    { record->pact = FALSE; return status; }
+
+			/* Check process condition (POPT/PCAL) */
+			if (record->popt == luascriptPOPT_Conditional)
 			{
-				/* Empty PCAL -- don't process */
-				record->pact = FALSE;
-				return 0;
-			}
+				lua_State* state = (lua_State*) record->state;
 
-			if (pvt->pcalRef == LUA_NOREF)
-			{
-				/* PCAL compilation failed -- report error, don't process */
-				strncpy(record->err, "PCAL failed to compile", sizeof(record->err) - 1);
-				record->err[sizeof(record->err) - 1] = '\0';
-				db_post_events(record, &record->err, DBE_VALUE);
-				record->pact = FALSE;
-				return 0;
-			}
+				if (record->pcal[0] == '\0')
+				{
+					/* Empty PCAL -- don't process */
+					record->pact = FALSE;
+					return 0;
+				}
 
-			/* Push and call the compiled PCAL chunk */
-			lua_rawgeti(state, LUA_REGISTRYINDEX, pvt->pcalRef);
-			int pcal_status = lua_pcall(state, 0, 1, 0);
+				if (pvt->pcalRef == LUA_NOREF)
+				{
+					/* PCAL compilation failed -- report error, don't process */
+					strncpy(record->err, "PCAL failed to compile", sizeof(record->err) - 1);
+					record->err[sizeof(record->err) - 1] = '\0';
+					db_post_events(record, &record->err, DBE_VALUE);
+					record->pact = FALSE;
+					return 0;
+				}
 
-			if (pcal_status != LUA_OK)
-			{
-				/* PCAL runtime error -- log to ERR, skip CODE */
-				const char* msg = lua_tostring(state, -1);
-				std::string err(msg ? msg : "PCAL error");
-				strncpy(record->err, err.c_str(), sizeof(record->err) - 1);
-				record->err[sizeof(record->err) - 1] = '\0';
-				db_post_events(record, &record->err, DBE_VALUE);
+				/* Push and call the compiled PCAL chunk */
+				lua_rawgeti(state, LUA_REGISTRYINDEX, pvt->pcalRef);
+				int pcal_status = lua_pcall(state, 0, 1, 0);
+
+				if (pcal_status != LUA_OK)
+				{
+					/* PCAL runtime error -- log to ERR, skip CODE */
+					const char* msg = lua_tostring(state, -1);
+					std::string err(msg ? msg : "PCAL error");
+					strncpy(record->err, err.c_str(), sizeof(record->err) - 1);
+					record->err[sizeof(record->err) - 1] = '\0';
+					db_post_events(record, &record->err, DBE_VALUE);
+					lua_pop(state, 1);
+					record->pact = FALSE;
+					return 0;
+				}
+
+				int should_process = lua_toboolean(state, -1);
 				lua_pop(state, 1);
-				record->pact = FALSE;
-				return 0;
+
+				if (!should_process)
+				{
+					record->pact = FALSE;
+					return 0;
+				}
 			}
 
-			int should_process = lua_toboolean(state, -1);
-			lua_pop(state, 1);
+			/* Clear the reload flag now that inputs are loaded */
+			pvt->stateReloaded = 0;
 
-			if (!should_process)
+			if (record->sync == luascriptSYNC_Asynchronous)
 			{
-				record->pact = FALSE;
+				/* Queue Lua execution to the callback thread. The guard
+				 * releases the lock here; the callback re-acquires it. */
+				callbackSetPriority(record->prio, &pvt->luaExecCb);
+				callbackRequest(&pvt->luaExecCb);
 				return 0;
 			}
+
+			/* Synchronous: execute Lua inline (still under the lock) */
+			executeLua(record);
+			handleResults(record);
 		}
-
-		/* Clear the reload flag now that inputs are loaded */
-		pvt->stateReloaded = 0;
-
-		if (record->sync == luascriptSYNC_Asynchronous)
-		{
-			/* Queue Lua execution to the callback thread */
-			callbackSetPriority(record->prio, &pvt->luaExecCb);
-			callbackRequest(&pvt->luaExecCb);
-			return 0;
-		}
-
-		/* Synchronous: execute Lua inline */
-		executeLua(record);
-		handleResults(record);
 	}
 
 	/* ---- PASS 2 (async) or continuation (sync): finish processing ---- */
@@ -1363,20 +1388,23 @@ static long special(dbAddr* paddr, int after)
 
 	if (field_index == luascriptRecordCODE)
 	{
-		epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
+		/* initState may swap record->state; compilePcal needs the
+		 * current state locked. initState is safe unlocked (special
+		 * runs under dbScanLock and pact prevents concurrent process). */
 		initState(record);
+		LuaStateGuard guard((lua_State*) record->state);
 		compilePcal(record);
 	}
 	else if (field_index == luascriptRecordPCAL)
 	{
-		epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
+		LuaStateGuard guard((lua_State*) record->state);
 		compilePcal(record);
 	}
 	else if (field_index == luascriptRecordFRLD && record->frld)
 	{
-		epicsGuard<epicsMutex> guard(*pvt->luaStateMutex);
 		memset(record->pcode, 0, 121);
 		initState(record);
+		LuaStateGuard guard((lua_State*) record->state);
 		compilePcal(record);
 		record->frld = 0;
 	}

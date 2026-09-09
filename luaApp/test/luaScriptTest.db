@@ -231,3 +231,23 @@ record(luascript, "$(P)popt_err") {
 	field(POPT, "Conditional")
 	field(PCAL, "this is not valid!!!")
 }
+
+# --- RELO (state reload) test records ---
+
+# RELO=Always recreates the Lua state on every processing. Verifies the
+# Stage 3 restructuring (initState runs before/outside the per-state
+# lock in pass-1) still produces correct results across reprocessings.
+record(luascript, "$(P)relo_always") {
+	field(CODE, "return A + 1")
+	field(INPA, "$(P)setA")
+	field(RELO, "Every Processing")
+}
+
+# RELO=Always with a file-based script: exercises the
+# initState -> getState -> luaLoadScript recreate path each process.
+record(luascript, "$(P)relo_file") {
+	field(CODE, "@luaScriptTest.lua test_add()")
+	field(INPA, "$(P)setA")
+	field(INPB, "$(P)setB")
+	field(RELO, "Every Processing")
+}

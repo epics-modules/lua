@@ -41,3 +41,36 @@ record(longout, "$(P)lo1") {
     field(OUT,  "@stress_state stress_write")
     field(SCAN, "Passive")
 }
+
+# luascript records sharing the SAME named state as the DTYP records
+# above. CODE "@stress_state ..." resolves to the pre-registered named
+# state, so these execute Lua on the same lua_State -- crossing the
+# device-support and record subsystems on one shared state.
+
+# Synchronous luascript on the shared state.
+record(luascript, "$(P)script_sync") {
+    field(CODE, "@stress_state stress_read()")
+}
+
+# A DTYP record that shares a LOCK SET with script_async (via the FLNK
+# below). A worker processes this record directly: it takes
+# dbScanLock(lockset) then the shared luaState lock. Meanwhile the
+# async callback for script_async (same lock set) takes the luaState
+# lock then dbScanLock(lockset). With the reverse (buggy) order that is
+# an AB-BA deadlock; with the Stage 3 fix (release luaState before
+# dbScanLock) it is safe.
+record(ai, "$(P)linked_ai") {
+    field(DTYP, "lua")
+    field(INP,  "@stress_state stress_read")
+    field(SCAN, "Passive")
+}
+
+# Asynchronous luascript on the shared state. This is the path that
+# previously held the Lua lock across dbScanLock (reverse order); the
+# Stage 3 restructuring makes it release the lock before dbScanLock.
+# FLNK joins it into linked_ai's lock set so the AB-BA is reachable.
+record(luascript, "$(P)script_async") {
+	field(CODE, "@stress_state stress_read()")
+    field(SYNC, "Async")
+    field(FLNK, "$(P)linked_ai")
+}

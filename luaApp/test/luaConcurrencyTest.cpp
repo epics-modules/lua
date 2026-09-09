@@ -128,9 +128,79 @@ static void testConcurrentSharedState(void)
     epicsEventDestroy(g_doneEvent);
 }
 
+/*
+ * Phase 2: cross-subsystem stress. luascript records (sync AND async)
+ * share the SAME named state as the DTYP records, and all are hammered
+ * concurrently. This exercises the Stage 3 lock-ordering fix: the async
+ * luascript callback must release the Lua lock before taking dbScanLock
+ * (scanLock -> luaState everywhere), or this deadlocks.
+ *
+ * Counting is not deterministic here (async records may be skipped by
+ * dbProcess while pact is TRUE), so the assertion is the meaningful
+ * property: no crash and no deadlock.
+ */
+static const char* kMixedRecords[] = {
+    "test:ai1", "test:li1", "test:si1", "test:ao1",
+    "test:script_sync", "test:script_async",
+    /* linked_ai shares a lock set with script_async (via FLNK). A
+     * worker holding its scanLock while wanting luaState, opposite the
+     * async callback, is the AB-BA the Stage 3 ordering fix prevents. */
+    "test:linked_ai"
+};
+
+static void mixedWorker(void* arg)
+{
+    int id = (int)(long) arg;
+
+    while (!g_startFlag)    { epicsThreadSleep(0.0); }
+
+    const int n = (int)(sizeof(kMixedRecords) / sizeof(kMixedRecords[0]));
+
+    for (int i = 0; i < ITERS_PER_THREAD; i++)
+    {
+        processRecord(kMixedRecords[(id + i) % n]);
+    }
+
+    if (epicsAtomicDecrIntT(&g_threadsRemaining) == 0)
+    {
+        epicsEventSignal(g_doneEvent);
+    }
+}
+
+static void testCrossSubsystem(void)
+{
+    testDiag("===== luascript + DTYP: cross-subsystem shared-state stress =====");
+
+    g_doneEvent = epicsEventCreate(epicsEventEmpty);
+    g_threadsRemaining = NUM_THREADS;
+    g_startFlag = 0;
+
+    for (int t = 0; t < NUM_THREADS; t++)
+    {
+        epicsThreadCreate("mixedWorker",
+                          epicsThreadPriorityMedium,
+                          epicsThreadGetStackSize(epicsThreadStackMedium),
+                          (EPICSTHREADFUNC) mixedWorker,
+                          (void*)(long) t);
+    }
+
+    g_startFlag = 1;
+
+    /* Bounded wait: a lock-ordering deadlock manifests as a timeout
+     * here (failure) rather than an indefinite hang. */
+    int finished = (epicsEventWaitWithTimeout(g_doneEvent, 60.0) == epicsEventOK);
+    testOk(finished, "cross-subsystem workers completed without deadlock");
+
+    /* Give any outstanding async luascript callbacks time to finish
+     * before shutdown. */
+    epicsThreadSleep(0.5);
+
+    epicsEventDestroy(g_doneEvent);
+}
+
 MAIN(luaConcurrencyTest)
 {
-    testPlan(3);
+    testPlan(4);
 
     testdbPrepare();
 
@@ -164,6 +234,7 @@ MAIN(luaConcurrencyTest)
     eltc(1);
 
     testConcurrentSharedState();
+    testCrossSubsystem();
 
     testIocShutdownOk();
     testdbCleanup();

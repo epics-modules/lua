@@ -424,6 +424,42 @@ static void testPcalChangedFlag(void)
     testdbGetFieldEqual("test:popt_cond.VAL", DBF_DOUBLE, 6.0);
 }
 
+static void testReloAlways(void)
+{
+    testDiag("===== luascriptRecord: RELO Every Processing =====");
+
+    /* Each PROC recreates the state; result must still be A+1. */
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 7.0);
+    testdbPutFieldOk("test:relo_always.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:relo_always.VAL", DBF_DOUBLE, 8.0);
+
+    /* Change A, reprocess -- state is recreated again, still correct. */
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 20.0);
+    testdbPutFieldOk("test:relo_always.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:relo_always.VAL", DBF_DOUBLE, 21.0);
+
+    /* Third reprocessing to be sure the recreate path is stable. */
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 0.0);
+    testdbPutFieldOk("test:relo_always.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:relo_always.VAL", DBF_DOUBLE, 1.0);
+}
+
+static void testReloFile(void)
+{
+    testDiag("===== luascriptRecord: RELO with file-based script =====");
+
+    /* RELO=Always reloads the file-based script each process. */
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 4.0);
+    testdbPutFieldOk("test:setB", DBF_DOUBLE, 9.0);
+    testdbPutFieldOk("test:relo_file.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:relo_file.VAL", DBF_DOUBLE, 13.0);
+
+    testdbPutFieldOk("test:setA", DBF_DOUBLE, 100.0);
+    testdbPutFieldOk("test:setB", DBF_DOUBLE, 1.0);
+    testdbPutFieldOk("test:relo_file.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("test:relo_file.VAL", DBF_DOUBLE, 101.0);
+}
+
 static void testPcalError(void)
 {
     testDiag("===== luascriptRecord: PCAL error =====");
@@ -532,6 +568,10 @@ MAIN(luaScriptTest)
     testPcalEmpty();
     testPcalChangedFlag();
     testPcalError();
+
+    /* RELO (state reload) */
+    testReloAlways();
+    testReloFile();
 
     testIocShutdownOk();
     testdbCleanup();
