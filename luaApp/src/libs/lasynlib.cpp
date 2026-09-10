@@ -19,14 +19,11 @@
 
 static asynPortDriver* find_driver(const char* port_name)
 {
-	asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver(port_name);
-
-	if (driver && std::string(driver->portName) == std::string(port_name))
-	{
-		return driver;
-	}
-	
-	return NULL;
+	/* findAsynPortDriver already resolves the port by exact name (or
+	 * returns NULL), so a follow-up portName comparison is redundant --
+	 * and would unsafely dereference drvPvt for ports that are not
+	 * asynPortDriver instances. Return the manager's result directly. */
+	return (asynPortDriver*) findAsynPortDriver(port_name);
 }
 
 static int asyn_read(lua_State* state, asynOctetClient* port)
