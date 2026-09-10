@@ -13,7 +13,7 @@ testLuaShell_registerRecordDeviceDriver(pdbbase)
 -- Register the lua module's lib/<arch>/ and bin/<arch>/ directories
 -- so that require("bytestream"), require("re"), luaLoadFile, and
 -- @file references can find installed Lua files.
-luaAddModule("../..")
+luaAddModule("../../../..")
 
 -- Load formatting and parsing examples.
 -- Creates luascript records and registers the "bytestream_demo" state.
