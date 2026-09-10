@@ -32,6 +32,7 @@ end
 -- LUA_SCRIPT_PATH is an environment variable that provides a search path to 
 -- find scripts for luash, luaSpawn, and luaRecord 
 epicsEnvSet("LUA_SCRIPT_PATH", "./scripts")
+epicsEnvSet("TOP", "../../../../")
 
 dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
