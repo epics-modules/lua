@@ -9,7 +9,7 @@
 dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
 
-luaAddModule("../..")
+luaAddModule("../../../..")
 
 -- Load the traffic light definition (creates records + registers sequencer)
 luaLoadFile("traffic.lua", {P="lua:"})
