@@ -14,8 +14,20 @@
 
 #include <dbAccess.h>
 #include <errlog.h>
+#include <epicsThread.h>
+#include <epicsEvent.h>
+#include <epicsAtomic.h>
 
 #include "luaEpics.h"
+
+/*
+ * Declared here rather than including <cadef.h>. That header pulls in
+ * db_access.h, which redefines the DBF and DBR field-type macros to
+ * different numeric values than dbFldTypes.h, which would break
+ * testdbGetFieldEqual() elsewhere in this file. We only compare context
+ * pointers for equality, so an opaque handle is sufficient.
+ */
+extern "C" struct ca_client_context* ca_current_context(void);
 
 extern "C" {
     void luaTest_registerRecordDeviceDriver(struct dbBase *);
@@ -345,6 +357,71 @@ static void testInfoPvObject(void)
 }
 
 
+/* ---- CA context threading test (bug #9) ---- */
+
+#define CA_CTX_THREADS 4
+
+static struct ca_client_context* g_ctx_seen[CA_CTX_THREADS];
+static epicsEventId g_ctx_done;
+static int g_ctx_remaining;
+
+static void caCtxWorker(void* arg)
+{
+    int id = (int)(long) arg;
+
+    /* Each worker uses its own Lua state and makes a remote CA call
+     * (nonexistent PV -> falls through to Channel Access, short
+     * timeout). This exercises ensure_ca_context() on a fresh thread. */
+    lua_State* L = luaCreateState();
+    doLua(L, "epics = require('epics')");
+    doLua(L, "epics.get('nonexistent:pv:zzz', 0.1)");
+
+    /* Record the CA context this thread ended up attached to. */
+    g_ctx_seen[id] = ca_current_context();
+
+    lua_close(L);
+
+    if (epicsAtomicDecrIntT(&g_ctx_remaining) == 0)
+    {
+        epicsEventSignal(g_ctx_done);
+    }
+}
+
+static void testCaContextShared(void)
+{
+    testDiag("===== epics library: shared CA context across threads (bug #9) =====");
+
+    g_ctx_done = epicsEventCreate(epicsEventEmpty);
+    g_ctx_remaining = CA_CTX_THREADS;
+
+    for (int i = 0; i < CA_CTX_THREADS; i++)
+    {
+        g_ctx_seen[i] = NULL;
+        epicsThreadCreate("caCtxWorker",
+                          epicsThreadPriorityMedium,
+                          epicsThreadGetStackSize(epicsThreadStackMedium),
+                          (EPICSTHREADFUNC) caCtxWorker,
+                          (void*)(long) i);
+    }
+
+    int finished = (epicsEventWait(g_ctx_done) == epicsEventOK);
+    testOk(finished, "all CA-context workers completed without crash");
+
+    /* Every worker thread must have ended up attached to the SAME,
+     * non-NULL shared context. The old per-state logic created a
+     * separate context per thread. */
+    testOk(g_ctx_seen[0] != NULL, "worker 0 has a CA context");
+
+    int all_same = 1;
+    for (int i = 1; i < CA_CTX_THREADS; i++)
+    {
+        if (g_ctx_seen[i] != g_ctx_seen[0])    { all_same = 0; break; }
+    }
+    testOk(all_same, "all worker threads share one CA context");
+
+    epicsEventDestroy(g_ctx_done);
+}
+
 MAIN(luaEpicsTest)
 {
 	testPlan(0);
@@ -397,6 +474,9 @@ MAIN(luaEpicsTest)
 	testInfoNil();
 	testInfoLibrary();
 	testInfoPvObject();
+
+	/* CA context threading */
+	testCaContextShared();
 
 	testIocShutdownOk();
 	testdbCleanup();

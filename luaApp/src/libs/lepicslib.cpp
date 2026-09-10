@@ -6,43 +6,49 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <epicsMutex.h>
+#include <epicsGuard.h>
 #include <epicsExport.h>
 #include "lepicslib.h"
 
 
 /*
- * CA context management -- cached per Lua state.
+ * CA context management -- a single, process-wide preemptive context.
  *
- * A sentinel userdata is stored in the Lua registry. Its __gc
- * destroys the CA context when the Lua state is closed. The
- * context is created once on first use and reused for all
- * subsequent epics.get/put/pv calls in that state.
+ * A Lua state is not bound to a thread: epics.get/put may be called
+ * from record scan/callback threads, luascript async callbacks,
+ * luaSpawn threads, or the shell. CA contexts, however, are attached
+ * per-thread. A per-state context (keyed on the per-thread
+ * ca_current_context) would create a separate context per calling
+ * thread and leave an unsafe per-state __gc destroy.
+ *
+ * Instead we create one shared preemptive-callback context on first
+ * remote use and attach each additional thread to it on demand. The
+ * context lives for the process lifetime (standard CA client practice;
+ * not explicitly destroyed).
  */
-#define LEPICS_CA_CONTEXT_KEY "LEPICS_CA_CONTEXT"
+static struct ca_client_context* g_ca_context = NULL;
+static epicsMutex g_ca_context_mutex;
 
-static int l_ca_context_gc(lua_State* L)
+static void ensure_ca_context(void)
 {
-	if (ca_current_context())    { ca_context_destroy(); }
-	return 0;
-}
-
-static void ensure_ca_context(lua_State* L)
-{
+	/* Thread already has a context (ours, or a pre-existing app
+	 * context, e.g. another CA client on this thread) -- leave it. */
 	if (ca_current_context())    { return; }
 
-	ca_context_create(ca_enable_preemptive_callback);
+	epicsGuard<epicsMutex> guard(g_ca_context_mutex);
 
-	/* Create a sentinel userdata with __gc to destroy the context */
-	lua_newuserdata(L, 1);
-
-	if (luaL_newmetatable(L, "lepics_ca_gc"))
+	if (g_ca_context == NULL)
 	{
-		lua_pushcfunction(L, l_ca_context_gc);
-		lua_setfield(L, -2, "__gc");
+		/* Creates AND attaches to this thread. */
+		ca_context_create(ca_enable_preemptive_callback);
+		g_ca_context = ca_current_context();
 	}
-	lua_setmetatable(L, -2);
-
-	lua_setfield(L, LUA_REGISTRYINDEX, LEPICS_CA_CONTEXT_KEY);
+	else
+	{
+		/* Attach this thread to the existing shared context. */
+		ca_attach_context(g_ca_context);
+	}
 }
 
 
@@ -445,7 +451,7 @@ static int epics_get(lua_State* state, const char* pv_name,
 	}
 
 	/* Remote PV -- use Channel Access */
-	ensure_ca_context(state);
+	ensure_ca_context();
 
 	chid id;
 
@@ -749,7 +755,7 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 	}
 
 	/* Remote PV -- use Channel Access */
-	ensure_ca_context(state);
+	ensure_ca_context();
 
 	chid id;
 
