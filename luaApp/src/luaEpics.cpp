@@ -25,10 +25,13 @@
 #include "luaShell.h"
 
 
-typedef std::vector<std::pair<const char*, lua_CFunction> >::iterator reg_iter;
+/* Names are stored as owned std::strings, not raw const char*, so the
+ * registry does not depend on the caller keeping the name pointer alive
+ * (avoids a dangling-pointer hazard for non-static names). */
+typedef std::vector<std::pair<std::string, lua_CFunction> >::iterator reg_iter;
 
-static std::vector<std::pair<const char*, lua_CFunction> > registered_libs;
-static std::vector<std::pair<const char*, lua_CFunction> > registered_funcs;
+static std::vector<std::pair<std::string, lua_CFunction> > registered_libs;
+static std::vector<std::pair<std::string, lua_CFunction> > registered_funcs;
 static std::vector<std::string> registered_paths;
 
 static std::map<std::string, lua_State*> named_states;
@@ -370,7 +373,7 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 {
 	epicsGuard<epicsMutex> guard(registryMutex);
 
-	std::pair<const char*, lua_CFunction> temp(library_name, library_func);
+	std::pair<std::string, lua_CFunction> temp(library_name, library_func);
 
 	registered_libs.push_back(temp);
 
@@ -386,7 +389,7 @@ epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction
 {
 	epicsGuard<epicsMutex> guard(registryMutex);
 
-	std::pair<const char*, lua_CFunction> temp(function_name, function);
+	std::pair<std::string, lua_CFunction> temp(function_name, function);
 
 	registered_funcs.push_back(temp);
 
@@ -409,12 +412,12 @@ static int luaCheckRegistered(lua_State* state)
 
 	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
 	{
-		if (libname == std::string(index->first))
+		if (libname == index->first)
 		{
 			/* Cache in package.preload for future calls */
 			luaL_getsubtable(state, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
 			lua_pushcfunction(state, index->second);
-			lua_setfield(state, -2, index->first);
+			lua_setfield(state, -2, index->first.c_str());
 			lua_pop(state, 1);
 
 			lua_pushcfunction(state, index->second);
@@ -446,7 +449,7 @@ epicsShareFunc void luaLoadRegistered(lua_State* state)
 	for (reg_iter index = registered_libs.begin(); index != registered_libs.end(); index++)
 	{
 		lua_pushcfunction(state, index->second);
-		lua_setfield(state, -2, index->first);
+		lua_setfield(state, -2, index->first.c_str());
 	}
 
 	lua_pop(state, 1);
@@ -463,7 +466,7 @@ epicsShareFunc void luaLoadRegistered(lua_State* state)
 
 	for (reg_iter index = registered_funcs.begin(); index != registered_funcs.end(); index++)
 	{
-		lua_register(state, index->first, index->second);
+		lua_register(state, index->first.c_str(), index->second);
 	}
 }
 

@@ -292,6 +292,45 @@ static void testStateLock(void)
     }
 }
 
+/* A trivial C function to register by name for the ownership test. */
+static int l_test_registered_fn(lua_State* state)
+{
+    lua_pushinteger(state, 4242);
+    return 1;
+}
+
+static void testRegisterFunctionNameOwnership(void)
+{
+    testDiag("===== Lua shell: registered name ownership (bug #12) =====");
+
+    /* Register with a name whose backing storage is freed immediately
+     * after the call. The registry must own a copy of the name, not the
+     * caller's pointer. */
+    {
+        std::string scoped_name("scoped_reg_fn");
+        luaRegisterFunction(scoped_name.c_str(), l_test_registered_fn);
+    }  /* scoped_name destroyed here; its c_str() is now invalid */
+
+    /* A state created after registration should have the function bound
+     * as a global under the intended name. */
+    lua_State* state = luaCreateState();
+    testOk(state != NULL, "State created after registration");
+
+    if (state)
+    {
+        int status = luaL_dostring(state, "result = scoped_reg_fn()");
+        testOk(status == 0, "calling scoped_reg_fn() succeeds");
+
+        lua_getglobal(state, "result");
+        testOk(lua_tointeger(state, -1) == 4242,
+               "registered function returns 4242, got %lld",
+               (long long) lua_tointeger(state, -1));
+        lua_pop(state, 1);
+
+        luaStateUnref(state);
+    }
+}
+
 static void testFindNamedStateNotFound(void)
 {
     testDiag("===== Lua shell: luaFindNamedState not found =====");
@@ -381,6 +420,7 @@ MAIN(luaShellTest)
     testRegisterState();
     testRegisterStateCollision();
     testStateLock();
+    testRegisterFunctionNameOwnership();
     testFindNamedStateNotFound();
     testLuaCmdTableMacros();
 
