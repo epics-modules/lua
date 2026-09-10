@@ -1,4 +1,5 @@
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <sstream>
 #include <cstdio>
@@ -48,6 +49,53 @@ static std::map<lua_State*, epicsMutex*> state_mutexes;
 static epicsMutex registryMutex;
 static epicsMutex namedStatesMutex;
 static epicsMutex refcountMutex;
+
+/* mark in error messages for incomplete statements (from the standard
+ * Lua interpreter); used by luaIncomplete below. */
+#define EOFMARK		"<eof>"
+#define marklen		(sizeof(EOFMARK)/sizeof(char) - 1)
+
+/*
+ * Line-compilation helpers shared by the shell and the luascript
+ * record. Lifted verbatim from the standard Lua interpreter (lua.c).
+ */
+epicsShareFunc int luaAddReturn(lua_State* L)
+{
+	int status;
+	size_t len; const char *line;
+	lua_pushliteral(L, "return ");
+	lua_pushvalue(L, -2);  /* duplicate line */
+	lua_concat(L, 2);  /* new line is "return ..." */
+	line = lua_tolstring(L, -1, &len);
+
+	if ((status = luaL_loadbuffer(L, line, len, "=stdin")) == LUA_OK)
+	{
+		lua_remove(L, -3);  /* remove original line */
+	}
+	else
+	{
+		lua_pop(L, 2);  /* remove result from 'luaL_loadbuffer' and new line */
+	}
+
+	return status;
+}
+
+epicsShareFunc int luaIncomplete(lua_State* L, int status)
+{
+	if (status == LUA_ERRSYNTAX)
+	{
+		size_t lmsg;
+		const char *msg = lua_tolstring(L, -1, &lmsg);
+
+		if (lmsg >= marklen && strcmp(msg + lmsg - marklen, EOFMARK) == 0)
+		{
+			lua_pop(L, 1);
+			return 1;
+		}
+	}
+
+	return 0;
+}
 
 /* Forward declaration: defined in path management section below */
 static void rebuildPaths(lua_State* state);

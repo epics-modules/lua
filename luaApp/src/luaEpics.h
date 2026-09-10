@@ -59,6 +59,19 @@ epicsShareFunc void luaStateUnref(lua_State* state);
 epicsShareFunc void luaLockState(lua_State* state);
 epicsShareFunc void luaUnlockState(lua_State* state);
 
+/*
+ * Line-compilation helpers shared by the shell and the luascript
+ * record (both derived from the standard Lua interpreter).
+ *
+ * luaAddReturn: with a line on the stack, try to compile it as
+ *   "return <line>"; on success the compiled chunk replaces the line,
+ *   otherwise the original line is left on the stack.
+ * luaIncomplete: returns non-zero if 'status' is a syntax error whose
+ *   message indicates an incomplete statement (ends with <eof>).
+ */
+epicsShareFunc int luaAddReturn(lua_State* state);
+epicsShareFunc int luaIncomplete(lua_State* state, int status);
+
 #ifdef __cplusplus
 }
 

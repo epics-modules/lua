@@ -20,10 +20,6 @@
 #include "luaEpics.h"
 #include "luaShell.h"
 
-/* mark in error messages for incomplete statements */
-#define EOFMARK		"<eof>"
-#define marklen		(sizeof(EOFMARK)/sizeof(char) - 1)
-
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"lua"
 #endif
@@ -162,53 +158,6 @@ static void l_print (lua_State *L)
 
 
 /*
-** Check whether 'status' signals a syntax error and the error
-** message at the top of the stack ends with the above mark for
-** incomplete statements.
-*/
-static int incomplete (lua_State *L, int status)
-{
-	if (status == LUA_ERRSYNTAX)
-	{
-		size_t lmsg;
-		const char *msg = lua_tolstring(L, -1, &lmsg);
-
-		if (lmsg >= marklen && strcmp(msg + lmsg - marklen, EOFMARK) == 0)
-		{
-			lua_pop(L, 1);
-			return 1;
-		}
-	}
-
-	return 0;  /* else... */
-}
-
-/*
-** Try to compile line on the stack as 'return <line>'; on return, stack
-** has either compiled chunk or original line (if compilation failed).
-*/
-static int addreturn (lua_State *L)
-{
-	int status;
-	size_t len; const char *line;
-	lua_pushliteral(L, "return ");
-	lua_pushvalue(L, -2);  /* duplicate line */
-	lua_concat(L, 2);  /* new line is "return ..." */
-	line = lua_tolstring(L, -1, &len);
-
-	if ((status = luaL_loadbuffer(L, line, len, "=stdin")) == LUA_OK)
-	{
-		lua_remove(L, -3);  /* remove original line */
-	}
-	else
-	{
-		lua_pop(L, 2);  /* remove result from 'luaL_loadbuffer' and new line */
-	}
-
-	return status;
-}
-
-/*
 ** Read multiple lines until a complete Lua statement
 */
 static int multiline (lua_State *L, const char* prompt, void* readlineContext)
@@ -222,7 +171,7 @@ static int multiline (lua_State *L, const char* prompt, void* readlineContext)
 		int status = luaL_loadbuffer(L, buffer, len, "=stdin");  /* try it */
 
 		/* cannot or should not try to add continuation line */
-		if (!incomplete(L, status))    { return status; }
+		if (!luaIncomplete(L, status))    { return status; }
 
 		const char* raw = epicsReadline(subprompt, readlineContext);
 
@@ -330,7 +279,7 @@ static void repl(lua_State* state, void* readlineContext, const char* prompt)
 		if (prompt == NULL)    { printf("%s\n", raw); }
 
 		/* try as command, maybe with continuation lines */
-		if ((status = addreturn(state)) != LUA_OK)    { status = multiline(state, prompt, readlineContext); }
+		if ((status = luaAddReturn(state)) != LUA_OK)    { status = multiline(state, prompt, readlineContext); }
 
 		lua_remove(state, 1);  /* remove line from the stack */
 		lua_assert(lua_gettop(state) == 1);
@@ -409,7 +358,7 @@ static void execfile(lua_State* state, void* readlineContext)
 		lua_pushstring(state, trimmed.c_str());
 
 		/* Try as expression first, then as statement with continuations */
-		if ((status = addreturn(state)) != LUA_OK)
+		if ((status = luaAddReturn(state)) != LUA_OK)
 		{
 			status = multiline(state, NULL, readlineContext);
 		}

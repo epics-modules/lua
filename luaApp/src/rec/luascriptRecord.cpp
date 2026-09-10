@@ -45,10 +45,6 @@
 #define CA_LINKS_ALL_OK 1
 #define CA_LINKS_NOT_OK 2
 
-/* mark in error messages for incomplete statements */
-#define EOFMARK		"<eof>"
-#define marklen		(sizeof(EOFMARK)/sizeof(char) - 1)
-
 #include "epicsVersion.h"
 #ifdef VERSION_INT
 
@@ -168,31 +164,6 @@ static void logError(luascriptRecord* record)
 	strncpy(record->err, err.c_str(), sizeof(record->err) - 1);
 	record->err[sizeof(record->err) - 1] = '\0';
 	db_post_events(record, &record->err, DBE_VALUE);
-}
-
-/*
-** Try to compile line on the stack as 'return <line>'; on return, stack
-** has either compiled chunk or original line (if compilation failed).
-*/
-static int addreturn (lua_State *L)
-{
-	int status;
-	size_t len; const char *line;
-	lua_pushliteral(L, "return ");
-	lua_pushvalue(L, -2);  /* duplicate line */
-	lua_concat(L, 2);  /* new line is "return ..." */
-	line = lua_tolstring(L, -1, &len);
-
-	if ((status = luaL_loadbuffer(L, line, len, "=stdin")) == LUA_OK)
-	{
-		lua_remove(L, -3);  /* remove original line */
-	}
-	else
-	{
-		lua_pop(L, 2);  /* remove result from 'luaL_loadbuffer' and new line */
-	}
-
-	return status;
 }
 
 static bool isLink(int index)
@@ -1065,23 +1036,6 @@ static void writeValue(luascriptRecord* record)
 }
 
 
-static int incomplete(lua_State* L, int status)
-{
-	if (status == LUA_ERRSYNTAX)
-	{
-		size_t lmsg;
-		const char *msg = lua_tolstring(L, -1, &lmsg);
-
-		if (lmsg >= marklen && strcmp(msg + lmsg - marklen, EOFMARK) == 0)
-		{
-			lua_pop(L, 1);
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
 /*
  * executeLua -- compile and execute the Lua code in record->call.
  * Sets pvt->luaError to 1 on failure, 0 on success.
@@ -1095,7 +1049,7 @@ static void executeLua(luascriptRecord* record)
 	pvt->luaError = 0;
 
 	lua_pushstring(state, (const char*) record->call);
-	int status = addreturn(state);
+	int status = luaAddReturn(state);
 
 	if (status != LUA_OK)
 	{
@@ -1103,7 +1057,7 @@ static void executeLua(luascriptRecord* record)
 		const char *buffer = lua_tolstring(state, 1, &len);
 		status = luaL_loadbuffer(state, buffer, len, "=stdin");
 
-		if (incomplete(state, status))
+		if (luaIncomplete(state, status))
 		{
 			logError(record);
 			recGblSetSevr(record, CALC_ALARM, INVALID_ALARM);
