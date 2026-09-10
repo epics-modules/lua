@@ -53,6 +53,46 @@ static void ensure_ca_context(void)
 
 
 /* ------------------------------------------------------------------ */
+/*  Shared array-push helper                                           */
+/* ------------------------------------------------------------------ */
+
+/* How to push each element of a typed C buffer onto the Lua stack. */
+enum lua_push_kind { PUSH_INT, PUSH_UINT8, PUSH_NUMBER, PUSH_STRING };
+
+/*
+ * Build a Lua table (left at the top of the stack) from `count`
+ * elements of a typed C buffer. Pure Lua-stack helper: it does not
+ * take ownership of `buf`. Shared by the local (dbGetField) and remote
+ * (ca_array_get) array read paths.
+ */
+static void pushLuaArray(lua_State* L, const void* buf, long count, enum lua_push_kind kind)
+{
+	lua_createtable(L, (int) count, 0);
+
+	for (long i = 0; i < count; i++)
+	{
+		switch (kind)
+		{
+			case PUSH_INT:
+				lua_pushinteger(L, ((const epicsInt32*) buf)[i]);
+				break;
+			case PUSH_UINT8:
+				lua_pushinteger(L, (unsigned char) ((const epicsInt8*) buf)[i]);
+				break;
+			case PUSH_NUMBER:
+				lua_pushnumber(L, ((const double*) buf)[i]);
+				break;
+			case PUSH_STRING:
+				lua_pushstring(L, ((const dbr_string_t*) buf)[i]);
+				break;
+		}
+
+		lua_rawseti(L, -2, i + 1);
+	}
+}
+
+
+/* ------------------------------------------------------------------ */
 /*  Direct database access helpers for local PVs                       */
 /* ------------------------------------------------------------------ */
 
@@ -71,7 +111,6 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 	if (count > 1)
 	{
 		/* ---- Array path ---- */
-		long i;
 		long options = 0;
 		long nRequest = count;
 
@@ -86,12 +125,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 					nRequest = count;
 					if (dbGetField(paddr, DB_DBR_CHAR, buf, &options, &nRequest, NULL) == 0)
 					{
-						lua_createtable(L, nRequest, 0);
-						for (i = 0; i < nRequest; i++)
-						{
-							lua_pushinteger(L, (unsigned char) buf[i]);
-							lua_rawseti(L, -2, i + 1);
-						}
+						pushLuaArray(L, buf, nRequest, PUSH_UINT8);
 						free(buf);
 						return 1;
 					}
@@ -121,12 +155,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				nRequest = count;
 				if (dbGetField(paddr, DB_DBR_STRING, buf, &options, &nRequest, NULL) == 0)
 				{
-					lua_createtable(L, nRequest, 0);
-					for (i = 0; i < nRequest; i++)
-					{
-						lua_pushstring(L, buf[i]);
-						lua_rawseti(L, -2, i + 1);
-					}
+					pushLuaArray(L, buf, nRequest, PUSH_STRING);
 					free(buf);
 					return 1;
 				}
@@ -143,12 +172,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 					nRequest = count;
 					if (dbGetField(paddr, DB_DBR_STRING, buf, &options, &nRequest, NULL) == 0)
 					{
-						lua_createtable(L, nRequest, 0);
-						for (i = 0; i < nRequest; i++)
-						{
-							lua_pushstring(L, buf[i]);
-							lua_rawseti(L, -2, i + 1);
-						}
+						pushLuaArray(L, buf, nRequest, PUSH_STRING);
 						free(buf);
 						return 1;
 					}
@@ -161,12 +185,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 					nRequest = count;
 					if (dbGetField(paddr, DB_DBR_LONG, buf, &options, &nRequest, NULL) == 0)
 					{
-						lua_createtable(L, nRequest, 0);
-						for (i = 0; i < nRequest; i++)
-						{
-							lua_pushinteger(L, buf[i]);
-							lua_rawseti(L, -2, i + 1);
-						}
+						pushLuaArray(L, buf, nRequest, PUSH_INT);
 						free(buf);
 						return 1;
 					}
@@ -182,12 +201,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				nRequest = count;
 				if (dbGetField(paddr, DB_DBR_LONG, buf, &options, &nRequest, NULL) == 0)
 				{
-					lua_createtable(L, nRequest, 0);
-					for (i = 0; i < nRequest; i++)
-					{
-						lua_pushinteger(L, buf[i]);
-						lua_rawseti(L, -2, i + 1);
-					}
+					pushLuaArray(L, buf, nRequest, PUSH_INT);
 					free(buf);
 					return 1;
 				}
@@ -202,12 +216,7 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				nRequest = count;
 				if (dbGetField(paddr, DB_DBR_DOUBLE, buf, &options, &nRequest, NULL) == 0)
 				{
-					lua_createtable(L, nRequest, 0);
-					for (i = 0; i < nRequest; i++)
-					{
-						lua_pushnumber(L, buf[i]);
-						lua_rawseti(L, -2, i + 1);
-					}
+					pushLuaArray(L, buf, nRequest, PUSH_NUMBER);
 					free(buf);
 					return 1;
 				}
@@ -485,8 +494,6 @@ static int epics_get(lua_State* state, const char* pv_name,
 	if (count > 1)
 	{
 		/* ---- Array path ---- */
-		unsigned long i;
-
 		switch (field_type)
 		{
 			case DBF_CHAR:
@@ -500,12 +507,7 @@ static int epics_get(lua_State* state, const char* pv_name,
 					status = ca_pend_io(timeout);
 					if (status == ECA_NORMAL)
 					{
-						lua_createtable(state, count, 0);
-						for (i = 0; i < count; i++)
-						{
-							lua_pushinteger(state, (unsigned char) buf[i]);
-							lua_rawseti(state, -2, i + 1);
-						}
+						pushLuaArray(state, buf, count, PUSH_UINT8);
 						result = 1;
 					}
 					free(buf);
@@ -536,12 +538,7 @@ static int epics_get(lua_State* state, const char* pv_name,
 				status = ca_pend_io(timeout);
 				if (status == ECA_NORMAL)
 				{
-					lua_createtable(state, count, 0);
-					for (i = 0; i < count; i++)
-					{
-						lua_pushstring(state, buf[i]);
-						lua_rawseti(state, -2, i + 1);
-					}
+					pushLuaArray(state, buf, count, PUSH_STRING);
 					result = 1;
 				}
 				free(buf);
@@ -559,12 +556,7 @@ static int epics_get(lua_State* state, const char* pv_name,
 					status = ca_pend_io(timeout);
 					if (status == ECA_NORMAL)
 					{
-						lua_createtable(state, count, 0);
-						for (i = 0; i < count; i++)
-						{
-							lua_pushstring(state, buf[i]);
-							lua_rawseti(state, -2, i + 1);
-						}
+						pushLuaArray(state, buf, count, PUSH_STRING);
 						result = 1;
 					}
 					free(buf);
@@ -578,12 +570,7 @@ static int epics_get(lua_State* state, const char* pv_name,
 					status = ca_pend_io(timeout);
 					if (status == ECA_NORMAL)
 					{
-						lua_createtable(state, count, 0);
-						for (i = 0; i < count; i++)
-						{
-							lua_pushinteger(state, buf[i]);
-							lua_rawseti(state, -2, i + 1);
-						}
+						pushLuaArray(state, buf, count, PUSH_INT);
 						result = 1;
 					}
 					free(buf);
@@ -601,12 +588,7 @@ static int epics_get(lua_State* state, const char* pv_name,
 				status = ca_pend_io(timeout);
 				if (status == ECA_NORMAL)
 				{
-					lua_createtable(state, count, 0);
-					for (i = 0; i < count; i++)
-					{
-						lua_pushinteger(state, buf[i]);
-						lua_rawseti(state, -2, i + 1);
-					}
+					pushLuaArray(state, buf, count, PUSH_INT);
 					result = 1;
 				}
 				free(buf);
@@ -623,12 +605,7 @@ static int epics_get(lua_State* state, const char* pv_name,
 				status = ca_pend_io(timeout);
 				if (status == ECA_NORMAL)
 				{
-					lua_createtable(state, count, 0);
-					for (i = 0; i < count; i++)
-					{
-						lua_pushnumber(state, buf[i]);
-						lua_rawseti(state, -2, i + 1);
-					}
+					pushLuaArray(state, buf, count, PUSH_NUMBER);
 					result = 1;
 				}
 				free(buf);
