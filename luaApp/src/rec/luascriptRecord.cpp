@@ -34,6 +34,10 @@
 
 #define STRING_SIZE 256
 
+/* Buffer size for CODE/PCODE/CALL. Must match size(121) for CODE (and
+ * PCAL) in luascriptRecord.dbd: holds up to CODE_SIZE-1 chars + NUL. */
+#define CODE_SIZE 121
+
 #define VAL_CHANGE  1
 #define SVAL_CHANGE 2
 
@@ -268,10 +272,10 @@ static int initState(luascriptRecord* record)
 	std::pair<std::string, std::string> curr = parseCode(code);
 	std::pair<std::string, std::string> prev = parseCode(pcode);
 
-	strncpy(record->call, curr.second.c_str(), 120);
-	record->call[120] = '\0';
-	strncpy(record->pcode, record->code, 120);
-	record->pcode[120] = '\0';
+	strncpy(record->call, curr.second.c_str(), CODE_SIZE - 1);
+	record->call[CODE_SIZE - 1] = '\0';
+	strncpy(record->pcode, record->code, CODE_SIZE - 1);
+	record->pcode[CODE_SIZE - 1] = '\0';
 
 	if (record->relo == luascriptRELO_NewFile)
 	{
@@ -867,8 +871,8 @@ static long init_record(dbCommon* common, int pass)
 
 	if (pass == 0)
 	{
-		record->pcode = (char *) calloc(121, sizeof(char));
-		record->call = (char *) calloc(121, sizeof(char));
+		record->pcode = (char *) calloc(CODE_SIZE, sizeof(char));
+		record->call = (char *) calloc(CODE_SIZE, sizeof(char));
 		record->rpvt = (void *) calloc(1, sizeof(struct rpvtStruct));
 		((rpvtStruct*) record->rpvt)->luaError = 0;
 		((rpvtStruct*) record->rpvt)->luaCompleted = 0;
@@ -1321,7 +1325,7 @@ static long process(dbCommon* common)
 		 * private to the record. */
 		if (record->relo == luascriptRELO_Always)
 		{
-			memset(record->pcode, 0, 121);
+			memset(record->pcode, 0, CODE_SIZE);
 
 			long status = initState(record);
 
@@ -1457,7 +1461,7 @@ static long special(dbAddr* paddr, int after)
 	}
 	else if (field_index == luascriptRecordFRLD && record->frld)
 	{
-		memset(record->pcode, 0, 121);
+		memset(record->pcode, 0, CODE_SIZE);
 		initState(record);
 		LuaStateGuard guard((lua_State*) record->state);
 		compilePcal(record);
