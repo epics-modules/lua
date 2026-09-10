@@ -40,6 +40,13 @@ record(luascript, "$(P)err") {
     field(CODE, "this is not valid lua!!!")
 }
 
+# Test: runtime error whose message contains a colon NOT followed by a
+# digit (error level 0 -> no chunk:line: prefix). Verifies logError does
+# not truncate at the first colon (bug #15).
+record(luascript, "$(P)err_colon") {
+    field(CODE, "error('luaerr:detail', 0)")
+}
+
 # Test: file-based script with function call
 record(luascript, "$(P)file") {
     field(CODE, "@luaScriptTest.lua test_add()")

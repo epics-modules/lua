@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include <cstring>
+#include <cctype>
 #include <cmath>
 #include <vector>
 #include <stdlib.h>
@@ -154,10 +155,20 @@ static void logError(luascriptRecord* record)
 	lua_pop((lua_State*) record->state, 1);
 
 
-	/* Get rid of everything up until the line number */
-	size_t split = err.find_first_of(':');
-
-	if (split != std::string::npos)    { err.erase(0, split + 1); }
+	/* Lua error messages have the form "chunkname:line: message". Strip
+	 * the "chunkname:" prefix, leaving "line: message". Find the colon
+	 * that precedes the line number (the first ':' followed by digits),
+	 * rather than the first colon overall -- a chunk name may itself
+	 * contain a colon (e.g. an "@C:\path" file on Windows), which the
+	 * naive first-colon split would truncate mid-path. */
+	for (size_t i = 0; i + 1 < err.size(); i += 1)
+	{
+		if (err[i] == ':' && isdigit((unsigned char) err[i + 1]))
+		{
+			err.erase(0, i + 1);
+			break;
+		}
+	}
 
 	errlogPrintf("Calling %s resulted in error: %s\n", record->call, err.c_str());
 

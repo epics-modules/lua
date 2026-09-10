@@ -87,6 +87,30 @@ static void testErrorHandling(void)
     }
 }
 
+static void testErrorColonPreserved(void)
+{
+    testDiag("===== luascriptRecord: error message colon not truncated (bug #15) =====");
+
+    testdbPutFieldOk("test:err_colon.PROC", DBF_LONG, 1);
+
+    /* error('luaerr:detail', 0) has no chunk:line: prefix. The old
+     * first-colon strip would truncate to 'detail'; the fix keeps the
+     * full message. */
+    DBADDR addr;
+    if (dbNameToAddr("test:err_colon.ERR", &addr) == 0)
+    {
+        char err_msg[64];
+        long n = 1;
+        dbGetField(&addr, DBR_STRING, err_msg, NULL, &n, NULL);
+        testOk(strcmp(err_msg, "luaerr:detail") == 0,
+               "ERR is 'luaerr:detail', got '%s'", err_msg);
+    }
+    else
+    {
+        testFail("Could not find test:err_colon.ERR");
+    }
+}
+
 static void testFileBasedScript(void)
 {
     testDiag("===== luascriptRecord: file-based script =====");
@@ -632,6 +656,7 @@ MAIN(luaScriptTest)
     testStringReturn();
     testTableReturn();
     testErrorHandling();
+    testErrorColonPreserved();
     testFileBasedScript();
     testStringInputs();
     testAsyncProcessing();
