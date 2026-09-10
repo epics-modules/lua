@@ -15,3 +15,5 @@ param.float64.read "FLOAT_RB" [[
 ]]
 
 param.int32 "BASIC_PARAM"
+
+param.uint32digital "DIGITAL_PARAM"

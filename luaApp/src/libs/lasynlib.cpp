@@ -612,12 +612,12 @@ static void asyn_settrace(lua_State* state, std::string portname, int addr, std:
 {
 	int mask = 0;
 	
-	if      (key == "error")     { mask = 0x0001; }
-	else if (key == "device")    { mask = 0x0002; }
-	else if (key == "filter")    { mask = 0x0004; }
-	else if (key == "driver")    { mask = 0x0008; }
-	else if (key == "flow")      { mask = 0x0010; }
-	else if (key == "warning")   { mask = 0x0020; }
+	if      (key == "error")     { mask = ASYN_TRACE_ERROR; }
+	else if (key == "device")    { mask = ASYN_TRACEIO_DEVICE; }
+	else if (key == "filter")    { mask = ASYN_TRACEIO_FILTER; }
+	else if (key == "driver")    { mask = ASYN_TRACEIO_DRIVER; }
+	else if (key == "flow")      { mask = ASYN_TRACE_FLOW; }
+	else if (key == "warning")   { mask = ASYN_TRACE_WARNING; }
 		
 	asynUser *pasynUser=NULL;
     asynStatus status;
@@ -648,10 +648,10 @@ static void asyn_settraceio(lua_State* state, std::string portname, int addr, st
 {
 	int mask = 0;
 	
-	if      (key == "nodata")   { mask = 0x0001; }
-	else if (key == "ascii")    { mask = 0x0002; }
-	else if (key == "escape")   { mask = 0x0004; }
-	else if (key == "hex")      { mask = 0x0008; }
+	if      (key == "nodata")   { mask = ASYN_TRACEIO_NODATA; }
+	else if (key == "ascii")    { mask = ASYN_TRACEIO_ASCII; }
+	else if (key == "escape")   { mask = ASYN_TRACEIO_ESCAPE; }
+	else if (key == "hex")      { mask = ASYN_TRACEIO_HEX; }
 		
 	asynUser *pasynUser=NULL;
     asynStatus status;

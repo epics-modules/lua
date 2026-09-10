@@ -20,6 +20,7 @@
 
 #include <asynDriver.h>
 #include <asynOctet.h>
+#include <asynPortDriver.h>
 
 extern "C" {
     void luaTest_registerRecordDeviceDriver(struct dbBase *);
@@ -38,6 +39,28 @@ static void processRecord(const char* pvname)
 }
 
 /* --- Old API tests (script-based) --- */
+
+static void testUint32DigitalType(void)
+{
+    testDiag("===== luaPortDriver (old API): uint32digital param type (bug #17) =====");
+
+    /* The DSL param.uint32digital must create an asynParamUInt32Digital
+     * parameter. The old code hard-coded 2, which is asynParamInt64 on
+     * asyn R4-42+ (the enum shifted when Int64 was inserted). */
+    asynPortDriver* driver = (asynPortDriver*) findAsynPortDriver("TESTPORT");
+    testOk(driver != NULL, "TESTPORT driver found");
+    if (!driver)    { return; }
+
+    int index = -1;
+    asynStatus st = driver->findParam("DIGITAL_PARAM", &index);
+    testOk(st == asynSuccess, "DIGITAL_PARAM found");
+    if (st != asynSuccess)    { return; }
+
+    asynParamType ptype = asynParamNotDefined;
+    driver->getParamType(index, &ptype);
+    testOk(ptype == asynParamUInt32Digital,
+           "DIGITAL_PARAM type is asynParamUInt32Digital (got %d)", (int) ptype);
+}
 
 static void testReadInt32(void)
 {
@@ -246,6 +269,7 @@ MAIN(luaPortDriverTest)
     eltc(1);
 
     /* Old API tests */
+    testUint32DigitalType();
     testReadInt32();
     testWriteInt32();
     testReadFloat64();

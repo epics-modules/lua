@@ -181,12 +181,15 @@ static int l_index(lua_State* state)
 
 	lua_newtable(state);
 
+	/* Use the named asynParamType enum values, not raw integers: the
+	 * enum numbering is asyn-version-dependent (asynParamInt64 was
+	 * inserted at position 2 in R4-42, shifting UInt32Digital 2->3). */
 	if      (strcasecmp(param_type, "int32") == 0)         { lua_pushinteger(state, asynParamInt32); }
-	else if (strcasecmp(param_type, "uint32digital") == 0) { lua_pushinteger(state, 2); }
+	else if (strcasecmp(param_type, "uint32digital") == 0) { lua_pushinteger(state, asynParamUInt32Digital); }
 	else if (strcasecmp(param_type, "float64") == 0)       { lua_pushinteger(state, asynParamFloat64); }
 	else if (strcasecmp(param_type, "string") == 0)        { lua_pushinteger(state, asynParamOctet); }
 	else if (strcasecmp(param_type, "octet") == 0)         { lua_pushinteger(state, asynParamOctet); }
-	else                                                   { lua_pushinteger(state, 0); }
+	else                                                   { lua_pushinteger(state, asynParamNotDefined); }
 
 	lua_setfield(state, -2, "type");
 
@@ -264,7 +267,7 @@ luaPortDriver::luaPortDriver(const char* port_name, const char* lua_filepath, co
 		lua_pop(this->state, 1);
 
 		lua_getfield(this->state, -1, "type");
-		int param_type = luaL_optinteger(this->state, -1, 1);
+		int param_type = luaL_optinteger(this->state, -1, asynParamInt32);
 		lua_pop(this->state, 1);
 
 		this->createParam(param_name, (asynParamType) param_type, &index);
