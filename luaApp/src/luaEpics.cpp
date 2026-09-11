@@ -1118,10 +1118,18 @@ epicsShareFunc lua_State* luaCreateState()
 	lua_register(output, "print", l_replaceprint);
 	lua_register(output, "info", l_info);
 	lua_register(output, "luaRegisterState", l_registerState);
+
+	/* Canonical run/load family */
+	lua_register(output, "luaRunString", l_luaRunString);
+	lua_register(output, "luaRunFile", l_luaRunFile);
+	lua_register(output, "luaShell", l_luaShell);
+
+	/* Deprecated aliases (warnings added in Stage 7) */
 	lua_register(output, "luaSpawn", l_luaSpawn);
 	lua_register(output, "luash", l_luash);
 	lua_register(output, "luaCmd", l_luaCmd);
 	lua_register(output, "luaLoadFile", l_luaLoadFile);
+
 	lua_register(output, "luaAddPath", l_luaAddPath);
 	lua_register(output, "luaAddModule", l_luaAddModule);
 

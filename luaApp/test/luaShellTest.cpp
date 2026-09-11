@@ -15,6 +15,10 @@
 #include <dbAccess.h>
 #include <errlog.h>
 #include <iocsh.h>
+#include <envDefs.h>
+#include <epicsThread.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "luaEpics.h"
 #include "luaShell.h"
@@ -77,6 +81,182 @@ static void testLuaCmd(void)
     /* luaCmd runs a Lua string through iocsh registration */
     int status = iocshCmd("luaCmd \"epicsEnvSet('LUA_TEST_VAR', 'success')\"");
     testOk(status == 0, "luaCmd via iocshCmd returns 0");
+}
+
+/* ---- Stage 2: canonical run/load family ---- */
+
+static void testRunString(void)
+{
+    testDiag("===== run/load: luaRunString =====");
+
+    /* Single-chunk execution: a local defined earlier in the string is
+     * visible later in the same string (whole-chunk scope). Observable
+     * effect via epicsEnvSet through the iocsh scope. */
+    int status = luaRunString(
+        "local x = 40; local y = 2; iocsh.epicsEnvSet('LUA_RS_VAR', tostring(x+y))",
+        NULL, NULL);
+    testOk(status == 0, "luaRunString returns 0");
+
+    const char* val = getenv("LUA_RS_VAR");
+    testOk(val != NULL && strcmp(val, "42") == 0,
+           "luaRunString ran as one chunk (locals shared): LUA_RS_VAR='%s'",
+           val ? val : "(null)");
+}
+
+static void testRunStringMacros(void)
+{
+    testDiag("===== run/load: luaRunString macros =====");
+
+    int status = luaRunString(
+        "iocsh.epicsEnvSet('LUA_RS_MACRO', tostring(P))",
+        "P=hello", NULL);
+    testOk(status == 0, "luaRunString with macros returns 0");
+
+    const char* val = getenv("LUA_RS_MACRO");
+    testOk(val != NULL && strcmp(val, "hello") == 0,
+           "macro P delivered to luaRunString: LUA_RS_MACRO='%s'",
+           val ? val : "(null)");
+}
+
+static void testRunFileSync(void)
+{
+    testDiag("===== run/load: luaRunFile synchronous =====");
+
+    /* Point the fixture at a temp output file we can read back. */
+    char outpath[] = "/tmp/luaRunFileTest_sync.XXXXXX";
+    int fd = mkstemp(outpath);
+    testOk(fd >= 0, "temp output file created");
+    if (fd >= 0)    { close(fd); }
+
+    epicsEnvSet("LUA_RUNFILE_OUT", outpath);
+
+    /* luaRunFileTest.lua is on LUA_SCRIPT_PATH ("..") set in main. */
+    int status = luaRunFile("luaRunFileTest.lua", NULL, NULL);
+    testOk(status == 0, "luaRunFile (sync) returns 0, got %d", status);
+
+    /* Synchronous: the result must be present immediately on return. */
+    char buf[64] = {0};
+    FILE* f = fopen(outpath, "r");
+    testOk(f != NULL, "output file readable");
+    if (f)
+    {
+        size_t n = fread(buf, 1, sizeof(buf) - 1, f);
+        buf[n] = '\0';
+        fclose(f);
+    }
+    testOk(strcmp(buf, "42") == 0,
+           "luaRunFile ran whole file as one chunk: got '%s'", buf);
+
+    remove(outpath);
+}
+
+static void testRunFileMacros(void)
+{
+    testDiag("===== run/load: luaRunFile macros =====");
+
+    char outpath[] = "/tmp/luaRunFileTest_macro.XXXXXX";
+    int fd = mkstemp(outpath);
+    if (fd >= 0)    { close(fd); }
+    epicsEnvSet("LUA_RUNFILE_OUT", outpath);
+
+    int status = luaRunFile("luaRunFileTest.lua", "P=world", NULL);
+    testOk(status == 0, "luaRunFile with macros returns 0");
+
+    char buf[64] = {0};
+    FILE* f = fopen(outpath, "r");
+    if (f)
+    {
+        size_t n = fread(buf, 1, sizeof(buf) - 1, f);
+        buf[n] = '\0';
+        fclose(f);
+    }
+    testOk(strcmp(buf, "42,world") == 0,
+           "macro P delivered to luaRunFile: got '%s'", buf);
+
+    remove(outpath);
+}
+
+static void testRunFileNotFound(void)
+{
+    testDiag("===== run/load: luaRunFile not found =====");
+
+    int status = luaRunFile("no_such_script_xyz.lua", NULL, NULL);
+    testOk(status == -1, "luaRunFile returns -1 for missing file, got %d", status);
+
+    int status2 = luaRunFile("", NULL, NULL);
+    testOk(status2 == -1, "luaRunFile returns -1 for empty filename, got %d", status2);
+}
+
+static void testRunFileAsync(void)
+{
+    testDiag("===== run/load: luaRunFile async option =====");
+
+    char outpath[] = "/tmp/luaRunFileTest_async.XXXXXX";
+    int fd = mkstemp(outpath);
+    if (fd >= 0)    { close(fd); }
+    remove(outpath);   /* start absent; the async thread creates it */
+    epicsEnvSet("LUA_RUNFILE_OUT", outpath);
+
+    /* Fixture busy-waits this many seconds before writing its output,
+     * so a synchronous run would block luaRunFile for the full delay
+     * (and the file would exist on return), while an async run returns
+     * immediately with the file still absent. */
+    epicsEnvSet("LUA_RUNFILE_DELAY", "0.3");
+
+    int status = luaRunFile("luaRunFileTest.lua", NULL, "async=true");
+    testOk(status == 0, "luaRunFile async returns 0 immediately");
+
+    /* Non-blocking proof: the delayed output must NOT be present yet. */
+    FILE* immediate = fopen(outpath, "r");
+    testOk(immediate == NULL, "async luaRunFile returned before the file was written");
+    if (immediate)    { fclose(immediate); }
+
+    /* Poll for the background thread to produce the file. */
+    char buf[64] = {0};
+    int found = 0;
+    for (int i = 0; i < 100 && !found; i++)   /* up to ~5s */
+    {
+        epicsThreadSleep(0.05);
+        FILE* f = fopen(outpath, "r");
+        if (f)
+        {
+            size_t n = fread(buf, 1, sizeof(buf) - 1, f);
+            buf[n] = '\0';
+            fclose(f);
+            if (n > 0)    { found = 1; }
+        }
+    }
+    testOk(found && strcmp(buf, "42") == 0,
+           "async luaRunFile eventually produced result: got '%s'", buf);
+
+    epicsEnvSet("LUA_RUNFILE_DELAY", "");   /* clear for other tests */
+    remove(outpath);
+}
+
+static void testDeprecatedAliasesForward(void)
+{
+    testDiag("===== run/load: deprecated aliases still forward =====");
+
+    /* luaCmd -> luaRunString equivalent */
+    int s1 = luaCmd("iocsh.epicsEnvSet('LUA_ALIAS_CMD','ok')", NULL);
+    testOk(s1 == 0, "luaCmd alias returns 0");
+    const char* v1 = getenv("LUA_ALIAS_CMD");
+    testOk(v1 != NULL && strcmp(v1, "ok") == 0, "luaCmd alias executed");
+
+    /* luaLoadFile -> luaRunFile (sync) */
+    char outpath[] = "/tmp/luaRunFileTest_alias.XXXXXX";
+    int fd = mkstemp(outpath);
+    if (fd >= 0)    { close(fd); }
+    epicsEnvSet("LUA_RUNFILE_OUT", outpath);
+
+    int s2 = luaLoadFile("luaRunFileTest.lua", NULL);
+    testOk(s2 == 0, "luaLoadFile alias returns 0");
+
+    char buf[64] = {0};
+    FILE* f = fopen(outpath, "r");
+    if (f) { size_t n = fread(buf, 1, sizeof(buf)-1, f); buf[n]='\0'; fclose(f); }
+    testOk(strcmp(buf, "42") == 0, "luaLoadFile alias ran the file: '%s'", buf);
+    remove(outpath);
 }
 
 static void testLoadParams(void)
@@ -517,6 +697,10 @@ MAIN(luaShellTest)
     testdbReadDatabase("luaTest.dbd", NULL, NULL);
     luaTest_registerRecordDeviceDriver(pdbbase);
 
+    /* Script fixtures (luaRunFileTest.lua) are installed in the test
+     * directory ".." relative to the O.<arch> run directory. */
+    epicsEnvSet("LUA_SCRIPT_PATH", "..");
+
     eltc(0);
     testIocInitOk();
     eltc(1);
@@ -524,6 +708,16 @@ MAIN(luaShellTest)
     testCreateState();
     testNamedState();
     testLuaCmd();
+
+    /* Stage 2: canonical run/load family */
+    testRunString();
+    testRunStringMacros();
+    testRunFileSync();
+    testRunFileMacros();
+    testRunFileNotFound();
+    testRunFileAsync();
+    testDeprecatedAliasesForward();
+
     testLoadParams();
     testLoadParamsEmpty();
     testLoadMacrosEmptyValue();

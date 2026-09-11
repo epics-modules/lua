@@ -52,6 +52,7 @@ TESTPROD_HOST += luaShellTest
 luaShellTest_SRCS += luaShellTest.cpp
 luaShellTest_SRCS += luaTest_registerRecordDeviceDriver.cpp
 testHarness_SRCS += luaShellTest.cpp
+TESTFILES += ../luaRunFileTest.lua
 TESTS += luaShellTest
 
 # --- epics library tests ---

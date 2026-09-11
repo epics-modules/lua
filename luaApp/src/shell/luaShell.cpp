@@ -585,6 +585,40 @@ static void loadFileCallFunc(const iocshArgBuf* args)
 	luaLoadFile(args[0].sval, args[1].sval);
 }
 
+/* --- Canonical run/load iocsh commands (Stage 2) --- */
+
+static const iocshArg runStringArg0 = { "lua code", iocshArgString};
+static const iocshArg runStringArg1 = { "macros", iocshArgString};
+static const iocshArg runStringArg2 = { "options", iocshArgString};
+static const iocshArg *runStringArgs[3] = {&runStringArg0, &runStringArg1, &runStringArg2};
+static const iocshFuncDef runStringFuncDef = {"luaRunString", 3, runStringArgs};
+
+static void runStringCallFunc(const iocshArgBuf* args)
+{
+	luaRunString(args[0].sval, args[1].sval, args[2].sval);
+}
+
+static const iocshArg runFileArg0 = { "lua script", iocshArgString};
+static const iocshArg runFileArg1 = { "macros", iocshArgString};
+static const iocshArg runFileArg2 = { "options", iocshArgString};
+static const iocshArg *runFileArgs[3] = {&runFileArg0, &runFileArg1, &runFileArg2};
+static const iocshFuncDef runFileFuncDef = {"luaRunFile", 3, runFileArgs};
+
+static void runFileCallFunc(const iocshArgBuf* args)
+{
+	luaRunFile(args[0].sval, args[1].sval, args[2].sval);
+}
+
+static const iocshArg shellArg0 = { "lua shell script", iocshArgString};
+static const iocshArg shellArg1 = { "macros", iocshArgString};
+static const iocshArg *shellArgs[2] = {&shellArg0, &shellArg1};
+static const iocshFuncDef shellFuncDef = {"luaShell", 2, shellArgs};
+
+static void shellCallFunc(const iocshArgBuf* args)
+{
+	luaShell(args[0].sval, args[1].sval);
+}
+
 static void initState(lua_State* state)
 {
 	luaL_getmetatable(state, "iocsh_meta");
@@ -737,37 +771,9 @@ epicsShareFunc int epicsShareAPI luaCmd(const char* command, const char* macros)
  */
 epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macros)
 {
-	lua_State* state = luaCreateState();
-
-	if (macros)    { luaLoadMacros(state, macros); }
-
-	std::string temp(filename);
-	std::string found = luaLocateFile(temp);
-
-	if (found.empty())    { luaStateUnref(state); return -1; }
-
-	int status = luaL_loadfile(state, found.c_str());
-
-	if (status)
-	{
-		std::string err(lua_tostring(state, -1));
-		lua_pop(state, 1);
-
-		printf("%s\n", err.c_str());
-		luaStateUnref(state);
-		return status;
-	}
-
-	std::string threadname("luaSpawn:");
-	threadname += filename;
-	if (macros)    { threadname += std::string("(") + macros + ")"; }
-
-	epicsThreadCreate(threadname.c_str(),
-	                  epicsThreadPriorityLow,
-	                  epicsThreadGetStackSize(epicsThreadStackMedium),
-	                  (EPICSTHREADFUNC)::spawn_thread_callback, state);
-
-	return 0;
+	/* Deprecated alias behavior preserved: run the file asynchronously.
+	 * Deprecation warning is added in Stage 7. */
+	return luaRunFile(filename, macros, "async=true");
 }
 
 
@@ -779,22 +785,49 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
  */
 epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* macros)
 {
-	if (!filename || filename[0] == '\0')
-	{
-		printf("luaLoadFile: no filename specified\n");
-		return -1;
-	}
+	return luaRunFile(filename, macros, NULL);
+}
 
-	lua_State* state = luaCreateState();
 
-	if (macros)    { luaLoadMacros(state, macros); }
+/*
+ * =========================================================================
+ * Canonical run/load family (Stage 2)
+ * =========================================================================
+ *
+ * luaRunString - run a string of Lua code as a single chunk in a new
+ *                (or supplied) state, printing the final expression's
+ *                result. Replaces luaCmd.
+ * luaRunFile   - run a file as a single chunk in a new state. With the
+ *                option "async=true" the file runs in a background
+ *                thread (replacing luaSpawn); otherwise it runs
+ *                synchronously (replacing luaLoadFile).
+ * luaShell     - line-by-line interactive/REPL execution (replaces
+ *                luash/luashLoad). Kept distinct because its per-line
+ *                chunking is fundamentally different from single-chunk
+ *                execution.
+ *
+ * All three share the (target, macros, options) argument shape. macros
+ * is a key=value string applied as a scope; options is a key=value
+ * string of execution-control flags parsed by luaParseOptions.
+ */
 
+/*
+ * Shared file-run core. Locates 'filename', loads it as a single chunk
+ * into 'state', and either spawns a background thread to run it (async)
+ * or runs it synchronously in the calling thread. Takes ownership of
+ * 'state' (unrefs it, or hands it to the spawned thread which unrefs).
+ *
+ * Returns 0 on success, -1 if the file is not found, or the nonzero
+ * load/pcall status on a compile/runtime error.
+ */
+static int runFileState(lua_State* state, const char* filename, int async)
+{
 	std::string temp(filename);
 	std::string found = luaLocateFile(temp);
 
 	if (found.empty())
 	{
-		printf("luaLoadFile: file not found: %s\n", filename);
+		printf("luaRunFile: file not found: %s\n", filename);
 		luaStateUnref(state);
 		return -1;
 	}
@@ -807,6 +840,19 @@ epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* m
 		lua_pop(state, 1);
 		luaStateUnref(state);
 		return status;
+	}
+
+	if (async)
+	{
+		std::string threadname("luaRunFile:");
+		threadname += filename;
+
+		epicsThreadCreate(threadname.c_str(),
+		                  epicsThreadPriorityLow,
+		                  epicsThreadGetStackSize(epicsThreadStackMedium),
+		                  (EPICSTHREADFUNC)::spawn_thread_callback, state);
+
+		return 0;
 	}
 
 	status = lua_pcall(state, 0, 0, 0);
@@ -820,6 +866,66 @@ epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* m
 	luaStateUnref(state);
 
 	return status;
+}
+
+
+extern "C"
+{
+
+/*
+ * Run a string of Lua code as a single chunk, printing the final
+ * result. Canonical replacement for luaCmd.
+ */
+epicsShareFunc int epicsShareAPI luaRunString(const char* code, const char* macros, const char* options)
+{
+	(void) options;  /* no execution-control options defined for strings yet */
+
+	return luaCmd(NULL, code, macros);
+}
+
+/*
+ * Run a Lua file as a single chunk in a new state. With option
+ * "async=true" the file runs in a background thread; otherwise it runs
+ * synchronously. Canonical replacement for luaLoadFile and luaSpawn.
+ */
+epicsShareFunc int epicsShareAPI luaRunFile(const char* filename, const char* macros, const char* options)
+{
+	if (!filename || filename[0] == '\0')
+	{
+		printf("luaRunFile: no filename specified\n");
+		return -1;
+	}
+
+	lua_State* state = luaCreateState();
+
+	if (macros)    { luaLoadMacros(state, macros); }
+
+	/* Parse execution-control options (async, ...) using the shared
+	 * options grammar. The table is popped before running. */
+	int async = 0;
+
+	if (options)
+	{
+		luaParseOptions(state, options);
+		async = luaOptionBool(state, lua_gettop(state), "async", 0);
+		lua_pop(state, 1);
+	}
+
+	return runFileState(state, filename, async);
+}
+
+/*
+ * Run a Lua script file line-by-line (REPL/interactive style),
+ * echoing each line and printing each result. Canonical replacement
+ * for luashLoad. Passing NULL for pathname starts an interactive
+ * shell. Line-by-line execution does NOT preserve local variables
+ * across lines; use luaRunFile for whole-file semantics.
+ */
+epicsShareFunc int epicsShareAPI luaShell(const char* pathname, const char* macros)
+{
+	return luashLoad(pathname, macros);
+}
+
 }
 
 
@@ -855,6 +961,12 @@ static void addModuleCallFunc(const iocshArgBuf* args)
 static void luashRegister(void)
 {
 	ensureShellStateId();
+	/* Canonical commands */
+	iocshRegister(&runStringFuncDef, runStringCallFunc);
+	iocshRegister(&runFileFuncDef, runFileCallFunc);
+	iocshRegister(&shellFuncDef, shellCallFunc);
+
+	/* Deprecated aliases (warnings added in Stage 7) */
 	iocshRegister(&luashFuncDef, luashCallFunc);
 	iocshRegister(&spawnFuncDef, spawnCallFunc);
 	iocshRegister(&luaCmdFuncDef, luaCmdCallFunc);
@@ -864,6 +976,83 @@ static void luashRegister(void)
 }
 
 epicsExportRegistrar(luashRegister);
+}
+
+
+/*
+ * Convert a Lua argument (string or table) at 'index' into a
+ * key=value string. Returns an empty string if the argument is
+ * absent or of another type.
+ */
+static std::string argToDefs(lua_State* state, int index)
+{
+	if (lua_istable(state, index))    { return luaMacrosFromTable(state, index); }
+	if (lua_isstring(state, index))   { return std::string(lua_tostring(state, index)); }
+
+	return std::string();
+}
+
+/*
+ * Canonical Lua wrappers. Each accepts macros (arg 2) and options
+ * (arg 3) as either a key=value string or a table, matching the
+ * iocsh (target, macros, options) shape.
+ *
+ *   luaRunString("print(2+2)")
+ *   luaRunFile("dev.lua", {P="dev1:"}, {async=true})
+ *   luaShell("script.lua", "P=dev1:")
+ */
+int l_luaRunString(lua_State* state)
+{
+	const char* code = luaL_checkstring(state, 1);
+
+	std::string macros  = argToDefs(state, 2);
+	std::string options = argToDefs(state, 3);
+
+	int status = luaRunString(code,
+	                          macros.empty()  ? NULL : macros.c_str(),
+	                          options.empty() ? NULL : options.c_str());
+
+	if (status)
+	{
+		lua_pushfstring(state, "luaRunString failed (status %d)", status);
+		return 1;
+	}
+	return 0;
+}
+
+int l_luaRunFile(lua_State* state)
+{
+	const char* filename = luaL_checkstring(state, 1);
+
+	std::string macros  = argToDefs(state, 2);
+	std::string options = argToDefs(state, 3);
+
+	int status = luaRunFile(filename,
+	                        macros.empty()  ? NULL : macros.c_str(),
+	                        options.empty() ? NULL : options.c_str());
+
+	if (status)
+	{
+		lua_pushfstring(state, "luaRunFile failed (status %d)", status);
+		return 1;
+	}
+	return 0;
+}
+
+int l_luaShell(lua_State* state)
+{
+	const char* pathname = luaL_checkstring(state, 1);
+
+	std::string macros = argToDefs(state, 2);
+
+	int status = luaShell(pathname, macros.empty() ? NULL : macros.c_str());
+
+	if (status)
+	{
+		lua_pushfstring(state, "luaShell failed (status %d)", status);
+		return 1;
+	}
+	return 0;
 }
 
 
