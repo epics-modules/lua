@@ -53,6 +53,13 @@ epicsShareFunc void luaPopScope(lua_State* state);
 
 epicsShareFunc void luaRegisterFunction(const char* function_name, lua_CFunction function);
 epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction load_func);
+
+/*
+ * Emit a one-time-per-name deprecation warning (via errlogPrintf)
+ * naming the replacement. Called by deprecated aliases; warns at most
+ * once per process for each old name.
+ */
+epicsShareFunc void luaDeprecated(const char* old_name, const char* replacement);
 epicsShareFunc void luaLoadRegistered(lua_State* state);
 
 epicsShareFunc lua_State* luaCreateState();

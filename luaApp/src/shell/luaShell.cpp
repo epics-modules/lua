@@ -551,6 +551,7 @@ static const iocshFuncDef luashFuncDef = {"luash", 2, luashCmdArgs};
 
 static void luashCallFunc(const iocshArgBuf* args)
 {
+	luaDeprecated("luash", "luaShell");
 	luashBegin(args[0].sval, args[1].sval, NULL);
 }
 
@@ -749,11 +750,13 @@ extern "C"
  */
 epicsShareFunc int epicsShareAPI luash(const char* pathname)
 {
+	luaDeprecated("luash", "luaShell");
 	return luash(NULL, pathname, NULL);
 }
 
 epicsShareFunc int epicsShareAPI luashLoad(const char* pathname, const char* macros)
 {
+	luaDeprecated("luashLoad", "luaShell");
 	return luash(NULL, pathname, macros);
 }
 
@@ -762,6 +765,7 @@ epicsShareFunc int epicsShareAPI luashLoad(const char* pathname, const char* mac
  */
 epicsShareFunc int epicsShareAPI luaCmd(const char* command, const char* macros)
 {
+	luaDeprecated("luaCmd", "luaRunString");
 	return luaCmd(NULL, command, macros);
 }
 
@@ -771,8 +775,7 @@ epicsShareFunc int epicsShareAPI luaCmd(const char* command, const char* macros)
  */
 epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macros)
 {
-	/* Deprecated alias behavior preserved: run the file asynchronously.
-	 * Deprecation warning is added in Stage 7. */
+	luaDeprecated("luaSpawn", "luaRunFile (with option async=true)");
 	return luaRunFile(filename, macros, "async=true");
 }
 
@@ -785,6 +788,7 @@ epicsShareFunc int epicsShareAPI luaSpawn(const char* filename, const char* macr
  */
 epicsShareFunc int epicsShareAPI luaLoadFile(const char* filename, const char* macros)
 {
+	luaDeprecated("luaLoadFile", "luaRunFile");
 	return luaRunFile(filename, macros, NULL);
 }
 
@@ -923,7 +927,9 @@ epicsShareFunc int epicsShareAPI luaRunFile(const char* filename, const char* ma
  */
 epicsShareFunc int epicsShareAPI luaShell(const char* pathname, const char* macros)
 {
-	return luashLoad(pathname, macros);
+	/* Call the shell core directly (not the deprecated luashLoad) so
+	 * canonical use does not emit a deprecation warning. */
+	return luash(NULL, pathname, macros);
 }
 
 }

@@ -418,6 +418,111 @@ static void testBuiltinsPresent(void)
     luaStateUnref(s);
 }
 
+/* ---- Stage 7: one-time deprecation warnings ---- */
+
+/* errlog capture: accumulate messages so we can assert whether a
+ * deprecation warning was emitted. */
+static char dep_buf[8192];
+static size_t dep_len = 0;
+
+static void depListener(void* /*priv*/, const char* message)
+{
+    if (!message) { return; }
+    size_t n = strlen(message);
+    if (dep_len + n < sizeof(dep_buf) - 1)
+    {
+        memcpy(dep_buf + dep_len, message, n);
+        dep_len += n;
+        dep_buf[dep_len] = '\0';
+    }
+}
+
+static void depReset(void)
+{
+    dep_len = 0;
+    dep_buf[0] = '\0';
+}
+
+/* Returns nonzero if the captured errlog contains 'needle'. Flushes
+ * the async errlog queue first. */
+static int depSaw(const char* needle)
+{
+    errlogFlush();
+    return strstr(dep_buf, needle) != NULL;
+}
+
+static void testDeprecationWarnsOnce(void)
+{
+    testDiag("===== deprecation: warns once per name =====");
+
+    errlogAddListener(depListener, NULL);
+
+    /* This test runs first in MAIN, so luaFindNamedState is genuinely
+     * first-use here and the one-time-per-name guard has not fired. */
+
+    /* First use of luaFindNamedState: should warn. */
+    depReset();
+    luaFindNamedState("dep_probe_state");
+    testOk(depSaw("luaFindNamedState") && depSaw("luaFindState"),
+           "luaFindNamedState warns once, naming luaFindState");
+
+    /* Second use: one-time guard suppresses it. */
+    depReset();
+    luaFindNamedState("dep_probe_state");
+    testOk(!depSaw("luaFindNamedState"),
+           "luaFindNamedState does not warn on repeat use");
+
+    errlogRemoveListeners(depListener, NULL);
+}
+
+static void testCanonicalDoesNotWarn(void)
+{
+    testDiag("===== deprecation: canonical names never warn =====");
+
+    errlogAddListener(depListener, NULL);
+
+    /* Canonical state verbs must not emit any deprecation warning. */
+    depReset();
+    luaGetState("dep_canon_state");
+    luaFindState("dep_canon_state");
+    lua_State* s = luaGetState("dep_canon_state");
+    luaStateIsNamed(s);
+    testOk(!depSaw("deprecated"),
+           "luaGetState/luaFindState/luaStateIsNamed emit no deprecation warning");
+
+    /* Canonical luaNameState Lua global must not warn, but the
+     * deprecated luaRegisterState global must. */
+    depReset();
+    lua_State* a = luaCreateState();
+    luaL_dostring(a, "luaNameState('dep_canon_named')");
+    testOk(!depSaw("deprecated"), "luaNameState global does not warn");
+
+    depReset();
+    lua_State* b = luaCreateState();
+    luaL_dostring(b, "luaRegisterState('dep_reg_named')");
+    testOk(depSaw("luaRegisterState") && depSaw("luaNameState"),
+           "luaRegisterState global warns, naming luaNameState");
+
+    errlogRemoveListeners(depListener, NULL);
+}
+
+static void testLuaShellDoesNotWarn(void)
+{
+    testDiag("===== deprecation: canonical luaShell does not trigger luashLoad warning =====");
+
+    /* Guards the inversion: luaShell must call the core directly, not
+     * the deprecated luashLoad. Passing a nonexistent file is fine --
+     * we only care that no deprecation warning is emitted. */
+    errlogAddListener(depListener, NULL);
+
+    depReset();
+    luaShell("no_such_shell_script_zzz.lua", NULL);
+    testOk(!depSaw("deprecated"),
+           "luaShell emits no deprecation warning (calls core directly)");
+
+    errlogRemoveListeners(depListener, NULL);
+}
+
 static void testLoadParams(void)
 {
     testDiag("===== Lua shell: luaLoadParams =====");
@@ -944,6 +1049,13 @@ MAIN(luaShellTest)
     eltc(0);
     testIocInitOk();
     eltc(1);
+
+    /* Stage 7: deprecation warnings. Run FIRST so the probes
+     * (luaFindNamedState, luaRegisterState global) are genuinely
+     * first-use -- the one-time-per-name guard is process-wide. */
+    testDeprecationWarnsOnce();
+    testCanonicalDoesNotWarn();
+    testLuaShellDoesNotWarn();
 
     testCreateState();
     testNamedState();

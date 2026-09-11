@@ -7,6 +7,7 @@
 #include <cctype>
 #include <vector>
 #include <map>
+#include <set>
 
 #if defined(__vxworks) || defined(vxWorks)
 	#include <symLib.h>
@@ -117,6 +118,32 @@ static FILE* temp_help = tmpfile();
 
 epicsShareDef LUA_LIBRARY_LOAD_HOOK_ROUTINE luaLoadLibraryHook = NULL;
 epicsShareDef LUA_FUNCTION_LOAD_HOOK_ROUTINE luaLoadFunctionHook = NULL;
+
+
+/*
+ * Emit a one-time-per-name deprecation warning naming the replacement.
+ * Deprecated aliases (across the C API, iocsh commands, and Lua
+ * globals) call this on use; it warns at most once per process for
+ * each old name so existing IOCs keep working without log spam.
+ */
+static epicsMutex deprecatedMutex;
+static std::set<std::string> warned_deprecated;
+
+epicsShareFunc void luaDeprecated(const char* old_name, const char* replacement)
+{
+	if (! old_name)    { return; }
+
+	{
+		epicsGuard<epicsMutex> guard(deprecatedMutex);
+
+		if (warned_deprecated.find(old_name) != warned_deprecated.end())    { return; }
+
+		warned_deprecated.insert(old_name);
+	}
+
+	errlogPrintf("lua: '%s' is deprecated; use '%s'\n",
+	             old_name, replacement ? replacement : "the canonical function");
+}
 
 /*
  * Ingest the current value of LUA_SCRIPT_PATH into the env_paths
@@ -1034,6 +1061,7 @@ int luaopen_iocsh (lua_State* state)
 
 
 static int l_nameState(lua_State* state);
+static int l_registerState_deprecated(lua_State* state);
 
 /*
  * info(library_or_object)
@@ -1282,7 +1310,7 @@ static const luaL_Reg lua_builtins[] = {
  *   luaLoadFile      -> luaRunFile
  */
 static const luaL_Reg lua_deprecated[] = {
-	{"luaRegisterState", l_nameState},
+	{"luaRegisterState", l_registerState_deprecated},
 	{"luaSpawn",         l_luaSpawn},
 	{"luash",            l_luash},
 	{"luaCmd",           l_luaCmd},
@@ -1458,34 +1486,36 @@ epicsShareFunc int luaStateIsNamed(lua_State* state)
 
 
 /*
- * Deprecated aliases (deprecation warnings added in Stage 7). These
- * forward to the canonical verbs above.
+ * Deprecated aliases. These forward to the canonical verbs above and
+ * emit a one-time deprecation warning naming the replacement.
  */
 epicsShareFunc lua_State* luaNamedState(const char* name)
 {
+	luaDeprecated("luaNamedState", "luaGetState");
 	return luaGetState(name);
 }
 
 epicsShareFunc lua_State* luaFindNamedState(const char* name)
 {
+	luaDeprecated("luaFindNamedState", "luaFindState");
 	return luaFindState(name);
 }
 
 epicsShareFunc void luaRegisterState(lua_State* state, const char* name)
 {
+	luaDeprecated("luaRegisterState", "luaNameState");
 	luaNameState(state, name);
 }
 
 epicsShareFunc int luaStateIsRegistered(lua_State* state)
 {
+	luaDeprecated("luaStateIsRegistered", "luaStateIsNamed");
 	return luaStateIsNamed(state);
 }
 
 
 /*
  * Lua-callable wrapper: bind the calling Lua state to a name.
- * Canonical global is luaNameState; luaRegisterState is a deprecated
- * alias bound to the same function (warning added in Stage 7).
  *
  *   luaNameState("mydriver")
  */
@@ -1506,6 +1536,17 @@ static int l_nameState(lua_State* state)
 	luaNameState(state, name);
 
 	return 0;
+}
+
+/*
+ * Deprecated Lua-callable wrapper for the "luaRegisterState" global.
+ * Distinct from l_nameState so that only the deprecated alias warns;
+ * the canonical luaNameState global does not.
+ */
+static int l_registerState_deprecated(lua_State* state)
+{
+	luaDeprecated("luaRegisterState", "luaNameState");
+	return l_nameState(state);
 }
 
 
