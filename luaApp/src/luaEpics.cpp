@@ -1250,6 +1250,47 @@ epicsShareFunc void luaUnlockState(lua_State* state)
 
 
 /*
+ * Built-in Lua globals provided by every state created via
+ * luaCreateState. This is the single, authoritative listing of the
+ * module's canonical globals (replacing the previously scattered
+ * lua_register calls). "print" overrides the stdlib global, so this
+ * table is applied after luaL_openlibs. "iocsh" is not here because it
+ * is a module (luaL_requiref), not a plain global.
+ */
+static const luaL_Reg lua_builtins[] = {
+	{"print",        l_replaceprint},
+	{"info",         l_info},
+	{"luaNameState", l_nameState},
+	{"luaRunString", l_luaRunString},
+	{"luaRunFile",   l_luaRunFile},
+	{"luaShell",     l_luaShell},
+	{"luaAddPath",   l_luaAddPath},
+	{"luaAddModule", l_luaAddModule},
+	{NULL, NULL}
+};
+
+/*
+ * Deprecated aliases retained for backward compatibility, each
+ * forwarding to a canonical function. Stage 7 wraps these with
+ * one-time deprecation warnings; keeping them in their own table makes
+ * that a single localized change.
+ *
+ *   luaRegisterState -> luaNameState
+ *   luaSpawn         -> luaRunFile(async=true)
+ *   luash            -> luaShell
+ *   luaCmd           -> luaRunString
+ *   luaLoadFile      -> luaRunFile
+ */
+static const luaL_Reg lua_deprecated[] = {
+	{"luaRegisterState", l_nameState},
+	{"luaSpawn",         l_luaSpawn},
+	{"luash",            l_luash},
+	{"luaCmd",           l_luaCmd},
+	{"luaLoadFile",      l_luaLoadFile},
+	{NULL, NULL}
+};
+
+/*
  * Generates a new lua state for the caller,
  * binds in the defined epics libraries and
  * functions. The state starts with a reference count of 1.
@@ -1266,28 +1307,27 @@ epicsShareFunc lua_State* luaCreateState()
 		rebuildPaths(output);
 	}
 
-	lua_register(output, "print", l_replaceprint);
-	lua_register(output, "info", l_info);
+	/* Register the module's built-in globals. These tables are the
+	 * single listing of every Lua global provided by luaCreateState.
+	 * Applied after luaL_openlibs so that "print" overrides the stdlib
+	 * global. "iocsh" is handled separately below because it is a
+	 * module (luaL_requiref), not a plain global. */
+	for (const luaL_Reg* b = lua_builtins; b->name != NULL; b++)
+	{
+		lua_register(output, b->name, b->func);
+	}
 
-	/* Canonical state self-naming binding; luaRegisterState kept as a
-	 * deprecated alias (warning added in Stage 7). */
-	lua_register(output, "luaNameState", l_nameState);
-	lua_register(output, "luaRegisterState", l_nameState);
+	/* Deprecated aliases -> canonical functions. Kept working for
+	 * backward compatibility; Stage 7 wraps these with one-time
+	 * deprecation warnings. Grouped here so that wrapping is a single,
+	 * localized change. */
+	for (const luaL_Reg* d = lua_deprecated; d->name != NULL; d++)
+	{
+		lua_register(output, d->name, d->func);
+	}
 
-	/* Canonical run/load family */
-	lua_register(output, "luaRunString", l_luaRunString);
-	lua_register(output, "luaRunFile", l_luaRunFile);
-	lua_register(output, "luaShell", l_luaShell);
-
-	/* Deprecated aliases (warnings added in Stage 7) */
-	lua_register(output, "luaSpawn", l_luaSpawn);
-	lua_register(output, "luash", l_luash);
-	lua_register(output, "luaCmd", l_luaCmd);
-	lua_register(output, "luaLoadFile", l_luaLoadFile);
-
-	lua_register(output, "luaAddPath", l_luaAddPath);
-	lua_register(output, "luaAddModule", l_luaAddModule);
-
+	/* iocsh is a module table, not a global function, so it uses
+	 * luaL_requiref rather than the built-ins table above. */
 	luaL_requiref(output, "iocsh", luaopen_iocsh, 1);
 	lua_pop(output, 1);
 

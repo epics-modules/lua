@@ -378,6 +378,46 @@ static void testPathRequireIngestOnly(void)
     rmdir(dir);
 }
 
+/* ---- Stage 6: built-in registration consistency ---- */
+
+static void testBuiltinsPresent(void)
+{
+    testDiag("===== builtins: all module globals present in a fresh state =====");
+
+    lua_State* s = luaCreateState();
+
+    /* Canonical module globals. */
+    const char* canonical[] = {
+        "print", "info", "luaNameState",
+        "luaRunString", "luaRunFile", "luaShell",
+        "luaAddPath", "luaAddModule", NULL
+    };
+    for (int i = 0; canonical[i]; i++)
+    {
+        lua_getglobal(s, canonical[i]);
+        testOk(lua_isfunction(s, -1), "canonical global '%s' is a function", canonical[i]);
+        lua_pop(s, 1);
+    }
+
+    /* Deprecated aliases (still present until removed). */
+    const char* deprecated[] = {
+        "luaRegisterState", "luaSpawn", "luash", "luaCmd", "luaLoadFile", NULL
+    };
+    for (int i = 0; deprecated[i]; i++)
+    {
+        lua_getglobal(s, deprecated[i]);
+        testOk(lua_isfunction(s, -1), "deprecated alias '%s' is a function", deprecated[i]);
+        lua_pop(s, 1);
+    }
+
+    /* iocsh is a module table, not a plain global function. */
+    lua_getglobal(s, "iocsh");
+    testOk(lua_istable(s, -1), "iocsh module table is present");
+    lua_pop(s, 1);
+
+    luaStateUnref(s);
+}
+
 static void testLoadParams(void)
 {
     testDiag("===== Lua shell: luaLoadParams =====");
@@ -923,6 +963,9 @@ MAIN(luaShellTest)
     testPathEnvRequire();
     testPathRuntimeAppend();
     testPathRequireIngestOnly();
+
+    /* Stage 6: built-in registration consistency */
+    testBuiltinsPresent();
 
     testLoadParams();
     testLoadParamsEmpty();
