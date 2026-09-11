@@ -387,10 +387,11 @@ static int createTable(lua_State* state, DBLINK* field, short field_type, long* 
  *   - Non-number elements in a numeric array are coerced via
  *     lua_tonumber (0 if not convertible).
  *
- * NOTE: string tables are converted to a char array of the FIRST
- * character of each element (ATYP = Char), which is the historical
- * behavior. Proper multi-element DBF_STRING array output is a separate
- * follow-up.
+ * String tables are converted to a DBF_STRING array (ATYP = String):
+ * a contiguous char[count * MAX_STRING_SIZE] buffer, one fixed-width
+ * slot per element (each truncated to MAX_STRING_SIZE-1 chars). This
+ * matches how EPICS represents string arrays (dbValueSize(DBF_STRING)
+ * == MAX_STRING_SIZE) and is written to string outputs by luaSoft.c.
  *
  * The table is expected at the top of the stack.
  */
@@ -469,15 +470,23 @@ static void* convertTable(lua_State* state, int* generated_size, epicsEnum16* ar
 			count += 1;
 		}
 
-		char* output = new char[count > 0 ? count : 1];
-		*generated_size = sizeof(char) * count;
-		*arraytype = luascriptAVALType_Char;
+		/* DBF_STRING array: one fixed-width MAX_STRING_SIZE slot per
+		 * element (zero-filled so unused bytes are NUL). */
+		int slots = (count > 0) ? count : 1;
+		char* output = new char[slots * MAX_STRING_SIZE];
+		memset(output, 0, slots * MAX_STRING_SIZE);
+		*generated_size = MAX_STRING_SIZE * count;
+		*arraytype = luascriptAVALType_String;
 
 		for (int index = 0; index < count; index += 1)
 		{
 			lua_geti(state, -1, index + 1);
 			const char* s = lua_tostring(state, -1);   /* NULL for non-string/number */
-			output[index] = (s != NULL) ? s[0] : '\0';
+			if (s != NULL)
+			{
+				strncpy(&output[index * MAX_STRING_SIZE], s, MAX_STRING_SIZE - 1);
+				output[index * MAX_STRING_SIZE + (MAX_STRING_SIZE - 1)] = '\0';
+			}
 			lua_pop(state, 1);
 		}
 
@@ -1146,6 +1155,7 @@ static void handleResults(luascriptRecord* record)
 				if (record->patp == luascriptAVALType_Integer)       { delete [] ((int*) record->pavl); }
 				else if (record->patp == luascriptAVALType_Double)   { delete [] ((double*) record->pavl); }
 				else if (record->patp == luascriptAVALType_Char)     { delete [] ((char*) record->pavl); }
+				else if (record->patp == luascriptAVALType_String)   { delete [] ((char*) record->pavl); }
 			}
 
 			record->pavl = record->aval;

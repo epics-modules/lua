@@ -41,6 +41,7 @@ menu(luascriptAVALType)
 	choice(luascriptAVALType_Integer, "Int")
 	choice(luascriptAVALType_Double, "Double")
 	choice(luascriptAVALType_Char, "Char")
+	choice(luascriptAVALType_String, "String")
 }
 
 menu(luascriptPOPT)

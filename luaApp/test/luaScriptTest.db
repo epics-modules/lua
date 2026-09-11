@@ -163,6 +163,19 @@ record(luascript, "$(P)arr_output") {
 	field(OOPT, "Every Time")
 }
 
+# String-array output: a table of strings becomes a DBF_STRING array
+# written to a STRING waveform (bug/follow-up: table of strings).
+record(waveform, "$(P)str_output_wf") {
+	field(FTVL, "STRING")
+	field(NELM, "5")
+}
+
+record(luascript, "$(P)arr_str_output") {
+	field(CODE, "return {'alpha', 'beta', 'gamma'}")
+	field(OUT,  "$(P)str_output_wf PP")
+	field(OOPT, "Every Time")
+}
+
 record(luascript, "$(P)arr_short") {
 	field(INAA, "$(P)short_wf")
 	field(CODE, "@luaScriptTest.lua arr_sum()")

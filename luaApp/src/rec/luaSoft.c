@@ -58,6 +58,7 @@ static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct 
 	if (record->atyp == luascriptAVALType_Integer)   { bytes_per_elem = sizeof(int); }
 	if (record->atyp == luascriptAVALType_Double)    { bytes_per_elem = sizeof(double); }
 	if (record->atyp == luascriptAVALType_Char)      { bytes_per_elem = sizeof(char); }
+	if (record->atyp == luascriptAVALType_String)    { bytes_per_elem = dbValueSize(DBF_STRING); }
 	
 	
 	int array_len = (int) record->asiz / bytes_per_elem;
@@ -75,6 +76,16 @@ static long asyncWrite(luascriptRecord* record, double* val, char* sval, struct 
 
 		switch (field_type)
 		{
+			case DBF_STRING:
+			{
+				if (record->atyp == luascriptAVALType_String)
+				{
+					return dbCaPutLinkCallback(out, DBF_STRING, record->aval, array_len, (dbCaCallback) dbCaCallbackProcess, out);
+				}
+
+				return 0;
+			}
+
 			case DBF_CHAR:
 			case DBF_UCHAR:
 			{				
@@ -250,6 +261,7 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 	if (record->atyp == luascriptAVALType_Integer)   { bytes_per_elem = sizeof(int); }
 	if (record->atyp == luascriptAVALType_Double)    { bytes_per_elem = sizeof(double); }
 	if (record->atyp == luascriptAVALType_Char)      { bytes_per_elem = sizeof(char); }
+	if (record->atyp == luascriptAVALType_String)    { bytes_per_elem = dbValueSize(DBF_STRING); }
 	
 	
 	int array_len = (int) record->asiz / bytes_per_elem;
@@ -266,6 +278,16 @@ static long syncWrite(luascriptRecord* record, double* val, char* sval, struct l
 		
 		switch (field_type)
 		{
+			case DBF_STRING:
+			{
+				if (record->atyp == luascriptAVALType_String)
+				{
+					return dbPutLink(out, DBF_STRING, record->aval, array_len);
+				}
+
+				return 0;
+			}
+
 			case DBF_CHAR:
 			case DBF_UCHAR:
 			{				

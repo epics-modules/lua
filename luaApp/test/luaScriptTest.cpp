@@ -298,6 +298,36 @@ static void testFloatArrayInput(void)
     testdbGetFieldEqual("test:arr_float.VAL", DBF_DOUBLE, 55.0);
 }
 
+static void testStringArrayOutput(void)
+{
+    testDiag("===== luascriptRecord: string-array output =====");
+
+    testdbPutFieldOk("test:arr_str_output.PROC", DBF_LONG, 1);
+
+    /* {'alpha','beta','gamma'} -> DBF_STRING array (ATYP=String=3),
+     * ASIZ = 3 * MAX_STRING_SIZE. */
+    testdbGetFieldEqual("test:arr_str_output.ATYP", DBF_SHORT, 3);   /* String */
+    testdbGetFieldEqual("test:arr_str_output.ASIZ", DBF_LONG, (int)(3 * MAX_STRING_SIZE));
+
+    /* The strings must round-trip to the output waveform. */
+    DBADDR addr;
+    if (dbNameToAddr("test:str_output_wf", &addr) == 0)
+    {
+        char vals[5][MAX_STRING_SIZE];
+        memset(vals, 0, sizeof(vals));
+        long n = 3;
+        dbGetField(&addr, DBF_STRING, vals, NULL, &n, NULL);
+        testOk(strcmp(vals[0], "alpha") == 0 &&
+               strcmp(vals[1], "beta")  == 0 &&
+               strcmp(vals[2], "gamma") == 0,
+               "output is {'%s','%s','%s'}", vals[0], vals[1], vals[2]);
+    }
+    else
+    {
+        testFail("Could not find test:str_output_wf");
+    }
+}
+
 static void testTablePromote(void)
 {
     testDiag("===== luascriptRecord: table int/float promotion (bug #13) =====");
@@ -676,6 +706,7 @@ MAIN(luaScriptTest)
     testShortArrayInput();
     testFloatArrayInput();
     testArrayOutput();
+    testStringArrayOutput();
     testTablePromote();
     testTableInteger();
     testTableHole();
