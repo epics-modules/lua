@@ -23,11 +23,12 @@ with the lua scripting language.  The record has 10 string fields
 time the record is processed and those values are pushed into lua as
 global variables with the same name as the field.
 
-The luascript record has both a VAL and SVAL output field. If the return
+The luascript record has VAL, SVAL, and AVAL output fields. If the return
 operator is used within a lua expression, the returned value is placed
-into one of these fields. Booleans or Numbers that are returned get
-their value put into the VAL field, while Strings will be put into the
-SVAL field.
+into one of these fields depending on its type. Numbers and booleans go
+into the numeric VAL field (a boolean `true` becomes 1 and `false`
+becomes 0), Strings go into the string SVAL field, and Tables go into the
+array AVAL field (see [Array (Table) Output](#array-table-output)).
 
 When writing to a string PV (any of DBF_STRING, DBF_ENUM, DBF_MENU,
 DBF_DEVICE, DBF_INLINK, DBF_OUTLINK, DBF_FWDLINK) the record (actually,
@@ -235,6 +236,42 @@ field(CODE, "@test.lua example(1, 'foo')")
 
 -  Runs the function 'example' from the file test.lua with two
    parameters, one a number, the other a string.
+
+
+### Array (Table) Output
+
+If CODE returns a Lua table, its contents are written to the array output
+field AVAL. The element type is chosen automatically from the table's
+values and reported in the ATYP field:
+
+| Table contents | ATYP | Written to output as |
+|----------------|------|----------------------|
+| All integers (or booleans) | Int    | DBF_LONG   |
+| Any non-integer number     | Double | DBF_DOUBLE |
+| Strings                    | String | DBF_STRING |
+
+Notes:
+
+-  A table containing a mix of integers and floating-point numbers is
+   promoted to Double, so no values are truncated.
+-  The array ends at the first `nil` (standard Lua sequence semantics);
+   `#t` is not relied upon.
+-  Non-number elements in a numeric table are coerced with `tonumber`
+   (0 if not convertible).
+-  A table of strings is written as a DBF_STRING array (each element a
+   full string, truncated to the EPICS string length). Use an output
+   link to a `stringout` record or a `waveform` with `FTVL = STRING`.
+-  Strings are only written to string-type outputs; the record writes an
+   array output only when the AVAL element type matches the output link's
+   field type.
+
+Example:
+
+```
+field(CODE, "return {1, 2, 3}")            -- Int array
+field(CODE, "return {1.5, 2, 3}")          -- Double array (promoted)
+field(CODE, "return {'red', 'green'}")     -- String array
+```
 
 
 Output Parameters

@@ -71,9 +71,11 @@ Release 4-0
   DBF_CHAR, DBF_ENUM) are now returned with `lua_pushinteger` instead of `lua_pushnumber`,
   preserving integer semantics. Scalar integer puts use `DBR_LONG` instead of `DBR_DOUBLE`.
 
-- **CA context cached per Lua state.** The CA context is now created once per Lua state
-  and reused for all subsequent `epics.get`/`epics.put` calls, eliminating the overhead
-  of context creation/destruction on every call.
+- **Shared Channel Access context.** `epics.get`/`epics.put` use a single process-wide
+  preemptive CA context, created on first remote use and shared across all threads and
+  Lua states. This eliminates per-call context churn and is correct when a Lua state is
+  driven from multiple threads (device support, async luascript callbacks, `luaSpawn`,
+  the shell).
 
 - **Local PV fast path.** `epics.get` and `epics.put` now automatically detect PVs that
   exist in the local IOC database and use direct database access (`dbGetField`/`dbPutField`)
@@ -113,6 +115,12 @@ Release 4-0
 
 - **luascript record async rework.** Asynchronous mode (`SYNC=Async`) now uses the
   EPICS callback system instead of creating a new thread per process cycle.
+
+- **luascript record array (table) output.** Returning a Lua table from CODE writes an
+  array output (AVAL). The element type (ATYP) is chosen from the table contents: an
+  all-integer table stays integer, a mix of integers and floats is promoted to double,
+  and a table of strings now writes a proper `DBF_STRING` array (previously it produced
+  a char array of each string's first character). Arrays end at the first `nil`.
 
 - **Event synchronization library.** New `event` library providing event flags for
   inter-thread signaling. Flags can be anonymous (local to a Lua state) or named
@@ -165,6 +173,50 @@ Release 4-0
 - **DTYP device support** now supports longer function names and
   parameter lists in INP/OUT fields (buffer increased from 62 to 256
   characters).
+
+- **Shared Lua state thread safety.** Lua states shared across
+  subsystems (named states used by DTYP device support, luascript
+  records, and the shell) are now serialized with a per-state lock. The
+  asynchronous luascript path releases the Lua lock before taking the
+  dbScanLock, giving a consistent lock order and removing an AB-BA
+  deadlock possibility.
+
+- **luascript boolean return.** Returning `true`/`false` from CODE now
+  sets VAL to 1/0 respectively (previously both produced 0).
+
+- **luascript numeric array inputs.** SHORT, USHORT, and FLOAT waveform
+  inputs (INAA-INJJ) no longer overrun their conversion buffers, and
+  field-type dispatch is correct across EPICS 3.15 and 7.0 (which number
+  the field types differently).
+
+- **luascript table output typing.** Mixed integer/float tables are
+  promoted to double instead of truncating the floats; arrays stop at
+  the first `nil`; non-number elements in a numeric table coerce safely
+  instead of crashing.
+
+- **luascript error messages** are no longer truncated at a colon that
+  appears within the chunk name (e.g. a Windows-style file path).
+
+- **Empty macro and parameter values** (e.g. a `P=` macro or an empty
+  item in a parameter list) no longer crash the IOC.
+
+- **`luaRegisterState` name collisions.** Registering a name that is
+  already bound to a different Lua state is rejected (the C API logs a
+  warning; the Lua-callable form raises an error) instead of silently
+  rebinding the name and leaking the previous state.
+
+- **asyn octet read/write bounds.** The `asyn.driver.new` octet read no
+  longer overruns the caller's buffer or leaves it unterminated, and the
+  octet write respects the provided length. A latent out-of-range throw
+  in the legacy port driver's octet write was also fixed.
+
+- **`param.uint32digital`** (legacy port-driver definition syntax) now
+  creates the correct asyn parameter type across asyn releases (the
+  asynParamType enum numbering shifted when Int64 was added).
+
+- **asyn `setTraceIO` / `client:traceio` masks** corrected: the
+  `ascii`, `escape`, and `hex` keys previously set the wrong trace-I/O
+  bits.
 
 - Various memory leak, null-pointer safety, and thread safety fixes
   throughout the codebase.
