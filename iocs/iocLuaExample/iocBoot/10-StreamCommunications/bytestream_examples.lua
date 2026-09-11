@@ -4,7 +4,7 @@
 -- that both creates records (via the db library) and defines the Lua
 -- callback functions they reference.
 --
--- Loaded via luaLoadFile from st.lua. The luaRegisterState call makes
+-- Loaded via luaRunFile from st.lua. The luaNameState call makes
 -- the functions defined here available to luascript CODE fields via
 -- the "@bytestream_demo function()" named-state pattern.
 
@@ -13,7 +13,7 @@ local bs = require("bytestream")
 
 local P = P or "bs:"
 
-luaRegisterState("bytestream_demo")
+luaNameState("bytestream_demo")
 
 
 ---------------------------------------------------------------------------

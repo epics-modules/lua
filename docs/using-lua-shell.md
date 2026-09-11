@@ -93,124 +93,115 @@ where a library hasn't been loaded yet.
 Shell Commands
 --------------
 
-### luash
+All run/load commands share the same argument shape:
+
+```
+command "target" ["macros"] ["options"]
+```
+
+- **target** -- a Lua code string (`luaRunString`) or a script filename
+  (`luaRunFile`, `luaShell`).
+- **macros** -- a `"KEY=val,KEY2=val2"` string (strings quoted, unquoted
+  values interpreted as numbers/booleans), set as global variables in
+  the target state. When called from Lua, a table (`{P="dev1:"}`) is
+  also accepted.
+- **options** -- a `"key=val"` string of execution-control flags (same
+  grammar as macros). Currently only `async` is defined, for
+  `luaRunFile`. From Lua a table (`{async=true}`) is also accepted.
+
+### luaRunString
 ---
 
-Run a Lua script in the calling shell's state.
+Execute a string of Lua code as a single chunk, printing the result of
+the final expression.
 
 ```
-luash "file.lua" ["macros"]
+luaRunString "lua code" ["macros"]
 ```
-
-The script shares
-variables, loaded modules, and function definitions with the shell
-session.
-
-Macros are set as global variables in the shell's state. They use the
-same `"KEY=val,KEY2=val2"` format as iocsh. Strings must be quoted;
-unquoted values are interpreted as numbers:
-
-```
-luash "config.lua" "P='dev1:',PORT='serial1',ADDR=0"
-```
-
-When called from Lua, table macros are also accepted:
 
 ```lua
-luash("config.lua", {P="dev1:", PORT="serial1", ADDR=0})
+luaRunString("print(P .. ' started')", {P="dev1:"})
+```
+
+Runs in a **new state** which is closed after the code completes.
+
+**Returns:** nothing on success, error string on failure.
+
+<br>
+
+### luaRunFile
+---
+
+Load and execute a Lua script file in a new state.
+
+```
+luaRunFile "file.lua" ["macros"] ["options"]
+```
+
+The entire file is compiled as a single chunk, so `local` variables
+work across lines. By default execution is **synchronous** (the command
+blocks until the script completes). With the option `async=true` the
+script runs in a **background thread** and the command returns
+immediately.
+
+```lua
+luaRunFile("driver.lua", {P="dev1:", PORT="SENSOR1"})
+luaRunFile("tick.lua", nil, {async=true})     -- background thread
+```
+
+```
+# iocsh: async as a keyword option
+luaRunFile "tick.lua", "", "async=true"
+```
+
+The new state has access to all registered libraries and paths. If the
+script calls `luaNameState`, the state is kept alive after execution
+(see Named States below). Otherwise, the state is closed when the
+script finishes. `async=true` is commonly used for long-running scripts
+such as device polling loops or port-driver definitions.
+
+**Returns:** nothing on success, error string on failure.
+
+<br>
+
+### luaShell
+---
+
+Run a Lua script in the calling shell's state, line-by-line
+(interactive/REPL style).
+
+```
+luaShell "file.lua" ["macros"]
+```
+
+The script shares variables, loaded modules, and function definitions
+with the shell session. If no filename is given, the shell reads from
+standard input with a prompt set by `LUASH_PS1`.
+
+```lua
+luaShell("config.lua", {P="dev1:", PORT="serial1", ADDR=0})
 ```
 
 The file is located by searching `LUA_SCRIPT_PATH`, paths registered
-via `luaAddPath`/`luaAddModule`, and the current directory. If no
-filename is given, the shell reads from standard input with a prompt
-set by `LUASH_PS1`.
+via `luaAddPath`/`luaAddModule`, and the current directory.
 
-**File mode:** When running a script file, each statement is executed as
-it is read, with lines echoed and output interleaved (matching iocsh
-behavior). Multi-line constructs such as function definitions, if blocks,
-and loops are accumulated until the statement is complete. Return values
-from expressions are printed automatically.
+**File mode:** each statement is executed as it is read, with lines
+echoed and output interleaved (matching iocsh behavior). Multi-line
+constructs (function definitions, if blocks, loops) are accumulated
+until the statement is complete. Return values from expressions are
+printed automatically. Because each line is a separate chunk, `local`
+variables do **not** persist between lines -- use global variables, or
+use `luaRunFile` which compiles the whole file as one chunk.
 
-**Include directive:** The `<` command includes another script at the
+**Include directive:** the `<` command includes another script at the
 current point:
 
 ```
 < other_script.lua
 ```
 
-**Exit:** A line containing only `exit` ends the current script and
+**Exit:** a line containing only `exit` ends the current script and
 returns to the caller.
-
-**Returns:** nothing on success, error string on failure.
-
-<br>
-
-### luaLoadFile
----
-
-Load and execute a Lua script in a new state.
-
-```
-luaLoadFile "file.lua" ["macros"]
-```
-
-The entire file is
-compiled as a single chunk, so `local` variables work across lines.
-Execution is synchronous -- the command blocks until the script
-completes.
-
-```lua
-luaLoadFile("driver.lua", {P="dev1:", PORT="SENSOR1"})
-```
-
-The new state has access to all registered libraries and paths. If the
-script calls `luaRegisterState`, the state is kept alive after execution
-(see Named States below). Otherwise, the state is closed when the script
-finishes.
-
-**Returns:** nothing on success, error string on failure.
-
-<br>
-
-### luaSpawn
----
-
-Run a Lua script in a background thread.
-
-```
-luaSpawn "file.lua" ["macros"]
-```
-
-Loads and executes a Lua script in a **new state** on a background
-thread. The command returns immediately. The file is compiled as a
-single chunk.
-
-```lua
-luaSpawn("tick.lua", "INTERVAL=1.0")
-```
-
-Commonly used for long-running scripts such as device polling loops
-or port driver definitions.
-
-**Returns:** nothing on success, error string on failure.
-
-<br>
-
-### luaCmd
----
-
-Execute a single Lua statement.
-
-```
-luaCmd "lua code" ["macros"]
-```
-
-Runs the statement in a **new state** which is closed after the
-statement completes.
-
-```lua
-luaCmd("print(P .. ' started')", {P="dev1:"})
-```
 
 **Returns:** nothing on success, error string on failure.
 
@@ -221,38 +212,49 @@ luaCmd("print(P .. ' started')", {P="dev1:"})
 
 | Command | Runs in | Execution | Line echoing |
 | ------- | ------- | --------- | ------------ |
-| `luash "file"` | Calling shell | Synchronous, line-by-line | Yes |
+| `luaShell "file"` | Calling shell | Synchronous, line-by-line | Yes |
 | `< file` | Calling shell | Synchronous, line-by-line | Yes |
-| `luaLoadFile "file"` | New state | Synchronous, whole file | No |
-| `luaSpawn "file"` | New state, background thread | Whole file | No |
-| `luaCmd "code"` | New state | Synchronous, single statement | No |
+| `luaRunFile "file"` | New state | Synchronous, whole file | No |
+| `luaRunFile "file","","async=true"` | New state, background thread | Whole file | No |
+| `luaRunString "code"` | New state | Synchronous, single chunk | No |
 
 Commands that run in the **calling shell** share variables, loaded
 modules, and function definitions with the shell session. Commands
 that run in a **new state** start fresh -- pass configuration via
 macros.
 
-Because `luash` executes each line as a separate statement, `local`
-variables do not persist between lines. Use global variables, or use
-`luaLoadFile` which compiles the entire file as one chunk.
+### Deprecated command names
+---
+
+The following older names still work but are **deprecated**; each emits
+a one-time warning on first use naming its replacement. Migrate to the
+canonical names above.
+
+| Deprecated | Use instead |
+| ---------- | ----------- |
+| `luash` / `luashLoad` | `luaShell` |
+| `luaLoadFile` | `luaRunFile` |
+| `luaSpawn` | `luaRunFile` with option `async=true` |
+| `luaCmd` | `luaRunString` |
+| `luaRegisterState` | `luaNameState` |
 
 
 Named States
 ------------
 
-By default, a Lua state created by `luaLoadFile` or `luaSpawn` is
+By default, a Lua state created by `luaRunFile` is
 closed when the script finishes. A **named state** is one that has been
 registered with a name, making it persistent and referenceable from
 other parts of the IOC.
 
 ### Creating a Named State
 
-Call `luaRegisterState` from within a script to register the current
+Call `luaNameState` from within a script to register the current
 state under a name:
 
 ```lua
--- Inside a script loaded via luaLoadFile or luaSpawn
-luaRegisterState("mydevice")
+-- Inside a script loaded via luaRunFile
+luaNameState("mydevice")
 ```
 
 The state will not be closed when the script finishes. All global
@@ -266,8 +268,8 @@ name after `@` does not resolve to a file on disk, it is looked up
 as a named state:
 
 ```lua
--- In a script loaded with luaLoadFile:
-luaRegisterState(PORT)
+-- In a script loaded with luaRunFile:
+luaNameState(PORT)
 
 function read_temperature()
     return client:write("MEAS:TEMP?"):read("%f")
@@ -285,17 +287,17 @@ db.record("ai", P .. "temperature") {
 
 ### Typical Pattern
 
-The most common pattern is a single file loaded via `luaLoadFile` that:
+The most common pattern is a single file loaded via `luaRunFile` that:
 
 1. Registers its state under a unique name (typically a port name or prefix)
 2. Creates records using `db.record`
 3. Defines the callback functions those records reference
 
 ```lua
--- device.lua: loaded before iocInit via luaLoadFile
+-- device.lua: loaded before iocInit via luaRunFile
 local db = require("db")
 
-luaRegisterState(PORT)
+luaNameState(PORT)
 
 -- ... set up clients, define functions ...
 
@@ -312,12 +314,12 @@ end
 
 ```lua
 -- st.lua: startup script
-luaLoadFile("device.lua", {P="dev1:", PORT="DEV1"})
-luaLoadFile("device.lua", {P="dev2:", PORT="DEV2"})
+luaRunFile("device.lua", {P="dev1:", PORT="DEV1"})
+luaRunFile("device.lua", {P="dev2:", PORT="DEV2"})
 iocInit()
 ```
 
-Each call to `luaLoadFile` creates a separate named state, so the two
+Each call to `luaRunFile` creates a separate named state, so the two
 instances do not interfere with each other.
 
 
@@ -326,7 +328,7 @@ luaAddPath / luaAddModule
 
 The `luaAddPath` and `luaAddModule` commands register directories for
 both `require()` (Lua's module loader) and script file resolution (used
-by `luaLoadFile`, `luaSpawn`, luascript `@file`, and DTYP `@file`).
+by `luaRunFile`, luascript `@file`, and DTYP `@file`).
 
 ### luaAddPath
 ---

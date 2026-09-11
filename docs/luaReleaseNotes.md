@@ -23,10 +23,30 @@ Release 4-0
 
 ### New Features
 
-- **`luaLoadFile` command.** New iocsh command that loads and executes a Lua script as
-  a single chunk in a new state. Unlike `luash`, the entire file is compiled at once 
-  (local variables work across lines). Unlike `luaSpawn`, execution is synchronous. 
-  Accepts table macros when called from Lua.
+- **Unified run/load command family.** The commands for running Lua now form a single,
+  consistent vocabulary with the shared shape `command "target" ["macros"] ["options"]`,
+  available identically from iocsh, Lua, and the C API:
+  - `luaRunString` -- run a code string as one chunk (replaces `luaCmd`).
+  - `luaRunFile` -- run a file as one chunk in a new state; the option `async=true`
+    runs it in a background thread (replaces `luaLoadFile` and `luaSpawn`).
+  - `luaShell` -- line-by-line interactive/REPL execution (replaces `luash`).
+
+  The whole file is compiled as one chunk (local variables work across lines), unlike
+  the line-by-line `luaShell`. Macros and options may be given as a `"key=val"` string
+  or, from Lua, a table. See the *Deprecations* section below for the old names.
+
+- **Unified state naming API.** State management uses consistent verbs: `luaGetState`
+  (get-or-create), `luaFindState` (lookup only), `luaNameState` (bind the calling/given
+  state to a name), and `luaStateIsNamed` (predicate). "Register" is now reserved for
+  extension registration (`luaRegisterFunction`/`luaRegisterLibrary`). The old
+  `luaNamedState`/`luaFindNamedState`/`luaRegisterState`/`luaStateIsRegistered` names
+  remain as deprecated aliases.
+
+- **`LUA_SCRIPT_PATH` unified with `require()`.** Directories on `LUA_SCRIPT_PATH` are
+  now searched by both script resolution (`@file`, `luaRunFile`, luascript/DTYP `@file`)
+  **and** Lua's `require()` -- a single path registry feeds both. `LUA_SCRIPT_PATH` is
+  re-read on each resolution, so runtime `epicsEnvSet` additions take effect immediately.
+  Search order is `LUA_SCRIPT_PATH` directories first, then `luaAddPath` directories.
 
 - **`POPT`/`PCAL` fields added to luascript record.** The Process Option field controls
   whether CODE runs every time (`Always`, default) or only when a condition is met
@@ -64,8 +84,9 @@ Release 4-0
   `nil, "error message"` on failure instead of silently returning nil.
 
 - **`epics.put` returns nothing on success.** Returns an error string on failure. The
-  same convention applies to `luaSpawn`, `luash`, `luaCmd`, and `luaLoadFile` -- all
-  action commands return nothing on success and an error string on failure.
+  same convention applies to the run/load commands (`luaRunString`, `luaRunFile`,
+  `luaShell`) -- all action commands return nothing on success and an error string on
+  failure.
 
 - **`epics.get`/`epics.put` integer distinction.** Integer types (DBF_SHORT, DBF_LONG,
   DBF_CHAR, DBF_ENUM) are now returned with `lua_pushinteger` instead of `lua_pushnumber`,
@@ -145,7 +166,27 @@ Release 4-0
 - **Lua state reference counting.** New `luaStateRef`/`luaStateUnref` API for
   managing Lua state lifetimes. States are automatically closed when all references
   are released. Used internally by the sequencer to keep states alive between
-  `luaLoadFile` and post-iocInit thread spawning.
+  `luaRunFile` and post-iocInit thread spawning.
+
+### Deprecations
+
+The following names are deprecated in favor of the unified vocabulary. They
+continue to work, and each emits a **one-time warning** (via the EPICS error log)
+on first use naming its replacement. They will be removed in a future release.
+
+| Deprecated | Replacement |
+| ---------- | ----------- |
+| `luaCmd` | `luaRunString` |
+| `luaLoadFile` | `luaRunFile` |
+| `luaSpawn` | `luaRunFile` with option `async=true` |
+| `luash` / `luashLoad` | `luaShell` |
+| `luaNamedState` | `luaGetState` |
+| `luaFindNamedState` | `luaFindState` |
+| `luaRegisterState` | `luaNameState` |
+| `luaStateIsRegistered` | `luaStateIsNamed` |
+
+`luaRegisterFunction` and `luaRegisterLibrary` are **not** deprecated -- "Register"
+now exclusively means extension registration.
 
 ### Bug Fixes
 
@@ -173,6 +214,14 @@ Release 4-0
 - **DTYP device support** now supports longer function names and
   parameter lists in INP/OUT fields (buffer increased from 62 to 256
   characters).
+
+- **DTYP INP/OUT parsing is quote/paren aware.** Parameters containing
+  commas or spaces inside quotes (e.g. `func(1, "a,b", 3)` or
+  `func("hello world")`) and nested parentheses (`func(g(1,2), 3)`) are
+  now parsed correctly. Previously a quoted space could be mistaken for
+  the portname delimiter and a quoted/nested comma could mis-split the
+  parameter list. Existing INP/OUT strings that already parsed correctly
+  are unaffected.
 
 - **Shared Lua state thread safety.** Lua states shared across
   subsystems (named states used by DTYP device support, luascript

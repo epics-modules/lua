@@ -30,14 +30,14 @@ if (VERSION_INT < VERSION_CHECK) then
 end
 
 -- LUA_SCRIPT_PATH is an environment variable that provides a search path to 
--- find scripts for luash, luaSpawn, and luaRecord 
+-- find scripts for luaShell, luaRunFile, and the luascript record
 epicsEnvSet("LUA_SCRIPT_PATH", "./scripts")
 epicsEnvSet("TOP", "../../../../")
 
 dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
 
--- The '<' command is equivalent to calling luash
+-- The '<' command is equivalent to calling luaShell
 < load_userscripts.lua
 
 ---------------
@@ -45,7 +45,7 @@ iocInit()
 ---------------
 
 -- Runs a script in the background
-luaSpawn("tick.lua")
+luaRunFile("tick.lua", nil, {async=true})
 
 dbl()
 

@@ -29,10 +29,10 @@ A main.cpp file might look like:
 int main(int argc,char *argv[])
 {
     if(argc>=2) {
-        luash(argv[1]);
+        luaShell(argv[1], NULL);
         epicsThreadSleep(.2);
     }
-    luash(NULL);
+    luaShell(NULL, NULL);
     epicsExit(0);
     return(0);
 }
@@ -51,10 +51,10 @@ include that library again once you are in the interactive shell, and
 there wouldn't be a way to automate that.
 
 Therefore, there is a way to define that you want different calls to
-luash to use a common environment. The `luashSetCommonState` command is
+luaShell to use a common environment. The `luashSetCommonState` command is
 included in the luaShell.h file and sets a default environment that
-subsequent luash calls will use. The command takes a C string; if the
-string matches the name of a state created using `luaNamedState()`, it
+subsequent luaShell calls will use. The command takes a C string; if the
+string matches the name of a state created using `luaGetState()`, it
 will use that state, otherwise it will create a new state with that
 name. So the above code changed to allow the interactive shell to
 reference code from the interpreted script would look like:
@@ -67,10 +67,10 @@ int main(int argc,char *argv[])
     luashSetCommonState("default");
 
     if(argc>=2) {
-        luash(argv[1]);
+        luaShell(argv[1], NULL);
         epicsThreadSleep(.2);
     }
-    luash(NULL);
+    luaShell(NULL, NULL);
     epicsExit(0);
     return(0);
 }

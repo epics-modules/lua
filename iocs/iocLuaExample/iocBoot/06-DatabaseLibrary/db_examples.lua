@@ -1,7 +1,7 @@
 -- db_examples.lua
 --
 -- Demonstrates the db library for creating EPICS records from Lua.
--- Loaded via luaLoadFile from st.lua before iocInit.
+-- Loaded via luaRunFile from st.lua before iocInit.
 
 local db = require("db")
 local P = P or "lua:"

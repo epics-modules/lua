@@ -3,7 +3,7 @@ local db = require("db")
 
 local Int32, Float64 = asyn.Int32, asyn.Float64
 
-luaRegisterState(PORT)
+luaNameState(PORT)
 
 local drv = asyn.driver.new(PORT, {
     Float64 "READBACK" (0.0),

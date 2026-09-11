@@ -4,7 +4,7 @@
 -- traffic light example. Creates the PV records and defines the
 -- state machine in a single file.
 --
--- Loaded via luaLoadFile before iocInit. The sequencer starts
+-- Loaded via luaRunFile before iocInit. The sequencer starts
 -- automatically after iocInit completes.
 
 local seq   = require("seq")

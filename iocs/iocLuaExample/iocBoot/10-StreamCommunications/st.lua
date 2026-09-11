@@ -11,17 +11,17 @@ dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
 
 -- Register the lua module's lib/<arch>/ and bin/<arch>/ directories
--- so that require("bytestream"), require("re"), luaLoadFile, and
+-- so that require("bytestream"), require("re"), luaRunFile, and
 -- @file references can find installed Lua files.
 luaAddModule("../../../..")
 
 -- Load formatting and parsing examples.
 -- Creates luascript records and registers the "bytestream_demo" state.
-luaLoadFile("bytestream_examples.lua", {P="bs:"})
+luaRunFile("bytestream_examples.lua", {P="bs:"})
 
 -- Device I/O examples (requires a real asyn port).
 -- Uncomment and configure for your instrument:
 --
---   luaLoadFile("device.lua", {P="bs:", PORT="SENSOR", IP="192.168.1.100:5025"})
+--   luaRunFile("device.lua", {P="bs:", PORT="SENSOR", IP="192.168.1.100:5025"})
 
 iocInit()

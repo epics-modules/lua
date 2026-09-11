@@ -11,7 +11,7 @@
 
 int main(int argc, char *argv[])
 {
-	lua_State* state = luaNamedState("shell");
+	lua_State* state = luaGetState("shell");
 	
     if(argc>=2) {    
         luash(state, argv[1]);

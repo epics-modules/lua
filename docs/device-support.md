@@ -73,8 +73,8 @@ field(INP, "@MYSTATE read_value()")
 ```
 
 If the source name does not resolve to a file on disk, it is treated as
-the name of a Lua state registered with `luaRegisterState`. This allows
-records to call functions in a state created by `luaLoadFile`, sharing
+the name of a Lua state registered with `luaNameState`. This allows
+records to call functions in a state created by `luaRunFile`, sharing
 variables, upvalues, and module-level state with the code that created
 the records.
 
@@ -82,7 +82,7 @@ This is the recommended pattern when using `db.record` from Lua to
 create records and define their callbacks in the same file:
 
 ```lua
-luaRegisterState(PORT)
+luaNameState(PORT)
 
 local client = bs.client(PORT)
 
@@ -262,7 +262,7 @@ of the device script creates a separate Lua state registered under the
 port name, allowing multiple device instances without collisions:
 
 ```lua
-luaRegisterState(PORT)
+luaNameState(PORT)
 
 local client = bs.client(PORT)
 client.OutTerminator = "\n"
@@ -285,8 +285,8 @@ end
 ```lua
 luaAddModule("$(LUA)")
 drvAsynIPPortConfigure("SENSOR1", "192.168.1.100:5025")
-luaLoadFile("device.lua", {P="dev1:", PORT="SENSOR1"})
+luaRunFile("device.lua", {P="dev1:", PORT="SENSOR1"})
 
 drvAsynIPPortConfigure("SENSOR2", "192.168.1.101:5025")
-luaLoadFile("device.lua", {P="dev2:", PORT="SENSOR2"})
+luaRunFile("device.lua", {P="dev2:", PORT="SENSOR2"})
 ```

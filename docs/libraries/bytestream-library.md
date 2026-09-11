@@ -334,7 +334,7 @@ allowing multiple instances without collisions.
 local db = require("db")
 local bs = require("bytestream")
 
-luaRegisterState(PORT)
+luaNameState(PORT)
 
 local client = bs.client(PORT)
 client.OutTerminator = "\n"
@@ -358,7 +358,7 @@ end
 ```lua
 luaAddModule("$(LUA)")
 drvAsynIPPortConfigure("SENSOR1", "192.168.1.100:5025")
-luaLoadFile("sensor.lua", {P="dev1:", PORT="SENSOR1"})
+luaRunFile("sensor.lua", {P="dev1:", PORT="SENSOR1"})
 ```
 
 <br>

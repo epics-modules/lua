@@ -11,7 +11,7 @@ testLuaShell_registerRecordDeviceDriver(pdbbase)
 
 luaAddModule("../..")
 
-luaLoadFile("monitor.lua", {P="lua:"})
+luaRunFile("monitor.lua", {P="lua:"})
 
 iocInit()
 

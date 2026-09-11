@@ -241,7 +241,7 @@ Usage Pattern
 -------------
 
 The typical pattern combines record creation and sequencer definition
-in a single file loaded via `luaLoadFile` before iocInit:
+in a single file loaded via `luaRunFile` before iocInit:
 
 ```lua
 -- myseq.lua
@@ -279,7 +279,7 @@ seq.register(prog)
 ```lua
 -- st.lua
 luaAddModule("../..")
-luaLoadFile("myseq.lua", {P="IOC:"})
+luaRunFile("myseq.lua", {P="IOC:"})
 iocInit()
 ```
 

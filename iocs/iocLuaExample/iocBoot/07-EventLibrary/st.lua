@@ -44,7 +44,7 @@ flag:test()
 -- and this script both call event.flag("workerReady") and get
 -- the same underlying flag.
 
-luaSpawn("worker.lua")
+luaRunFile("worker.lua", nil, {async=true})
 
 ready = event.flag("workerReady")
 

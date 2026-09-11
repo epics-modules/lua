@@ -10,7 +10,7 @@ dbLoadDatabase("../../dbd/testLuaShell.dbd")
 testLuaShell_registerRecordDeviceDriver(pdbbase)
 
 -- Create records and load templates before iocInit
-luaLoadFile("db_examples.lua", {P="lua:"})
+luaRunFile("db_examples.lua", {P="lua:"})
 
 iocInit()
 

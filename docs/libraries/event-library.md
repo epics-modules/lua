@@ -155,7 +155,7 @@ Examples
 ### Basic signaling between threads
 
 ```lua
--- shared.lua: loaded via luaLoadFile
+-- shared.lua: loaded via luaRunFile
 local event = require("event")
 local ready = event.flag("sensorReady")
 

@@ -31,7 +31,7 @@ luaAddModule(MYMODULE)
 
 After registering, `require("libname")` will find `.lua` files installed
 via `LIB_INSTALLS` and `.so`/`.dll` files in those directories. Script
-loading functions (`luaLoadFile`, `luaSpawn`, `@file` references in
+loading functions (`luaRunFile`, `@file` references in
 luascript CODE and DTYP INP/OUT) will also search the registered
 directories.
 

@@ -12,7 +12,7 @@ testLuaShell_registerRecordDeviceDriver(pdbbase)
 luaAddModule("../../../..")
 
 -- Load the traffic light definition (creates records + registers sequencer)
-luaLoadFile("traffic.lua", {P="lua:"})
+luaRunFile("traffic.lua", {P="lua:"})
 
 iocInit()
 

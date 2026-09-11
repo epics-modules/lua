@@ -236,7 +236,7 @@ Creating Records
 
 Lua port drivers are typically paired with `db.record` calls to create
 the asyn device support records that connect to the driver's parameters.
-Using `luaRegisterState` and `luaLoadFile`, the driver, callbacks, and
+Using `luaNameState` and `luaRunFile`, the driver, callbacks, and
 records can all be defined in a single Lua file:
 
 ```lua
@@ -244,7 +244,7 @@ local asyn = require("asyn")
 local db = require("db")
 local Int32, Float64, Octet = asyn.Int32, asyn.Float64, asyn.Octet
 
-luaRegisterState(PORT)
+luaNameState(PORT)
 
 local drv = asyn.driver.new(PORT, {
     Float64 "TEMPERATURE" (0.0),
@@ -291,8 +291,8 @@ db.record("ao", P .. "Setpoint") {
 
 Startup:
 ```lua
-luaSpawn("device.lua", {P="dev1:", PORT="DEV1", DEVICE_PORT="serial1", CONV="0.01"})
-luaSpawn("device.lua", {P="dev2:", PORT="DEV2", DEVICE_PORT="serial2", CONV="0.1"})
+luaRunFile("device.lua", {P="dev1:", PORT="DEV1", DEVICE_PORT="serial1", CONV="0.01"}, {async=true})
+luaRunFile("device.lua", {P="dev2:", PORT="DEV2", DEVICE_PORT="serial2", CONV="0.1"}, {async=true})
 ```
 
 The `09-PortDriver` example IOC demonstrates this pattern.

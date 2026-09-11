@@ -11,8 +11,8 @@
 -- under the PORT name. This allows multiple instances for different
 -- devices without state collisions:
 --
---   luaLoadFile("device.lua", {P="dev1:", PORT="SENSOR1", IP="192.168.1.100:5025"})
---   luaLoadFile("device.lua", {P="dev2:", PORT="SENSOR2", IP="192.168.1.101:5025"})
+--   luaRunFile("device.lua", {P="dev1:", PORT="SENSOR1", IP="192.168.1.100:5025"})
+--   luaRunFile("device.lua", {P="dev2:", PORT="SENSOR2", IP="192.168.1.101:5025"})
 
 local db = require("db")
 local bs = require("bytestream")
@@ -21,7 +21,7 @@ local P    = P    or "dev:"
 local PORT = PORT or "SENSOR"
 
 -- Register lua_State to be able to reference by records
-luaRegisterState(PORT)
+luaNameState(PORT)
 
 -- Create the network port to communicate
 drvAsynIPPortConfigure(PORT, IP)
