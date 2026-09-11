@@ -56,6 +56,19 @@ epicsShareFunc void luaRegisterLibrary(const char* library_name, lua_CFunction l
 epicsShareFunc void luaLoadRegistered(lua_State* state);
 
 epicsShareFunc lua_State* luaCreateState();
+
+/*
+ * State naming family. luaGetState is get-or-create; luaFindState is
+ * lookup-only; luaNameState binds an existing state to a name;
+ * luaStateIsNamed is the predicate. "Register" is reserved for
+ * extension registration (luaRegisterFunction / luaRegisterLibrary).
+ */
+epicsShareFunc lua_State* luaGetState(const char* name);
+epicsShareFunc lua_State* luaFindState(const char* name);
+epicsShareFunc void luaNameState(lua_State* state, const char* name);
+epicsShareFunc int  luaStateIsNamed(lua_State* state);
+
+/* Deprecated aliases (deprecation warnings: Stage 7). */
 epicsShareFunc lua_State* luaNamedState(const char* name);
 epicsShareFunc lua_State* luaFindNamedState(const char* name);
 epicsShareFunc void luaRegisterState(lua_State* state, const char* name);

@@ -935,7 +935,7 @@ epicsShareFunc void epicsShareAPI luashSetCommonState(const char* name)
 
 	if (! name)    { default_state = NULL; return; }
 
-	default_state = luaNamedState(name);
+	default_state = luaGetState(name);
 	initState(default_state);
 }
 

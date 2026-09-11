@@ -882,7 +882,7 @@ int luaopen_iocsh (lua_State* state)
 }
 
 
-static int l_registerState(lua_State* state);
+static int l_nameState(lua_State* state);
 
 /*
  * info(library_or_object)
@@ -1117,7 +1117,11 @@ epicsShareFunc lua_State* luaCreateState()
 
 	lua_register(output, "print", l_replaceprint);
 	lua_register(output, "info", l_info);
-	lua_register(output, "luaRegisterState", l_registerState);
+
+	/* Canonical state self-naming binding; luaRegisterState kept as a
+	 * deprecated alias (warning added in Stage 7). */
+	lua_register(output, "luaNameState", l_nameState);
+	lua_register(output, "luaRegisterState", l_nameState);
 
 	/* Canonical run/load family */
 	lua_register(output, "luaRunString", l_luaRunString);
@@ -1154,39 +1158,27 @@ epicsShareFunc lua_State* luaCreateState()
 
 
 /*
- * Creates a new named lua_State or returns an existing
- * one. Used to allow data to be shared between different
- * epics uses of lua. Most notably, allowing variables from
- * startup scripts able to continue into another call of
- * luash.
+ * =========================================================================
+ * State naming family (Stage 3)
+ * =========================================================================
+ *
+ * Canonical verbs (all C-only except the Lua self-naming binding):
+ *   luaFindState(name)         - lookup only; NULL if not bound
+ *   luaGetState(name)          - get-or-create-and-bind
+ *   luaNameState(state, name)  - bind an existing state to a name
+ *   luaStateIsNamed(state)     - predicate: is this state bound to any name?
+ *
+ * "Register" is reserved for extension registration
+ * (luaRegisterFunction / luaRegisterLibrary). The old names
+ * (luaNamedState / luaFindNamedState / luaRegisterState /
+ * luaStateIsRegistered) are retained as deprecated aliases below.
  */
-epicsShareFunc lua_State* luaNamedState(const char* name)
-{
-	if (! name) { return NULL; }
-
-	epicsGuard<epicsMutex> guard(namedStatesMutex);
-
-	std::string state_name(name);
-
-	if (named_states.find(state_name) != named_states.end())
-	{
-		return named_states[state_name];
-	}
-
-	lua_State* output = luaCreateState();
-
-	named_states[state_name] = output;
-	luaStateRef(output);  /* named state registration holds a reference */
-
-	return output;
-}
-
 
 /*
  * Looks up a named lua_State without creating one.
- * Returns NULL if no state is registered under the given name.
+ * Returns NULL if no state is bound under the given name.
  */
-epicsShareFunc lua_State* luaFindNamedState(const char* name)
+epicsShareFunc lua_State* luaFindState(const char* name)
 {
 	if (! name) { return NULL; }
 
@@ -1203,12 +1195,15 @@ epicsShareFunc lua_State* luaFindNamedState(const char* name)
 
 
 /*
- * Registers an existing lua_State under a name so that
- * it can be retrieved later with luaNamedState. This allows
- * luascript records to reference the calling state via
- * CODE = "@statename function()"
+ * Binds an existing lua_State to a name so that it can be retrieved
+ * later with luaGetState/luaFindState. This allows luascript records
+ * and DTYP device support to reference a state via "@statename".
+ *
+ * Rebinding a name to a *different* state is rejected (logged and
+ * ignored) to avoid leaking the previously-bound state's registration
+ * reference and silently redirecting existing users.
  */
-epicsShareFunc void luaRegisterState(lua_State* state, const char* name)
+epicsShareFunc void luaNameState(lua_State* state, const char* name)
 {
 	if (! state || ! name) { return; }
 
@@ -1218,27 +1213,45 @@ epicsShareFunc void luaRegisterState(lua_State* state, const char* name)
 
 	if (it != named_states.end())
 	{
-		/* Same name already registered to the same state: no-op. */
+		/* Same name already bound to the same state: no-op. */
 		if (it->second == state)    { return; }
 
-		/* Same name bound to a *different* state: reject the overwrite.
-		 * Blindly overwriting would leak the previously-bound state's
-		 * registration reference and silently rebind the name, leaving
-		 * existing users pointing at the old state. */
-		errlogPrintf("luaRegisterState: name '%s' is already registered to a different Lua state; ignoring\n", name);
+		errlogPrintf("luaNameState: name '%s' is already bound to a different Lua state; ignoring\n", name);
 		return;
 	}
 
 	named_states[std::string(name)] = state;
-	luaStateRef(state);  /* named state registration holds a reference */
+	luaStateRef(state);  /* named binding holds a reference */
 }
 
+
 /*
- * Returns non-zero if the given lua_State is registered
- * in the named_states map (i.e., it should not be closed
- * by the caller).
+ * Get-or-create a named lua_State. Returns the state bound to 'name'
+ * if one exists, otherwise creates a fresh state, binds it to the
+ * name, and returns it. Composed from luaFindState + luaCreateState +
+ * luaNameState.
  */
-epicsShareFunc int luaStateIsRegistered(lua_State* state)
+epicsShareFunc lua_State* luaGetState(const char* name)
+{
+	if (! name) { return NULL; }
+
+	lua_State* existing = luaFindState(name);
+
+	if (existing != NULL)    { return existing; }
+
+	lua_State* output = luaCreateState();
+
+	luaNameState(output, name);
+
+	return output;
+}
+
+
+/*
+ * Returns non-zero if the given lua_State is bound to any name (i.e.,
+ * it should not be closed by the caller).
+ */
+epicsShareFunc int luaStateIsNamed(lua_State* state)
 {
 	if (! state) { return 0; }
 
@@ -1252,27 +1265,54 @@ epicsShareFunc int luaStateIsRegistered(lua_State* state)
 	return 0;
 }
 
+
 /*
- * Lua-callable wrapper for luaRegisterState.
- * Registers the calling Lua state under the given name.
- *
- *   luaRegisterState("mydriver")
+ * Deprecated aliases (deprecation warnings added in Stage 7). These
+ * forward to the canonical verbs above.
  */
-static int l_registerState(lua_State* state)
+epicsShareFunc lua_State* luaNamedState(const char* name)
+{
+	return luaGetState(name);
+}
+
+epicsShareFunc lua_State* luaFindNamedState(const char* name)
+{
+	return luaFindState(name);
+}
+
+epicsShareFunc void luaRegisterState(lua_State* state, const char* name)
+{
+	luaNameState(state, name);
+}
+
+epicsShareFunc int luaStateIsRegistered(lua_State* state)
+{
+	return luaStateIsNamed(state);
+}
+
+
+/*
+ * Lua-callable wrapper: bind the calling Lua state to a name.
+ * Canonical global is luaNameState; luaRegisterState is a deprecated
+ * alias bound to the same function (warning added in Stage 7).
+ *
+ *   luaNameState("mydriver")
+ */
+static int l_nameState(lua_State* state)
 {
 	const char* name = luaL_checkstring(state, 1);
 
 	/* If the name is already bound to a *different* state, this is a
 	 * naming collision -- abort the script rather than silently
 	 * corrupting the shared-state mapping. */
-	lua_State* existing = luaFindNamedState(name);
+	lua_State* existing = luaFindState(name);
 
 	if (existing != NULL && existing != state)
 	{
-		return luaL_error(state, "luaRegisterState: name '%s' is already registered to a different Lua state", name);
+		return luaL_error(state, "luaNameState: name '%s' is already bound to a different Lua state", name);
 	}
 
-	luaRegisterState(state, name);
+	luaNameState(state, name);
 
 	return 0;
 }

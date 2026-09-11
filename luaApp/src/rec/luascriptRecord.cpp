@@ -212,7 +212,7 @@ static int getState(luascriptRecord* record, std::string name)
 {
 	if (! name.empty() && luaLocateFile(name).empty())
 	{
-		record->state = luaNamedState(name.c_str());
+		record->state = luaGetState(name.c_str());
 		((rpvtStruct*) record->rpvt)->my_state = false;
 		return 0;
 	}

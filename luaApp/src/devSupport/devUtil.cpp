@@ -66,7 +66,7 @@ extern "C"
 		 * If the filename doesn't resolve to a file on disk, treat it
 		 * as a named state (same convention as luascriptRecord's CODE
 		 * field). This allows DTYP "lua" records to share a Lua state
-		 * registered with luaRegisterState().
+		 * bound with luaNameState().
 		 *
 		 * INP/OUT format:
 		 *   "@script.lua function(params) [portname]"  -- file-based
@@ -77,7 +77,7 @@ extern "C"
 		if (located.empty())
 		{
 			/* Not a file -- try as a named state */
-			lua_State* named = luaFindNamedState(output->filename);
+			lua_State* named = luaFindState(output->filename);
 			
 			if (named)
 			{

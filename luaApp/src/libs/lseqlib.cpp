@@ -10,7 +10,7 @@
  * in that state via coroutines).
  *
  * When all programs in a state exit, the thread closes the Lua state
- * unless it was registered as a named state via luaRegisterState.
+ * unless it was bound as a named state via luaNameState.
  */
 
 #include <vector>

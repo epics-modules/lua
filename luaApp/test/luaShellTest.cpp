@@ -465,6 +465,87 @@ static void testNullNamedState(void)
     testOk(state == NULL, "luaNamedState(NULL) returns NULL");
 }
 
+/* ---- Stage 3: canonical state naming family ---- */
+
+static void testGetState(void)
+{
+    testDiag("===== state: luaGetState get-or-create =====");
+
+    lua_State* s1 = luaGetState("stage3_a");
+    testOk(s1 != NULL, "luaGetState creates a new state");
+
+    lua_State* s2 = luaGetState("stage3_a");
+    testOk(s1 == s2, "luaGetState returns the same state for the same name");
+
+    lua_State* s3 = luaGetState("stage3_b");
+    testOk(s3 != NULL && s3 != s1, "luaGetState makes a distinct state for a new name");
+
+    /* Get-or-create binds the name, so it is findable. */
+    testOk(luaFindState("stage3_a") == s1, "luaGetState-created state is findable");
+
+    /* NULL name -> NULL. */
+    testOk(luaGetState(NULL) == NULL, "luaGetState(NULL) returns NULL");
+}
+
+static void testFindState(void)
+{
+    testDiag("===== state: luaFindState lookup-only =====");
+
+    /* A name that was never created must not be auto-created by find. */
+    testOk(luaFindState("stage3_never") == NULL,
+           "luaFindState returns NULL for an unknown name");
+    /* ...and must still be absent afterwards (find does not create). */
+    testOk(luaFindState("stage3_never") == NULL,
+           "luaFindState did not create the state as a side effect");
+
+    testOk(luaFindState(NULL) == NULL, "luaFindState(NULL) returns NULL");
+}
+
+static void testNameStateLateBind(void)
+{
+    testDiag("===== state: luaNameState late-bind + predicate =====");
+
+    lua_State* s = luaCreateState();
+    testOk(s != NULL, "fresh state created");
+
+    /* Not yet bound to any name. */
+    testOk(luaStateIsNamed(s) == 0, "fresh state is not named");
+
+    luaNameState(s, "stage3_late");
+    testOk(luaFindState("stage3_late") == s, "luaNameState binds the state to the name");
+    testOk(luaStateIsNamed(s) != 0, "state is named after luaNameState");
+
+    /* Second name for the same state (alias). */
+    luaNameState(s, "stage3_late_alias");
+    testOk(luaFindState("stage3_late_alias") == s, "state reachable under a second name");
+
+    /* Rebinding an existing name to a DIFFERENT state is rejected. */
+    lua_State* other = luaCreateState();
+    luaNameState(other, "stage3_late");
+    testOk(luaFindState("stage3_late") == s,
+           "luaNameState rejects rebinding a name to a different state");
+    luaStateUnref(other);
+}
+
+static void testNameStateLuaGlobal(void)
+{
+    testDiag("===== state: luaNameState Lua self-binding =====");
+
+    lua_State* s = luaCreateState();
+
+    /* Canonical Lua global binds the calling state. */
+    int status = luaL_dostring(s, "luaNameState('stage3_self')");
+    testOk(status == LUA_OK, "Lua luaNameState('stage3_self') succeeds");
+    testOk(luaFindState("stage3_self") == s, "calling state bound under the name");
+
+    /* Deprecated alias still works and binds the same way. */
+    lua_State* s2 = luaCreateState();
+    status = luaL_dostring(s2, "luaRegisterState('stage3_self_alias')");
+    testOk(status == LUA_OK, "deprecated luaRegisterState global still works");
+    testOk(luaFindState("stage3_self_alias") == s2,
+           "luaRegisterState alias binds the calling state");
+}
+
 static void testRegisterState(void)
 {
     testDiag("===== Lua shell: luaRegisterState =====");
@@ -725,6 +806,13 @@ MAIN(luaShellTest)
     testParseOptions();
     testOptionBoolForms();
     testNullNamedState();
+
+    /* Stage 3: canonical state naming family */
+    testGetState();
+    testFindState();
+    testNameStateLateBind();
+    testNameStateLuaGlobal();
+
     testRegisterState();
     testRegisterStateCollision();
     testStateLock();
