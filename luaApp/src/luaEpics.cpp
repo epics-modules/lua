@@ -34,6 +34,16 @@ typedef std::vector<std::pair<std::string, lua_CFunction> >::iterator reg_iter;
 
 static std::vector<std::pair<std::string, lua_CFunction> > registered_libs;
 static std::vector<std::pair<std::string, lua_CFunction> > registered_funcs;
+
+/*
+ * Path registry (single source of truth for both luaLocateFile and,
+ * via rebuildPaths, package.path/cpath). Two ordered segments, always
+ * searched env_paths first then registered_paths:
+ *   env_paths        - directories ingested from LUA_SCRIPT_PATH
+ *   registered_paths - directories added via luaAddPath / luaAddModule
+ * Both are deduped. Guarded by registryMutex.
+ */
+static std::vector<std::string> env_paths;
 static std::vector<std::string> registered_paths;
 
 static std::map<std::string, lua_State*> named_states;
@@ -109,17 +119,19 @@ epicsShareDef LUA_LIBRARY_LOAD_HOOK_ROUTINE luaLoadLibraryHook = NULL;
 epicsShareDef LUA_FUNCTION_LOAD_HOOK_ROUTINE luaLoadFunctionHook = NULL;
 
 /*
- * Attempts to find a given filename within the folders listed
- * in the environment variable "LUA_SCRIPT_PATH"
+ * Ingest the current value of LUA_SCRIPT_PATH into the env_paths
+ * segment of the path registry. Colon-separated directories are added
+ * in order; duplicates (already present in env_paths) are skipped, so
+ * this is safe to call on every resolution. Runtime appends to
+ * LUA_SCRIPT_PATH (e.g. via epicsEnvSet) become visible to both
+ * luaLocateFile and require() the next time this runs.
+ *
+ * ingestScriptPathLocked: caller MUST already hold registryMutex.
+ * ingestScriptPath:       takes registryMutex itself; caller must NOT
+ *                         hold it.
  */
-epicsShareFunc std::string luaLocateFile(std::string filename)
+static void ingestScriptPathLocked()
 {
-	if (filename.empty())    { return std::string(""); }
-
-	/* Check if the filename is an absolute path */
-	if (filename.at(0) == '/' && std::ifstream(filename.c_str()).good())    { return filename; }
-
-	/* Otherwise, see if the file exists in the script path */
 	char* env_path = std::getenv("LUA_SCRIPT_PATH");
 
 	#if defined(__vxworks) || defined(vxWorks)
@@ -136,23 +148,58 @@ epicsShareFunc std::string luaLocateFile(std::string filename)
 	}
 	#endif
 
-	/* Search LUA_SCRIPT_PATH directories */
-	if (env_path)
+	if (! env_path)    { return; }
+
+	std::stringstream path;
+	path << env_path;
+
+	std::string segment;
+	while (std::getline(path, segment, ':'))
 	{
-		std::stringstream path;
-		path << env_path;
+		if (segment.empty())    { continue; }
 
-		std::string segment;
-		while (std::getline(path, segment, ':'))
+		bool found = false;
+		for (size_t i = 0; i < env_paths.size(); i++)
 		{
-			std::string fullpath = segment + "/" + filename;
-			if (std::ifstream(fullpath.c_str()).good())    { return fullpath; }
+			if (env_paths[i] == segment)    { found = true; break; }
 		}
-	}
 
-	/* Search directories registered via luaAddPath */
+		if (! found)    { env_paths.push_back(segment); }
+	}
+}
+
+static void ingestScriptPath()
+{
+	epicsGuard<epicsMutex> guard(registryMutex);
+	ingestScriptPathLocked();
+}
+
+/*
+ * Attempts to find a given filename in the path registry. Search
+ * order: absolute path, then LUA_SCRIPT_PATH directories (env_paths),
+ * then luaAddPath directories (registered_paths), then the current
+ * directory. LUA_SCRIPT_PATH is re-ingested on every call so runtime
+ * changes take effect.
+ */
+epicsShareFunc std::string luaLocateFile(std::string filename)
+{
+	if (filename.empty())    { return std::string(""); }
+
+	/* Check if the filename is an absolute path */
+	if (filename.at(0) == '/' && std::ifstream(filename.c_str()).good())    { return filename; }
+
+	/* Pick up any current/appended LUA_SCRIPT_PATH directories. */
+	ingestScriptPath();
+
+	/* Search the registry: env_paths first, then registered_paths. */
 	{
 		epicsGuard<epicsMutex> guard(registryMutex);
+
+		for (size_t i = 0; i < env_paths.size(); i++)
+		{
+			std::string fullpath = env_paths[i] + "/" + filename;
+			if (std::ifstream(fullpath.c_str()).good())    { return fullpath; }
+		}
 
 		for (size_t i = 0; i < registered_paths.size(); i++)
 		{
@@ -1368,20 +1415,33 @@ static void ensureDefaultPaths(lua_State* state)
 }
 
 /*
- * Rebuild package.path and package.cpath on a state from the
- * full registered_paths list. Caller must hold registryMutex.
+ * Rebuild package.path and package.cpath on a state from the path
+ * registry so that require() sees the same directories as
+ * luaLocateFile. Directories are applied env_paths first, then
+ * registered_paths (matching luaLocateFile's search order). Caller
+ * must hold registryMutex.
  */
 static void rebuildPaths(lua_State* state)
 {
+	/* Pick up any current/appended LUA_SCRIPT_PATH directories so
+	 * require() sees them too. Caller holds registryMutex, so use the
+	 * lock-free core. */
+	ingestScriptPathLocked();
+
 	ensureDefaultPaths(state);
 
-	/* Build prefix strings from registered_paths in order */
+	/* Build prefix strings: env_paths first, then registered_paths. */
 	std::string path_prefix;
 	std::string cpath_prefix;
 
-	for (size_t i = 0; i < registered_paths.size(); i++)
+	std::vector<std::string> ordered;
+	ordered.reserve(env_paths.size() + registered_paths.size());
+	ordered.insert(ordered.end(), env_paths.begin(), env_paths.end());
+	ordered.insert(ordered.end(), registered_paths.begin(), registered_paths.end());
+
+	for (size_t i = 0; i < ordered.size(); i++)
 	{
-		const std::string& dir = registered_paths[i];
+		const std::string& dir = ordered[i];
 
 		path_prefix += dir + "/?.lua;";
 		path_prefix += dir + "/?/init.lua;";

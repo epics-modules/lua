@@ -259,6 +259,125 @@ static void testDeprecatedAliasesForward(void)
     remove(outpath);
 }
 
+/* ---- Stage 4: path unification ---- */
+
+static void testPathEnvLocate(void)
+{
+    testDiag("===== path: LUA_SCRIPT_PATH feeds luaLocateFile =====");
+
+    /* ".." (the test dir) is on LUA_SCRIPT_PATH (set in main). A file
+     * present only there must be located. */
+    std::string found = luaLocateFile(std::string("luaPathModule.lua"));
+    testOk(!found.empty(), "luaLocateFile finds a file via LUA_SCRIPT_PATH: '%s'",
+           found.c_str());
+}
+
+static void testPathEnvRequire(void)
+{
+    testDiag("===== path: LUA_SCRIPT_PATH is require()-able =====");
+
+    /* The unified registry must make a LUA_SCRIPT_PATH directory
+     * reachable by require(), not just by @file/luaLocateFile. A state
+     * created after the env var is set gets it via rebuildPaths. */
+    lua_State* s = luaCreateState();
+
+    int status = luaL_dostring(s,
+        "local m = require('luaPathModule'); result = m.marker()");
+    testOk(status == LUA_OK,
+           "require('luaPathModule') succeeds from LUA_SCRIPT_PATH dir");
+
+    lua_getglobal(s, "result");
+    const char* r = lua_tostring(s, -1);
+    testOk(r != NULL && strcmp(r, "luaPathModule-loaded") == 0,
+           "required module returned its marker: '%s'", r ? r : "(null)");
+    lua_pop(s, 1);
+
+    luaStateUnref(s);
+}
+
+static void testPathRuntimeAppend(void)
+{
+    testDiag("===== path: runtime LUA_SCRIPT_PATH append is visible =====");
+
+    /* Create a subdir with a uniquely-named script NOT reachable via
+     * the current path, then append its parent to LUA_SCRIPT_PATH at
+     * runtime and confirm luaLocateFile now finds it (lazy re-ingest). */
+    char dirtmpl[] = "/tmp/luaPathTestXXXXXX";
+    char* dir = mkdtemp(dirtmpl);
+    testOk(dir != NULL, "temp dir created");
+    if (!dir)    { return; }
+
+    std::string scriptpath = std::string(dir) + "/runtime_added.lua";
+    FILE* f = fopen(scriptpath.c_str(), "w");
+    if (f) { fputs("return 1\n", f); fclose(f); }
+
+    /* Not findable yet. */
+    testOk(luaLocateFile(std::string("runtime_added.lua")).empty(),
+           "script not found before appending its dir");
+
+    /* Append to LUA_SCRIPT_PATH (preserving the existing "..") . */
+    const char* cur = getenv("LUA_SCRIPT_PATH");
+    std::string newval = std::string(cur ? cur : "") + ":" + dir;
+    epicsEnvSet("LUA_SCRIPT_PATH", newval.c_str());
+
+    /* Now the lazy re-ingest on luaLocateFile must pick it up. */
+    std::string found = luaLocateFile(std::string("runtime_added.lua"));
+    testOk(!found.empty(),
+           "script found after runtime LUA_SCRIPT_PATH append: '%s'", found.c_str());
+
+    /* And it must be require()-able in a state built afterwards. */
+    lua_State* s = luaCreateState();
+    int status = luaL_dostring(s, "req_ok = (require('runtime_added') == 1)");
+    testOk(status == LUA_OK, "require of runtime-added module succeeds");
+    lua_getglobal(s, "req_ok");
+    testOk(lua_toboolean(s, -1), "runtime-added dir reached by require()");
+    lua_pop(s, 1);
+    luaStateUnref(s);
+
+    /* Restore LUA_SCRIPT_PATH for later tests. */
+    epicsEnvSet("LUA_SCRIPT_PATH", cur ? cur : "");
+
+    remove(scriptpath.c_str());
+    rmdir(dir);
+}
+
+static void testPathRequireIngestOnly(void)
+{
+    testDiag("===== path: rebuildPaths ingests env for require() (no prior locate) =====");
+
+    /* Create a dir + require-able module, append it to LUA_SCRIPT_PATH,
+     * then create a state and require() WITHOUT ever calling
+     * luaLocateFile for it. This isolates the ingest performed by
+     * rebuildPaths (state creation) as the only way the dir reaches
+     * package.path. */
+    char dirtmpl[] = "/tmp/luaPathReqXXXXXX";
+    char* dir = mkdtemp(dirtmpl);
+    testOk(dir != NULL, "temp dir created");
+    if (!dir)    { return; }
+
+    std::string scriptpath = std::string(dir) + "/ingest_only_mod.lua";
+    FILE* f = fopen(scriptpath.c_str(), "w");
+    if (f) { fputs("return 7\n", f); fclose(f); }
+
+    const char* cur = getenv("LUA_SCRIPT_PATH");
+    std::string newval = std::string(cur ? cur : "") + ":" + dir;
+    epicsEnvSet("LUA_SCRIPT_PATH", newval.c_str());
+
+    /* No luaLocateFile("ingest_only_mod...") here on purpose. */
+    lua_State* s = luaCreateState();
+    int status = luaL_dostring(s, "v = require('ingest_only_mod')");
+    testOk(status == LUA_OK,
+           "require() reaches env dir via rebuildPaths ingest (no prior locate)");
+    lua_getglobal(s, "v");
+    testOk(lua_tointeger(s, -1) == 7, "required module value correct");
+    lua_pop(s, 1);
+    luaStateUnref(s);
+
+    epicsEnvSet("LUA_SCRIPT_PATH", cur ? cur : "");
+    remove(scriptpath.c_str());
+    rmdir(dir);
+}
+
 static void testLoadParams(void)
 {
     testDiag("===== Lua shell: luaLoadParams =====");
@@ -798,6 +917,12 @@ MAIN(luaShellTest)
     testRunFileNotFound();
     testRunFileAsync();
     testDeprecatedAliasesForward();
+
+    /* Stage 4: path unification */
+    testPathEnvLocate();
+    testPathEnvRequire();
+    testPathRuntimeAppend();
+    testPathRequireIngestOnly();
 
     testLoadParams();
     testLoadParamsEmpty();
