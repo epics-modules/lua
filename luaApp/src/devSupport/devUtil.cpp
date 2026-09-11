@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstring>
+#include <cctype>
 
 #include "link.h"
 
@@ -10,6 +11,108 @@
 #include <epicsExport.h>
 
 #include "luaEpics.h"
+
+/*
+ * Quote/paren-aware scanning helpers for INP/OUT parsing.
+ *
+ * The INP/OUT string has the form:
+ *   "filename function(param1, param2, ...) [portname]"
+ * where a param may itself contain spaces, commas, or parentheses if
+ * quoted ("..."/'...') or nested. The old parser split on the first
+ * and last space and the first/last parenthesis, which mis-parsed any
+ * quoted space (read as the portname delimiter) or quoted/nested
+ * parenthesis. These helpers scan while tracking quote state and
+ * paren/bracket/brace depth so structure inside quotes/parens is
+ * preserved.
+ */
+namespace {
+
+/* Advance past one character, updating quote state. Returns the index
+ * just after the (possibly escaped) character. */
+static size_t scanChar(const std::string& s, size_t i, char& quote)
+{
+	char c = s[i];
+
+	if (quote)
+	{
+		if (c == '\\' && i + 1 < s.size())    { return i + 2; }  /* escaped */
+		if (c == quote)                       { quote = '\0'; }
+		return i + 1;
+	}
+
+	if (c == '"' || c == '\'')    { quote = c; }
+
+	return i + 1;
+}
+
+/* Find the first top-level (not quoted, depth 0) whitespace character,
+ * or npos. */
+static size_t findTopLevelSpace(const std::string& s, size_t start)
+{
+	char quote = '\0';
+	int depth = 0;
+
+	for (size_t i = start; i < s.size(); )
+	{
+		char c = s[i];
+
+		if (!quote)
+		{
+			if (c == '(' || c == '[' || c == '{')    { depth += 1; }
+			else if (c == ')' || c == ']' || c == '}') { if (depth > 0) depth -= 1; }
+			else if (depth == 0 && isspace((unsigned char) c)) { return i; }
+		}
+
+		i = scanChar(s, i, quote);
+	}
+
+	return std::string::npos;
+}
+
+/* Find the matching top-level '(' and its matching ')', quote/nesting
+ * aware. Sets open/close to their indices; returns true if a balanced
+ * top-level (...) was found. */
+static bool findParens(const std::string& s, size_t start, size_t& open, size_t& close)
+{
+	char quote = '\0';
+	int depth = 0;
+	open = std::string::npos;
+	close = std::string::npos;
+
+	for (size_t i = start; i < s.size(); )
+	{
+		char c = s[i];
+
+		if (!quote)
+		{
+			if (c == '(')
+			{
+				if (depth == 0 && open == std::string::npos)    { open = i; }
+				depth += 1;
+			}
+			else if (c == ')')
+			{
+				depth -= 1;
+				if (depth == 0 && open != std::string::npos)    { close = i; return true; }
+			}
+		}
+
+		i = scanChar(s, i, quote);
+	}
+
+	return false;
+}
+
+/* Trim leading/trailing ASCII whitespace. */
+static std::string trim(const std::string& s)
+{
+	size_t a = s.find_first_not_of(" \t\r\n");
+	if (a == std::string::npos)    { return std::string(); }
+	size_t b = s.find_last_not_of(" \t\r\n");
+	return s.substr(a, b - a + 1);
+}
+
+}  /* anonymous namespace */
 
 extern "C"
 {
@@ -19,9 +122,6 @@ extern "C"
 		
 		std::string code(inpout->value.instio.string);
 		
-		size_t first_split = code.find_first_of(" ");
-		size_t last_split  = code.find_last_of(" ");
-		
 		if (code.empty())
 		{
 			errlogPrintf("Error parsing INP string, format is '@filename function [portname]'\n");
@@ -29,37 +129,69 @@ extern "C"
 			return NULL;
 		}
 		
-		strncpy(output->filename, code.substr(0, first_split).c_str(), sizeof(output->filename) - 1);
+		/* filename: up to the first top-level whitespace. */
+		size_t fn_end = findTopLevelSpace(code, 0);
+		std::string filename = (fn_end == std::string::npos) ? code : code.substr(0, fn_end);
+		
+		strncpy(output->filename, filename.c_str(), sizeof(output->filename) - 1);
 		output->filename[sizeof(output->filename) - 1] = '\0';
 		
-		if (last_split != first_split)
-		{
-			strncpy(output->portname, code.substr(last_split + 1, code.length() - last_split - 1).c_str(), sizeof(output->portname) - 1);
-			output->portname[sizeof(output->portname) - 1] = '\0';
-		}
+		/* The remainder is "function(params) [portname]". */
+		std::string rest = (fn_end == std::string::npos) ? std::string() : trim(code.substr(fn_end + 1));
 		
-		std::string function = code.substr(first_split + 1, last_split - first_split - 1);
+		std::string function;   /* "name(params)" portion */
 		
-		size_t start_params = function.find_first_of("(");
-		size_t end_params   = function.find_last_of(")");
+		/* Locate the top-level (...) that delimits the parameter list. */
+		size_t open = std::string::npos, close = std::string::npos;
+		bool has_parens = findParens(rest, 0, open, close);
 		
-		bool has_start = start_params != std::string::npos;
-		bool has_end   = end_params   != std::string::npos;
+		/* Detect an unbalanced single paren (has one but not a matched
+		 * pair) to preserve the previous error behavior. */
+		bool any_open  = rest.find('(') != std::string::npos;
+		bool any_close = rest.find(')') != std::string::npos;
 		
-		if ((has_start && !has_end) || (has_end && !has_start))
+		if ((any_open || any_close) && !has_parens)
 		{
 			errlogPrintf("Error parsing function parameters, format is 'function_name(param1,param2,...)'\n");
 			delete output;
 			return NULL;
 		}
 		
-		strncpy(output->function_name, function.substr(0, start_params).c_str(), sizeof(output->function_name) - 1);
-		output->function_name[sizeof(output->function_name) - 1] = '\0';
-		
-		if (has_start && has_end)
+		if (has_parens)
 		{
-			strncpy(output->param_list, function.substr(start_params + 1, end_params - start_params - 1).c_str(), sizeof(output->param_list) - 1);
+			/* function name is everything up to the '('; params are
+			 * inside; portname is the top-level token after ')'. */
+			strncpy(output->function_name, trim(rest.substr(0, open)).c_str(), sizeof(output->function_name) - 1);
+			output->function_name[sizeof(output->function_name) - 1] = '\0';
+			
+			std::string params = rest.substr(open + 1, close - open - 1);
+			strncpy(output->param_list, params.c_str(), sizeof(output->param_list) - 1);
 			output->param_list[sizeof(output->param_list) - 1] = '\0';
+			
+			std::string after = trim(rest.substr(close + 1));
+			if (!after.empty())
+			{
+				/* portname is the first top-level token after ')'. */
+				size_t sp = findTopLevelSpace(after, 0);
+				std::string port = (sp == std::string::npos) ? after : after.substr(0, sp);
+				strncpy(output->portname, port.c_str(), sizeof(output->portname) - 1);
+				output->portname[sizeof(output->portname) - 1] = '\0';
+			}
+		}
+		else
+		{
+			/* No parameter list. "function [portname]". */
+			size_t sp = findTopLevelSpace(rest, 0);
+			std::string fname = (sp == std::string::npos) ? rest : rest.substr(0, sp);
+			strncpy(output->function_name, fname.c_str(), sizeof(output->function_name) - 1);
+			output->function_name[sizeof(output->function_name) - 1] = '\0';
+			
+			if (sp != std::string::npos)
+			{
+				std::string port = trim(rest.substr(sp + 1));
+				strncpy(output->portname, port.c_str(), sizeof(output->portname) - 1);
+				output->portname[sizeof(output->portname) - 1] = '\0';
+			}
 		}
 		
 		/*

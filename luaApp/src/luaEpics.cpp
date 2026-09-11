@@ -303,25 +303,129 @@ static void strtolua(lua_State* state, std::string text)
 
 
 /*
+ * Split a string on TOP-LEVEL commas, i.e. commas that are not inside
+ * a quoted string ("..." or '...') or inside parentheses/brackets/
+ * braces. Appends each field (including empty fields, so "1,,3" yields
+ * three fields) to 'out'. A NULL input yields no fields.
+ *
+ * Escapes: a backslash inside a quoted string escapes the next
+ * character (so "a\",b" is a single field containing a",b). Nesting
+ * of (), [], {} is tracked by depth so commas inside nested calls or
+ * tables like g(1,2) or {1,2} stay within one field.
+ */
+static void splitTopLevel(const char* text, std::vector<std::string>& out)
+{
+	if (! text)    { return; }
+
+	std::string current;
+	int depth = 0;
+	char quote = '\0';   /* current quote char, or '\0' if not in a quote */
+
+	for (const char* p = text; *p; p++)
+	{
+		char c = *p;
+
+		if (quote)
+		{
+			current += c;
+
+			if (c == '\\' && *(p + 1))
+			{
+				/* keep the escaped char verbatim */
+				current += *(++p);
+			}
+			else if (c == quote)
+			{
+				quote = '\0';
+			}
+
+			continue;
+		}
+
+		switch (c)
+		{
+			case '"':
+			case '\'':
+				quote = c;
+				current += c;
+				break;
+
+			case '(':
+			case '[':
+			case '{':
+				depth += 1;
+				current += c;
+				break;
+
+			case ')':
+			case ']':
+			case '}':
+				if (depth > 0)    { depth -= 1; }
+				current += c;
+				break;
+
+			case ',':
+				if (depth == 0)
+				{
+					out.push_back(current);
+					current.clear();
+				}
+				else
+				{
+					current += c;
+				}
+				break;
+
+			default:
+				current += c;
+				break;
+		}
+	}
+
+	out.push_back(current);
+}
+
+
+/*
  * Takes a set of comma-separated values, parses them, and pushes
  * the equivalent lua values to the stack. Returns the number of
  * values in the list. Useful for allowing epics strings to contain
  * text that looks like a function call.
+ *
+ * Splitting is done on top-level commas only (see splitTopLevel), so
+ * commas inside quotes or nested parens/brackets/braces stay within a
+ * single value. Empty and whitespace-only tokens are preserved (they
+ * still count toward the returned parameter count); each token is
+ * type-coerced by strtolua.
  */
 epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
 {
-	std::stringstream parse(param_list);
-	std::string param;
+	if (! param_list)    { return 0; }
 
-	int num_params = 0;
+	/* Preserve prior behavior: an empty string yields zero params
+	 * (std::getline gave no fields), whereas "a,," yields fields. */
+	if (param_list[0] == '\0')    { return 0; }
 
-	while (std::getline(parse, param, ','))
+	std::vector<std::string> fields;
+	splitTopLevel(param_list, fields);
+
+	/* std::getline (the previous implementation) did not emit a trailing
+	 * empty field for a string ending in a top-level comma: "1," gave
+	 * one field, "," gave one, "a,b," gave two. splitTopLevel always
+	 * emits the trailing field, so drop one trailing empty field when
+	 * the input ended with a top-level comma, to preserve the exact
+	 * parameter count of existing INP/OUT strings. */
+	if (fields.size() > 1 && fields.back().empty())
 	{
-		strtolua(state, param);
-		num_params += 1;
+		fields.pop_back();
 	}
 
-	return num_params;
+	for (size_t i = 0; i < fields.size(); i++)
+	{
+		strtolua(state, fields[i]);
+	}
+
+	return (int) fields.size();
 }
 
 
