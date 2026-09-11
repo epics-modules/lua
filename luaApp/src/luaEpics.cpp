@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
+#include <cctype>
 #include <vector>
 #include <map>
 
@@ -278,37 +279,115 @@ epicsShareFunc int luaLoadParams(lua_State* state, const char* param_list)
 
 
 /*
+ * Parse a comma-separated "key=value,key=value" definition string
+ * into a fresh Lua table, which is left on top of the stack. Values
+ * are type-coerced with strtolua (so "true" -> boolean, "5" -> number,
+ * etc.), giving macros and options a single, shared set of parsing
+ * and coercion rules. A NULL or empty def_list leaves an empty table.
+ *
+ * This is the shared front-half of luaLoadMacros (which additionally
+ * installs the table as a scope) and the option parser (which reads
+ * named keys back out of the table).
+ */
+static void parseDefsToTable(lua_State* state, const char* def_list)
+{
+	lua_newtable(state);
+
+	if (! def_list)    { return; }
+
+	char** pairs;
+
+	macParseDefns(NULL, def_list, &pairs);
+
+	char** original_pairs = pairs;
+
+	for ( ; pairs && pairs[0]; pairs += 2)
+	{
+		std::string param(pairs[1]);
+
+		strtolua(state, param);
+
+		lua_setfield(state, -2, pairs[0]);
+	}
+
+	free(original_pairs);
+}
+
+
+/*
  * Takes a set of comma-separated macro definitions in the form of
  * key-value pairs. Adds a scope of global variables according to
  * the keys parsed. Variables can be popped off with luaPopScope
  */
 epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list)
 {
-	char** pairs;
-
 	if (macro_list)
 	{
-		lua_newtable(state);
-
-		macParseDefns(NULL, macro_list, &pairs);
-
-		char** original_pairs = pairs;
-
-		for ( ; pairs && pairs[0]; pairs += 2)
-		{
-			std::string param(pairs[1]);
-
-			strtolua(state, param);
-
-			lua_setfield(state, -2, pairs[0]);
-		}
-
-		free(original_pairs);
+		parseDefsToTable(state, macro_list);
 
 		lua_pushvalue(state, -1);
 		lua_setfield(state, -2, "__index");
 		luaPushScope(state);
 	}
+}
+
+
+/*
+ * Parse an options string ("key=value,key=value") into a table left
+ * on top of the stack, using the same parsing/coercion rules as
+ * macros (parseDefsToTable). Unlike luaLoadMacros, the table is NOT
+ * installed as a scope: options are execution-control flags read out
+ * by the C caller (e.g. luaOptionBool), not variables injected into
+ * the running script.
+ *
+ * The caller owns the table and must pop it (lua_pop(state, 1)) when
+ * done. A NULL/empty option_list yields an empty table.
+ */
+epicsShareFunc void luaParseOptions(lua_State* state, const char* option_list)
+{
+	parseDefsToTable(state, option_list);
+}
+
+
+/*
+ * Read a boolean option named 'key' from the options table at the
+ * given (absolute or positive) stack index. Returns default_value if
+ * the key is absent. A value is true when it is a Lua boolean true,
+ * a non-zero number, or a string that is neither "false", "0", "no",
+ * nor "off" (case-insensitive). This keeps the string form used on
+ * the iocsh surface ("async=true") consistent with the Lua boolean
+ * form ({async=true}).
+ */
+epicsShareFunc int luaOptionBool(lua_State* state, int index, const char* key, int default_value)
+{
+	lua_getfield(state, index, key);
+
+	int result = default_value;
+
+	if (! lua_isnil(state, -1))
+	{
+		int type = lua_type(state, -1);
+
+		if      (type == LUA_TBOOLEAN) { result = lua_toboolean(state, -1); }
+		else if (type == LUA_TNUMBER)  { result = (lua_tonumber(state, -1) != 0); }
+		else if (type == LUA_TSTRING)
+		{
+			std::string val(lua_tostring(state, -1));
+
+			for (size_t i = 0; i < val.size(); i++)    { val[i] = (char) tolower((unsigned char) val[i]); }
+
+			result = ! (val == "false" || val == "0" || val == "no" || val == "off" || val.empty());
+		}
+		else
+		{
+			/* Any other type present counts as "set" -> true. */
+			result = 1;
+		}
+	}
+
+	lua_pop(state, 1);
+
+	return result;
 }
 
 

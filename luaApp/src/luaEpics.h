@@ -35,6 +35,17 @@ epicsShareFunc int  luaLoadString(lua_State* state, const char* lua_code);
 epicsShareFunc int  luaLoadParams(lua_State* state, const char* param_list);
 epicsShareFunc void luaLoadMacros(lua_State* state, const char* macro_list);
 
+/*
+ * Options-string infrastructure (shared by iocsh/Lua-facing run/load
+ * entry points). luaParseOptions parses a "key=value,key=value" string
+ * into a table left on top of the stack, using the same coercion rules
+ * as macros; the caller owns and must pop the table. luaOptionBool
+ * reads a boolean option out of that table with a default. See the
+ * .cpp for full semantics.
+ */
+epicsShareFunc void luaParseOptions(lua_State* state, const char* option_list);
+epicsShareFunc int  luaOptionBool(lua_State* state, int index, const char* key, int default_value);
+
 epicsShareFunc int luaLoadLibrary(lua_State* state, const char* lib_name);
 
 epicsShareFunc void luaPushScope(lua_State* state);

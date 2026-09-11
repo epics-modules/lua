@@ -166,6 +166,117 @@ static void testLoadMacrosEmptyValue(void)
     }
 }
 
+static void testLoadMacrosCoercion(void)
+{
+    testDiag("===== Lua shell: luaLoadMacros type coercion =====");
+
+    lua_State* state = luaCreateState();
+    testOk(state != NULL, "State created for macro-coercion test");
+
+    if (state)
+    {
+        /* After the parseDefsToTable refactor, macros must still be
+         * type-coerced by strtolua: numbers -> number, true -> boolean,
+         * bare words -> string. This guards the shared front-half. */
+        luaLoadMacros(state, "N=5,B=true,S=word");
+
+        int status = luaL_dostring(state,
+            "result = (type(N)=='number' and N==5) and "
+            "(type(B)=='boolean' and B==true) and "
+            "(type(S)=='string' and S=='word')");
+        testOk(status == 0, "Script referencing coerced macros runs");
+
+        lua_getglobal(state, "result");
+        testOk(lua_toboolean(state, -1),
+               "N coerced to number, B to boolean, S to string");
+        lua_pop(state, 1);
+
+        luaPopScope(state);   /* luaLoadMacros pushed a scope */
+        lua_close(state);
+    }
+}
+
+static void testParseOptions(void)
+{
+    testDiag("===== Lua shell: luaParseOptions / luaOptionBool =====");
+
+    lua_State* state = luaCreateState();
+    testOk(state != NULL, "State created for options test");
+
+    if (state)
+    {
+        int top_before = lua_gettop(state);
+
+        /* Options string parses like macros but is NOT installed as a
+         * scope -- it is read out by the C caller via luaOptionBool. */
+        luaParseOptions(state, "async=true,verbose=false");
+        testOk(lua_istable(state, -1), "luaParseOptions leaves a table on the stack");
+        testOk(lua_gettop(state) == top_before + 1,
+               "luaParseOptions pushes exactly one value");
+
+        int idx = lua_gettop(state);
+
+        testOk(luaOptionBool(state, idx, "async", 0) == 1,
+               "async=true reads as true");
+        testOk(luaOptionBool(state, idx, "verbose", 1) == 0,
+               "verbose=false reads as false");
+        testOk(luaOptionBool(state, idx, "missing", 1) == 1,
+               "absent key returns the default (1)");
+        testOk(luaOptionBool(state, idx, "missing", 0) == 0,
+               "absent key returns the default (0)");
+
+        /* luaOptionBool must be stack-neutral (get + pop). */
+        testOk(lua_gettop(state) == idx,
+               "luaOptionBool leaves the stack unchanged");
+
+        /* Options are NOT injected as globals (no scope pushed). */
+        lua_getglobal(state, "async");
+        testOk(lua_isnil(state, -1), "options are not injected as globals");
+        lua_pop(state, 1);
+
+        lua_pop(state, 1);   /* pop the options table */
+        lua_close(state);
+    }
+}
+
+static void testOptionBoolForms(void)
+{
+    testDiag("===== Lua shell: luaOptionBool value forms =====");
+
+    lua_State* state = luaCreateState();
+
+    if (state)
+    {
+        /* String forms that must read as false. */
+        luaParseOptions(state, "a=false,b=0,c=no,d=off");
+        int idx = lua_gettop(state);
+        testOk(luaOptionBool(state, idx, "a", 1) == 0, "\"false\" -> false");
+        testOk(luaOptionBool(state, idx, "b", 1) == 0, "\"0\" -> false");
+        testOk(luaOptionBool(state, idx, "c", 1) == 0, "\"no\" -> false");
+        testOk(luaOptionBool(state, idx, "d", 1) == 0, "\"off\" -> false");
+        lua_pop(state, 1);
+
+        /* Truthy forms. */
+        luaParseOptions(state, "a=true,b=1,c=yes,d=on");
+        idx = lua_gettop(state);
+        testOk(luaOptionBool(state, idx, "a", 0) == 1, "\"true\" -> true");
+        testOk(luaOptionBool(state, idx, "b", 0) == 1, "1 (number) -> true");
+        testOk(luaOptionBool(state, idx, "c", 0) == 1, "\"yes\" -> true");
+        testOk(luaOptionBool(state, idx, "d", 0) == 1, "\"on\" -> true");
+        lua_pop(state, 1);
+
+        /* NULL option list -> empty table, everything is default. */
+        luaParseOptions(state, NULL);
+        idx = lua_gettop(state);
+        testOk(lua_istable(state, -1), "NULL option list yields a table");
+        testOk(luaOptionBool(state, idx, "async", 1) == 1,
+               "NULL options: key absent -> default");
+        lua_pop(state, 1);
+
+        lua_close(state);
+    }
+}
+
 static void testNullNamedState(void)
 {
     testDiag("===== Lua shell: luaNamedState(NULL) =====");
@@ -416,6 +527,9 @@ MAIN(luaShellTest)
     testLoadParams();
     testLoadParamsEmpty();
     testLoadMacrosEmptyValue();
+    testLoadMacrosCoercion();
+    testParseOptions();
+    testOptionBoolForms();
     testNullNamedState();
     testRegisterState();
     testRegisterStateCollision();
