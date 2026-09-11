@@ -5,6 +5,7 @@
 --   - Integer waveform input -> table of integers in Lua -> reversed output
 --   - Char waveform input    -> Lua string -> string length
 --   - String waveform input  -> table of strings in Lua -> uppercase
+--   - String waveform input  -> table of strings returned -> STRING waveform output
 --
 -- Run with: ../../bin/<arch>/testLuaShell st.lua
 
@@ -50,3 +51,8 @@ dbgf("lua:arr:strlen.VAL")
 --- String array: uppercase first element ---
 dbpf("lua:arr:upper.PROC", 1)
 dbgf("lua:arr:upper.SVAL")
+
+--
+--- String array: build labels -> string waveform output ---
+dbpf("lua:arr:labels.PROC", 1)
+dbgf("lua:arr:string_output")

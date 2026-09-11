@@ -63,3 +63,17 @@ function upper()
 
 	return string.upper(AA[1] or "")
 end
+
+-- Build a label for each element of a string array.
+-- Input:  AA (table of strings from string waveform)
+-- Output: table of strings (written to OUT STRING waveform via AVAL)
+function labels()
+	if type(AA) ~= "table" then return {} end
+
+	local result = {}
+	for i, v in ipairs(AA) do
+		result[i] = "item:" .. v
+	end
+
+	return result
+end

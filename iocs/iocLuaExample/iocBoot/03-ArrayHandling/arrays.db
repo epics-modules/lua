@@ -38,6 +38,12 @@ record(waveform, "$(P)$(R)int_output")
 	field(NELM, "10")
 }
 
+record(waveform, "$(P)$(R)string_output")
+{
+	field(FTVL, "STRING")
+	field(NELM, "5")
+}
+
 # luascript records
 
 # Scale every element of a double array by 2.0
@@ -78,4 +84,13 @@ record(luascript, "$(P)$(R)upper")
 {
 	field(INAA, "$(P)$(R)string_input")
 	field(CODE, "@arrays.lua upper()")
+}
+
+# Build a string array and write it to a STRING waveform (AVAL output)
+record(luascript, "$(P)$(R)labels")
+{
+	field(INAA, "$(P)$(R)string_input")
+	field(OUT,  "$(P)$(R)string_output PP")
+	field(OOPT, "Every Time")
+	field(CODE, "@arrays.lua labels()")
 }
