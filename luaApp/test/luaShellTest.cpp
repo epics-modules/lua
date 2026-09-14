@@ -18,7 +18,18 @@
 #include <envDefs.h>
 #include <epicsThread.h>
 #include <stdio.h>
+
+/* Portable directory create/remove (temp dirs for path tests). */
+#ifdef _WIN32
+#include <direct.h>
+#define TEST_MKDIR(d) _mkdir(d)
+#define TEST_RMDIR(d) _rmdir(d)
+#else
+#include <sys/stat.h>
 #include <unistd.h>
+#define TEST_MKDIR(d) mkdir(d, 0777)
+#define TEST_RMDIR(d) rmdir(d)
+#endif
 
 #include "luaEpics.h"
 #include "luaShell.h"
@@ -122,11 +133,10 @@ static void testRunFileSync(void)
 {
     testDiag("===== run/load: luaRunFile synchronous =====");
 
-    /* Point the fixture at a temp output file we can read back. */
-    char outpath[] = "/tmp/luaRunFileTest_sync.XXXXXX";
-    int fd = mkstemp(outpath);
-    testOk(fd >= 0, "temp output file created");
-    if (fd >= 0)    { close(fd); }
+    /* Point the fixture at an output file (in the cwd) we can read
+     * back. Tests are serial, so a fixed name is safe and portable. */
+    const char* outpath = "luaRunFileTest_sync.out";
+    remove(outpath);
 
     epicsEnvSet("LUA_RUNFILE_OUT", outpath);
 
@@ -154,9 +164,8 @@ static void testRunFileMacros(void)
 {
     testDiag("===== run/load: luaRunFile macros =====");
 
-    char outpath[] = "/tmp/luaRunFileTest_macro.XXXXXX";
-    int fd = mkstemp(outpath);
-    if (fd >= 0)    { close(fd); }
+    const char* outpath = "luaRunFileTest_macro.out";
+    remove(outpath);
     epicsEnvSet("LUA_RUNFILE_OUT", outpath);
 
     int status = luaRunFile("luaRunFileTest.lua", "P=world", NULL);
@@ -191,9 +200,7 @@ static void testRunFileAsync(void)
 {
     testDiag("===== run/load: luaRunFile async option =====");
 
-    char outpath[] = "/tmp/luaRunFileTest_async.XXXXXX";
-    int fd = mkstemp(outpath);
-    if (fd >= 0)    { close(fd); }
+    const char* outpath = "luaRunFileTest_async.out";
     remove(outpath);   /* start absent; the async thread creates it */
     epicsEnvSet("LUA_RUNFILE_OUT", outpath);
 
@@ -244,9 +251,8 @@ static void testDeprecatedAliasesForward(void)
     testOk(v1 != NULL && strcmp(v1, "ok") == 0, "luaCmd alias executed");
 
     /* luaLoadFile -> luaRunFile (sync) */
-    char outpath[] = "/tmp/luaRunFileTest_alias.XXXXXX";
-    int fd = mkstemp(outpath);
-    if (fd >= 0)    { close(fd); }
+    const char* outpath = "luaRunFileTest_alias.out";
+    remove(outpath);
     epicsEnvSet("LUA_RUNFILE_OUT", outpath);
 
     int s2 = luaLoadFile("luaRunFileTest.lua", NULL);
@@ -299,15 +305,16 @@ static void testPathRuntimeAppend(void)
 {
     testDiag("===== path: runtime LUA_SCRIPT_PATH append is visible =====");
 
-    /* Create a subdir with a uniquely-named script NOT reachable via
-     * the current path, then append its parent to LUA_SCRIPT_PATH at
-     * runtime and confirm luaLocateFile now finds it (lazy re-ingest). */
-    char dirtmpl[] = "/tmp/luaPathTestXXXXXX";
-    char* dir = mkdtemp(dirtmpl);
-    testOk(dir != NULL, "temp dir created");
-    if (!dir)    { return; }
-
+    /* Create a subdir (in the cwd) with a uniquely-named script NOT
+     * reachable via the current path, then append it to LUA_SCRIPT_PATH
+     * at runtime and confirm luaLocateFile now finds it (lazy re-ingest).
+     * A fixed name is safe: tests are serial. */
+    const char* dir = "luaPathTestDir";
     std::string scriptpath = std::string(dir) + "/runtime_added.lua";
+    remove(scriptpath.c_str());  /* clean stale contents from a prior run */
+    TEST_RMDIR(dir);
+    testOk(TEST_MKDIR(dir) == 0, "temp dir created");
+
     FILE* f = fopen(scriptpath.c_str(), "w");
     if (f) { fputs("return 1\n", f); fclose(f); }
 
@@ -338,7 +345,7 @@ static void testPathRuntimeAppend(void)
     epicsEnvSet("LUA_SCRIPT_PATH", cur ? cur : "");
 
     remove(scriptpath.c_str());
-    rmdir(dir);
+    TEST_RMDIR(dir);
 }
 
 static void testPathRequireIngestOnly(void)
@@ -350,12 +357,12 @@ static void testPathRequireIngestOnly(void)
      * luaLocateFile for it. This isolates the ingest performed by
      * rebuildPaths (state creation) as the only way the dir reaches
      * package.path. */
-    char dirtmpl[] = "/tmp/luaPathReqXXXXXX";
-    char* dir = mkdtemp(dirtmpl);
-    testOk(dir != NULL, "temp dir created");
-    if (!dir)    { return; }
-
+    const char* dir = "luaPathReqDir";
     std::string scriptpath = std::string(dir) + "/ingest_only_mod.lua";
+    remove(scriptpath.c_str());  /* clean stale contents from a prior run */
+    TEST_RMDIR(dir);
+    testOk(TEST_MKDIR(dir) == 0, "temp dir created");
+
     FILE* f = fopen(scriptpath.c_str(), "w");
     if (f) { fputs("return 7\n", f); fclose(f); }
 
@@ -375,7 +382,7 @@ static void testPathRequireIngestOnly(void)
 
     epicsEnvSet("LUA_SCRIPT_PATH", cur ? cur : "");
     remove(scriptpath.c_str());
-    rmdir(dir);
+    TEST_RMDIR(dir);
 }
 
 /* ---- Stage 6: built-in registration consistency ---- */
