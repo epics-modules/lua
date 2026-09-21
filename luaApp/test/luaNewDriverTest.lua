@@ -18,7 +18,7 @@ drv.READBACK.read = function(self)
     return drv.SETPOINT.value * self.scale
 end
 
-drv.SETPOINT.write = function(value, self)
+drv.SETPOINT.write = function(self, value)
     drv.SETPOINT.value = value
 end
 
@@ -33,7 +33,7 @@ drv.STR_RB.read = function(self)
 end
 
 -- Octet write: store what was written so it can be read back.
-drv.STR_SP.write = function(value, self)
+drv.STR_SP.write = function(self, value)
     self.stored = value
 end
 

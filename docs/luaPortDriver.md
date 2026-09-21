@@ -171,9 +171,9 @@ drv.PARAM.read = function(self)
     return some_value
 end
 
-drv.PARAM.write = function(value, self)
-    -- 'value' is the incoming value from the writer
+drv.PARAM.write = function(self, value)
     -- 'self' is the driver proxy
+    -- 'value' is the incoming value from the writer
     drv.PARAM.value = value
 end
 ```
@@ -269,7 +269,7 @@ drv.TEMPERATURE.read = function(self)
     return drv.TEMPERATURE.value
 end
 
-drv.SETPOINT.write = function(value, self)
+drv.SETPOINT.write = function(self, value)
     drv.SETPOINT.value = value
 end
 

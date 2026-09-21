@@ -16,7 +16,7 @@ drv.READBACK.read = function(self)
     return self.SETPOINT.value * self.scale
 end
 
-drv.SETPOINT.write = function(value, self)
+drv.SETPOINT.write = function(self, value)
     self.SETPOINT.value = value
 end
 

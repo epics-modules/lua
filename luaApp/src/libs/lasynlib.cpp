@@ -1121,8 +1121,11 @@ private:
 
 	int callWrite()
 	{
-		/* value is already on stack, push self */
+		/* value is already on stack; push self and slide it beneath
+		 * value so the callback is invoked as write(self, value),
+		 * mirroring the read(self) signature. */
 		lua_rawgeti(this->state, LUA_REGISTRYINDEX, this->selfRef);
+		lua_insert(this->state, -2);
 		int status = lua_pcall(this->state, 2, 0, 0);
 		if (status)
 		{
@@ -1307,7 +1310,7 @@ static int l_type_constructor(lua_State* state)
  * Returned by drv.PARAM_NAME via the driver proxy __index.
  * Supports:
  *   proxy.read  = function(self) ... end    -- bind read callback
- *   proxy.write = function(value, self) ... end  -- bind write callback
+ *   proxy.write = function(self, value) ... end  -- bind write callback
  *   proxy.value                             -- read param value
  *   proxy.value = x                         -- write param value + callParamCallbacks
  *   proxy.name                              -- parameter name string
