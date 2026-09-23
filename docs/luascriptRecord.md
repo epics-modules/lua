@@ -37,7 +37,7 @@ other kind of PV, the record writes its numeric value (VAL).
 
 To write successfully to a DBF_MENU or DBF_ENUM (for example, the VAL
 field of a ``bo`` or ``mbbo`` record) the record's string value must be
-one of the possible strings for the PV, or it must an integer specifying
+one of the possible strings for the PV, or it must be an integer specifying
 the string number [0..N] for the PV. For example, when writing to a
 ``bo`` record whose ZNAM is "No" and whose ONAM is "Yes", the string
 value must be one of the following: "No", "Yes", "0", or "1". To ensure
@@ -49,12 +49,12 @@ Scan Parameters
 ---------------
 
 The luascript record has the standard fields for specifying under what
-circumstances the record will be processed. These fields are listed in
-[Scan Fields](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-6.html).
-In addition, [Scanning Specification](http://aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html)
-explains how these fields are used. Since the luascript record supports
-no direct interfaces to hardware, it cannot be scanned on I/O interrupt,
-so its SCAN field cannot be ``I/O Intr``.
+circumstances the record will be processed. These fields are described in
+the [Scan Fields](https://docs.epics-controls.org/projects/base/en/latest/dbCommonRecord.html#scan-fields)
+section of the EPICS "Fields Common to All Record Types" documentation,
+which also explains how these fields are used. Since the luascript record
+supports no direct interfaces to hardware, it cannot be scanned on I/O
+interrupt, so its SCAN field cannot be ``I/O Intr``.
 
 
 Read Parameters
@@ -74,7 +74,7 @@ In addition, the luascript record contains the fields INAV, INBV, . . .
 INJV, which indicate the status of the links to numeric fields, and the
 fields IAAV, IBBV, . . . IJJV, which indicate the status of the links to
 string fields.  These fields indicate whether or not the specified PV
-was found and a link to it established. See [Section 5, Operator Display
+was found and a link to it established. See [Operator Display
 Parameters](#operator-display-parameters) for an explanation of these fields.
 
  See the EPICS Record Reference Manual for information on how to specify
@@ -134,7 +134,7 @@ error encountered during processing.
 
  
 The record also has a second set of calculation-related fields
-  described in `[Section 4, Output Parameters](#output-parameters)`
+described in [Output Parameters](#output-parameters).
   
 
 
@@ -300,7 +300,7 @@ It's a menu field that has six choices:
 -  ``Transition to Non-zero`` -- when record is processed, write output
    only if VAL is non-zero and last value was zero. If SVAL was changed,
    write output only if SVAL is a non-empty string and the last value
-   was a empty string. If AVAL was changed, write output only if AVAL
+   was an empty string. If AVAL was changed, write output only if AVAL
    has at least one element and the last value had no elements.
 -  ``Never`` -- Don't write output ever.
 
@@ -352,8 +352,6 @@ Operator Display Parameters
 
 These parameters are used to present meaningful data to the operator.
 Some are also meant to represent the status of the record at run-time.
-An example of an interactive MEDM display screen that displays the
-status of the luascript record is located here.
 
 The HOPR and LOPR fields only refer to the limits of the VAL, HIHI,
 HIGH, LOW, and LOLO fields. PREC controls the precision of the VAL
@@ -361,10 +359,10 @@ field.
 
 The INAV-INJV and IAAV-IJJV fields indicate the status of the link to
 the PVs specified in the INPA-INPJ and INAA-INJJ fields, respectively.
-The fields can have three possible values:
+The fields can have four possible values:
 
 |Ext PV NC | the PV wasn't found on this IOC and a Channel Access link hasn't been established. |
-|Ext PV OK | the PV wasn't found on this IOC and a Channel Access link has been established. |
+|Ext PV OK | the PV wasn't found on this IOC, but a Channel Access link has been established. |
 |Local PV  | the PV was found on this IOC. |
 |Constant  | the corresponding link field is a constant. |
 
@@ -469,7 +467,7 @@ bytecode.
 ### process
 
 
-See section 11.
+See [Record Processing](#record-processing) below.
 
 
 ### special

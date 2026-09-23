@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Adding Addtional Libraries
+title: Adding Additional Libraries
 parent: Included Libraries
 nav_order: 8
 ---

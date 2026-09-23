@@ -251,12 +251,12 @@ function next_bool(record)
 end
 ```
 
-The `07-LuaDTYPSupport` example IOC demonstrates this pattern with
+The `08-LuaDTYPSupport` example IOC demonstrates this pattern with
 additional record types.
 
 ### Named state with bytestream client
 
-The `09-StreamCommunications` example IOC demonstrates using named
+The `10-StreamCommunications` example IOC demonstrates using named
 states with `bytestream.client` for structured device I/O. Each load
 of the device script creates a separate Lua state registered under the
 port name, allowing multiple device instances without collisions:

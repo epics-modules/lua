@@ -65,9 +65,8 @@ local label = epics.get("my:mbbo", {string=true})
 > Char waveforms are returned as Lua strings by default. Use
 > `{string=false}` to get a table of byte values instead.
 
-**Returns:** the value on success. For arrays, returns a Lua table.
-
-**Returns:** `nil, "error message"` on failure.
+**Returns:** the value on success (a Lua table for arrays), or
+`nil, "error message"` on failure.
 
 <br>
 
@@ -98,9 +97,7 @@ epics.put("my:stringwf", {"Hello", "World"})
 | timeout | number | Optional. Timeout in seconds. Default: 1.0. |
 | options | table | Optional. `{timeout=N}` for custom timeout. |
 
-**Returns:** nothing on success.
-
-**Returns:** an error string on failure.
+**Returns:** nothing on success, or an error string on failure.
 
 <br>
 

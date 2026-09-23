@@ -17,6 +17,82 @@ The module uses Lua version 5.4.6. A reference manual describing the
 details of the language can be [found here](https://www.lua.org/manual/5.4/).
 
 
+Adding lua to an IOC
+--------------------
+
+Point your IOC's `configure/RELEASE` at the built lua module:
+
+```
+# configure/RELEASE
+LUA = /path/to/modules/lua
+```
+
+Then make the support library and its database definition available to
+the IOC application. There are two ways to wire this up in the IOC's
+`src/Makefile`.
+
+**Automatic dependencies (recommended).** Include the module's
+`CONFIG_MODULE` from `configure/CONFIG_SITE` (or `RELEASE`) and use the
+variables it provides. This pulls in the correct DBD, library, and their
+dependencies (such as asyn) automatically:
+
+```makefile
+# configure/CONFIG_SITE
+-include $(LUA)/cfg/CONFIG_MODULE
+```
+
+```makefile
+# xxxApp/src/Makefile
+xxx_DBD  += $(LUA_IOC_DBDS)
+xxx_LIBS += $(LUA_IOC_LIBS)
+```
+
+**Explicit form.** Name the DBD and library directly. The lua library
+depends on asyn, so list asyn as well:
+
+```makefile
+# xxxApp/src/Makefile
+xxx_DBD  += luaSupport.dbd
+xxx_LIBS += lua
+xxx_LIBS += asyn
+```
+
+{: .note }
+> The pure-Lua libraries (`bytestream`, `seq`, and `re`) are installed to
+> the module's `lib/<arch>/` directory. Call `luaAddModule("$(LUA)")` in
+> your startup script so `require()` can find them. See
+> [Adding Additional Libraries](libraries/adding-libraries) for details.
+
+
+Example IOCs
+------------
+
+A full, numbered set of runnable example IOCs lives in
+`iocs/iocLuaExample/iocBoot/`. Each is a self-contained startup script;
+build the example application and run one with the `testLuaShell` binary,
+e.g. from inside an example directory:
+
+```
+../../bin/<arch>/testLuaShell st.lua
+```
+
+The examples are ordered as a learning progression:
+
+| Example | Demonstrates |
+|---------|--------------|
+| `01-LuaShell` | Using the Lua shell as a replacement for the ioc shell. |
+| `02-LuascriptRecord` | The luascript record with inline code and script files. |
+| `03-ArrayHandling` | Array/waveform inputs and table (array) output. |
+| `04-AsynLibrary` | Communicating with asyn ports via the asyn library. |
+| `05-EpicsLibrary` | Reading and writing PVs with the epics library. |
+| `06-DatabaseLibrary` | Creating and inspecting records with the db library. |
+| `07-EventLibrary` | Inter-thread signaling with the event library. |
+| `08-LuaDTYPSupport` | DTYP "lua" device support callbacks. |
+| `09-PortDriver` | Creating an asynPortDriver from Lua. |
+| `10-StreamCommunications` | Structured device I/O with the bytestream library. |
+| `11-Sequencer` | State machines with the seq library. |
+
+
 Lua Shell
 ---------
 

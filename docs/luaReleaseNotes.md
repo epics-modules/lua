@@ -13,7 +13,7 @@ Release 4-0
 ### Major Changes
 
 - **luaaa dependency removed.** The third-party luaaa C++ binding library has been 
-  completely eliminated. All Lua libraries now use the standard Lua C API directly.
+  completely eliminated. All Lua libraries now use the standard Lua C API directly,
   restoring compatibility with older toolchains such as vxWorks and legacy MSVC versions. 
   The `CXX11_SUPPORT` build flag has been removed.
 
@@ -104,7 +104,7 @@ Release 4-0
   providing orders-of-magnitude faster access. Remote PVs transparently fall through to CA.
 
 - **`epics.pv` redesigned as proper userdata.** The PV object returned by `epics.pv()`
-  is now a proper Lua userdata, `__tostring` support, and type-safe access via `luaL_checkudata`. 
+  is now a proper Lua userdata, with `__tostring` support and type-safe access via `luaL_checkudata`. 
   The `pv.name` property returns the PV name. The old `pv:getName()` method and `pv.pv_name`
   raw field are removed.
 
@@ -281,7 +281,7 @@ Release 3-1
 ### Library Changes:
 
 Included libraries now have extended capabilities when built with a compiler that 
-supports C++11. To enable these capabilites, define CXX11_SUPPORT=YES in a 
+supports C++11. To enable these capabilities, define CXX11_SUPPORT=YES in a 
 CONFIG_SITE.local file. Changes are noted below.
 
 #### asyn
