@@ -20,6 +20,11 @@
 #include "luaEpics.h"
 #include "luaShell.h"
 
+/* Lua 5.5 moved lua_writestringerror / lua_writestring / lua_writeline and
+   the lua_assert debug macro out of the public headers into llimits.h.
+   Upstream lua.c includes llimits.h for the same reason. */
+#include "llimits.h"
+
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"lua"
 #endif

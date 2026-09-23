@@ -13,8 +13,8 @@ calcout/scalcout record types. Lua scripts can be used for IOC startup,
 record processing logic, device communication, and asynPortDriver
 creation.
 
-The module uses Lua version 5.4.6. A reference manual describing the
-details of the language can be [found here](https://www.lua.org/manual/5.4/).
+The module uses Lua version 5.5.1. A reference manual describing the
+details of the language can be [found here](https://www.lua.org/manual/5.5/).
 
 
 Adding lua to an IOC

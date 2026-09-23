@@ -12,6 +12,17 @@ Release 4-0
 
 ### Major Changes
 
+- **Lua language updated to 5.5.1.** The bundled Lua interpreter has been
+  upgraded from 5.4.6 to 5.5.1. The only major incompatibility being:
+
+  - **`global` is now a reserved word.** Scripts must not use `global` as a
+    variable or parameter name.
+
+  New user-facing language features in 5.5 include global-variable
+  declarations, named vararg tables, more compact arrays, and incremental
+  major garbage collections. See the
+  [Lua 5.5 reference manual](https://www.lua.org/manual/5.5/) for details.
+
 - **luaaa dependency removed.** The third-party luaaa C++ binding library has been 
   completely eliminated. All Lua libraries now use the standard Lua C API directly,
   restoring compatibility with older toolchains such as vxWorks and legacy MSVC versions. 

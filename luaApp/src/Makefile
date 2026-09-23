@@ -29,7 +29,6 @@ INC += luaconf.h
 lua_SRCS += lapi.c
 lua_SRCS += lauxlib.c
 lua_SRCS += lbaselib.c
-lua_SRCS += lbitlib.c
 lua_SRCS += lcode.c
 lua_SRCS += lcorolib.c
 lua_SRCS += lctype.c
