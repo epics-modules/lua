@@ -126,10 +126,17 @@ end
 
 
 ---------------------------------------------------------------------------
--- Read-side: basic_reader factory
+-- Read-side: reader factory (public helper)
 ---------------------------------------------------------------------------
+--
+-- bytestream.reader{pattern_fn=..., conversion=..., defaultvalue=...}
+--
+-- Builds a read(flags) function from an LPeg pattern generator and a
+-- conversion function. The returned pattern produces a single capture
+-- (the converted value). The library applies the * (ignore) flag
+-- centrally in the compile layer, so this helper does NOT handle it.
 
-local function basic_reader(datatable)
+function bytestream.reader(datatable)
 	-- Compute default value once
 	local defaultvalue = datatable.defaultvalue
 	if defaultvalue == nil then
@@ -154,20 +161,6 @@ local function basic_reader(datatable)
 		if not flags.strict then
 			local dv = defaultvalue
 			output = output / function(x) return x or dv end
-		end
-
-		-- * flag: match but discard (no capture contribution)
-		if flags.ignore then
-			-- Rebuild without captures: just match the underlying text pattern.
-			-- Re-invoke pattern_fn but wrap result in a non-capturing match.
-			local raw_pat = datatable.pattern_fn(e)
-
-			-- Strip captures by matching via Cmt: consume the matched text,
-			-- return only the new position (no extra values = no captures).
-			local width_pat = e.max_width(raw_pat, flags.width, flags.exact_width)
-			output = lpeg.Cmt(width_pat, function(s, pos)
-				return pos
-			end)
 		end
 
 		return output
@@ -198,6 +191,25 @@ local function parse_fields(data)
 	return output
 end
 
+-- Wrap a fully-built read pattern so it matches (consuming the same text,
+-- honoring width) but produces no captures. Used to implement the *
+-- (ignore) flag centrally, independent of the format's own captures.
+local function apply_ignore(pattern)
+	return lpeg.Cmt(pattern, function(s, pos) return pos end)
+end
+
+-- Build the read pattern from parsed fields, applying the * flag centrally
+-- so individual format functions never need to handle it.
+local function build_input(format_function)
+	return function(fields)
+		local pattern = format_function(fields)
+		if fields.ignore then
+			return apply_ignore(pattern)
+		end
+		return pattern
+	end
+end
+
 local function compile_input(format_specifier, format_function)
 	local P = get_lpeg()
 
@@ -207,7 +219,7 @@ local function compile_input(format_specifier, format_function)
 	search = search * lpeg.Cg((lpeg.P(".") * lpeg.C(lpeg.locale().digit^1))^-1 / tonumber, "precision")
 	search = search * lpeg.P(format_specifier)
 
-	return lpeg.Ct(search) / parse_fields / format_function
+	return lpeg.Ct(search) / parse_fields / build_input(format_function)
 end
 
 
@@ -246,9 +258,9 @@ local function compile_enum_input()
 			pattern = pattern + lpeg.P(val) * lpeg.Cc(enum_map[val])
 		end
 
+		-- The * (ignore) flag is applied centrally.
 		if flags.ignore then
-			-- Match without capturing: consume the text, return only position
-			return lpeg.Cmt(pattern, function(s, pos) return pos end)
+			return apply_ignore(pattern)
 		end
 
 		return pattern
@@ -298,16 +310,18 @@ end
 
 
 ---------------------------------------------------------------------------
--- Write-side: basic_writer factory
+-- Write-side: writer factory (public helper)
 ---------------------------------------------------------------------------
+--
+-- bytestream.writer(specifier_char)
+--
+-- Builds a write(flags) function that formats a value using
+-- string.format with the given conversion character, honoring the
+-- width/precision/left-align/zero-pad flags. The library applies the
+-- * (ignore) flag centrally, so this helper does NOT handle it.
 
--- Sentinel for ignored write conversions (no arg consumed, no output)
-local IGNORE_WRITE = { ignore = true }
-
-local function basic_writer(specifier_char)
+function bytestream.writer(specifier_char)
 	return function(flags)
-		if flags.ignore then return IGNORE_WRITE end
-
 		return function(value)
 			local fmt = "%"
 			if flags.left_pad   then fmt = fmt .. "-" end
@@ -325,6 +339,18 @@ end
 -- Write-side: compile a single output format specifier
 ---------------------------------------------------------------------------
 
+-- Build the write conversion from parsed fields, recording the * (ignore)
+-- flag centrally so individual format functions never need to handle it.
+-- Returns a record { ignore = bool, fn = function(value) or nil }.
+local function build_output(format_function)
+	return function(fields)
+		if fields.ignore then
+			return { ignore = true }
+		end
+		return { ignore = false, fn = format_function(fields) }
+	end
+end
+
 local function compile_output(format_specifier, format_function)
 	local P = get_lpeg()
 
@@ -334,7 +360,7 @@ local function compile_output(format_specifier, format_function)
 	search = search * lpeg.Cg((lpeg.P(".") * lpeg.C(lpeg.locale().digit^1))^-1 / tonumber, "precision")
 	search = search * lpeg.P(format_specifier)
 
-	return lpeg.Ct(search) / parse_fields / format_function
+	return lpeg.Ct(search) / parse_fields / build_output(format_function)
 end
 
 local function compile_enum_output()
@@ -356,16 +382,17 @@ local function compile_enum_output()
 			enums[#enums + 1] = val
 		end
 
-		if flags.ignore then return IGNORE_WRITE end
+		-- The * (ignore) flag is applied centrally.
+		if flags.ignore then return { ignore = true } end
 
-		return function(value)
+		return { ignore = false, fn = function(value)
 			local idx = math.floor(tonumber(value) or 0)
 			local s = enums[idx + 1]  -- 0-based to 1-based
 			if not s then
 				error("bytestream: enum index " .. tostring(idx) .. " out of range (0.." .. tostring(#enums - 1) .. ")")
 			end
 			return s
-		end
+		end }
 	end
 
 	return lpeg.Ct(search) / build_enum_writer
@@ -395,8 +422,8 @@ function bytestream.format(specifier, ...)
 		-- Add enum output
 		converter = converter + compile_enum_output()
 
-		-- Capture converter results as {type="fmt", func=fn}
-		local fmt_item = converter / function(fn) return { type = "fmt", func = fn } end
+		-- Capture converter results as {type="fmt", conv={ignore=bool, fn=...}}
+		local fmt_item = converter / function(conv) return { type = "fmt", conv = conv } end
 
 		-- Raw text: anything not %
 		local rawtext = lpeg.C((lpeg.P(1) - lpeg.P("%"))^1) / function(s) return { type = "lit", text = s } end
@@ -423,14 +450,14 @@ function bytestream.format(specifier, ...)
 		if seg.type == "lit" then
 			parts[#parts + 1] = seg.text
 		elseif seg.type == "fmt" then
-			local fn = seg.func
-			if type(fn) == "table" and fn.ignore then
+			local conv = seg.conv
+			if conv.ignore then
 				-- * flag: skip, consume no arg, emit nothing
-			elseif type(fn) == "function" then
+			else
 				if arg_idx > args.n then
 					error("bytestream: not enough arguments for format specifier")
 				end
-				parts[#parts + 1] = fn(args[arg_idx])
+				parts[#parts + 1] = conv.fn(args[arg_idx])
 				arg_idx = arg_idx + 1
 			end
 		end
@@ -458,21 +485,20 @@ end
 
 bytestream.add_format {
 	identifier = "s",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C((lpeg.P(1) - e.space)^1) end,
 		conversion = tostring
 	},
-	write = basic_writer("s")
+	write = bytestream.writer("s")
 }
 
 bytestream.add_format {
 	identifier = "c",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(lpeg.P(1)^1) end,
 		conversion = tostring
 	},
 	write = function(flags)
-		if flags.ignore then return IGNORE_WRITE end
 		return function(value)
 			local s = tostring(value)
 			if flags.width then
@@ -488,34 +514,34 @@ bytestream.add_format {
 
 bytestream.add_format {
 	identifier = "d",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(e.signed_int) end,
 		conversion = tonumber
 	},
-	write = basic_writer("d")
+	write = bytestream.writer("d")
 }
 
 bytestream.add_format {
 	identifier = "u",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(e.uint) end,
 		conversion = tonumber
 	},
-	write = basic_writer("u")
+	write = bytestream.writer("u")
 }
 
 bytestream.add_format {
 	identifier = "o",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(e.if_neg(e.optsign) * lpeg.R("07")^1) end,
 		conversion = function(x) return tonumber(strip(x), 8) end
 	},
-	write = basic_writer("o")
+	write = bytestream.writer("o")
 }
 
 bytestream.add_format {
 	identifier = "x",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e)
 			return e.C(e.if_neg(e.optsign))
 			     * e.opt(lpeg.P("0") * lpeg.S("xX"))
@@ -523,61 +549,61 @@ bytestream.add_format {
 		end,
 		conversion = hextonumber
 	},
-	write = basic_writer("x")
+	write = bytestream.writer("x")
 }
 
 -- Float formats
 
 bytestream.add_format {
 	identifier = "f",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(e.floating_point) end,
 		conversion = function(x) return tonumber(strip(x)) end
 	},
-	write = basic_writer("f")
+	write = bytestream.writer("f")
 }
 
 bytestream.add_format {
 	identifier = "e",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(e.floating_point) end,
 		conversion = function(x) return tonumber(strip(x)) end
 	},
-	write = basic_writer("e")
+	write = bytestream.writer("e")
 }
 
 bytestream.add_format {
 	identifier = "g",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(e.floating_point) end,
 		conversion = function(x) return tonumber(strip(x)) end
 	},
-	write = basic_writer("g")
+	write = bytestream.writer("g")
 }
 
 bytestream.add_format {
 	identifier = "E",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(e.floating_point) end,
 		conversion = function(x) return tonumber(strip(x)) end
 	},
-	write = basic_writer("E")
+	write = bytestream.writer("E")
 }
 
 bytestream.add_format {
 	identifier = "G",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e) return e.C(e.floating_point) end,
 		conversion = function(x) return tonumber(strip(x)) end
 	},
-	write = basic_writer("G")
+	write = bytestream.writer("G")
 }
 
 -- Binary format (%b)
 
 bytestream.add_format {
 	identifier = "b",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e)
 			local bindigit = lpeg.S("01")
 			return e.C(e.opt(e.sign) * bindigit^1)
@@ -593,7 +619,6 @@ bytestream.add_format {
 		end
 	},
 	write = function(flags)
-		if flags.ignore then return IGNORE_WRITE end
 		return function(value)
 			local s = int_to_bin(math.floor(tonumber(value) or 0))
 
@@ -618,7 +643,7 @@ bytestream.add_format {
 
 bytestream.add_format {
 	identifier = "r",
-	read = basic_reader {
+	read = bytestream.reader {
 		pattern_fn = function(e)
 			-- Width determines byte count; default 1
 			local count = (e.flags and e.flags.width) or 1
@@ -627,7 +652,6 @@ bytestream.add_format {
 		conversion = tostring
 	},
 	write = function(flags)
-		if flags.ignore then return IGNORE_WRITE end
 		return function(value)
 			return tostring(value)
 		end
@@ -721,7 +745,9 @@ bytestream._doc = {
 	[".match"]      = "match(fmt, input) - parse input string, return extracted values",
 	[".format"]     = "format(fmt, ...) - format values into an output string",
 	[".client"]     = "client(port [,addr]) - create a bytestream client wrapping asyn",
-	[".add_format"] = "add_format(cvt) - register a custom format specifier",
+	[".add_format"] = "add_format{identifier, read, write} - register a custom format specifier",
+	[".reader"]     = "reader{pattern_fn, conversion [,defaultvalue]} - build a read(flags) function",
+	[".writer"]     = "writer(char) - build a write(flags) function using string.format",
 	[".inputs"]     = "Table of registered read-side format functions",
 	[".outputs"]    = "Table of registered write-side format functions",
 }

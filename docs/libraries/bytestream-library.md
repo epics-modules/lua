@@ -60,7 +60,7 @@ All format specifiers use the syntax `%[flags][width][.precision]<specifier>`.
 
 | Flag | Read effect | Write effect |
 | - | - | - |
-| `*` | Match but discard (no capture) | Skip conversion, consume no argument |
+| `*` | Match but discard (no capture) | Emit nothing, consume no argument |
 | `-` | Allow negative sign on `%o`, `%x` | Left-align output |
 | `0` | (none) | Zero-pad output |
 | `#` | Allow spaces after sign | (reserved) |
@@ -163,19 +163,69 @@ index is out of range.
 Register a custom format specifier.
 
 ```
-bytestream.add_format (specifier)
+bytestream.add_format {identifier = ..., read = ..., write = ...}
 ```
 
-Adds a new format letter for use with `match` and `format`. The
-specifier table must contain an `identifier` and either or both of
-`read` and `write`.
+Adds a new format specifier for use with `match` (read) and `format`
+(write). A bytestream specifier is registered from Lua and
+is immediately usable in any `match`/`format` string on that Lua state.
+
+| Field | Type | Description |
+| - | - | - |
+| `identifier` | string | The text that follows `%[flags][width][.precision]`. Usually a single letter (e.g. `"B"`), but may be multiple characters. Must not collide with a built-in specifier or the `{...}` enum syntax. |
+| `read` | function | Optional. `read(flags) -> LPeg pattern`. Called once per unique format string during compilation. |
+| `write` | function | Optional. `write(flags) -> function(value) -> string`. Called once per unique format string during compilation. |
+
+At least one of `read` / `write` must be provided. A specifier with
+only `read` is input-only; only `write` is output-only.
+
+#### The `read` contract
+
+`read(flags)` must return an **LPeg pattern**. Whatever the pattern
+captures becomes the value returned by `match` for that specifier.
+Return a single capture (use `bytestream.reader` to get this handling
+for free).
+
+`flags` is a table describing the parsed conversion:
+
+| Field | Type | Meaning |
+| - | - | - |
+| `width` | number/nil | The width field, or `nil` if absent. |
+| `precision` | number/nil | The precision field, or `nil`. |
+| `ignore` | bool | The `*` flag was present. **You do not need to handle this** — see below. |
+| `exact_width` | bool | The `!` flag: width is exact, not maximum. |
+| `strict` | bool | `false` if the `?` flag was present (return a default on no match). |
+| `left_pad` | bool | The `-` flag. |
+| `pad_zeroes` | bool | The `0` flag. |
+| `hash` | bool | The `#` flag. |
+| `compare` | bool | The `=` flag. |
+
+#### The `write` contract
+
+`write(flags)` must return a **converter closure** `function(value)`
+that returns the formatted string. `flags` has the same fields as
+above. Always return a converter closure — the library handles the `*`
+flag for you (see below).
+
+{: .note }
+> **The library owns the `*` (ignore) flag.** You don't need to inspect
+> `flags.ignore` in a custom `read` or `write`. When `*` is present,
+> the library wraps your read pattern so it matches but produces no
+> capture, and on the write side it skips your converter entirely. This
+> means every custom specifier supports `%*<id>` automatically.
+
+#### Example: custom specifier from scratch
+
+A `%B` boolean that reads/writes the literal text `true` / `false`:
 
 ```lua
+local lpeg = require("lpeg")
+
 bs.add_format {
     identifier = "B",
     read = function(flags)
-        local lpeg = require("lpeg")
-        return lpeg.P("true") * lpeg.Cc(true)
+        -- Return a pattern that captures the converted value.
+        return lpeg.P("true")  * lpeg.Cc(true)
              + lpeg.P("false") * lpeg.Cc(false)
     end,
     write = function(flags)
@@ -184,11 +234,78 @@ bs.add_format {
         end
     end,
 }
+
+bs.match("%B", "true")   -- true
+bs.format("%B", false)   -- "false"
+bs.match("%*B %d", "true 9")  -- 9
 ```
 
-| Parameter | Type | Description |
+<br>
+
+### bytestream.reader / bytestream.writer
+---
+
+Helper factories that build `read` / `write` functions with the same
+flag handling the built-in specifiers use. Prefer these over
+hand-rolling when your specifier is "match a pattern, convert the text"
+(read) or "format with `string.format`" (write).
+
+```
+bytestream.reader {pattern_fn = ..., conversion = ..., defaultvalue = ...}
+bytestream.writer (specifier_char)
+```
+
+**`bytestream.reader{...}`** returns a `read(flags)` function.
+
+| Field | Type | Description |
 | - | - | - |
-| specifier | table | Table with `identifier` (string), `read` (function), and/or `write` (function). |
+| `pattern_fn` | function | `pattern_fn(e) -> LPeg pattern` producing one capture (the matched text). `e` is a pattern environment (see below). |
+| `conversion` | function | Converts the captured text to the final value (e.g. `tonumber`). |
+| `defaultvalue` | any | Optional. Value returned under the `?` flag when the match is empty. Computed from `conversion("")` if omitted. |
+
+The `e` environment passed to `pattern_fn` bundles LPeg with useful
+building blocks:
+
+| Field | Description |
+| - | - |
+| `e.P`, `e.R`, `e.S`, `e.C` | The corresponding `lpeg` functions. |
+| `e.digit`, `e.space`, ... | The LPeg locale character classes. |
+| `e.opt(pat)` | `pat^-1` (optional). |
+| `e.sign`, `e.uint`, `e.signed_int`, `e.decimal`, `e.floating_point` | Common numeric sub-patterns. |
+| `e.max_width(pat, w, exact)` | Limit a pattern to `w` characters. Applied automatically for width/`!`. |
+| `e.flags` | The parsed `flags` table. |
+
+**`bytestream.writer(char)`** returns a `write(flags)` function that
+formats the value with `string.format` using the given conversion
+character, honoring width, precision, `-` (left align) and `0`
+(zero pad).
+
+#### Example: custom specifier using the helpers
+
+A `%H` hexadecimal integer, read via `bytestream.reader` and written
+via `bytestream.writer("X")`:
+
+```lua
+bs.add_format {
+    identifier = "H",
+    read = bs.reader {
+        pattern_fn = function(e)
+            return e.C((e.digit + e.R("af") + e.R("AF"))^1)
+        end,
+        conversion = function(x) return tonumber(x, 16) end,
+    },
+    write = bs.writer("X"),
+}
+
+bs.match("%H", "ff")     -- 255
+bs.format("%H", 255)     -- "FF"
+bs.format("%04H", 255)   -- "00FF"  (width/zero-pad handled by writer)
+```
+
+| Function | Returns |
+| - | - |
+| `bytestream.reader{...}` | A `read(flags)` function for use as `add_format`'s `read`. |
+| `bytestream.writer(char)` | A `write(flags)` function for use as `add_format`'s `write`. |
 
 <br>
 

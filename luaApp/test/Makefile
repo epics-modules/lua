@@ -80,6 +80,15 @@ TESTFILES += ../luaConcurrencyTest.db
 TESTFILES += ../luaConcurrencyTest.lua
 TESTS += luaConcurrencyTest
 
+# --- bytestream library tests ---
+TESTPROD_HOST += bytestreamTest
+bytestreamTest_SRCS += bytestreamTest.cpp
+bytestreamTest_SRCS += luaTest_registerRecordDeviceDriver.cpp
+testHarness_SRCS += bytestreamTest.cpp
+TESTFILES += ../bytestreamTest.lua
+TESTFILES += ../../src/libs/bytestream.lua
+TESTS += bytestreamTest
+
 # --- Test harness for embedded targets ---
 testHarness_SRCS += epicsRunLuaTests.c
 luaTestHarness_SRCS += $(testHarness_SRCS)
