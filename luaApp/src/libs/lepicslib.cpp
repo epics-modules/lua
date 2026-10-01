@@ -282,6 +282,19 @@ static int db_get(lua_State* L, DBADDR* paddr, int max_count, int as_string)
 				break;
 			}
 
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
+			case DB_LUA_INT64:
+			{
+				epicsInt64 val;
+				if (dbGetField(paddr, DB_DBR_INT64, &val, &options, &nRequest, NULL) == 0)
+				{
+					lua_pushinteger(L, val);
+					return 1;
+				}
+				break;
+			}
+#endif
+
 			case DB_LUA_DOUBLE:
 			{
 				double val;
@@ -319,6 +332,16 @@ static int db_put(lua_State* L, DBADDR* paddr, int val_index)
 		{
 			if (lua_isinteger(L, val_index))
 			{
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
+				/* Preserve full 64-bit precision when writing to an
+				 * INT64/UINT64 field; Lua 5.5 integers are 64-bit. */
+				if (dbf_to_lua_type(paddr->field_type) == DB_LUA_INT64)
+				{
+					epicsInt64 val = (epicsInt64) lua_tointeger(L, val_index);
+					status = dbPutField(paddr, DB_DBR_INT64, &val, 1);
+					break;
+				}
+#endif
 				epicsInt32 val = (epicsInt32) lua_tointeger(L, val_index);
 				status = dbPutField(paddr, DB_DBR_LONG, &val, 1);
 			}

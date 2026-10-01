@@ -10,6 +10,10 @@ luaTest_DBD += base.dbd
 luaTest_DBD += asyn.dbd
 luaTest_DBD += drvAsynIPPort.dbd
 luaTest_DBD += luaSupport.dbd
+# int64in/int64out device support (base 7.0+ only)
+ifeq ($(BASE_7_0),YES)
+luaTest_DBD += luaInt64Support.dbd
+endif
 TESTFILES += $(COMMON_DIR)/luaTest.dbd
 
 testHarness_SRCS += luaTest_registerRecordDeviceDriver.cpp
@@ -34,6 +38,10 @@ luaDtypTest_SRCS += luaTest_registerRecordDeviceDriver.cpp
 testHarness_SRCS += luaDtypTest.cpp
 TESTFILES += ../luaDtypTest.db
 TESTFILES += ../luaDtypTest.lua
+# int64in/int64out records only exist on base 7.0+
+ifeq ($(BASE_7_0),YES)
+TESTFILES += ../luaDtypInt64Test.db
+endif
 TESTS += luaDtypTest
 
 # --- luaPortDriver tests ---

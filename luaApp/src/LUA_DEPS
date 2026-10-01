@@ -1,2 +1,8 @@
 LUA_IOC_DBDS = luaSupport.dbd
 LUA_IOC_LIBS = lua
+
+# int64in/int64out device support is only built on EPICS base 7.0+.
+# Pull in its DBD only when available so IOCs on base 3.15 still build.
+ifeq ($(BASE_7_0),YES)
+LUA_IOC_DBDS += luaInt64Support.dbd
+endif

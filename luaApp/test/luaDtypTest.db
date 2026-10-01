@@ -72,6 +72,20 @@ record(mbbo, "$(P)mbbo") {
     field(SCAN, "Passive")
 }
 
+record(mbbiDirect, "$(P)mbbiDirect") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_bits")
+    field(NOBT, "4")
+    field(SCAN, "Passive")
+}
+
+record(mbboDirect, "$(P)mbboDirect") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua write_noop")
+    field(NOBT, "4")
+    field(SCAN, "Passive")
+}
+
 record(stringin, "$(P)stringin") {
     field(DTYP, "lua")
     field(INP,  "@luaDtypTest.lua read_string")

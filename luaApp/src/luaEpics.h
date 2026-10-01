@@ -158,6 +158,7 @@ epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index);
 #define DB_DBR_LONG     5
 
 #if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
+#define DB_DBR_INT64    7
 #define DB_DBR_DOUBLE  10
 #else
 #define DB_DBR_DOUBLE   8
@@ -167,6 +168,7 @@ enum db_lua_type {
 	DB_LUA_STRING,
 	DB_LUA_CHAR,
 	DB_LUA_INTEGER,
+	DB_LUA_INT64,
 	DB_LUA_DOUBLE,
 	DB_LUA_ENUM,
 	DB_LUA_UNKNOWN
@@ -186,7 +188,7 @@ static inline enum db_lua_type dbf_to_lua_type(short field_type)
 		case 3:  case 4:     return DB_LUA_INTEGER;  /* SHORT, USHORT */
 		case 5:  case 6:     return DB_LUA_INTEGER;  /* LONG, ULONG */
 #if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
-		case 7:  case 8:     return DB_LUA_DOUBLE;   /* INT64, UINT64 */
+		case 7:  case 8:     return DB_LUA_INT64;    /* INT64, UINT64 */
 		case 9:  case 10:    return DB_LUA_DOUBLE;   /* FLOAT, DOUBLE */
 		case 11: case 12:
 		case 13:             return DB_LUA_ENUM;     /* ENUM, MENU, DEVICE */

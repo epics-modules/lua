@@ -27,3 +27,14 @@ end
 function read_error(record)
     error("intentional test error")
 end
+
+-- Returns a 64-bit value larger than 2^32 to prove int64 precision is
+-- preserved end-to-end (would be truncated/rounded through 32-bit or double).
+function read_bignum(record)
+    return math.tointeger(5000000000)   -- 5e9, > 2^32
+end
+
+-- Bitfield value for mbbiDirect (bits 0 and 2 set => 5).
+function read_bits(record)
+    return math.tointeger(5)
+end

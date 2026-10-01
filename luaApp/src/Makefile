@@ -70,11 +70,21 @@ lua_SRCS += devLuaBi.cpp
 lua_SRCS += devLuaBo.cpp
 lua_SRCS += devLuaMbbi.cpp
 lua_SRCS += devLuaMbbo.cpp
+lua_SRCS += devLuaMbbiDirect.cpp
+lua_SRCS += devLuaMbboDirect.cpp
 lua_SRCS += devLuaLongin.cpp
 lua_SRCS += devLuaLongout.cpp
 lua_SRCS += devLuaStringin.cpp
 lua_SRCS += devLuaStringout.cpp
 lua_SRCS += devUtil.cpp
+
+# int64in/int64out records only exist on EPICS base 7.0 and later.
+# Build their device support only when building against base 7.0+.
+ifeq ($(BASE_7_0),YES)
+lua_SRCS += devLuaInt64in.cpp
+lua_SRCS += devLuaInt64out.cpp
+DBD += luaInt64Support.dbd
+endif
 
 
 # Include luascript record

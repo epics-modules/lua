@@ -37,10 +37,20 @@ Supported Record Types
 | bo | Output | OUT | nil |
 | longin | Input | INP | integer |
 | longout | Output | OUT | nil |
+| int64in | Input | INP | integer (64-bit) |
+| int64out | Output | OUT | nil |
 | mbbi | Input | INP | number or string label |
 | mbbo | Output | OUT | nil |
+| mbbiDirect | Input | INP | integer (bit-field) |
+| mbboDirect | Output | OUT | nil |
 | stringin | Input | INP | string |
 | stringout | Output | OUT | nil |
+
+{: .note }
+> The `int64in` and `int64out` record types require EPICS base 7.0 or
+> later. They are omitted automatically when the module is built against
+> base 3.15. Lua's native 64-bit integers are preserved without loss of
+> precision.
 
 
 INP/OUT Field Format

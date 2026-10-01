@@ -1,0 +1,13 @@
+# int64 DTYP "lua" device support tests (EPICS base 7.0+ only)
+
+record(int64in, "$(P)int64in") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_bignum")
+    field(SCAN, "Passive")
+}
+
+record(int64out, "$(P)int64out") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua write_noop")
+    field(SCAN, "Passive")
+}

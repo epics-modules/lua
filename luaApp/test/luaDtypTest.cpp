@@ -1,9 +1,9 @@
 /*
  * Tests for DTYP "lua" device support
  *
- * Exercises all 10 standard record types (ai, ao, bi, bo,
- * longin, longout, mbbi, mbbo, stringin, stringout) with
- * Lua-based device support.
+ * Exercises the supported record types (ai, ao, bi, bo, longin,
+ * longout, mbbi, mbbo, mbbiDirect, mbboDirect, stringin, stringout,
+ * and int64in/int64out on base 7.0+) with Lua-based device support.
  */
 
 #include <string.h>
@@ -119,6 +119,41 @@ static void testMbbo(void)
 
     testdbPutFieldOk("test:mbbo.VAL", DBF_LONG, 1);
 }
+
+static void testMbbiDirect(void)
+{
+    testDiag("===== DTYP lua: mbbiDirect (bitfield) =====");
+
+    processRecord("test:mbbiDirect");
+    /* read_bits returns 5 (bits 0 and 2); set directly, returns 2 */
+    testdbGetFieldEqual("test:mbbiDirect.VAL", DBF_LONG, 5);
+}
+
+static void testMbboDirect(void)
+{
+    testDiag("===== DTYP lua: mbboDirect =====");
+
+    testdbPutFieldOk("test:mbboDirect.VAL", DBF_LONG, 5);
+}
+
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
+static void testInt64in(void)
+{
+    testDiag("===== DTYP lua: int64in (64-bit precision) =====");
+
+    processRecord("test:int64in");
+    /* read_bignum returns 5e9, which exceeds 32-bit range; the value
+     * must be preserved exactly (no truncation or double rounding). */
+    testdbGetFieldEqual("test:int64in.VAL", DBF_INT64, (epicsInt64) 5000000000LL);
+}
+
+static void testInt64out(void)
+{
+    testDiag("===== DTYP lua: int64out =====");
+
+    testdbPutFieldOk("test:int64out.VAL", DBF_INT64, (epicsInt64) 9000000000LL);
+}
+#endif
 
 static void testStringin(void)
 {
@@ -360,6 +395,10 @@ MAIN(luaDtypTest)
     epicsEnvSet("LUA_SCRIPT_PATH", "..");
     testdbReadDatabase("luaDtypTest.db", "..", "P=test:");
 
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
+    testdbReadDatabase("luaDtypInt64Test.db", "..", "P=test:");
+#endif
+
     eltc(0);
     testIocInitOk();
     eltc(1);
@@ -374,6 +413,12 @@ MAIN(luaDtypTest)
     testMbbi();
     testMbbiRval();
     testMbbo();
+    testMbbiDirect();
+    testMbboDirect();
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 0, 0)
+    testInt64in();
+    testInt64out();
+#endif
     testStringin();
     testStringout();
     testUdfClearedOnRead();
