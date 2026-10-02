@@ -45,6 +45,8 @@ Supported Record Types
 | mbboDirect | Output | OUT | nil |
 | stringin | Input | INP | string |
 | stringout | Output | OUT | nil |
+| lsi | Input | INP | string |
+| lso | Output | OUT | nil |
 
 {: .note }
 > The `int64in` and `int64out` record types require EPICS base 7.0 or

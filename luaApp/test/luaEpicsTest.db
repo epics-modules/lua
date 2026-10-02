@@ -30,3 +30,7 @@ record(waveform, "$(P)test_cwf") {
 	field(FTVL, "CHAR")
 	field(NELM, "256")
 }
+
+record(lso, "$(P)test_lso") {
+	field(SIZV, "256")
+}

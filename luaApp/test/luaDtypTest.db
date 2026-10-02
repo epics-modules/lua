@@ -98,6 +98,20 @@ record(stringout, "$(P)stringout") {
     field(SCAN, "Passive")
 }
 
+record(lsi, "$(P)lsi") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_longstring")
+    field(SIZV, "256")
+    field(SCAN, "Passive")
+}
+
+record(lso, "$(P)lso") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua write_noop")
+    field(SIZV, "256")
+    field(SCAN, "Passive")
+}
+
 # Test bi with string return matching ONAM
 record(bi, "$(P)bi_str") {
     field(DTYP, "lua")

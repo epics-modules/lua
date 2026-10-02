@@ -38,3 +38,11 @@ end
 function read_bits(record)
     return math.tointeger(5)
 end
+
+-- A string longer than the 40-char stringin/stringout limit, to exercise
+-- the lsi/lso long-string path.
+long_string = string.rep("abcdefghij", 10)   -- 100 chars
+
+function read_longstring(record)
+    return long_string
+end

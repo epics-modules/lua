@@ -3,7 +3,8 @@
  *
  * Exercises the supported record types (ai, ao, bi, bo, longin,
  * longout, mbbi, mbbo, mbbiDirect, mbboDirect, stringin, stringout,
- * and int64in/int64out on base 7.0+) with Lua-based device support.
+ * lsi, lso, and int64in/int64out on base 7.0+) with Lua-based device
+ * support.
  */
 
 #include <string.h>
@@ -168,6 +169,74 @@ static void testStringout(void)
     testDiag("===== DTYP lua: stringout =====");
 
     testdbPutFieldOk("test:stringout.VAL", DBF_STRING, "output_test");
+}
+
+/* Read a long-string record's VAL as a full char array (not the
+ * 40-char-truncated DBF_STRING view). The "$" field modifier requests
+ * the char-array view of a long string field. */
+static void getLongString(const char* pvname, char* out, size_t outsize)
+{
+    DBADDR addr;
+    out[0] = '\0';
+    if (dbNameToAddr(pvname, &addr) != 0) { return; }
+
+    long nReq = (long) outsize - 1;
+    long options = 0;
+    if (dbGetField(&addr, DBR_CHAR, out, &options, &nReq, NULL) == 0)
+    {
+        if (nReq < 0) { nReq = 0; }
+        if ((size_t) nReq >= outsize) { nReq = (long) outsize - 1; }
+        out[nReq] = '\0';
+    }
+}
+
+static void testLsi(void)
+{
+    testDiag("===== DTYP lua: lsi (long string in, > 40 chars) =====");
+
+    /* Expected value matches read_longstring() in luaDtypTest.lua:
+     * string.rep("abcdefghij", 10) = 100 chars. */
+    char expected[128];
+    for (int i = 0; i < 10; i++) { memcpy(expected + i * 10, "abcdefghij", 10); }
+    expected[100] = '\0';
+
+    processRecord("test:lsi");
+
+    char got[256];
+    getLongString("test:lsi.VAL$", got, sizeof(got));
+
+    testOk(strcmp(got, expected) == 0,
+           "lsi.VAL holds full 100-char string (len=%d)", (int) strlen(got));
+    testdbGetFieldEqual("test:lsi.LEN", DBF_ULONG, 101);  /* 100 chars + nul */
+}
+
+static void testLso(void)
+{
+    testDiag("===== DTYP lua: lso (long string out, > 40 chars) =====");
+
+    /* Write a 100-char string to the char-array view of VAL, process the
+     * record (runs the Lua callback), then read VAL back and confirm the
+     * full value was stored without truncation at 40 chars. */
+    char value[128];
+    for (int i = 0; i < 10; i++) { memcpy(value + i * 10, "0123456789", 10); }
+    value[100] = '\0';
+
+    DBADDR addr;
+    if (dbNameToAddr("test:lso.VAL$", &addr) == 0)
+    {
+        long status = dbPutField(&addr, DBR_CHAR, value, (long) strlen(value) + 1);
+        testOk(status == 0, "dbPutField(lso.VAL$, 100-char string) ok");
+    }
+    else
+    {
+        testFail("could not resolve test:lso.VAL$");
+    }
+
+    char got[256];
+    getLongString("test:lso.VAL$", got, sizeof(got));
+    testOk(strcmp(got, value) == 0,
+           "lso.VAL holds full 100-char string after write (len=%d)",
+           (int) strlen(got));
 }
 
 static void testUdfClearedOnRead(void)
@@ -421,6 +490,8 @@ MAIN(luaDtypTest)
 #endif
     testStringin();
     testStringout();
+    testLsi();
+    testLso();
     testUdfClearedOnRead();
     testReadErrorSetsAlarm();
 

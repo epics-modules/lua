@@ -126,6 +126,37 @@ static void testPutLocalString(void)
 	lua_close(L);
 }
 
+static void testLongStringRoundTrip(void)
+{
+	testDiag("===== epics library: long string (lso) round trip > 40 chars =====");
+
+	lua_State* L = luaCreateState();
+
+	doLua(L, "epics = require('epics')");
+	/* 100-char string: longer than the 40-char DBF_STRING limit. The put
+	 * must store the full value through the char-array view. */
+	doLua(L, "longstr = string.rep('abcdefghij', 10)");
+	int status = doLua(L, "epics.put('etest:test_lso', longstr)");
+	testOk(status == 0, "epics.put of 100-char string succeeds");
+	testdbGetFieldEqual("etest:test_lso.LEN", DBF_ULONG, 101);
+
+	doLua(L, "result = epics.get('etest:test_lso')");
+	lua_getglobal(L, "result");
+	testOk(lua_isstring(L, -1), "epics.get on lso returns a string");
+	if (lua_isstring(L, -1))
+	{
+		size_t len = 0;
+		const char* s = lua_tolstring(L, -1, &len);
+		testOk(len == 100, "returned string is 100 chars (not truncated), got %d",
+		       (int) len);
+		testOk(s != NULL && strncmp(s, "abcdefghij", 10) == 0,
+		       "returned string content matches");
+	}
+	lua_pop(L, 1);
+
+	lua_close(L);
+}
+
 static void testGetLocalWaveform(void)
 {
 	testDiag("===== epics library: get local waveform =====");
@@ -455,6 +486,7 @@ MAIN(luaEpicsTest)
 	testGetLocalInteger();
 	testPutLocalDouble();
 	testPutLocalString();
+	testLongStringRoundTrip();
 	testGetLocalWaveform();
 
 	/* PV object */

@@ -124,10 +124,10 @@ Device Support
 DTYP "lua" device support allows standard EPICS record types to use Lua
 callback functions for their read and write operations. Supported record
 types include ai, ao, bi, bo, longin, longout, int64in, int64out, mbbi,
-mbbo, mbbiDirect, mbboDirect, stringin, and stringout (int64in/int64out
-require EPICS base 7.0+). Each callback receives a PV object for accessing
-the record's fields, and errors in the callback are reported as record
-alarms.
+mbbo, mbbiDirect, mbboDirect, stringin, stringout, lsi, and lso
+(int64in/int64out require EPICS base 7.0+). Each callback receives a PV
+object for accessing the record's fields, and errors in the callback are
+reported as record alarms.
 
 [Full Documentation](device-support)
 

@@ -76,6 +76,8 @@ lua_SRCS += devLuaLongin.cpp
 lua_SRCS += devLuaLongout.cpp
 lua_SRCS += devLuaStringin.cpp
 lua_SRCS += devLuaStringout.cpp
+lua_SRCS += devLuaLsi.cpp
+lua_SRCS += devLuaLso.cpp
 lua_SRCS += devUtil.cpp
 
 # int64in/int64out records only exist on EPICS base 7.0 and later.

@@ -97,6 +97,35 @@ static void pushLuaArray(lua_State* L, const void* buf, long count, enum lua_pus
 /* ------------------------------------------------------------------ */
 
 /*
+ * Long string records (lsi/lso/printf) present VAL as a DBF_STRING
+ * scalar whose field_size is the buffer capacity (SIZV), larger than a
+ * normal 40-char string. Such fields are read/written in full by
+ * resolving the address with a "$" suffix (see longStringAddr), which
+ * yields the DBF_CHAR array view of the buffer.
+ */
+static bool isLongStringField(const DBADDR* paddr)
+{
+	return paddr->field_type == DBF_STRING && paddr->field_size > MAX_STRING_SIZE;
+}
+
+/*
+ * Build the "$" (char-array view) name for a long string field. The "$"
+ * modifier must follow an explicit field, so append ".VAL$" when the
+ * name has no field component, otherwise append "$".
+ */
+static std::string longStringDollarName(const char* pv_name)
+{
+	std::string name(pv_name);
+
+	size_t dot = name.find('.');
+	if (dot == std::string::npos)
+	{
+		return name + ".VAL$";
+	}
+	return name + "$";
+}
+
+/*
  * db_get -- read a local PV via dbGetField.
  * Returns: number of Lua values pushed (1 on success, 2 on error).
  */
@@ -478,6 +507,20 @@ static int epics_get(lua_State* state, const char* pv_name,
 		DBADDR addr;
 		if (iocshPpdbbase && *iocshPpdbbase && dbNameToAddr(pv_name, &addr) == 0)
 		{
+			/* Long string fields (lsi/lso/printf VAL) present as a
+			 * DBF_STRING scalar with an oversized buffer. Re-resolve
+			 * through the "$" char-array view so the full value is read
+			 * instead of a 40-char-truncated copy. The char-array path in
+			 * db_get returns it as a Lua string. */
+			if (isLongStringField(&addr))
+			{
+				DBADDR charAddr;
+				std::string dollar = longStringDollarName(pv_name);
+				if (dbNameToAddr(dollar.c_str(), &charAddr) == 0)
+				{
+					return db_get(state, &charAddr, max_count, 1);
+				}
+			}
 			return db_get(state, &addr, max_count, as_string);
 		}
 	}
@@ -750,6 +793,19 @@ static int epics_put(lua_State* state, const char* pv_name, int offset, double t
 		DBADDR addr;
 		if (iocshPpdbbase && *iocshPpdbbase && dbNameToAddr(pv_name, &addr) == 0)
 		{
+			/* Long string fields (lsi/lso/printf VAL) present as a
+			 * DBF_STRING scalar with an oversized buffer. Re-resolve
+			 * through the "$" char-array view so the full value is
+			 * written instead of being truncated to 40 chars. */
+			if (isLongStringField(&addr) && lua_type(state, offset) == LUA_TSTRING)
+			{
+				DBADDR charAddr;
+				std::string dollar = longStringDollarName(pv_name);
+				if (dbNameToAddr(dollar.c_str(), &charAddr) == 0)
+				{
+					return db_put(state, &charAddr, offset);
+				}
+			}
 			return db_put(state, &addr, offset);
 		}
 	}
