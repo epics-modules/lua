@@ -9,6 +9,8 @@
 
 #include <errlog.h>
 #include <epicsExport.h>
+#include <epicsTypes.h>
+#include <dbFldTypes.h>
 
 #include "luaEpics.h"
 
@@ -250,5 +252,148 @@ extern "C"
 		}
 		
 		return status;
+	}
+
+	/*
+	 * Fill a typed C array `bptr` of element type `ftvl` from a Lua table
+	 * at stack index `idx`. Writes up to `nelm` elements, stopping at the
+	 * first nil. Returns the number of elements written, or -1 if the
+	 * value is not a table.
+	 *
+	 * DBF_* macros are used (rather than raw enum values) because the
+	 * dbFldTypes.h numbering shifted between base 3.15 and 7.0 when
+	 * INT64/UINT64 were inserted.
+	 */
+	long luaTableToBuffer(lua_State* state, int idx, short ftvl, void* bptr, long nelm)
+	{
+		if (lua_type(state, idx) != LUA_TTABLE)    { return -1; }
+
+		/* Count the contiguous (non-nil) elements, capped at nelm. */
+		long count = 0;
+		while (count < nelm)
+		{
+			lua_geti(state, idx, count + 1);
+			int t = lua_type(state, -1);
+			lua_pop(state, 1);
+			if (t == LUA_TNIL)    { break; }
+			count += 1;
+		}
+
+		for (long i = 0; i < count; i += 1)
+		{
+			lua_geti(state, idx, i + 1);
+
+			switch (ftvl)
+			{
+				case DBF_CHAR:
+					((epicsInt8*)   bptr)[i] = (epicsInt8)   lua_tointeger(state, -1);
+					break;
+				case DBF_UCHAR:
+					((epicsUInt8*)  bptr)[i] = (epicsUInt8)  lua_tointeger(state, -1);
+					break;
+				case DBF_SHORT:
+					((epicsInt16*)  bptr)[i] = (epicsInt16)  lua_tointeger(state, -1);
+					break;
+				case DBF_USHORT:
+					((epicsUInt16*) bptr)[i] = (epicsUInt16) lua_tointeger(state, -1);
+					break;
+				case DBF_LONG:
+					((epicsInt32*)  bptr)[i] = (epicsInt32)  lua_tointeger(state, -1);
+					break;
+				case DBF_ULONG:
+					((epicsUInt32*) bptr)[i] = (epicsUInt32) lua_tointeger(state, -1);
+					break;
+#ifdef DBF_INT64
+				case DBF_INT64:
+					((epicsInt64*)  bptr)[i] = (epicsInt64)  lua_tointeger(state, -1);
+					break;
+				case DBF_UINT64:
+					((epicsUInt64*) bptr)[i] = (epicsUInt64) lua_tointeger(state, -1);
+					break;
+#endif
+				case DBF_FLOAT:
+					((epicsFloat32*) bptr)[i] = (epicsFloat32) lua_tonumber(state, -1);
+					break;
+				case DBF_DOUBLE:
+					((epicsFloat64*) bptr)[i] = (epicsFloat64) lua_tonumber(state, -1);
+					break;
+				case DBF_STRING:
+				{
+					char* slot = ((char*) bptr) + (i * MAX_STRING_SIZE);
+					const char* s = lua_tostring(state, -1);
+					memset(slot, 0, MAX_STRING_SIZE);
+					if (s != NULL)
+					{
+						strncpy(slot, s, MAX_STRING_SIZE - 1);
+						slot[MAX_STRING_SIZE - 1] = '\0';
+					}
+					break;
+				}
+				default:
+					/* Unsupported element type: leave as-is. */
+					break;
+			}
+
+			lua_pop(state, 1);
+		}
+
+		return count;
+	}
+
+	/*
+	 * Push a Lua table built from `count` elements of a typed C array
+	 * `bptr` of element type `ftvl`. The table is left at the top of the
+	 * stack.
+	 */
+	void luaBufferToTable(lua_State* state, short ftvl, const void* bptr, long count)
+	{
+		lua_createtable(state, (int) count, 0);
+
+		for (long i = 0; i < count; i += 1)
+		{
+			switch (ftvl)
+			{
+				case DBF_CHAR:
+					lua_pushinteger(state, ((const epicsInt8*)   bptr)[i]);
+					break;
+				case DBF_UCHAR:
+					lua_pushinteger(state, ((const epicsUInt8*)  bptr)[i]);
+					break;
+				case DBF_SHORT:
+					lua_pushinteger(state, ((const epicsInt16*)  bptr)[i]);
+					break;
+				case DBF_USHORT:
+					lua_pushinteger(state, ((const epicsUInt16*) bptr)[i]);
+					break;
+				case DBF_LONG:
+					lua_pushinteger(state, ((const epicsInt32*)  bptr)[i]);
+					break;
+				case DBF_ULONG:
+					lua_pushinteger(state, ((const epicsUInt32*) bptr)[i]);
+					break;
+#ifdef DBF_INT64
+				case DBF_INT64:
+					lua_pushinteger(state, ((const epicsInt64*)  bptr)[i]);
+					break;
+				case DBF_UINT64:
+					lua_pushinteger(state, (lua_Integer) ((const epicsUInt64*) bptr)[i]);
+					break;
+#endif
+				case DBF_FLOAT:
+					lua_pushnumber(state, ((const epicsFloat32*) bptr)[i]);
+					break;
+				case DBF_DOUBLE:
+					lua_pushnumber(state, ((const epicsFloat64*) bptr)[i]);
+					break;
+				case DBF_STRING:
+					lua_pushstring(state, ((const char*) bptr) + (i * MAX_STRING_SIZE));
+					break;
+				default:
+					lua_pushnil(state);
+					break;
+			}
+
+			lua_rawseti(state, -2, i + 1);
+		}
 	}
 }

@@ -35,12 +35,12 @@ Release 4-0
 ### New Features
 
 - **Additional DTYP "lua" record types.** Device support was extended with
-  six more record types: `int64in`, `int64out`, `mbbiDirect`, `mbboDirect`,
-  `lsi`, and `lso`. The `int64in`/`int64out` types require EPICS base 7.0+
-  (they are omitted automatically on base 3.15) and preserve full 64-bit
-  integer precision, matching Lua 5.5's native 64-bit integers. PV field
-  access for `INT64`/`UINT64` fields now routes through a dedicated 64-bit
-  path instead of being coerced through a double.
+  nine more record types: `int64in`, `int64out`, `mbbiDirect`, `mbboDirect`,
+  `lsi`, `lso`, `waveform`, `aai`, and `aao`. The `int64in`/`int64out` types
+  require EPICS base 7.0+ (they are omitted automatically on base 3.15) and
+  preserve full 64-bit integer precision, matching Lua 5.5's native 64-bit
+  integers. PV field access for `INT64`/`UINT64` fields now routes through a
+  dedicated 64-bit path instead of being coerced through a double.
 
 - **Unified run/load command family.** The commands for running Lua now form a single,
   consistent vocabulary with the shared shape `command "target" ["macros"] ["options"]`,

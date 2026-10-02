@@ -112,6 +112,38 @@ record(lso, "$(P)lso") {
     field(SCAN, "Passive")
 }
 
+record(waveform, "$(P)wf_double") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_double_array")
+    field(FTVL, "DOUBLE")
+    field(NELM, "10")
+    field(SCAN, "Passive")
+}
+
+record(waveform, "$(P)wf_string") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_string_array")
+    field(FTVL, "STRING")
+    field(NELM, "10")
+    field(SCAN, "Passive")
+}
+
+record(aai, "$(P)aai_int") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua read_int_array")
+    field(FTVL, "LONG")
+    field(NELM, "10")
+    field(SCAN, "Passive")
+}
+
+record(aao, "$(P)aao_double") {
+    field(DTYP, "lua")
+    field(OUT,  "@luaDtypTest.lua capture_array")
+    field(FTVL, "DOUBLE")
+    field(NELM, "10")
+    field(SCAN, "Passive")
+}
+
 # Test bi with string return matching ONAM
 record(bi, "$(P)bi_str") {
     field(DTYP, "lua")

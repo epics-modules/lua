@@ -3,8 +3,8 @@
  *
  * Exercises the supported record types (ai, ao, bi, bo, longin,
  * longout, mbbi, mbbo, mbbiDirect, mbboDirect, stringin, stringout,
- * lsi, lso, and int64in/int64out on base 7.0+) with Lua-based device
- * support.
+ * lsi, lso, waveform, aai, aao, and int64in/int64out on base 7.0+) with
+ * Lua-based device support.
  */
 
 #include <string.h>
@@ -237,6 +237,58 @@ static void testLso(void)
     testOk(strcmp(got, value) == 0,
            "lso.VAL holds full 100-char string after write (len=%d)",
            (int) strlen(got));
+}
+
+static void testWaveformDouble(void)
+{
+    testDiag("===== DTYP lua: waveform (double array) =====");
+
+    processRecord("test:wf_double");
+
+    double expected[] = {1.5, 2.5, 3.5, 4.5};
+    testdbGetArrFieldEqual("test:wf_double", DBF_DOUBLE, 4, 4, expected);
+    testdbGetFieldEqual("test:wf_double.NORD", DBF_ULONG, 4);
+}
+
+static void testWaveformString(void)
+{
+    testDiag("===== DTYP lua: waveform (string array) =====");
+
+    processRecord("test:wf_string");
+
+    testdbGetFieldEqual("test:wf_string.NORD", DBF_ULONG, 3);
+
+    char expected[3][MAX_STRING_SIZE];
+    memset(expected, 0, sizeof(expected));
+    strcpy(expected[0], "alpha");
+    strcpy(expected[1], "beta");
+    strcpy(expected[2], "gamma");
+    testdbGetArrFieldEqual("test:wf_string", DBF_STRING, 3, 3, expected);
+}
+
+static void testAaiInt(void)
+{
+    testDiag("===== DTYP lua: aai (int array) =====");
+
+    processRecord("test:aai_int");
+
+    epicsInt32 expected[] = {10, 20, 30};
+    testdbGetArrFieldEqual("test:aai_int", DBF_LONG, 3, 3, expected);
+    testdbGetFieldEqual("test:aai_int.NORD", DBF_ULONG, 3);
+}
+
+static void testAaoDouble(void)
+{
+    testDiag("===== DTYP lua: aao (double array out) =====");
+
+    /* Write an array to aao, then process so the Lua callback runs and
+     * reads record.VAL via the PV object. Confirm the stored array. */
+    double value[] = {5.0, 6.0, 7.0, 8.0};
+    testdbPutArrFieldOk("test:aao_double", DBF_DOUBLE, 4, value);
+
+    processRecord("test:aao_double");
+
+    testdbGetArrFieldEqual("test:aao_double", DBF_DOUBLE, 4, 4, value);
 }
 
 static void testUdfClearedOnRead(void)
@@ -492,6 +544,10 @@ MAIN(luaDtypTest)
     testStringout();
     testLsi();
     testLso();
+    testWaveformDouble();
+    testWaveformString();
+    testAaiInt();
+    testAaoDouble();
     testUdfClearedOnRead();
     testReadErrorSetsAlarm();
 

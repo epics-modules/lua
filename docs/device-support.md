@@ -47,13 +47,15 @@ Supported Record Types
 | stringout | Output | OUT | nil |
 | lsi | Input | INP | string |
 | lso | Output | OUT | nil |
+| waveform | Input | INP | table (array) |
+| aai | Input | INP | table (array) |
+| aao | Output | OUT | nil |
 
 {: .note }
 > The `int64in` and `int64out` record types require EPICS base 7.0 or
 > later. They are omitted automatically when the module is built against
 > base 3.15. Lua's native 64-bit integers are preserved without loss of
 > precision.
-
 
 INP/OUT Field Format
 --------------------

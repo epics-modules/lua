@@ -46,3 +46,28 @@ long_string = string.rep("abcdefghij", 10)   -- 100 chars
 function read_longstring(record)
     return long_string
 end
+
+-- Array (waveform/aai) read callbacks.
+function read_double_array(record)
+    return {1.5, 2.5, 3.5, 4.5}
+end
+
+function read_int_array(record)
+    return {math.tointeger(10), math.tointeger(20), math.tointeger(30)}
+end
+
+function read_string_array(record)
+    return {"alpha", "beta", "gamma"}
+end
+
+-- aao write callback: read the outgoing array via the PV object and stash
+-- its element count so the test can confirm the array was received.
+aao_sum = 0
+
+function capture_array(record)
+    local arr = record.VAL
+    aao_sum = 0
+    if type(arr) == "table" then
+        for _, v in ipairs(arr) do aao_sum = aao_sum + v end
+    end
+end

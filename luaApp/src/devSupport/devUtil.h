@@ -26,6 +26,21 @@ Protocol* parseINPOUT(const struct link* inpout);
 
 int runFunction(Protocol* proto);
 
+/*
+ * Fill an array record's buffer (bptr) from a Lua table at stack index
+ * `idx`, dispatching on the record's FTVL. Reads up to `nelm` elements,
+ * stopping at the first nil (standard Lua sequence semantics). Returns
+ * the number of elements written (suitable for NORD). Returns -1 if the
+ * value at `idx` is not a table.
+ */
+long luaTableToBuffer(lua_State* state, int idx, short ftvl, void* bptr, long nelm);
+
+/*
+ * Push a Lua table (left at the top of the stack) built from `count`
+ * elements of an array record's buffer (bptr), dispatching on FTVL.
+ */
+void luaBufferToTable(lua_State* state, short ftvl, const void* bptr, long count);
+
 #ifdef __cplusplus
 }
 #endif
