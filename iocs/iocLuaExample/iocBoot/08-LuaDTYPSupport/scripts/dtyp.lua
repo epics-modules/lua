@@ -60,3 +60,47 @@ end
 function on_string_write(record)
 	print("  on_string_write: received \"" .. record.VAL .. "\"")
 end
+
+
+-- === Long String Callbacks (lsi/lso) ===
+
+-- Return a status string longer than 40 characters.
+-- Demonstrates: lsi carries strings beyond the stringin 40-char limit.
+function read_status(record)
+	return "System nominal: all 12 subsystems reporting OK at " .. os.date("%H:%M:%S")
+end
+
+-- Log the full (untruncated) string being written to an lso record.
+-- Demonstrates: reading a long string from record.VAL returns the whole
+-- value, not a 40-character-truncated copy.
+function on_long_write(record)
+	local value = record.VAL
+	print("  on_long_write: received " .. #value .. " chars: \"" .. value .. "\"")
+end
+
+
+-- === Array Callbacks (waveform/aao) ===
+
+-- Return a generated ramp as a Lua table.
+-- Demonstrates: an input array callback returns a table; its elements are
+-- stored in the record's buffer (converted to FTVL) and NORD is set.
+function read_ramp(record)
+	local ramp = {}
+	for i = 1, 5 do
+		ramp[i] = i * 1.5
+	end
+	return ramp
+end
+
+-- Read the outgoing array from record.VAL and log it.
+-- Demonstrates: an output array callback reads record.VAL as a Lua table.
+function on_array_write(record)
+	local arr = record.VAL
+
+	local sum = 0
+	for _, v in ipairs(arr) do
+		sum = sum + v
+	end
+
+	print("  on_array_write: received " .. #arr .. " elements, sum = " .. sum)
+end

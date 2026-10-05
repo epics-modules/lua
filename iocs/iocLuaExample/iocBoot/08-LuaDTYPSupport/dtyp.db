@@ -63,3 +63,60 @@ record(stringout, "$(P)$(R)stringout")
 	field(DTYP, "lua")
 	field(OUT, "@dtyp.lua on_string_write")
 }
+
+
+# --- Long String Records (lsi/lso) ---
+#
+# lsi/lso carry strings longer than the 40-character limit of
+# stringin/stringout, bounded by the SIZV (buffer size) field. The
+# callbacks work just like stringin/stringout, but with full-length
+# strings.
+
+# lsi: return a status string longer than 40 characters
+record(lsi, "$(P)$(R)lsi")
+{
+	field(DTYP, "lua")
+	field(INP, "@dtyp.lua read_status")
+	field(SIZV, "256")
+}
+
+# lso: log the full (untruncated) string being written
+record(lso, "$(P)$(R)lso")
+{
+	field(DTYP, "lua")
+	field(OUT, "@dtyp.lua on_long_write")
+	field(SIZV, "256")
+}
+
+
+# --- Array Records (waveform/aao) ---
+#
+# Array records map to and from Lua tables. An input callback
+# (waveform/aai) returns a table; its elements are converted to the
+# record's FTVL element type and stored, with NORD set to the count.
+# An output callback (aao) reads the outgoing array from record.VAL,
+# which returns a Lua table.
+#
+# aai behaves exactly like waveform (an input array); it is omitted
+# here only to keep the example short. Likewise, the bit-field types
+# (mbbiDirect/mbboDirect) and the 64-bit integer types (int64in/
+# int64out, which require EPICS base 7.0+) follow the same pattern as
+# their mbbi/mbbo and longin/longout counterparts.
+
+# waveform: return a generated array of doubles
+record(waveform, "$(P)$(R)waveform")
+{
+	field(DTYP, "lua")
+	field(INP, "@dtyp.lua read_ramp")
+	field(FTVL, "DOUBLE")
+	field(NELM, "10")
+}
+
+# aao: read the outgoing array from record.VAL and log it
+record(aao, "$(P)$(R)aao")
+{
+	field(DTYP, "lua")
+	field(OUT, "@dtyp.lua on_array_write")
+	field(FTVL, "DOUBLE")
+	field(NELM, "10")
+}
