@@ -12,180 +12,75 @@ Release 4-0
 
 ### Major Changes
 
-- **Lua language updated to 5.5.1.** The bundled Lua interpreter has been
-  upgraded from 5.4.6 to 5.5.1. The only major incompatibility being:
+- **Lua language updated to 5.5.1** (from 5.4.6). The one incompatibility to
+  note: **`global` is now a reserved word** and must not be used as a variable
+  or parameter name. See the
+  [Lua 5.5 reference manual](https://www.lua.org/manual/5.5/) for language changes.
 
-  - **`global` is now a reserved word.** Scripts must not use `global` as a
-    variable or parameter name.
+- **luaaa dependency removed.** All libraries now use the standard Lua C API
+  directly, restoring compatibility with older toolchains; the `CXX11_SUPPORT`
+  build flag is gone.
 
-  New user-facing language features in 5.5 include global-variable
-  declarations, named vararg tables, more compact arrays, and incremental
-  major garbage collections. See the
-  [Lua 5.5 reference manual](https://www.lua.org/manual/5.5/) for details.
-
-- **luaaa dependency removed.** The third-party luaaa C++ binding library has been 
-  completely eliminated. All Lua libraries now use the standard Lua C API directly,
-  restoring compatibility with older toolchains such as vxWorks and legacy MSVC versions. 
-  The `CXX11_SUPPORT` build flag has been removed.
-
-- **Basic and main library versions unified.** The separate `libs/basic/` implementations 
-  have been replaced with `#include` forwarders to the main versions. All platforms now 
-  get the same full-featured library code.
+- **Basic and main library versions unified.** All platforms get the same
+  full-featured library code.
 
 ### New Features
 
-- **Additional DTYP "lua" record types.** Device support was extended with
-  nine more record types: `int64in`, `int64out`, `mbbiDirect`, `mbboDirect`,
-  `lsi`, `lso`, `waveform`, `aai`, and `aao`. The `int64in`/`int64out` types
-  require EPICS base 7.0+ (they are omitted automatically on base 3.15) and
-  preserve full 64-bit integer precision, matching Lua 5.5's native 64-bit
-  integers. PV field access for `INT64`/`UINT64` fields now routes through a
-  dedicated 64-bit path instead of being coerced through a double.
+- **Nine new DTYP "lua" record types:** `int64in`, `int64out`, `mbbiDirect`,
+  `mbboDirect`, `lsi`, `lso`, `waveform`, `aai`, and `aao`. `int64in`/`int64out`
+  require EPICS base 7.0+ (omitted automatically on 3.15) and preserve full
+  64-bit integer precision.
 
-- **Unified run/load command family.** The commands for running Lua now form a single,
-  consistent vocabulary with the shared shape `command "target" ["macros"] ["options"]`,
-  available identically from iocsh, Lua, and the C API:
-  - `luaRunString` -- run a code string as one chunk (replaces `luaCmd`).
-  - `luaRunFile` -- run a file as one chunk in a new state; the option `async=true`
-    runs it in a background thread (replaces `luaLoadFile` and `luaSpawn`).
-  - `luaShell` -- line-by-line interactive/REPL execution (replaces `luash`).
+- **Unified run/load command family:** `luaRunString`, `luaRunFile` (with
+  `async=true` option), and `luaShell`, available identically from iocsh, Lua,
+  and the C API. See *Deprecations* for the old names.
 
-  The whole file is compiled as one chunk (local variables work across lines), unlike
-  the line-by-line `luaShell`. Macros and options may be given as a `"key=val"` string
-  or, from Lua, a table. See the *Deprecations* section below for the old names.
+- **`LUA_SCRIPT_PATH` unified with `require()`** -- one path registry feeds both
+  script resolution and `require()`.
 
-- **Unified state naming API.** State management uses consistent verbs: `luaGetState`
-  (get-or-create), `luaFindState` (lookup only), `luaNameState` (bind the calling/given
-  state to a name), and `luaStateIsNamed` (predicate). "Register" is now reserved for
-  extension registration (`luaRegisterFunction`/`luaRegisterLibrary`). The old
-  `luaNamedState`/`luaFindNamedState`/`luaRegisterState`/`luaStateIsRegistered` names
-  remain as deprecated aliases.
+- **`luaAddPath`/`luaAddModule` commands** for registering directories with both
+  `require()` and script resolution; `luaAddModule` wraps an EPICS module's
+  `lib/<arch>` and `bin/<arch>` paths.
 
-- **`LUA_SCRIPT_PATH` unified with `require()`.** Directories on `LUA_SCRIPT_PATH` are
-  now searched by both script resolution (`@file`, `luaRunFile`, luascript/DTYP `@file`)
-  **and** Lua's `require()` -- a single path registry feeds both. `LUA_SCRIPT_PATH` is
-  re-read on each resolution, so runtime `epicsEnvSet` additions take effect immediately.
-  Search order is `LUA_SCRIPT_PATH` directories first, then `luaAddPath` directories.
+- **luascript `POPT`/`PCAL` fields** for conditional processing, with per-input
+  changed flags (`_A`-`_J`, `_AA`-`_JJ`).
 
-- **`POPT`/`PCAL` fields added to luascript record.** The Process Option field controls
-  whether CODE runs every time (`Always`, default) or only when a condition is met
-  (`Conditional`). The Process Condition field holds a Lua expression that gates CODE
-  execution. Changed flags (`_A`-`_J`, `_AA`-`_JJ`) are provided as boolean Lua globals
-  indicating which inputs changed since the last process cycle. PCAL is pre-compiled
-  for efficiency and recompiled when changed at runtime.
+- **luascript `IVOA`/`IVOV` fields** controlling output behavior on script error
+  (standard `menuIvoa`).
 
-- **`IVOA`/`IVOV` fields added to luascript record.** The Invalid Output Action field
-  controls behavior when Lua script execution fails: "Continue normally" (default),
-  "Don't drive outputs" (suppress output write and forward link), or "Set output to
-  IVOV" (write the IVOV value instead). Uses the standard `menuIvoa` from EPICS base,
-  matching the calcout/scalcout/acalcout convention.
+- **luascript array (table) output** (CODE returning a Lua table writes AVAL,
+  element type from contents) and **async rework** (uses the EPICS callback
+  system instead of a thread per process cycle).
 
-- **luascript record string fields expanded.** AA-JJ, SVAL, PSVL fields expanded from
-  40 to 256 characters. ERR field expanded from 200 to 256 characters.
+- **luascript string fields expanded:** AA-JJ, SVAL, PSVL to 256 chars; ERR to
+  256 chars.
 
-- **`info()` function for shell discoverability.** New global function available in all
-  Lua states. Call `info(library)` to list available functions, or `info(object)` to
-  list methods and properties of a userdata object.
+- **`epics` library get/put enhancements:** array support (Lua tables),
+  an options table (`timeout`, `count`, `string`), integer-preserving returns,
+  a local-PV fast path (direct `dbGet/PutField`), a shared process-wide CA
+  context, and return conventions (`nil, "error"` / error-string-on-failure).
+  `epics.pv()` is now proper userdata with `pv:get`/`pv:put` methods; `epics.sleep`
+  is removed (use `osi.sleep`).
 
-- **`db.entry()` with method syntax.** The entry object returned by `db.entry()` now 
-  supports both method syntax (`ent:findRecord("name")`) and module function syntax
-  (`db.findRecord(ent, "name")`).
+- **`db.entry()` method syntax** (`ent:findRecord(...)` as well as
+  `db.findRecord(ent, ...)`).
 
-- **`epics.get` and `epics.put` array support.** Both functions now support array/waveform
-  PVs. `epics.get` returns a Lua table for multi-element PVs; `epics.put` accepts a Lua
-  table to write arrays. Char waveforms are returned as Lua strings by default.
+- **`info()` function** in all Lua states to list a library's functions or an
+  object's methods/properties.
 
-- **`epics.get` and `epics.put` options table.** Both functions accept an options table
-  as the second/third argument with named parameters: `timeout`, `count` (max elements
-  to fetch), and `string` (force string vs numeric return for enums and char arrays).
+- **New libraries:** `bytestream` (scanf/printf-style device I/O over
+  `asyn.client`, StreamDevice-style specifiers), `event` (inter-thread event
+  flags), `seq` (Lua-native state-machine sequencer), and embedded `lpeg` 1.1.0
+  (with `re`).
 
-- **`epics.get` returns `nil, "error"` on failure.** Returns the value on success, or
-  `nil, "error message"` on failure instead of silently returning nil.
+- **`osi` time functions:** `osi.monotonic()`, `osi.time()`, `osi.timestr()`.
 
-- **`epics.put` returns nothing on success.** Returns an error string on failure. The
-  same convention applies to the run/load commands (`luaRunString`, `luaRunFile`,
-  `luaShell`) -- all action commands return nothing on success and an error string on
-  failure.
+- **Per-client asyn timeouts:** `ReadTimeout`/`WriteTimeout` on `asyn.client`
+  and `bytestream.client` (default 1.0 s).
 
-- **`epics.get`/`epics.put` integer distinction.** Integer types (DBF_SHORT, DBF_LONG,
-  DBF_CHAR, DBF_ENUM) are now returned with `lua_pushinteger` instead of `lua_pushnumber`,
-  preserving integer semantics. Scalar integer puts use `DBR_LONG` instead of `DBR_DOUBLE`.
+- **`#-` silent comments** when hash comments are enabled.
 
-- **Shared Channel Access context.** `epics.get`/`epics.put` use a single process-wide
-  preemptive CA context, created on first remote use and shared across all threads and
-  Lua states. This eliminates per-call context churn and is correct when a Lua state is
-  driven from multiple threads (device support, async luascript callbacks, `luaSpawn`,
-  the shell).
-
-- **Local PV fast path.** `epics.get` and `epics.put` now automatically detect PVs that
-  exist in the local IOC database and use direct database access (`dbGetField`/`dbPutField`)
-  instead of Channel Access. This eliminates network and CA overhead for local PVs,
-  providing orders-of-magnitude faster access. Remote PVs transparently fall through to CA.
-
-- **`epics.pv` redesigned as proper userdata.** The PV object returned by `epics.pv()`
-  is now a proper Lua userdata, with `__tostring` support and type-safe access via `luaL_checkudata`. 
-  The `pv.name` property returns the PV name. The old `pv:getName()` method and `pv.pv_name`
-  raw field are removed.
-
-- **`epics.pv` get/put methods.** The PV object supports `pv:get(field, options)` and
-  `pv:put(field, value, options)` for field access with custom timeout, count, and
-  string options.
-
-- **`epics.sleep` removed.** Use `osi.sleep` instead.
-
-- **`#-` silent comments.** When hash comments are enabled, lines starting with `#-`
-  are skipped silently without being echoed, matching the iocsh convention.
-
-- **`luaAddPath` and `luaAddModule` commands.** New iocsh commands and Lua functions
-  for registering directories with both `require()` (`package.path`/`package.cpath`)
-  and script file resolution (`luaLocateFile`). `luaAddModule` is a convenience wrapper
-  for EPICS modules that automatically constructs `lib/<arch>/` and `bin/<arch>/` paths
-  from a module's top directory using `EPICS_HOST_ARCH`.
-
-- **Bytestream library.** New pure-Lua library for scanf-style parsing
-  (`bytestream.match`) and printf-style formatting (`bytestream.format`) of byte
-  stream data, plus a client wrapper (`bytestream.client`) around `asyn.client` for
-  structured device I/O. Format specifiers follow StreamDevice conventions. Includes
-  binary (`%b`), raw bytes (`%r`), and enumeration (`%{val0|val1|...}`) specifiers.
-
-- **LPeg pattern matching library embedded.** The LPeg 1.1.0 library (Parsing
-  Expression Grammars for Lua) is now included and automatically available via
-  `require("lpeg")`. The companion `re.lua` module is installed to the lib directory.
-  LPeg is Copyright (c) 2007-2023 Lua.org, PUC-Rio (MIT License).
-
-- **luascript record async rework.** Asynchronous mode (`SYNC=Async`) now uses the
-  EPICS callback system instead of creating a new thread per process cycle.
-
-- **luascript record array (table) output.** Returning a Lua table from CODE writes an
-  array output (AVAL). The element type (ATYP) is chosen from the table contents: an
-  all-integer table stays integer, a mix of integers and floats is promoted to double,
-  and a table of strings now writes a proper `DBF_STRING` array (previously it produced
-  a char array of each string's first character). Arrays end at the first `nil`.
-
-- **Event synchronization library.** New `event` library providing event flags for
-  inter-thread signaling. Flags can be anonymous (local to a Lua state) or named
-  (shared across all Lua states by name). Operations: `set`, `clear`, `test`,
-  `testAndClear`, and `wait` with explicit timeout.
-
-- **Sequencer library.** New `seq` library providing a Lua-native state machine
-  sequencer as an alternative to the EPICS State Notation Language (SNL). Programs
-  define states with transitions driven by PV values, timers (`seq.delay`), and
-  event flags. Multiple programs run as coroutines in a single background thread.
-  Can be combined with `db.record` to create records and state machines in one file.
-
-- **`osi` library time functions.** New functions: `osi.monotonic()` returns a
-  monotonic time in seconds for interval measurement, `osi.time()` returns the
-  current EPICS epoch time with sub-second precision, and `osi.timestr()` formats
-  an EPICS timestamp as a string with configurable format.
-
-- **Per-client asyn timeouts.** `asyn.client` and `bytestream.client` objects now
-  support `ReadTimeout` and `WriteTimeout` properties for per-client timeout
-  configuration. Default is 1.0 seconds.
-
-- **Lua state reference counting.** New `luaStateRef`/`luaStateUnref` API for
-  managing Lua state lifetimes. States are automatically closed when all references
-  are released. Used internally by the sequencer to keep states alive between
-  `luaRunFile` and post-iocInit thread spawning.
+- **Lua state reference counting** (`luaStateRef`/`luaStateUnref`).
 
 ### Deprecations
 
@@ -209,85 +104,34 @@ now exclusively means extension registration.
 
 ### Bug Fixes
 
-- **Concurrent shell sessions** no longer interfere with each other.
-  Each shell session now uses its own thread-local state.
+- **Concurrent shell sessions** no longer interfere (each uses its own
+  thread-local state).
 
-- **`db.entry` and `db.record` cleanup.** Objects returned by `db.entry()`
-  and `db.record()` are now properly cleaned up on garbage collection.
+- **Shared Lua state thread safety** -- states shared across DTYP device
+  support, luascript records, and the shell are serialized with a per-state
+  lock, with a consistent lock order that removes an AB-BA deadlock.
 
-- **luascript record "On Change" output option** now detects value
-  changes correctly, matching calcout record behavior.
+- **luascript record "On Change" output** now detects value changes correctly.
 
-- **luascript record DBD fields** corrected for 64-bit systems. OUTV
-  field default corrected to "Ext PV OK".
+- **luascript boolean return** -- `true`/`false` from CODE now sets VAL to 1/0.
 
-- **luascript record error messages** now go to the EPICS error log
-  instead of stdout.
+- **luascript DBD fields** corrected for 64-bit systems (OUTV default now
+  "Ext PV OK").
 
-- **Asyn octet read buffer** increased from 256 to 1024 bytes, allowing
-  longer device responses.
+- **DTYP INP/OUT parsing is quote/paren aware** -- commas/spaces inside quotes
+  and nested parentheses are parsed correctly.
 
-- **Legacy port driver parameter callbacks** now fire after writes, so
-  parameter changes propagate to connected records.
+- **Asyn octet read buffer** increased from 256 to 1024 bytes.
 
-- **DTYP device support** now supports longer function names and
-  parameter lists in INP/OUT fields (buffer increased from 62 to 256
-  characters).
+- **asyn `setTraceIO` / `client:traceio` masks** corrected (`ascii`,
+  `escape`, `hex` keys set the right bits).
 
-- **DTYP INP/OUT parsing is quote/paren aware.** Parameters containing
-  commas or spaces inside quotes (e.g. `func(1, "a,b", 3)` or
-  `func("hello world")`) and nested parentheses (`func(g(1,2), 3)`) are
-  now parsed correctly. Previously a quoted space could be mistaken for
-  the portname delimiter and a quoted/nested comma could mis-split the
-  parameter list. Existing INP/OUT strings that already parsed correctly
-  are unaffected.
-
-- **Shared Lua state thread safety.** Lua states shared across
-  subsystems (named states used by DTYP device support, luascript
-  records, and the shell) are now serialized with a per-state lock. The
-  asynchronous luascript path releases the Lua lock before taking the
-  dbScanLock, giving a consistent lock order and removing an AB-BA
-  deadlock possibility.
-
-- **luascript boolean return.** Returning `true`/`false` from CODE now
-  sets VAL to 1/0 respectively (previously both produced 0).
-
-- **luascript numeric array inputs.** SHORT, USHORT, and FLOAT waveform
-  inputs (INAA-INJJ) no longer overrun their conversion buffers, and
-  field-type dispatch is correct across EPICS 3.15 and 7.0 (which number
-  the field types differently).
-
-- **luascript table output typing.** Mixed integer/float tables are
-  promoted to double instead of truncating the floats; arrays stop at
-  the first `nil`; non-number elements in a numeric table coerce safely
-  instead of crashing.
-
-- **luascript error messages** are no longer truncated at a colon that
-  appears within the chunk name (e.g. a Windows-style file path).
-
-- **Empty macro and parameter values** (e.g. a `P=` macro or an empty
-  item in a parameter list) no longer crash the IOC.
-
-- **`luaRegisterState` name collisions.** Registering a name that is
-  already bound to a different Lua state is rejected (the C API logs a
-  warning; the Lua-callable form raises an error) instead of silently
-  rebinding the name and leaking the previous state.
-
-- **asyn octet read/write bounds.** The `asyn.driver.new` octet read no
-  longer overruns the caller's buffer or leaves it unterminated, and the
-  octet write respects the provided length. A latent out-of-range throw
-  in the legacy port driver's octet write was also fixed.
-
-- **`param.uint32digital`** (legacy port-driver definition syntax) now
-  creates the correct asyn parameter type across asyn releases (the
-  asynParamType enum numbering shifted when Int64 was added).
-
-- **asyn `setTraceIO` / `client:traceio` masks** corrected: the
-  `ascii`, `escape`, and `hex` keys previously set the wrong trace-I/O
-  bits.
-
-- Various memory leak, null-pointer safety, and thread safety fixes
-  throughout the codebase.
+- Various fixes for memory leaks, null-pointer and thread safety, GC cleanup
+  of `db.entry`/`db.record` objects, error messages (routed to the EPICS
+  error log, no longer truncated at colons), longer DTYP buffers, luascript
+  numeric-array-input overruns and table-output typing, empty macro/parameter
+  values, `luaRegisterState` name collisions, legacy port-driver parameter
+  callbacks and octet bounds, and `param.uint32digital` parameter typing.
 
 
 Release 3-1
