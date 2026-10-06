@@ -999,14 +999,33 @@ static void testLuaCmdTableMacros(void)
         lua_pushstring(state, "sensor");
         lua_setfield(state, -2, "R");
 
+        lua_pushboolean(state, 1);
+        lua_setfield(state, -2, "enabled");
+        lua_pushboolean(state, 0);
+        lua_setfield(state, -2, "disabled");
+
+        lua_pushinteger(state, 42);
+        lua_setfield(state, -2, "ivalue");
+
+        lua_pushnumber(state, 3.14);
+        lua_setfield(state, -2, "fvalue");
+
         std::string macros = luaMacrosFromTable(state, lua_gettop(state));
         lua_pop(state, 1);
 
-        /* Order of keys in Lua tables is not guaranteed, check both */
+        /* Order of keys in Lua tables is not guaranteed */
         testOk(macros.find("P=dev1:") != std::string::npos,
                "macros contains P=dev1: : '%s'", macros.c_str());
         testOk(macros.find("R=sensor") != std::string::npos,
                "macros contains R=sensor : '%s'", macros.c_str());
+        testOk(macros.find("enabled=true") != std::string::npos,
+               "macros contains enabled=true: '%s'", macros.c_str());
+        testOk(macros.find("disabled=false") != std::string::npos,
+               "macros contains disabled=false: '%s'", macros.c_str());
+        testOk(macros.find("ivalue=42") != std::string::npos,
+               "macros contains ivalue=42: '%s'", macros.c_str());
+        testOk(macros.find("fvalue=3.14") != std::string::npos,
+               "macros contains fvalue=3.14: '%s'", macros.c_str());
 
         lua_close(state);
     }
