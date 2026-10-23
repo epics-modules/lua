@@ -284,7 +284,15 @@ static void testAaoDouble(void)
     /* Write an array to aao, then process so the Lua callback runs and
      * reads record.VAL via the PV object. Confirm the stored array. */
     double value[] = {5.0, 6.0, 7.0, 8.0};
-    testdbPutArrFieldOk("test:aao_double", DBF_DOUBLE, 4, value);
+
+    /* testdbPutArrFieldOk is not available on base 3.15, so put the
+     * array directly via dbPutField (a core API present on all base
+     * versions). aao itself is not version-specific. */
+    DBADDR addr;
+    long status = dbNameToAddr("test:aao_double", &addr);
+    testOk(status == 0, "resolved test:aao_double");
+    status = dbPutField(&addr, DBR_DOUBLE, value, 4);
+    testOk(status == 0, "put 4 doubles to aao");
 
     processRecord("test:aao_double");
 
