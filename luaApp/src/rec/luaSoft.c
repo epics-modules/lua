@@ -33,7 +33,7 @@ struct {
 	NULL,
 	NULL,
 	NULL,
-	write_Script
+	(DEVSUPFUN)write_Script
 };
 
 epicsExportAddress(dset,devLuaSoft);
