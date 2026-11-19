@@ -159,3 +159,12 @@ record(ai, "$(P)ai_err") {
     field(INP,  "@luaDtypTest.lua read_error")
     field(SCAN, "Passive")
 }
+
+# Test: INP names a function that does not exist in the script.
+# lua_pcall should fail ("attempt to call a nil value") and raise
+# READ_ALARM with the reason attached as the alarm message.
+record(ai, "$(P)ai_badfunc") {
+    field(DTYP, "lua")
+    field(INP,  "@luaDtypTest.lua no_such_function")
+    field(SCAN, "Passive")
+}

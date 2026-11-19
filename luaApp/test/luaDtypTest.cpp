@@ -326,6 +326,33 @@ static void testReadErrorSetsAlarm(void)
     testdbGetFieldEqual("test:ai_err.STAT", DBF_SHORT, (int) READ_ALARM);
 }
 
+/* A mismatched/missing function name must not fail silently: lua_pcall
+ * fails with "attempt to call a nil value", which should raise the
+ * alarm and (base 7.0.6+) attach a reason to the record's amsg. */
+static void testMissingFunctionSetsAlarm(void)
+{
+    testDiag("===== DTYP lua: missing function name sets alarm =====");
+
+    processRecord("test:ai_badfunc");
+
+    testdbGetFieldEqual("test:ai_badfunc.SEVR", DBF_SHORT, (int) INVALID_ALARM);
+    testdbGetFieldEqual("test:ai_badfunc.STAT", DBF_SHORT, (int) READ_ALARM);
+
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 6, 0)
+    {
+        DBADDR addr;
+        char amsg[64] = {0};
+        long nreq = 1;
+        if (dbNameToAddr("test:ai_badfunc.AMSG", &addr) == 0)
+        {
+            dbGetField(&addr, DBF_STRING, amsg, NULL, &nreq, NULL);
+        }
+        testOk(strstr(amsg, "lua:") != NULL,
+               "amsg carries the Lua reason, got '%s'", amsg);
+    }
+#endif
+}
+
 /* ---- Stage 5: quoting/paren-aware INP/OUT parsing ---- */
 
 /* Build a struct link carrying an instio string and run parseINPOUT.
@@ -558,6 +585,7 @@ MAIN(luaDtypTest)
     testAaoDouble();
     testUdfClearedOnRead();
     testReadErrorSetsAlarm();
+    testMissingFunctionSetsAlarm();
 
     /* Stage 5: quoting/paren-aware INP/OUT parsing */
     testParseBasic();

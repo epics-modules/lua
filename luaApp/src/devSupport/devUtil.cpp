@@ -10,7 +10,11 @@
 #include <errlog.h>
 #include <epicsExport.h>
 #include <epicsTypes.h>
+#include <epicsVersion.h>
 #include <dbFldTypes.h>
+#include <dbCommon.h>
+#include <recGbl.h>
+#include <alarm.h>
 
 #include "luaEpics.h"
 
@@ -218,9 +222,23 @@ extern "C"
 				output->state = named;
 				return output;
 			}
+			
+			/*
+			 * Neither a loadable script file nor a registered state.
+			 * This is almost always a typo in the script path or in the
+			 * state name (luaNameState). Report both things that were
+			 * tried rather than the misleading "Error loading file",
+			 * then fail so the record goes to LINK_ALARM.
+			 */
+			errlogPrintf("Error in INP/OUT (\"%s\"): '%s' is neither a loadable script file "
+			             "(check LUA_SCRIPT_PATH) nor a registered Lua state (luaNameState). "
+			             "Check the script path or the state name.\n",
+			             inpout->value.instio.string, output->filename);
+			delete output;
+			return NULL;
 		}
 		
-		/* File found (or no named state match) -- create a new state and load */
+		/* File found -- create a new state and load */
 		output->state = luaCreateState();
 		
 		if (luaLoadScript(output->state, output->filename))
@@ -237,7 +255,7 @@ extern "C"
 		return output;
 	}
 	
-	int runFunction(Protocol* proto)
+	int runFunction(Protocol* proto, dbCommon* record, epicsEnum16 alarm_condition)
 	{
 		int params = luaLoadParams(proto->state, proto->param_list);
 		
@@ -245,10 +263,24 @@ extern "C"
 		
 		if (status)
 		{
-			std::string err(lua_tostring(proto->state, -1));
+			/* The Lua error object is usually a string, but guard the
+			 * NULL case (non-string error) so std::string isn't
+			 * constructed from NULL (undefined behavior). */
+			const char* msg = lua_tostring(proto->state, -1);
+			std::string err(msg ? msg : "(non-string Lua error)");
 			lua_pop(proto->state, 1);
 			
-			errlogPrintf("Calling %s in %s resulted in error: %s\n", proto->function_name, proto->filename, err.c_str());
+			errlogPrintf("%s: calling %s in %s resulted in error: %s\n",
+			             record->name, proto->function_name, proto->filename, err.c_str());
+			
+			/* Attach the reason to the record. On base 7.0.6+ the alarm
+			 * message (amsg) is visible over Channel Access, matching the
+			 * luascript record's ERR field behavior. */
+#if EPICS_VERSION_INT >= VERSION_INT(7, 0, 6, 0)
+			recGblSetSevrMsg(record, alarm_condition, INVALID_ALARM, "lua: %s", err.c_str());
+#else
+			recGblSetSevr(record, alarm_condition, INVALID_ALARM);
+#endif
 		}
 		
 		return status;

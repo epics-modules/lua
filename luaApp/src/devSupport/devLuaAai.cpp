@@ -34,11 +34,7 @@ static long readData(struct aaiRecord* record)
 	lua_getglobal(proto->state, proto->function_name);
 	pushRecord(record);
 	
-	if (runFunction(proto))
-	{
-		recGblSetSevr((dbCommon*) record, READ_ALARM, INVALID_ALARM);
-		return -1;
-	}
+	if (runFunction(proto, (dbCommon*) record, READ_ALARM))    { return -1; }
 	
 	type = lua_type(proto->state, -1);
 	

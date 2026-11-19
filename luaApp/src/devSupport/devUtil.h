@@ -4,6 +4,8 @@
 #include "lepicslib.h"
 #include <link.h>
 #include <lua.h>
+#include <dbCommon.h>
+#include <epicsTypes.h>
 
 #ifdef __cplusplus
 /* Device support is compiled as C++; DEVSUPFUN assignments need an
@@ -24,7 +26,18 @@ typedef struct Protocol
 
 Protocol* parseINPOUT(const struct link* inpout);
 
-int runFunction(Protocol* proto);
+/*
+ * Call the Lua function named by proto on the arguments already pushed
+ * on proto->state (the record PV plus the parsed param list). Returns
+ * the lua_pcall status (0 on success, non-zero on error).
+ *
+ * On error the Lua message is logged to the console (prefixed with the
+ * record name) and, on base 7.0.6+, attached to the record as the alarm
+ * message so the reason is visible over Channel Access. The record is
+ * also placed into INVALID_ALARM with the supplied alarm condition
+ * (READ_ALARM for input records, WRITE_ALARM for output records).
+ */
+int runFunction(Protocol* proto, dbCommon* record, epicsEnum16 alarm_condition);
 
 /*
  * Fill an array record's buffer (bptr) from a Lua table at stack index
