@@ -1704,18 +1704,18 @@ epicsShareFunc void luaAddPath(const char* directory)
 
 /*
  * Add an EPICS module's lib/<arch>/ and bin/<arch>/ directories
- * to the path registry. Reads EPICS_HOST_ARCH from the environment
+ * to the path registry. Reads ARCH from the environment
  * to determine the architecture subdirectory.
  */
 epicsShareFunc void luaAddModule(const char* module_top)
 {
 	if (! module_top || ! module_top[0])    { return; }
 
-	const char* arch = std::getenv("EPICS_HOST_ARCH");
+	const char* arch = std::getenv("ARCH");
 
 	if (! arch || ! arch[0])
 	{
-		errlogPrintf("luaAddModule: EPICS_HOST_ARCH not set\n");
+		errlogPrintf("luaAddModule: ARCH not set\n");
 		return;
 	}
 
