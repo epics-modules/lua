@@ -98,9 +98,10 @@ TESTFILES += ../../src/libs/bytestream.lua
 TESTS += bytestreamTest
 
 # --- Test harness for embedded targets ---
+# Not built for vxWorks: several tests use the POSIX two-argument mkdir(),
+# which vxWorks does not provide (it declares mkdir(const char *)).
 testHarness_SRCS += epicsRunLuaTests.c
 luaTestHarness_SRCS += $(testHarness_SRCS)
-PROD_vxWorks = luaTestHarness
 PROD_RTEMS = luaTestHarness
 
 TESTSCRIPTS_HOST += $(TESTS:%=%.t)
