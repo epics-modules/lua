@@ -25,6 +25,7 @@
 #include <cstring>
 #include <cctype>
 #include <cmath>
+#include <epicsMath.h>
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
