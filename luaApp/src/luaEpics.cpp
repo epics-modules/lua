@@ -652,7 +652,7 @@ epicsShareFunc std::string luaMacrosFromTable(lua_State* state, int index)
 			/* Duplicate the value before converting -- lua_tostring on a
 			 * non-string value modifies it in-place, which corrupts lua_next */
 			lua_pushvalue(state, -1);
-			const char* val = nullptr;
+			const char* val = NULL;
 			switch (lua_type(state, -1))
 			{
 				case LUA_TBOOLEAN:
