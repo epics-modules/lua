@@ -27,7 +27,11 @@
 #else
 #include <sys/stat.h>
 #include <unistd.h>
+#if defined(vxWorks) || defined(__vxworks)
+#define TEST_MKDIR(d) mkdir(d)
+#else
 #define TEST_MKDIR(d) mkdir(d, 0777)
+#endif
 #define TEST_RMDIR(d) rmdir(d)
 #endif
 
